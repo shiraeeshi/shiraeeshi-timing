@@ -1,0 +1,14 @@
+{
+	"timings": [
+		{
+			"name": "timing",
+			"filepath": "~/timing"
+		} , {
+			"name": "other-timing",
+			"filepath": "~/other-timing"
+		} , {
+			"name": "btiming",
+			"filepath": "~/btiming"
+		}
+	]
+}
