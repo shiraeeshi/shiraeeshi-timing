@@ -9,6 +9,10 @@
 		} , {
 			"name": "btiming",
 			"filepath": "~/btiming"
+		} , {
+			"name": "background-tasks",
+			"filepath": "~/qbackground"
 		}
-	]
+	],
+	"processes-filepath": "~/qprocesses.yaml"
 }

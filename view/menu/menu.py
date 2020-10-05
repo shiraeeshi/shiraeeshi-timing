@@ -1,8 +1,8 @@
-
 import os
 from common import gtk
 from enum import Enum
 from view.some_window import show_window
+from view.short_tasks.short_tasks import show_short_tasks
 from view.timings_summary.summary import show_timings_summary
 
 #async def create_menu(indicEnv):
@@ -20,15 +20,23 @@ def create_menu(indicEnv):
 
     item_command_one = gtk.MenuItem('My Notes')
     item_command_one.connect('activate', note)
-    menu.append(item_command_one)
+    #menu.append(item_command_one)
 
-    item_command_two = gtk.MenuItem('Something')
+    item_command_two = gtk.MenuItem('Processes')
     #item_command_two.connect('activate', show_window)
     item_command_two.connect('activate', lambda _: show_window())
     menu.append(item_command_two)
 
+    item_short_tasks = gtk.MenuItem('Short Tasks')
+    item_short_tasks.connect('activate', lambda _: show_short_tasks())
+    menu.append(item_short_tasks)
+
+    #item_with_submenu = gtk.MenuItem('With Submenu')
+    #item_with_submenu.set_submenu(create_some_submenu())
+    #menu.append(item_with_submenu)
+
     item_timing_summary = gtk.MenuItem('Timing Summary')
-    item_timing_summary.set_submenu(create_timing_summary_submenu())
+    item_timing_summary.connect('activate', lambda _: show_timings_summary(TimingSummaryType.LAST_24_HOURS))
     menu.append(item_timing_summary)
 
     item_sep = gtk.SeparatorMenuItem()
@@ -47,7 +55,7 @@ def create_menu(indicEnv):
     menu.show_all()
     return menu
 
-def create_timing_summary_submenu():
+def create_some_submenu():
     summaries_menu = gtk.Menu()
 
     item_24_hours = gtk.MenuItem('24 Hours')

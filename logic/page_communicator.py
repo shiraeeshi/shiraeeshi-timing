@@ -18,15 +18,15 @@ class PageCommunicator(object):
 
     def _send_initial_message_or_wait(self):
         if self.load_finished and self.config_load_finished:
-            self.webview.run_javascript("init_listener({});".format(self.config.as_json()))
+            #self.webview.run_javascript("init_listener({});".format(self.config.as_json()))
+            pass
 
     def send_json(self, message_as_json):
-        print("send_json start.")
         if self.load_finished:
-            print("send_json about to run_js.")
             self.webview.run_javascript("handleServerMessage({});".format(message_as_json))
         else:
-            print("didn't send json (because load is not finished): {}".format(message_as_json))
+            #print("didn't send json (because load is not finished): {}".format(message_as_json))
+            pass
 
     def handleScriptMessage(self, value):
         print("value as json: {}".format(value.get_js_value().to_json(2)))

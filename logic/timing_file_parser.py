@@ -12,8 +12,8 @@ def read_timings(config):
             #result[timing_name] = lines
             timings = parse_timing_file_lines(lines)
             result[timing_name] = timings
-            import json
-            print(json.dumps(timings))
+            #import json
+            #print(json.dumps(timings))
     return result
 
 def parse_timing_file_lines(lines):
@@ -76,7 +76,8 @@ def parse_timing_file_lines(lines):
                 "name": name
                 })
         if line == "-":
-            print("line is -")
+            #print("line is -")
+            pass
     if current_day is not None and len(current_day_timings) > 0:
         result.append({"date": current_day, "timings": current_day_timings})
     return result

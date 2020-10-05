@@ -1,9 +1,35 @@
 <!doctype html>
 <html>
 <head>
+  <style>
+    p.some-class {
+        color: green;
+        margin-left: 30px;
+    }
+
+    .column {
+      float: left;
+    }
+
+    .left {
+      width: 50%;
+    }
+
+    .right {
+      width: 50%;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+  </style>
 </head>
 <body>
     <div>
+        <!--
         <h2>
             A Header
         </h2>
@@ -15,7 +41,12 @@
                 3 + 2
             </button>
         </p>
-        <div id="main-content-wrapper">
+        -->
+        <div class="row">
+          <div id="processes-content-wrapper" class="column left">
+          </div>
+          <div id="timings-content-wrapper" class="column right">
+          </div>
         </div>
     </div>
 </body>
