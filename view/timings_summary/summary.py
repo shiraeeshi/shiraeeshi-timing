@@ -13,7 +13,7 @@ def show_timings_summary(summary_type):
     window.set_title("Something")
     window.connect("destroy", gtk.main_quit)
     window.set_default_size(800, 600)
-    window.set_position(gtk.WindowPosition.CENTER_ALWAYS)
+    window.set_position(gtk.WindowPosition.CENTER)
 
     headerbar = gtk.HeaderBar()
     headerbar.set_show_close_button(True)
