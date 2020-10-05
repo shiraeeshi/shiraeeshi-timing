@@ -5,7 +5,6 @@ from definitions import ROOT_DIR
 from logic.page_communicator import PageCommunicator
 from logic.window_app_state import WindowAppState
 from models.config_info import json2config
-from logic.timing_file_parser import read_timings
 from logic.processes_file_parser import parse_processes_file
 
 #async def show_window():
@@ -14,7 +13,7 @@ def show_window():
     window = gtk.Window()
     window.set_title("Something")
     window.connect("destroy", gtk.main_quit)
-    window.set_default_size(800, 600)
+    window.set_default_size(1200, 800)
 
     headerbar = gtk.HeaderBar()
     headerbar.set_show_close_button(True)
@@ -64,10 +63,8 @@ def show_window():
         config = json2config(contents)
         app_state.config = config
         page_communicator.config_loaded(config)
-        timings_contents = read_timings(config)
         processes_info = parse_processes_file(config.processes_filepath)
         composed_info = {
-                "timings": timings_contents,
                 "processes": processes_info
                 }
         #await page_communicator.load_finished_event.wait()
