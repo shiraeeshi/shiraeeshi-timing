@@ -4,6 +4,7 @@ from enum import Enum
 from view.some_window import show_window
 from view.short_tasks.short_tasks import show_short_tasks
 from view.timings_summary.summary import show_timings_summary
+from view.timings_history.timings_history_latest import show_timings_history_latest
 
 #async def create_menu(indicEnv):
 def create_menu(indicEnv):
@@ -34,6 +35,10 @@ def create_menu(indicEnv):
     #item_with_submenu = gtk.MenuItem('With Submenu')
     #item_with_submenu.set_submenu(create_some_submenu())
     #menu.append(item_with_submenu)
+
+    item_timings_history = gtk.MenuItem('Timings History Latest')
+    item_timings_history.connect('activate', lambda _: show_timings_history_latest())
+    menu.append(item_timings_history)
 
     item_timing_summary = gtk.MenuItem('Timing Summary')
     item_timing_summary.connect('activate', lambda _: show_timings_summary(TimingSummaryType.LAST_24_HOURS))
