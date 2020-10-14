@@ -1,6 +1,6 @@
 import os
 import json
-from common import gtk, WebKit2
+from common import gtk, WebKit2, Gdk
 from definitions import ROOT_DIR
 from logic.page_communicator import PageCommunicator
 from logic.window_app_state import WindowAppState
@@ -8,7 +8,7 @@ from models.config_info import json2config
 from logic.timing_file_parser import read_timings
 
 def show_timings_summary(summary_type):
-    print summary_type
+    print(summary_type)
     window = gtk.Window()
     window.set_title("Something")
     window.connect("destroy", gtk.main_quit)
@@ -54,6 +54,40 @@ def show_timings_summary(summary_type):
             , lambda userContentManager, value: page_communicator.handleScriptMessage(value))
     webview.get_user_content_manager().register_script_message_handler("timings_summary_msgs")
 
+    def webview_key_press_handler(a_webview, eve):
+        keyval = eve.keyval
+        keyval_name = Gdk.keyval_name(keyval)
+        print ("webview_key_press_handler. keyval: " + keyval_name)
+        if keyval_name == "Escape":
+            if not window.emit("delete-event", Gdk.Event(Gdk.EventType.DELETE)):
+                window.destroy()
+            return True
+        if keyval_name == "f":
+            if app_state.is_fullscreen:
+                window.unfullscreen()
+            else:
+                window.fullscreen()
+            app_state.is_fullscreen = not app_state.is_fullscreen 
+            return True
+        if keyval_name == "w":
+            msg = {
+                    "type": "key_pressed",
+                    "keyval": "w"
+                    }
+            page_communicator.send_json(json.dumps(msg))
+            return True
+    webview.connect("key_press_event", webview_key_press_handler);
+
+    def webview_button_press_handler(a_webview, eve):
+        if eve.type == Gdk.EventType.DOUBLE_BUTTON_PRESS:
+            if app_state.is_fullscreen:
+                window.unfullscreen()
+            else:
+                window.fullscreen()
+            app_state.is_fullscreen = not app_state.is_fullscreen 
+            return True
+    webview.connect("button_press_event", webview_button_press_handler);
+
     config_file = os.path.join(ROOT_DIR, "indic.config.txt")
     with open(config_file) as f:
         contents = f.read().rstrip()
@@ -66,9 +100,22 @@ def show_timings_summary(summary_type):
         app_state.after_page_loaded(
                 lambda : page_communicator.send_json(json.dumps(timings_contents)))
 
+    wallpapers_dir = os.path.join(ROOT_DIR, "wallpapers")
+    wallpapers = os.listdir(wallpapers_dir)
+    print("wallpapers: {}".format(wallpapers))
+    wallpapers_msg = {
+            "type": "wallpapers",
+            "wallpapers": wallpapers
+            }
+    app_state.after_page_loaded(
+            lambda : page_communicator.send_json(json.dumps(wallpapers_msg)))
+
     app_html_file = os.path.join(ROOT_DIR, "frontend", "timings_summary.html")
     with open(app_html_file) as f:
-        base_uri = "file:///"
+        from urllib.parse import urljoin
+        from urllib.request import pathname2url
+        base_uri = urljoin('file:', pathname2url(ROOT_DIR)) + "/"
+        print("base_uri: " + base_uri)
         webview.load_html(f.read(), base_uri)
 
     if (show_web_inspector):
@@ -80,4 +127,3 @@ def show_timings_summary(summary_type):
     window.show_all()
 
     gtk.main()
-

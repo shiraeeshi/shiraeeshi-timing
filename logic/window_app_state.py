@@ -4,6 +4,7 @@ class WindowAppState(object):
         self.page_communicator = page_communicator
         self.config = None
         self.after_page_loaded_actions = []
+        self.is_fullscreen = False
 
     def page_loaded(self):
         self.page_communicator.page_loaded()

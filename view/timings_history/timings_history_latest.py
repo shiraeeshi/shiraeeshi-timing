@@ -56,11 +56,34 @@ def show_timings_history_latest():
         keyval = eve.keyval
         keyval_name = Gdk.keyval_name(keyval)
         print ("webview_key_press_handler. keyval: " + keyval_name)
+        if keyval_name == "Escape":
+            if not window.emit("delete-event", Gdk.Event(Gdk.EventType.DELETE)):
+                window.destroy()
+            return True
         if keyval_name == "Left":
             page_communicator.send_json("{\"msg_type\": \"keypress_event\", \"keyval\": \"Left\"}")
+            return True
         elif keyval_name == "Right":
             page_communicator.send_json("{\"msg_type\": \"keypress_event\", \"keyval\": \"Right\"}")
+            return True
+        elif keyval_name == "f":
+            if app_state.is_fullscreen:
+                window.unfullscreen()
+            else:
+                window.fullscreen()
+            app_state.is_fullscreen = not app_state.is_fullscreen 
+            return True
     webview.connect("key_press_event", webview_key_press_handler);
+
+    def webview_button_press_handler(a_webview, eve):
+        if eve.type == Gdk.EventType.DOUBLE_BUTTON_PRESS:
+            if app_state.is_fullscreen:
+                window.unfullscreen()
+            else:
+                window.fullscreen()
+            app_state.is_fullscreen = not app_state.is_fullscreen 
+            return True
+    webview.connect("button_press_event", webview_button_press_handler);
 
     config_file = os.path.join(ROOT_DIR, "indic.config.txt")
     with open(config_file) as f:

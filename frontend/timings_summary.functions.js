@@ -1,9 +1,31 @@
 let my = {
-  timings: null
+  timings: null,
+  wallpapers: {
+    lst: null,
+    idx: 0
+  }
 };
 
 function handleServerMessage(msg) {
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage start ");
+  if (msg.type == "wallpapers") {
+    my.wallpapers.lst = msg.wallpapers;
+    let randomIndex = getRandomInt(my.wallpapers.lst.length);
+    document.body.style.backgroundImage = "url(wallpapers/" + my.wallpapers.lst[randomIndex] + ")";
+    return;
+  }
+  if (msg.type == "key_pressed") {
+    if (msg.keyval == "w") {
+      my.wallpapers.idx++;
+      if (my.wallpapers.idx >= my.wallpapers.lst.length) {
+        my.wallpapers.idx = 0;
+      }
+      window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage current wallpaper: " +
+        my.wallpapers.lst[my.wallpapers.idx]);
+      document.body.style.backgroundImage = "url(wallpapers/" + my.wallpapers.lst[my.wallpapers.idx] + ")";
+    }
+    return;
+  }
   addListenersToButtons();
   my.timings = msg;
   let mainContentWrapper = document.getElementById("main-content-wrapper");
@@ -106,7 +128,8 @@ function createAndAppendFilterByCategory(timingsByDates) {
   allBtn.onmouseover = function (eve) {
     let trs = document.getElementsByClassName("timing-row");
     for (let i=0; i<trs.length; i++) {
-      trs[i].style.color = 'black';
+      trs[i].style.color = 'white';
+      trs[i].style.opacity = '1';
     }
   }
   btnsContainer.appendChild(withChildren(allBtn, txt));
@@ -118,11 +141,16 @@ function createAndAppendFilterByCategory(timingsByDates) {
     btn.onmouseover = function (eve) {
       let trs = document.getElementsByClassName("timing-row");
       for (let i=0; i<trs.length; i++) {
-        trs[i].style.color = '#BEBEBE';
+        trs[i].style.backgroundColor = "";
+        //trs[i].style.color = '#BEBEBE';
+        trs[i].style.color = 'white';
+        trs[i].style.opacity = ".3";
       }
       let ctrs = document.getElementsByClassName("timing-row-of-" + cat);
       for (let i=0; i<ctrs.length; i++) {
-        ctrs[i].style.color = 'black';
+        //ctrs[i].style.backgroundColor = 'white';
+        ctrs[i].style.color = 'white';
+        ctrs[i].style.opacity = "1";
       }
     };
     btnsContainer.appendChild(withChildren(btn, txt));
@@ -293,4 +321,8 @@ function timingItem2symbol(timingItem) {
   } else {
     return " ";
   }
+}
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
 }
