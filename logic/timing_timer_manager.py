@@ -1,4 +1,5 @@
 import os
+import math
 from datetime import datetime
 from models.timing_timer_info import TimingTimerInfo
 
@@ -23,7 +24,7 @@ class TimingTimerManager(object):
         timing_end_str = current_time.strftime("%H:%M")
 
         delta = current_time - started_at
-        delta_str = "{} m".format(delta.seconds / 60)
+        delta_str = "{} m".format(math.floor(delta.seconds / 60))
 
         row = "{} {} - {}   ({}) {}".format(
                 current_date_str,
