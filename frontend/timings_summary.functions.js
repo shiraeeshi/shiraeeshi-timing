@@ -1,5 +1,9 @@
 let my = {
   timings: null,
+  imageInfo: {
+    minutesRange: 0,
+    minutesMaxDiff: 0
+  },
   wallpapers: {
     lst: null,
     idx: 0
@@ -56,9 +60,11 @@ function displayTimingsAsImage(timings, categoryToHighlight) {
   //let maxDiff = 2.5 * 24 * 60 * 60 * 1000;
   //let maxDiff = 2.5 * 24 * 60;
   //let maxDiff = 24 * 60;
-  let firstDay = timings[0];
-  let dtFirstTimingFrom = timingDateArrays2Date(firstDay.date, firstDay.timings[0].from);
-  let maxDiff = (now.getTime() - dtFirstTimingFrom.getTime()) / (60*1000.0);
+  //let firstDay = timings[0];
+  //let dtFirstTimingFrom = timingDateArrays2Date(firstDay.date, firstDay.timings[0].from);
+  //let maxDiff = (now.getTime() - dtFirstTimingFrom.getTime()) / (60*1000.0);
+  let minutesRange = my.imageInfo.minutesRange;
+  let maxDiff = my.imageInfo.minutesMaxDiff;
 
   ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
 
@@ -66,14 +72,14 @@ function displayTimingsAsImage(timings, categoryToHighlight) {
     oneDayTiming.timings.forEach(timingItem => {
       let dtFrom = timingDateArrays2Date(oneDayTiming.date, timingItem.from);
       let diffFrom = (now.getTime() - dtFrom.getTime()) / (60*1000.0);
-      let xFrom = canvasWidth * (maxDiff - diffFrom) / maxDiff;
+      let xFrom = (maxDiff - diffFrom) * canvasWidth * 1.0 / minutesRange;
 
       if (categoryToHighlight && timingItem.category == categoryToHighlight) {
         ctx.fillStyle = 'rgba(5, 168, 82, 0.5)';
       } else {
         ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
       }
-      ctx.fillRect(xFrom, 10, timingItem.minutes*canvasWidth*1.0/maxDiff, 50);
+      ctx.fillRect(xFrom, 10, timingItem.minutes*canvasWidth*1.0/minutesRange, 50);
       //window.webkit.messageHandlers.timings_summary_msgs.postMessage(
       //  " displayTimingsAsImage. timing from " + oneDayTiming.date.join(".") + " " + timingItem.from.join(":") +
       //  ", diffFrom: " + diffFrom +
@@ -92,6 +98,8 @@ function addListenersToButtons() {
   btnLast24Hours.addEventListener("click", function() {
     try {
       let timings = filterLast24HourTimings();
+      setImageMinutesRange(24*60);
+      setImageMinutesMaxDiff(24*60);
       displayTimings(timings);
       createAndAppendFilterByCategory(timings);
     } catch (err) {
@@ -101,20 +109,39 @@ function addListenersToButtons() {
   });
   btnLast12Hours.addEventListener("click", function() {
     let timings = filterLast12HourTimings();
+    setImageMinutesRange(12*60);
+    setImageMinutesMaxDiff(12*60);
     displayTimings(timings);
     createAndAppendFilterByCategory(timings);
   });
   btnFromZeroHours.addEventListener("click", function() {
-    let timings = filterTodaysTimings();
-    displayTimings(timings);
-    createAndAppendFilterByCategory(timings);
+    try {
+      let timings = filterTodaysTimings();
+      setImageMinutesRange(24 * 60);
+      setImageMinutesMaxDiff(calculateDifferenceBetweenNowAndStartOfDay() / (60.0 * 1000));
+      displayTimings(timings);
+      createAndAppendFilterByCategory(timings);
+    } catch (err) {
+      window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+        "btnFromZeroHours click handler error msg: " + err.message);
+    }
   });
   btnFromZeroTwoAndAHalfHours.addEventListener("click", function() {
     let timings = filterCurrentTwoAndAHalfDaysTimings();
+    setImageMinutesRange(2.5 * 24 * 60);
+    setImageMinutesMaxDiff(millisOfCurrentAbstractDayOfYear(2.5) / (60.0 * 1000));
     displayTimings(timings);
     createAndAppendFilterByCategory(timings);
   });
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("addListenersToButtons end ");
+}
+
+function setImageMinutesMaxDiff(maxDiff) {
+  my.imageInfo.minutesMaxDiff = maxDiff;
+}
+
+function setImageMinutesRange(minutesRange) {
+  my.imageInfo.minutesRange = minutesRange;
 }
 
 function displayTimings(timings) {
@@ -310,13 +337,18 @@ function filterLast12HourTimings() {
   return filterTimingsByDifference(12*60*60*1000);
 }
 
-function filterTodaysTimings() {
+function calculateDifferenceBetweenNowAndStartOfDay() {
   let dt = new Date();
   let todayZero = new Date();
   todayZero.setHours(0);
   todayZero.setMinutes(0);
   todayZero.setSeconds(0);
-  return filterTimingsByDifference(dt.getTime() - todayZero.getTime());
+  return dt.getTime() - todayZero.getTime();
+}
+
+function filterTodaysTimings() {
+  let differenceBetweenNowAndStartOfDay = calculateDifferenceBetweenNowAndStartOfDay();
+  return filterTimingsByDifference(differenceBetweenNowAndStartOfDay);
 }
 
 function filterCurrentTwoAndAHalfDaysTimings() {
