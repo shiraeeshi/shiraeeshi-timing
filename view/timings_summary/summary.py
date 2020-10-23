@@ -21,12 +21,13 @@ def show_timings_summary(summary_type):
 
     scrolled_window = gtk.ScrolledWindow()
 
-    show_web_inspector = False
+    #show_web_inspector = False
 
     webview = WebKit2.WebView()
 
-    if (show_web_inspector):
-        webview.get_settings().set_enable_developer_extras(True)
+    #if (show_web_inspector):
+    #    webview.get_settings().set_enable_developer_extras(True)
+    webview.get_settings().set_enable_developer_extras(True)
     #webview.open("https://www.gnome.org/")
 
     app_functions_file = os.path.join(ROOT_DIR, "frontend", "timings_summary.functions.js")
@@ -72,10 +73,12 @@ def show_timings_summary(summary_type):
         if keyval_name == "w":
             msg = {
                     "type": "key_pressed",
-                    "keyval": "w"
+                    "keyval": keyval_name
                     }
             page_communicator.send_json(json.dumps(msg))
             return True
+        if (keyval_name == "J" or keyval_name == "j") and (eve.state & Gdk.ModifierType.SHIFT_MASK != 0) and (eve.state & Gdk.ModifierType.CONTROL_MASK != 0):
+            webview.get_inspector().show()
     webview.connect("key_press_event", webview_key_press_handler);
 
     def webview_button_press_handler(a_webview, eve):
@@ -118,8 +121,8 @@ def show_timings_summary(summary_type):
         print("base_uri: " + base_uri)
         webview.load_html(f.read(), base_uri)
 
-    if (show_web_inspector):
-        webview.get_inspector().show()
+    #if (show_web_inspector):
+    #    webview.get_inspector().show()
 
     scrolled_window.add(webview)
 
