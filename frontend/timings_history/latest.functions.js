@@ -332,8 +332,8 @@ function filterTimingsByDifference(differenceInMillisFrom, differenceInMillisTo)
     let d = new Date();
     let timeNow = d.getTime();
 
-    d.setDate(dt[0]);
     d.setMonth(dt[1] - 1);
+    d.setDate(dt[0]);
     d.setFullYear(dt[2]);
     d.setHours(0);
     d.setMinutes(0);
@@ -415,8 +415,8 @@ function dateDifferenceInMillis(d1, d2) {
 
 function timingDateArrays2Date(dateArray, hourMinuteArray) {
   let d = new Date();
-  d.setDate(dateArray[0]);
   d.setMonth(dateArray[1] - 1);
+  d.setDate(dateArray[0]);
   d.setFullYear(dateArray[2]);
   d.setHours(hourMinuteArray[0]);
   d.setMinutes(hourMinuteArray[1]);
