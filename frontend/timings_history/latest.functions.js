@@ -129,6 +129,17 @@ function showTimingsOf60HourDay() {
   setImageMinutesRange(2.5*24*60);
   displayTimings(timings);
   createAndAppendFilterByCategory(timings);
+  // <debug>
+  let currentAbstractDayBeginning = new Date()
+  currentAbstractDayBeginning.setTime(new Date().getTime() - diffFrom)
+  window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
+    "showTimingsOf60HourDay currentAbstractDay started at time: " +
+    currentAbstractDayBeginning.getDate() + "." +
+    (currentAbstractDayBeginning.getMonth() + 1) + " " +
+    currentAbstractDayBeginning.getHours() + ":" +
+    currentAbstractDayBeginning.getMinutes()
+    );
+  // </debug>
 }
 
 function setImageMinutesMaxDiff(maxDiff) {
