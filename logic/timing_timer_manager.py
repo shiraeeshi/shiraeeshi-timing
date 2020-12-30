@@ -11,7 +11,15 @@ class TimingTimerManager(object):
         return self.current_timing_info is not None;
 
     def start_timing(self, timing_name):
-        self.current_timing_info = TimingTimerInfo(timing_name, datetime.now())
+        current_time = datetime.now()
+        self.current_timing_info = TimingTimerInfo(timing_name, current_time)
+
+        current_date_str = current_time.strftime("%d.%m.%Y")
+        timing_start_str = current_time.strftime("%H:%M")
+        row = "{} {}".format(
+                current_date_str,
+                timing_start_str)
+        os.system("echo '{}' >> $HOME/timing_start".format(row))
 
     def stop_timing(self):
         if not self.has_timing():
