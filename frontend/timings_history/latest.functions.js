@@ -20,12 +20,22 @@ function handleServerMessage(msg) {
     let btnNextDay = document.getElementById("next-day");
     if (msg.keyval == "Left") {
       my.dayOffset++;
+
+      my.highlightedCategory = false;
+      my.isHighlightingTimingRowInText = false;
+      my.isHighlightingTimingItemInImage = false;
+
       btnNextDay.disabled = false;
       showTimings();
     } else if (msg.keyval == "Right") {
       if (my.dayOffset > 0) {
         my.dayOffset--;
       }
+
+      my.highlightedCategory = false;
+      my.isHighlightingTimingRowInText = false;
+      my.isHighlightingTimingItemInImage = false;
+
       if (my.dayOffset <= 0) {
         btnNextDay.disabled = true;
       }
@@ -47,6 +57,9 @@ function addListenersToButtons() {
   let radioBtn24Hours = document.getElementById("day-of-24-hours");
   document.getElementById("day-of-60-hours").addEventListener("change", function() {
     my.dayOffset = 0;
+    my.highlightedCategory = false;
+    my.isHighlightingTimingRowInText = false;
+    my.isHighlightingTimingItemInImage = false;
     if (radioBtn24Hours.checked) {
       showTimingsOf24HourDay();
     } else {
@@ -55,6 +68,9 @@ function addListenersToButtons() {
   });
   radioBtn24Hours.addEventListener("change", function() {
     my.dayOffset = 0;
+    my.highlightedCategory = false;
+    my.isHighlightingTimingRowInText = false;
+    my.isHighlightingTimingItemInImage = false;
     if (radioBtn24Hours.checked) {
       showTimingsOf24HourDay();
     } else {
@@ -65,6 +81,9 @@ function addListenersToButtons() {
     try {
       my.dayOffset++;
       btnNextDay.disabled = false;
+      my.highlightedCategory = false;
+      my.isHighlightingTimingRowInText = false;
+      my.isHighlightingTimingItemInImage = false;
       if (radioBtn24Hours.checked) {
         showTimingsOf24HourDay();
       } else {
@@ -83,6 +102,9 @@ function addListenersToButtons() {
       if (my.dayOffset <= 0) {
         btnNextDay.disabled = true;
       }
+      my.highlightedCategory = false;
+      my.isHighlightingTimingRowInText = false;
+      my.isHighlightingTimingItemInImage = false;
       if (radioBtn24Hours.checked) {
         showTimingsOf24HourDay();
       } else {
