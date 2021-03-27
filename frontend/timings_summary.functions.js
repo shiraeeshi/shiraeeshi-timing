@@ -105,7 +105,7 @@ function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlig
           my.isHighlightingTimingRowInText = false;
           let previouslyHighlightedTimingRow = document.querySelector("[data-timing-start = '" + my.highlightedTimingItemStart + "']");
           if (previouslyHighlightedTimingRow) {
-            previouslyHighlightedTimingRow.style.color = my.highlightedTimingItemPreviousColor;
+            Object.assign(previouslyHighlightedTimingRow.style, my.highlightedTimingItemPreviousStyle);
           }
         }
         return;
@@ -118,24 +118,27 @@ function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlig
       if (my.highlightedCategory) {
         let trs = document.getElementsByClassName("timing-row");
         for (let i=0; i<trs.length; i++) {
-          trs[i].style.color = '#BEBEBE';
+          trs[i].style.color = 'white';
+          trs[i].style.opacity = '.3';
         }
         let ctrs = document.getElementsByClassName("timing-row-of-" + my.highlightedCategory);
         for (let i=0; i<ctrs.length; i++) {
-          ctrs[i].style.color = 'black';
+          ctrs[i].style.color = 'white';
+          ctrs[i].style.opacity = '1';
         }
       } else {
         let trs = document.getElementsByClassName("timing-row");
         for (let i=0; i<trs.length; i++) {
-          trs[i].style.color = 'black';
+          trs[i].style.color = 'white';
+          trs[i].style.opacity = '1';
         }
       }
       let timingRowToHighlight = document.querySelector("[data-timing-start = '" + timingAtOffset.from.join(".") + "']");
       if (timingRowToHighlight) {
         my.isHighlightingTimingRowInText = true;
-        my.highlightedTimingItemPreviousColor = timingRowToHighlight.style.color;
+        my.highlightedTimingItemPreviousStyle = Object.assign({}, timingRowToHighlight.style);
         my.highlightedTimingItemStart = timingAtOffset.from.join(".");
-        timingRowToHighlight.style.color = 'red';
+        Object.assign(timingRowToHighlight.style, {color: 'red', opacity: '1'});
       }
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage("canvas mousemove. error: " + err.message);
@@ -258,7 +261,7 @@ function displayTimingsAsText(timings) {
 
           if (my.isHighlightingTimingRowInText) {
             let lastHighlightedTimingRow = document.querySelector("[data-timing-start = '" + my.highlightedTimingItemStart + "']");
-            lastHighlightedTimingRow.style.color = my.highlightedTimingItemPreviousColor;
+            Object.assign(lastHighlightedTimingRow.style, my.highlightedTimingItemPreviousStyle);
             my.isHighlightingTimingRowInText = false;
           }
         };
