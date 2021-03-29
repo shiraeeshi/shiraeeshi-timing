@@ -16,7 +16,6 @@ function handleServerMessage(msg) {
     let forest = yamlRootObject2forest(msg.processes);
     showTagsAndLinks(forest);
     showProcessesForest(forest);
-    //showYamlProcesses(processes_object);
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
   }
@@ -26,7 +25,6 @@ function showProcessesAndTags() {
   try {
     let forest = yamlRootObject2forest(my.processesTree);
     showTagsAndLinks(forest);
-    showYamlProcesses(my.processesTree);
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js showProcessesAndTags error msg: " + err.message);
     throw err;
@@ -233,19 +231,6 @@ function showProcessesForest(processesForest) {
   });
 }
 
-function showYamlProcesses(processes_object) {
-  let processesWrapper = document.getElementById("processes-content-wrapper");
-  let processCategoryNames = Object.keys(processes_object);
-  let processCategoryDivs = processCategoryNames.map(procCatName => {
-    return listYamlProcesses(
-      processes_object[procCatName],
-      procCatName);
-  });
-  processCategoryDivs.forEach(procCatDiv => {
-    processesWrapper.appendChild(procCatDiv);
-  });
-}
-
 function processesTree2html(procNode) {
   let wrapperDiv = document.createElement('div');
   let headerElem = document.createElement('h3');
@@ -283,25 +268,6 @@ function showProcessesTreeNodeAsLiElem(procNode) {
     );
 }
 
-function listYamlProcesses(processes, header) {
-  let wrapperDiv = document.createElement('div');
-  let headerElem = document.createElement('h3');
-  let headerTxt = document.createTextNode(header);
-
-  let unorderedList;
-  if (processes.constructor === Object) {
-    unorderedList = yamlObjectAsUl(processes);
-  } else {
-    unorderedList = yamlListAsUl(processes);
-  }
-
-  return withChildren(wrapperDiv, 
-    withChildren(headerElem,
-      headerTxt),
-    unorderedList
-  );
-}
-
 function string2li(value) {
   let li = document.createElement('li');
   let span = document.createElement('span');
@@ -311,45 +277,7 @@ function string2li(value) {
   );
 }
 
-function yamlObjectAsUl(obj) {
-  let ul = document.createElement('ul');
-  let keys = Object.keys(obj);
-  let propsAsLis = keys.map(key => {
-    let li = string2li(key);
-    let prop = obj[key];
-    if (prop.constructor === Object) {
-      return withChildren(li, yamlObjectAsUl(prop));
-    } else if (prop.constructor === Array) {
-      return withChildren(li, yamlListAsUl(prop));
-    } else {
-      return string2li(key + ": " + prop);
-    }
-  });
-  return withChildren(ul, ...propsAsLis);
-}
-
 function tmpLi() {
   return document.createElement('li');
-}
-
-function yamlListAsUl(lst) {
-  let ul = document.createElement('ul');
-  let lstAsLis = lst.map(el => {
-    if (el.constructor === Object) {
-      let keys = Object.keys(el);
-      let firstKey = keys[0];
-      if (keys.length == 1 && el[firstKey].constructor === Array) {
-        let li = string2li(firstKey);
-        return withChildren(li, yamlListAsUl(el[firstKey]));
-      } else {
-        return withChildren(tmpLi(), yamlObjectAsUl(el));
-      }
-    } else if (el.constructor === Array) {
-      return withChildren(tmpLi(), yamlListAsUl(el));
-    } else {
-      return string2li(el);
-    }
-  });
-  return withChildren(ul, ...lstAsLis);
 }
 
