@@ -1,11 +1,33 @@
 <!doctype html>
 <html>
 <head>
+  <style>
+    .column {
+      float: left;
+    }
+
+    .left {
+      width: 50%;
+    }
+
+    .right {
+      width: 50%;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+  </style>
 </head>
 <body>
     <div>
-        <div>
-          <div id="processes-content-wrapper">
+        <div class="row">
+          <div id="tags-and-links-content-wrapper" class="column left">
+          </div>
+          <div id="processes-content-wrapper" class="column right">
           </div>
         </div>
     </div>
