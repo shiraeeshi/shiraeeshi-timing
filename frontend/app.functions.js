@@ -1,5 +1,5 @@
 let my = {
-  processesTree: null
+  processesForest: null
 };
 
 function extractTag(str) {
@@ -11,23 +11,13 @@ function extractTag(str) {
 function handleServerMessage(msg) {
   try {
     let processes_object = msg.processes;
-    my.processesTree = processes_object;
-    // //window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage processes: " + JSON.stringify(my.processesTree));
     let forest = yamlRootObject2forest(msg.processes);
+    my.processesForest = forest;
+    // //window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage processes: " + JSON.stringify(my.processesForest));
     showTagsAndLinks(forest);
     showProcessesForest(forest);
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
-  }
-}
-
-function showProcessesAndTags() {
-  try {
-    let forest = yamlRootObject2forest(my.processesTree);
-    showTagsAndLinks(forest);
-  } catch (err) {
-    window.webkit.messageHandlers.foobar.postMessage("js showProcessesAndTags error msg: " + err.message);
-    throw err;
   }
 }
 
@@ -73,9 +63,34 @@ function tagsTreeRootNode2html(tagsTreeRootNode) {
   }
 }
 
-function searchByTag(tagAncestry, tagName) {
-  window.webkit.messageHandlers.foobar.postMessage("js searchByTag tag: " + (tagAncestry.concat([tagName]).join(".")));
+function searchByTag(tagNode) {
+  window.webkit.messageHandlers.foobar.postMessage("js searchByTag tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
   //console.log("search by tag: " + )
+  for (let link of tagNode.links) {
+    window.webkit.messageHandlers.foobar.postMessage("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
+  }
+  let resultForest = [];
+  for (let link of tagNode.links) {
+    let lst = resultForest;
+    link.ancestry.forEach(linkParent => {
+      let found = lst.find(el => el.name == linkParent);
+      if (found) {
+        lst = found.children;
+      } else {
+        let newLst = [];
+        lst[lst.length] = {
+          name: linkParent,
+          children: newLst
+        };
+        lst = newLst;
+      }
+    });
+    lst[lst.length] = {
+      name: link.name,
+      children: []
+    };
+  }
+  showProcessesForest(resultForest);
 }
 
 function tagsTreeNode2html(tagsTreeNode) {
@@ -85,7 +100,7 @@ function tagsTreeNode2html(tagsTreeNode) {
                 (function() {
                   let a = document.createElement('a');
                   a.onclick = function() {
-                    searchByTag(tagsTreeNode.tagAncestry, tagsTreeNode.name);
+                    searchByTag(tagsTreeNode);
                   };
                   return withChildren(a, document.createTextNode(tagsTreeNode.name))
                 })(),
@@ -223,6 +238,7 @@ function extractTagsFromNode(node, ancestry) {
 
 function showProcessesForest(processesForest) {
   let processesWrapper = document.getElementById("processes-content-wrapper");
+  processesWrapper.innerHTML = "";
   let processCategoryDivs = processesForest.map(procNode => {
     return processesTree2html(procNode);
   });
