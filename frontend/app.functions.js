@@ -15,7 +15,8 @@ function handleServerMessage(msg) {
     // //window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage processes: " + JSON.stringify(my.processesTree));
     let forest = yamlRootObject2forest(msg.processes);
     showTagsAndLinks(forest);
-    showYamlProcesses(processes_object);
+    showProcessesForest(forest);
+    //showYamlProcesses(processes_object);
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
   }
@@ -185,7 +186,7 @@ function yamlList2SubtreesList(yamlList) {
       } else if (el.constructor === Array) {
         throw Error("Wrong structure: list in list (objects have single (list-typed) property, lists contain strings or objects)");
       } else {
-        return {name: el};
+        return {name: el, children: []};
       }
     });
   } catch (err) {
@@ -222,6 +223,16 @@ function extractTagsFromNode(node, ancestry) {
   return result;
 }
 
+function showProcessesForest(processesForest) {
+  let processesWrapper = document.getElementById("processes-content-wrapper");
+  let processCategoryDivs = processesForest.map(procNode => {
+    return processesTree2html(procNode);
+  });
+  processCategoryDivs.forEach(procCatDiv => {
+    processesWrapper.appendChild(procCatDiv);
+  });
+}
+
 function showYamlProcesses(processes_object) {
   let processesWrapper = document.getElementById("processes-content-wrapper");
   let processCategoryNames = Object.keys(processes_object);
@@ -233,6 +244,43 @@ function showYamlProcesses(processes_object) {
   processCategoryDivs.forEach(procCatDiv => {
     processesWrapper.appendChild(procCatDiv);
   });
+}
+
+function processesTree2html(procNode) {
+  let wrapperDiv = document.createElement('div');
+  let headerElem = document.createElement('h3');
+  let headerTxt = document.createTextNode(procNode.name);
+
+  return withChildren(wrapperDiv,
+    withChildren(headerElem,
+      headerTxt),
+    withChildren(document.createElement('ul'),
+      ...procNode.children.map(childNode => {
+        if (childNode.children.length > 0) {
+          return showProcessesTreeNodeAsLiElem(childNode)
+        } else {
+          return string2li(childNode.name);
+        }
+      })
+    )
+  );
+}
+
+function showProcessesTreeNodeAsLiElem(procNode) {
+  if (procNode.children.length == 0) {
+    return string2li(procNode.name);
+  }
+  return withChildren(string2li(procNode.name),
+      withChildren(document.createElement('ul'),
+        ...procNode.children.map(childNode => {
+          if (childNode.children.length > 0) {
+            return showProcessesTreeNodeAsLiElem(childNode)
+          } else {
+            return string2li(childNode.name);
+          }
+        })
+      )
+    );
 }
 
 function listYamlProcesses(processes, header) {
