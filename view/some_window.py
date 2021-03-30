@@ -10,7 +10,8 @@ from logic.processes_file_parser import parse_processes_file
 #async def show_window():
 #async def show_window(_):
 def show_window():
-    window = gtk.Window()
+    window = gtk.Window(gtk.WindowType.TOPLEVEL)
+    #window = gtk.Window()
     window.set_title("Something")
     window.connect("destroy", gtk.main_quit)
     window.set_default_size(1200, 800)
@@ -25,17 +26,18 @@ def show_window():
 
     webview = WebKit2.WebView()
 
-    webview.get_settings().set_allow_file_access_from_file_urls(True)
+    #webview.get_settings().set_allow_file_access_from_file_urls(True)
 
-    if (show_web_inspector):
-        webview.get_settings().set_enable_developer_extras(True)
+    webview.get_settings().set_enable_developer_extras(True)
+    #if (show_web_inspector):
+    #    webview.get_settings().set_enable_developer_extras(True)
     #webview.open("https://www.gnome.org/")
 
     app_functions_file = os.path.join(ROOT_DIR, "frontend", "app.functions.js")
     with open(app_functions_file) as f:
         contents = f.read()
         webview.get_user_content_manager().add_script(
-                WebKit2.UserScript.new(contents, 0, 1, ["file:///"], None)
+                WebKit2.UserScript.new(contents, 0, 1, None, None)
                 )
 
     app_styles_file = os.path.join(ROOT_DIR, "frontend", "app.styles.css")
@@ -71,6 +73,9 @@ def show_window():
                 window.fullscreen()
             app_state.is_fullscreen = not app_state.is_fullscreen 
             return True
+        #if keyval_name == "n":
+        #    Gdk.notify_startup_complete()
+        #    return True
     webview.connect("key_press_event", webview_key_press_handler);
 
     def webview_button_press_handler(a_webview, eve):
@@ -97,10 +102,12 @@ def show_window():
         #await page_communicator.load_finished_event.wait()
         app_state.after_page_loaded(
                 lambda : page_communicator.send_json(json.dumps(composed_info)))
-
+        
     app_html_file = os.path.join(ROOT_DIR, "frontend", "app.html")
     with open(app_html_file) as f:
-        base_uri = "file:///"
+        from urllib.parse import urljoin
+        from urllib.request import pathname2url
+        base_uri = urljoin('file:', pathname2url(ROOT_DIR)) + "/"
         webview.load_html(f.read(), base_uri)
 
     if (show_web_inspector):
@@ -109,7 +116,9 @@ def show_window():
     scrolled_window.add(webview)
 
     window.add(scrolled_window)
+    #window.set_keep_above(True)
     window.show_all()
+    #app_state.after_page_loaded(lambda : window.set_keep_above(False))
 
     gtk.main()
 

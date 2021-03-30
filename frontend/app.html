@@ -21,6 +21,38 @@
       clear: both;
     }
   </style>
+
+
+
+  <style>
+    li.proc-node-open, li.proc-node-closed, li.proc-leaf {
+      list-style-type: none;
+    }
+
+    li.proc-leaf {
+      margin-left: 14px;
+    }
+
+    .proc-node-open .proc-node-icon {
+      background: url('frontend/img/proc-node-minus.png') no-repeat top left;
+    }
+
+    .proc-node-closed .proc-node-icon {
+      background: url('frontend/img/proc-node-plus.png') no-repeat top left;
+    }
+
+    .proc-node-open .proc-node-icon, .proc-node-closed .proc-node-icon {
+      background-size: contain;
+      width: 10px;
+      height: 10px;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .proc-node-closed > ul {
+      display: none;
+    }
+  </style>
 </head>
 <body>
     <div>

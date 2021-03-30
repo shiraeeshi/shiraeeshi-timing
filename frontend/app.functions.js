@@ -13,9 +13,11 @@ function handleServerMessage(msg) {
     let processes_object = msg.processes;
     let forest = yamlRootObject2forest(msg.processes);
     my.processesForest = forest;
-    // //window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage processes: " + JSON.stringify(my.processesForest));
     showTagsAndLinks(forest);
-    showProcessesForest(forest);
+    let viewBuilder = new ProcessesForestViewBuilder();
+    viewBuilder.buildView(forest);
+    my.processesForestViews = viewBuilder.getProcessesForestViews();
+    appendProcessesForestHtml(viewBuilder.getHtmlElements());
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
   }
@@ -35,11 +37,30 @@ function showTagsAndLinks(forest) {
       let tagsTreeNode = tagsAndLinksForest[tagsTreeNodeName];
       return tagsTreeNode2html(tagsTreeNode);
     });
+    mainWrapper.appendChild((function() {
+      let btnShowAll = document.createElement('button');
+      btnShowAll.addEventListener('click', eve => {
+        showAllProcesses();
+      });
+      return withChildren(btnShowAll, document.createTextNode('all'))
+    })());
     tagsAndLinksElements.forEach(el => {
       mainWrapper.appendChild(el);
     });
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js showTagsAndLinks error msg: " + err.message);
+    throw err;
+  }
+}
+
+function showAllProcesses() {
+  try {
+    let resultForest = my.processesForest.map(tree => {
+      return {name: tree.name, children: tree.children.map(ch => { return { name: ch.name, children: [] }; }) };
+    });
+    highlightProcessesInForest(my.processesForestViews, resultForest);
+  } catch (err) {
+    window.webkit.messageHandlers.foobar.postMessage("js showAllProcesses error msg: " + err.message);
     throw err;
   }
 }
@@ -65,7 +86,6 @@ function tagsTreeRootNode2html(tagsTreeRootNode) {
 
 function searchByTag(tagNode) {
   window.webkit.messageHandlers.foobar.postMessage("js searchByTag tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
-  //console.log("search by tag: " + )
   for (let link of tagNode.links) {
     window.webkit.messageHandlers.foobar.postMessage("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
   }
@@ -90,7 +110,24 @@ function searchByTag(tagNode) {
       children: []
     };
   }
-  showProcessesForest(resultForest);
+  highlightProcessesInForest(my.processesForestViews, resultForest);
+}
+
+function highlightProcessesInForest(processesForestViews, forestToHighlight) {
+  try {
+    processesForestViews.forEach(treeView => treeView.hide());
+
+    forestToHighlight.forEach(nodeToHighlight => {
+      processesForestViews.forEach(treeView => {
+        if (treeView.name != nodeToHighlight.name) return;
+
+        treeView.highlightTree(nodeToHighlight);
+      });
+    });
+  } catch (err) {
+    window.webkit.messageHandlers.foobar.postMessage("js highlightProcLeafsInForest error msg: " + err.message);
+    throw err;
+  }
 }
 
 function tagsTreeNode2html(tagsTreeNode) {
@@ -236,52 +273,200 @@ function extractTagsFromNode(node, ancestry) {
   return result;
 }
 
-function showProcessesForest(processesForest) {
-  let processesWrapper = document.getElementById("processes-content-wrapper");
-  processesWrapper.innerHTML = "";
-  let processCategoryDivs = processesForest.map(procNode => {
-    return processesTree2html(procNode);
-  });
-  processCategoryDivs.forEach(procCatDiv => {
-    processesWrapper.appendChild(procCatDiv);
+function ProcessesForestViewBuilder() {
+  let that = this;
+  that.htmls = [];
+  that.views = [];
+}
+
+ProcessesForestViewBuilder.prototype.buildView = function(processesForest) {
+  let that = this;
+  processesForest.forEach(processesTree => {
+    that.addTree(processesTree);
   });
 }
 
-function processesTree2html(procNode) {
+ProcessesForestViewBuilder.prototype.addTree = function(processesTree) {
+  let that = this;
+  let htmls = that.htmls;
+  let views = that.views;
+  let treeView = new ProcessNodeView(processesTree);
+  views[views.length] = treeView;
+
   let wrapperDiv = document.createElement('div');
   let headerElem = document.createElement('h3');
-  let headerTxt = document.createTextNode(procNode.name);
+  let headerTxt = document.createTextNode(treeView.name);
 
-  return withChildren(wrapperDiv,
-    withChildren(headerElem,
-      headerTxt),
-    withChildren(document.createElement('ul'),
-      ...procNode.children.map(childNode => {
-        if (childNode.children.length > 0) {
-          return showProcessesTreeNodeAsLiElem(childNode)
-        } else {
-          return string2li(childNode.name);
-        }
-      })
-    )
-  );
-}
-
-function showProcessesTreeNodeAsLiElem(procNode) {
-  if (procNode.children.length == 0) {
-    return string2li(procNode.name);
-  }
-  return withChildren(string2li(procNode.name),
+  treeView.children.forEach(childNode => childNode.buildAsHtmlLiElement());
+  let treeHtml =
+    withChildren(wrapperDiv,
+      withChildren(headerElem,
+        headerTxt),
       withChildren(document.createElement('ul'),
-        ...procNode.children.map(childNode => {
-          if (childNode.children.length > 0) {
-            return showProcessesTreeNodeAsLiElem(childNode)
-          } else {
-            return string2li(childNode.name);
-          }
-        })
+        ...treeView.children.map(childNode => childNode.html)
       )
     );
+  treeView.html = treeHtml;
+
+  htmls[htmls.length] = treeHtml;
+};
+
+ProcessesForestViewBuilder.prototype.getHtmlElements = function() {
+  return this.htmls;
+};
+
+ProcessesForestViewBuilder.prototype.getProcessesForestViews = function() {
+  return this.views;
+};
+
+function ProcessNodeView(processNode) {
+  let that = this;
+  that.name = processNode.name;
+  that.isCollapsed = false;
+  that.children = processNode.children.map(childNode => new ProcessNodeView(childNode));
+  that.childrenByName = {};
+  that.children.forEach(childView => {
+    that.childrenByName[childView.name] = childView;
+  });
+}
+
+ProcessNodeView.prototype.buildAsHtmlLiElement = function() {
+  let that = this;
+  if (that.children.length == 0) {
+    let htmlElement = withClass(string2li(that.name), 'proc-leaf');
+    that.html = htmlElement;
+    return;
+  }
+
+  that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
+  let htmlElement =
+    withChildren(
+      withChildren(withClass(document.createElement('li'), 'proc-node-open'),
+        (function() {
+          let elem = document.createElement('span');
+          elem.classList.add('proc-node-icon');
+          elem.addEventListener('click', eve => {
+            that.toggleCollapse();
+          });
+          return elem;
+        })(),
+        withChildren(document.createElement('span'),
+          document.createTextNode(that.name)
+        )
+      ),
+      withChildren(document.createElement('ul'),
+        ...that.children.map(childNode => childNode.html)
+      )
+    );
+  that.html = htmlElement;
+};
+
+ProcessNodeView.prototype.isLeaf = function() {
+  return this.children.length == 0;
+};
+
+ProcessNodeView.prototype.toggleCollapse = function() {
+  let that = this;
+  if (that.isCollapsed) {
+    that.uncollapse();
+  } else {
+    that.collapse();
+  }
+};
+
+ProcessNodeView.prototype.collapse = function() {
+  let that = this;
+  that.isCollapsed = true;
+  if (that.html.classList.contains("proc-node-open")) {
+    that.html.classList.remove("proc-node-open");
+    that.html.classList.add("proc-node-closed");
+  }
+};
+
+ProcessNodeView.prototype.uncollapse = function() {
+  let that = this;
+  that.isCollapsed = false;
+  if (that.html.classList.contains("proc-node-closed")) {
+    that.html.classList.remove("proc-node-closed");
+    that.html.classList.add("proc-node-open");
+  }
+  that.children.forEach(childView => childView.parentUncollapsed());
+};
+
+ProcessNodeView.prototype.parentUncollapsed = function() {
+  let that = this;
+  if (!that.isCollapsed) {
+    that.collapse();
+  }
+};
+
+ProcessNodeView.prototype.hide = function() {
+  let that = this;
+  if (that.html.style.display != 'none') {
+    that.oldDisplay = that.html.style.display;
+  }
+  that.html.style.display = 'none';
+  that.children.forEach(childView => childView.hide());
+};
+
+ProcessNodeView.prototype.unhide = function() {
+  let that = this;
+
+  if (that.html.style.display != 'none') {
+    that.oldDisplay = that.html.style.display;
+  } else {
+    that.html.style.display = that.oldDisplay;
+  }
+  that.children.forEach(childView => childView.unhide());
+};
+
+ProcessNodeView.prototype.highlightTree = function(nodeToHighlight) {
+  let that = this;
+
+  if (that.html.style.display != 'none') {
+    that.oldDisplay = that.html.style.display;
+  } else {
+    that.html.style.display = that.oldDisplay;
+  }
+
+  if (nodeToHighlight.children.length == 0) {
+    if (!that.isLeaf()) {
+      if (!that.isCollapsed) {
+        that.collapse();
+      }
+      that.children.forEach(childView => childView.parentIsHighlighted());
+    }
+  } else {
+    if (!that.isLeaf()) {
+      if (that.isCollapsed) {
+        that.uncollapse();
+      }
+      nodeToHighlight.children.forEach(childNodeToHighlight => {
+        if (that.childrenByName.hasOwnProperty(childNodeToHighlight.name)) {
+          that.childrenByName[childNodeToHighlight.name].highlightTree(childNodeToHighlight);
+        }
+      });
+    }
+  }
+};
+
+ProcessNodeView.prototype.parentIsHighlighted = function() {
+  let that = this;
+  that.unhide();
+  if (!that.isCollapsed) {
+    that.collapse();
+  }
+};
+
+function appendProcessesForestHtml(processesForestHtmlElements) {
+  let processesWrapper = document.getElementById("processes-content-wrapper");
+  processesWrapper.innerHTML = "";
+  processesForestHtmlElements.forEach(el => processesWrapper.appendChild(el));
+}
+
+function withClass(elem, cls) {
+  elem.classList.add(cls);
+  return elem;
 }
 
 function string2li(value) {
