@@ -37,16 +37,20 @@ function showTagsAndLinks(forest) {
       let tagsTreeNode = tagsAndLinksForest[tagsTreeNodeName];
       return tagsTreeNode2html(tagsTreeNode);
     });
-    mainWrapper.appendChild((function() {
-      let btnShowAll = document.createElement('button');
-      btnShowAll.addEventListener('click', eve => {
-        showAllProcesses();
-      });
-      return withChildren(btnShowAll, document.createTextNode('all'))
-    })());
-    tagsAndLinksElements.forEach(el => {
-      mainWrapper.appendChild(el);
-    });
+    withChildren(mainWrapper,
+      withChildren(document.createElement('div'),
+        (function() {
+                let btnShowAll = document.createElement('button');
+                btnShowAll.addEventListener('click', eve => {
+                          showAllProcesses();
+                        });
+                return withChildren(btnShowAll, document.createTextNode('all'))
+              })(),
+        withChildren(document.createElement('ul'),
+          ...tagsAndLinksElements
+        )
+      )
+    );
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js showTagsAndLinks error msg: " + err.message);
     throw err;
