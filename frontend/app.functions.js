@@ -69,25 +69,6 @@ function showAllProcesses() {
   }
 }
 
-function tagsTreeRootNode2html(tagsTreeRootNode) {
-  try {
-    return withChildren(document.createElement('div'),
-             withChildren(document.createElement('span'),
-               document.createTextNode(tagsTreeRootNode.name),
-               withChildren(document.createElement('ul'),
-                 ...Object.keys(tagsTreeNode.subTags).map(tagsTreeNodeName => {
-                   let tagsTreeNode = tagsTreeRootNode[tagsTreeNodeName];
-                   return tagsTreeNode2html(tagsTreeNode);
-                 })
-               )
-             )
-           );
-  } catch (err) {
-    window.webkit.messageHandlers.foobar.postMessage("js tagsTreeRootNode2html error msg: " + err.message);
-    throw err;
-  }
-}
-
 function searchByTag(tagNode) {
   window.webkit.messageHandlers.foobar.postMessage("js searchByTag tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
   for (let link of tagNode.links) {
