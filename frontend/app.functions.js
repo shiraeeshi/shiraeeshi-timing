@@ -33,10 +33,11 @@ function showTagsAndLinks(forest) {
     let mainWrapper = document.getElementById("tags-and-links-content-wrapper");
     let taggedNodes = extractTagsFromRootForest(forest);
     let tagsAndLinksForest = buildTagsAndLinksForest(taggedNodes);
-    let tagsAndLinksElements = Object.keys(tagsAndLinksForest).map(tagsTreeNodeName => {
-      let tagsTreeNode = tagsAndLinksForest[tagsTreeNodeName];
-      return tagsTreeNode2html(tagsTreeNode);
-    });
+
+    let viewBuilder = new ProcessTagsForestViewBuilder();
+    viewBuilder.buildView(tagsAndLinksForest);
+
+    my.processTagsForestViews = viewBuilder.getProcessTagsForestViews();
     withChildren(mainWrapper,
       withChildren(document.createElement('div'),
         (function() {
@@ -47,10 +48,11 @@ function showTagsAndLinks(forest) {
                 return withChildren(btnShowAll, document.createTextNode('all'))
               })(),
         withChildren(document.createElement('ul'),
-          ...tagsAndLinksElements
+          ...viewBuilder.getHtmlElements()
         )
       )
     );
+    viewBuilder.getProcessTagsForestViews().forEach(v => v.collapse());
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js showTagsAndLinks error msg: " + err.message);
     throw err;
@@ -115,32 +117,9 @@ function highlightProcessesInForest(processesForestViews, forestToHighlight) {
   }
 }
 
-function tagsTreeNode2html(tagsTreeNode) {
-  try {
-    return withChildren(document.createElement('li'),
-              withChildren(document.createElement('span'),
-                (function() {
-                  let a = document.createElement('a');
-                  a.onclick = function() {
-                    searchByTag(tagsTreeNode);
-                  };
-                  return withChildren(a, document.createTextNode(tagsTreeNode.name))
-                })(),
-                withChildren(document.createElement('ul'),
-                  ...Object.keys(tagsTreeNode.subTags).map(subTagName => {
-                    return tagsTreeNode2html(tagsTreeNode.subTags[subTagName]);
-                  })
-                )
-              )
-            );
-  } catch (err) {
-    window.webkit.messageHandlers.foobar.postMessage("js tagsTreeNode2html error msg: " + err.message);
-    throw err;
-  }
-}
-
 function buildTagsAndLinksForest(taggedNodes) {
   let preResult = {
+    children: [],
     subTags: {}
   };
   taggedNodes.forEach(taggedNode => {
@@ -149,12 +128,15 @@ function buildTagsAndLinksForest(taggedNodes) {
     let tagAncestry = [];
     tagPath.forEach(tagPathSegment => {
       if (!obj.subTags.hasOwnProperty(tagPathSegment)) {
-        obj.subTags[tagPathSegment] = {
+        let subTag = {
           name: tagPathSegment,
           tagAncestry: tagAncestry,
           subTags: {},
+          children: [],
           links: []
         };
+        obj.subTags[tagPathSegment] = subTag;
+        obj.children[obj.children.length] = subTag;
       }
       tagAncestry = tagAncestry.concat([tagPathSegment]);
       obj = obj.subTags[tagPathSegment];
@@ -304,6 +286,41 @@ ProcessesForestViewBuilder.prototype.getProcessesForestViews = function() {
   return this.views;
 };
 
+function ProcessTagsForestViewBuilder() {
+  let that = this;
+  that.htmls = [];
+  that.views = [];
+}
+
+ProcessTagsForestViewBuilder.prototype.buildView = function(processTagsForest) {
+  let that = this;
+  Object.keys(processTagsForest).forEach(propName => {
+    let processTagsTreeNode = processTagsForest[propName];
+    that.addTree(processTagsTreeNode);
+  });
+}
+
+ProcessTagsForestViewBuilder.prototype.addTree = function(processTagsTree) {
+  let that = this;
+
+  let htmls = that.htmls;
+  let views = that.views;
+
+  let treeView = new ProcessTagsTreeNodeView(processTagsTree);
+  treeView.buildAsHtmlLiElement();
+
+  views[views.length] = treeView;
+  htmls[htmls.length] = treeView.html;
+};
+
+ProcessTagsForestViewBuilder.prototype.getHtmlElements = function() {
+  return this.htmls;
+};
+
+ProcessTagsForestViewBuilder.prototype.getProcessTagsForestViews = function() {
+  return this.views;
+};
+
 function ProcessNodeView(processNode) {
   let that = this;
   that.name = processNode.name;
@@ -315,10 +332,17 @@ function ProcessNodeView(processNode) {
   });
 }
 
+ProcessNodeView.prototype.name2html = function() {
+  let that = this;
+  return withChildren(document.createElement('span'),
+           document.createTextNode(that.name)
+         );
+}
+
 ProcessNodeView.prototype.buildAsHtmlLiElement = function() {
   let that = this;
   if (that.children.length == 0) {
-    let htmlElement = withClass(string2li(that.name), 'proc-leaf');
+    let htmlElement = withClass(withChildren(document.createElement('li'), that.name2html()), 'proc-leaf');
     that.html = htmlElement;
     return;
   }
@@ -335,9 +359,7 @@ ProcessNodeView.prototype.buildAsHtmlLiElement = function() {
           });
           return elem;
         })(),
-        withChildren(document.createElement('span'),
-          document.createTextNode(that.name)
-        )
+        that.name2html()
       ),
       withChildren(document.createElement('ul'),
         ...that.children.map(childNode => childNode.html)
@@ -448,6 +470,37 @@ function appendProcessesForestHtml(processesForestHtmlElements) {
   processesWrapper.innerHTML = "";
   processesForestHtmlElements.forEach(el => processesWrapper.appendChild(el));
 }
+
+let ProcessTagsTreeNodeView = (function() {
+
+  function ProcessTagsTreeNodeViewConstructorFunction(processTagsTreeNode) {
+    let that = this;
+    that.tagsTreeNode = processTagsTreeNode;
+    that.name = processTagsTreeNode.name;
+    that.isCollapsed = false;
+    that.children = processTagsTreeNode.children.map(childNode => new ProcessTagsTreeNodeView(childNode));
+    that.childrenByName = {};
+    that.children.forEach(childView => {
+      that.childrenByName[childView.name] = childView;
+    });
+  }
+
+  for (let propName in ProcessNodeView.prototype) {
+    ProcessTagsTreeNodeViewConstructorFunction.prototype[propName] = ProcessNodeView.prototype[propName];
+  }
+
+  ProcessTagsTreeNodeViewConstructorFunction.prototype.name2html = function() {
+    let that = this;
+    let a = document.createElement('a');
+    a.onclick = function() {
+      searchByTag(that.tagsTreeNode);
+    };
+    return withChildren(a, document.createTextNode(that.name))
+  }
+
+  return ProcessTagsTreeNodeViewConstructorFunction;
+
+})();
 
 function withClass(elem, cls) {
   elem.classList.add(cls);
