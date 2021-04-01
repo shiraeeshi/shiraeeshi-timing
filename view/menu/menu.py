@@ -2,7 +2,6 @@ import os
 from common import gtk
 from enum import Enum
 from view.some_window import show_window
-from view.short_tasks.short_tasks import show_short_tasks
 from view.timings_summary.summary import show_timings_summary
 from view.timings_history.timings_history_latest import show_timings_history_latest
 
@@ -27,10 +26,6 @@ def create_menu(indicEnv):
     #item_command_two.connect('activate', show_window)
     item_command_two.connect('activate', lambda _: show_window())
     menu.append(item_command_two)
-
-    item_short_tasks = gtk.MenuItem('Short Tasks')
-    item_short_tasks.connect('activate', lambda _: show_short_tasks())
-    menu.append(item_short_tasks)
 
     #item_with_submenu = gtk.MenuItem('With Submenu')
     #item_with_submenu.set_submenu(create_some_submenu())
