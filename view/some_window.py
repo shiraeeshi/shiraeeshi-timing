@@ -44,7 +44,7 @@ def show_window():
     with open(app_styles_file) as f:
         contents = f.read()
         webview.get_user_content_manager().add_style_sheet(
-                WebKit2.UserStyleSheet.new(contents, 0, 1, None, [])
+                WebKit2.UserStyleSheet.new(contents, 0, 0, None, None)
                 )
 
     page_communicator = PageCommunicator(webview)
