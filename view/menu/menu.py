@@ -2,6 +2,7 @@ import os
 from common import gtk
 from enum import Enum
 from view.some_window import show_window
+from view.composite_main_window import show_composite_main_window
 from view.timings_summary.summary import show_timings_summary
 from view.timings_history.timings_history_latest import show_timings_history_latest
 
@@ -18,9 +19,13 @@ def create_menu(indicEnv):
     item_start_timing.connect('activate', start_timing)
     menu.append(item_start_timing)
 
-    item_command_one = gtk.MenuItem('My Notes')
-    item_command_one.connect('activate', note)
+    #item_command_one = gtk.MenuItem('My Notes')
+    #item_command_one.connect('activate', note)
     #menu.append(item_command_one)
+
+    item_command_one = gtk.MenuItem('Main Window')
+    item_command_one.connect('activate', lambda _: show_composite_main_window())
+    menu.append(item_command_one)
 
     item_command_two = gtk.MenuItem('Processes')
     #item_command_two.connect('activate', show_window)
