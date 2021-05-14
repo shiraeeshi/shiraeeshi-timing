@@ -1,15 +1,3 @@
-let my = {
-  timings: null,
-  imageInfo: {
-    minutesRange: 0,
-    minutesMaxDiff: 0
-  },
-  wallpapers: {
-    lst: null,
-    idx: 0
-  }
-};
-
 function handleServerMessage(msg) {
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage start ");
   if (msg.type == "wallpapers") {

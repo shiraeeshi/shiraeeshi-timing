@@ -37,6 +37,13 @@ def show_timings_summary(summary_type):
                 WebKit2.UserScript.new(contents, 0, 1, None, None)
                 )
 
+    app_functions_file = os.path.join(ROOT_DIR, "frontend", "timings_summary.my.js")
+    with open(app_functions_file) as f:
+        contents = f.read()
+        webview.get_user_content_manager().add_script(
+                WebKit2.UserScript.new(contents, 0, 1, None, None)
+                )
+
     app_styles_file = os.path.join(ROOT_DIR, "frontend", "timings_summary.styles.css")
     with open(app_styles_file) as f:
         contents = f.read()
