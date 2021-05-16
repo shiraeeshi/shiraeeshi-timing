@@ -73,6 +73,15 @@ function searchByTag(tagNode) {
     window.webkit.messageHandlers.foobar.postMessage("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
   }
   let resultForest = [];
+  addTagNodeLinksToForest(tagNode, resultForest);
+  highlightProcessesInForest(my.processesForestViews, resultForest);
+}
+
+function addTagNodeLinksToForest(tagNode, resultForest) {
+  window.webkit.messageHandlers.foobar.postMessage("js addTagNodeLinksToForest tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
+  for (let link of tagNode.links) {
+    window.webkit.messageHandlers.foobar.postMessage("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
+  }
   for (let link of tagNode.links) {
     let lst = resultForest;
     link.ancestry.forEach(linkParent => {
@@ -93,7 +102,6 @@ function searchByTag(tagNode) {
       children: []
     };
   }
-  highlightProcessesInForest(my.processesForestViews, resultForest);
 }
 
 function highlightProcessesInForest(processesForestViews, forestToHighlight) {
