@@ -6,6 +6,21 @@ body {
   background-position: right bottom;
   background-attachment: fixed;
 }
+
+.row {
+  display: flex;
+}
+
+#timings-container {
+  width: 800px;
+  min-width: 800px;
+  flex: initial;
+}
+
+#current-processes-tree-nodes-container {
+  flex: auto;
+}
+
 #inner-content-wrapper {
   color: white;
 }
@@ -14,3 +29,39 @@ body {
   padding-bottom: 10px;
 }
 
+#processes-content-wrapper {
+  color: white;
+  font-size: xx-small;
+}
+
+li.proc-node-open, li.proc-node-closed, li.proc-leaf {
+  list-style-type: none;
+}
+
+li.proc-leaf {
+  margin-left: 14px;
+}
+
+.proc-node-icon {
+  cursor: pointer;
+}
+
+.proc-node-open .proc-node-icon {
+  background: url('frontend/img/proc-node-minus.png') no-repeat top left;
+}
+
+.proc-node-closed .proc-node-icon {
+  background: url('frontend/img/proc-node-plus.png') no-repeat top left;
+}
+
+.proc-node-open .proc-node-icon, .proc-node-closed .proc-node-icon {
+  background-size: contain;
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.proc-node-closed > ul {
+  display: none;
+}
