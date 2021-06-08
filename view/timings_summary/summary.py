@@ -84,6 +84,13 @@ def show_timings_summary(summary_type):
                     }
             page_communicator.send_json(json.dumps(msg))
             return True
+        if keyval_name == "m":
+            msg = {
+                    "type": "key_pressed",
+                    "keyval": keyval_name
+                    }
+            page_communicator.send_json(json.dumps(msg))
+            return True
         if (keyval_name == "J" or keyval_name == "j") and (eve.state & Gdk.ModifierType.SHIFT_MASK != 0) and (eve.state & Gdk.ModifierType.CONTROL_MASK != 0):
             webview.get_inspector().show()
     webview.connect("key_press_event", webview_key_press_handler);

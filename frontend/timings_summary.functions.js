@@ -15,6 +15,15 @@ function handleServerMessage(msg) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage current wallpaper: " +
         my.wallpapers.lst[my.wallpapers.idx]);
       document.body.style.backgroundImage = "url(wallpapers/" + my.wallpapers.lst[my.wallpapers.idx] + ")";
+    } else if (msg.keyval == "m") {
+      my.minimalTextForTimings = !my.minimalTextForTimings;
+      if (my.minimalTextForTimings) {
+        clearTimingsTextWrapper();
+      } else {
+        if (my.currentlyDisplayedTimings) {
+          displayTimingsAsText(my.currentlyDisplayedTimings);
+        }
+      }
     }
     return;
   }
@@ -96,6 +105,9 @@ function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlig
             Object.assign(previouslyHighlightedTimingRow.style, my.highlightedTimingItemPreviousStyle);
           }
         }
+        if (my.minimalTextForTimings) {
+          clearTimingsTextWrapper();
+        }
         return;
       }
       if (my.isHighlightingTimingRowInText &&
@@ -103,35 +115,75 @@ function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlig
         return;
       }
       window.webkit.messageHandlers.timings_summary_msgs.postMessage("canvas mousemove. timingAtOffset.name: " + timingAtOffset.name);
-      if (my.highlightedCategory) {
-        let trs = document.getElementsByClassName("timing-row");
-        for (let i=0; i<trs.length; i++) {
-          trs[i].style.color = 'white';
-          trs[i].style.opacity = '.3';
-        }
-        let ctrs = document.getElementsByClassName("timing-row-of-" + my.highlightedCategory);
-        for (let i=0; i<ctrs.length; i++) {
-          ctrs[i].style.color = 'white';
-          ctrs[i].style.opacity = '1';
-        }
+
+      if (my.minimalTextForTimings) {
+        highlightTimingInMinimalText(timingAtOffset);
       } else {
-        let trs = document.getElementsByClassName("timing-row");
-        for (let i=0; i<trs.length; i++) {
-          trs[i].style.color = 'white';
-          trs[i].style.opacity = '1';
-        }
+        highlightTimingInText(timingAtOffset);
       }
-      let timingRowToHighlight = document.querySelector("[data-timing-start = '" + timingAtOffset.from.join(".") + "']");
-      if (timingRowToHighlight) {
-        my.isHighlightingTimingRowInText = true;
-        my.highlightedTimingItemPreviousStyle = Object.assign({}, timingRowToHighlight.style);
-        my.highlightedTimingItemStart = timingAtOffset.from.join(".");
-        Object.assign(timingRowToHighlight.style, {color: 'red', opacity: '1'});
-      }
+
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage("canvas mousemove. error: " + err.message);
     }
   });
+}
+
+function highlightTimingInText(timingAtOffset) {
+  try {
+    if (my.highlightedCategory) {
+      let trs = document.getElementsByClassName("timing-row");
+      for (let i=0; i<trs.length; i++) {
+        trs[i].style.color = 'white';
+        trs[i].style.opacity = '.3';
+      }
+      let ctrs = document.getElementsByClassName("timing-row-of-" + my.highlightedCategory);
+      for (let i=0; i<ctrs.length; i++) {
+        ctrs[i].style.color = 'white';
+        ctrs[i].style.opacity = '1';
+      }
+    } else {
+      let trs = document.getElementsByClassName("timing-row");
+      for (let i=0; i<trs.length; i++) {
+        trs[i].style.color = 'white';
+        trs[i].style.opacity = '1';
+      }
+    }
+    let timingRowToHighlight = document.querySelector("[data-timing-start = '" + timingAtOffset.from.join(".") + "']");
+    if (timingRowToHighlight) {
+      my.isHighlightingTimingRowInText = true;
+      my.highlightedTimingItemPreviousStyle = Object.assign({}, timingRowToHighlight.style);
+      my.highlightedTimingItemStart = timingAtOffset.from.join(".");
+      Object.assign(timingRowToHighlight.style, {color: 'red', opacity: '1'});
+    }
+  } catch (err) {
+    window.webkit.messageHandlers.timings_summary_msgs.postMessage("highlightTimingInText. error: " + err.message);
+  }
+}
+
+function highlightTimingInMinimalText(timingItem) {
+  try {
+    // let timingRowToHighlight = document.querySelector("[data-timing-start = '" + timingAtOffset.from.join(".") + "']");
+    // if (timingRowToHighlight) {
+    //   my.isHighlightingTimingRowInText = true;
+    //   my.highlightedTimingItemPreviousStyle = Object.assign({}, timingRowToHighlight.style);
+    //   my.highlightedTimingItemStart = timingAtOffset.from.join(".");
+    //   Object.assign(timingRowToHighlight.style, {color: 'red', opacity: '1'});
+    // }
+    let container = document.getElementById("inner-content-wrapper");
+    container.innerHTML = "";
+    let txt = document.createTextNode([
+      timingItem.dtstr,
+      timingItem.from.join("."),
+      "-",
+      timingItem.to.join("."),
+      timingItem2symbol(timingItem),
+      ['(',timingItem.minutes,' m)'].join(""),
+      timingItem.name
+    ].join(" "));
+    container.appendChild(txt);
+  } catch (err) {
+    window.webkit.messageHandlers.timings_summary_msgs.postMessage("highlightTimingInMinimalText. error: " + err.message);
+  }
 }
 
 function findTimingItemByOffset(offsetX) {
@@ -171,6 +223,7 @@ function addListenersToButtons() {
   btnLast24Hours.addEventListener("click", function() {
     try {
       let timings = filterLast24HourTimings();
+      my.currentlyDisplayedTimings = timings;
       setImageMinutesRange(24*60);
       setImageMinutesMaxDiff(24*60);
       displayTimings(timings);
@@ -183,6 +236,7 @@ function addListenersToButtons() {
   });
   btnLast12Hours.addEventListener("click", function() {
     let timings = filterLast12HourTimings();
+    my.currentlyDisplayedTimings = timings;
     setImageMinutesRange(12*60);
     setImageMinutesMaxDiff(12*60);
     displayTimings(timings);
@@ -192,6 +246,7 @@ function addListenersToButtons() {
   btnFromZeroHours.addEventListener("click", function() {
     try {
       let timings = filterTodaysTimings();
+      my.currentlyDisplayedTimings = timings;
       setImageMinutesRange(24 * 60);
       setImageMinutesMaxDiff(calculateDifferenceBetweenNowAndStartOfDay() / (60.0 * 1000));
       displayTimings(timings);
@@ -204,6 +259,7 @@ function addListenersToButtons() {
   });
   btnFromZeroTwoAndAHalfHours.addEventListener("click", function() {
     let timings = filterCurrentTwoAndAHalfDaysTimings();
+    my.currentlyDisplayedTimings = timings;
     setImageMinutesRange(2.5 * 24 * 60);
     setImageMinutesMaxDiff(millisOfCurrentAbstractDayOfYear(2.5) / (60.0 * 1000));
     displayTimings(timings);
@@ -223,8 +279,17 @@ function setImageMinutesRange(minutesRange) {
 
 function displayTimings(timings) {
   my.currentFilteredTimings = timings;
-  displayTimingsAsText(timings);
+  if (my.minimalTextForTimings) {
+    clearTimingsTextWrapper();
+  } else {
+    displayTimingsAsText(timings);
+  }
   displayTimingsAsImage(timings);
+}
+
+function clearTimingsTextWrapper() {
+  let innerContentWrapper = document.getElementById("inner-content-wrapper");
+  innerContentWrapper.innerHTML = "";
 }
 
 function displayTimingsAsText(timings) {
@@ -452,6 +517,7 @@ function filterTimingsByDifference(differenceInMillis) {
             t.fromdate = d;
             t.category = key;
             let dtstr = dt.join(".");
+            t.dtstr = dtstr;
             if (!timingsByDates.hasOwnProperty(dtstr)) {
               timingsByDates[dtstr] = {
                 date: dt,
