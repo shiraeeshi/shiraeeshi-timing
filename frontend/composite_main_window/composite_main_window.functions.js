@@ -20,10 +20,19 @@ function handleServerMessage(msg) {
         window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage current wallpaper: " +
           my.wallpapers.lst[my.wallpapers.idx]);
         document.body.style.backgroundImage = "url(wallpapers/" + my.wallpapers.lst[my.wallpapers.idx] + ")";
+      } else if (msg.keyval == "m") {
+        my.minimalTextForTimings = !my.minimalTextForTimings;
+        if (my.minimalTextForTimings) {
+          clearTimingsTextWrapper();
+        } else {
+          if (my.currentlyDisplayedTimings) {
+            displayTimingsAsText(my.currentlyDisplayedTimings);
+          }
+        }
       }
       return;
     }
-    addListenersToButtons();
+    initPeriodButtonsRow();
     my.timings = msg.timings;
     /*
     let processes_object = msg.processes;
