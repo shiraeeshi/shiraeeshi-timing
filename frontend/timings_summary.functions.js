@@ -18,7 +18,7 @@ function handleServerMessage(msg) {
     }
     return;
   }
-  addListenersToButtons();
+  initPeriodButtonsRow();
   my.timings = msg;
   let mainContentWrapper = document.getElementById("main-content-wrapper");
   let keys = Object.keys(msg);
@@ -153,8 +153,17 @@ function findTimingItemByOffset(offsetX) {
   }
 }
 
+function initPeriodButtonsRow() {
+
+  let periodButtonsRow = new PeriodButtonsRow();
+  my.periodButtonsRowVisibilityToggle = new PeriodButtonsRowVisibilityToggle(periodButtonsRow);
+
+  addListenersToButtons();
+}
+
 function addListenersToButtons() {
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("addListenersToButtons start ");
+
   let btnLast24Hours = document.getElementById("last-24-hours");
   let btnLast12Hours = document.getElementById("last-12-hours");
   let btnFromZeroHours = document.getElementById("from-zero-hours");
@@ -166,6 +175,7 @@ function addListenersToButtons() {
       setImageMinutesMaxDiff(24*60);
       displayTimings(timings);
       createAndAppendFilterByCategory(timings);
+      my.periodButtonsRowVisibilityToggle.toInitialState();
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "btnLast24Hours click handler error msg: " + err.message);
@@ -177,6 +187,7 @@ function addListenersToButtons() {
     setImageMinutesMaxDiff(12*60);
     displayTimings(timings);
     createAndAppendFilterByCategory(timings);
+    my.periodButtonsRowVisibilityToggle.toInitialState();
   });
   btnFromZeroHours.addEventListener("click", function() {
     try {
@@ -185,6 +196,7 @@ function addListenersToButtons() {
       setImageMinutesMaxDiff(calculateDifferenceBetweenNowAndStartOfDay() / (60.0 * 1000));
       displayTimings(timings);
       createAndAppendFilterByCategory(timings);
+      my.periodButtonsRowVisibilityToggle.toInitialState();
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "btnFromZeroHours click handler error msg: " + err.message);
@@ -196,6 +208,7 @@ function addListenersToButtons() {
     setImageMinutesMaxDiff(millisOfCurrentAbstractDayOfYear(2.5) / (60.0 * 1000));
     displayTimings(timings);
     createAndAppendFilterByCategory(timings);
+    my.periodButtonsRowVisibilityToggle.toInitialState();
   });
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("addListenersToButtons end ");
 }
@@ -266,6 +279,53 @@ function displayTimingsAsText(timings) {
   }
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("displayTimings end ");
 }
+
+let PeriodButtonsRow = (function() {
+  function PeriodButtonsRowInitFunction() {
+    this.elem = document.getElementById("period-btns-container");
+    this.isVisible = true;
+  }
+  PeriodButtonsRowInitFunction.prototype.show = function() {
+    this.elem.style.display = 'block';
+    this.isVisible = true;
+  };
+  PeriodButtonsRowInitFunction.prototype.hide = function() {
+    this.elem.style.display = 'none';
+    this.isVisible = false;
+  };
+  return PeriodButtonsRowInitFunction;
+})();
+
+let PeriodButtonsRowVisibilityToggle = (function() {
+  function InitFunction(periodButtonsRow) {
+    let that = this;
+    that.row = periodButtonsRow;
+    that.btnHide = document.getElementById("btn-hide-period-btns");
+    that.btnShow = document.getElementById("btn-show-period-btns");
+    that.btnHide.onclick = function() {
+      that.toggle();
+    };
+    that.btnShow.onclick = function() {
+      that.toggle();
+    };
+  }
+  InitFunction.prototype.toggle = function() {
+    if (this.row.isVisible) {
+      this.row.hide();
+      this.btnHide.style.display = 'none';
+      this.btnShow.style.display = 'inline';
+    } else {
+      this.row.show();
+      this.btnHide.style.display = 'inline';
+      this.btnShow.style.display = 'none';
+    }
+  };
+  InitFunction.prototype.toInitialState = function() {
+    this.btnHide.style.display = 'inline';
+    this.btnShow.style.display = 'none';
+  };
+  return InitFunction;
+})();
 
 function createAndAppendFilterByCategory(timingsByDates) {
   let categories2timings = new Map();
