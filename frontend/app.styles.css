@@ -27,6 +27,10 @@ li.proc-node-open, li.proc-node-closed, li.proc-leaf {
   list-style-type: none;
 }
 
+li.proc-node-open > div, li.proc-node-closed > div, li.proc-leaf > div {
+  display: inline;
+}
+
 li.proc-leaf {
   margin-left: 14px;
 }

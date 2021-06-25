@@ -338,9 +338,18 @@ function ProcessNodeView(processNode) {
 
 ProcessNodeView.prototype.name2html = function() {
   let that = this;
-  return withChildren(document.createElement('span'),
-           document.createTextNode(that.name)
-         );
+  if (that.name.includes("\n")) {
+    return withChildren(document.createElement('div'),
+            ...that.name.split("\n")
+                        .map(line => document.createTextNode(line))
+                        .flatMap(el => [el,document.createElement("br")])
+                        .slice(0, -1)
+          );
+  } else {
+    return withChildren(document.createElement('span'),
+            document.createTextNode(that.name)
+          );
+  }
 }
 
 ProcessNodeView.prototype.buildAsHtmlLiElement = function() {
