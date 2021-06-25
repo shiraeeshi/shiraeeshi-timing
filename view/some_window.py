@@ -22,16 +22,11 @@ def show_window():
 
     scrolled_window = gtk.ScrolledWindow()
 
-    show_web_inspector = False
-
     webview = WebKit2.WebView()
 
     #webview.get_settings().set_allow_file_access_from_file_urls(True)
 
     webview.get_settings().set_enable_developer_extras(True)
-    #if (show_web_inspector):
-    #    webview.get_settings().set_enable_developer_extras(True)
-    #webview.open("https://www.gnome.org/")
 
     app_functions_file = os.path.join(ROOT_DIR, "frontend", "app.functions.js")
     with open(app_functions_file) as f:
@@ -83,6 +78,8 @@ def show_window():
         #if keyval_name == "n":
         #    Gdk.notify_startup_complete()
         #    return True
+        if (keyval_name == "J" or keyval_name == "j") and (eve.state & Gdk.ModifierType.SHIFT_MASK != 0) and (eve.state & Gdk.ModifierType.CONTROL_MASK != 0):
+            webview.get_inspector().show()
     webview.connect("key_press_event", webview_key_press_handler);
 
     def webview_button_press_handler(a_webview, eve):
@@ -116,9 +113,6 @@ def show_window():
         from urllib.request import pathname2url
         base_uri = urljoin('file:', pathname2url(ROOT_DIR)) + "/"
         webview.load_html(f.read(), base_uri)
-
-    if (show_web_inspector):
-        webview.get_inspector().show()
 
     scrolled_window.add(webview)
 
