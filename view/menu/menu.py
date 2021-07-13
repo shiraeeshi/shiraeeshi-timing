@@ -5,7 +5,7 @@ from view.some_window import show_window
 from view.composite_main_window import show_composite_main_window
 from view.timings_summary.summary import show_timings_summary
 from view.timings_history.timings_history_latest import show_timings_history_latest
-from view.timings_reports.timings_frequencies import show_timings_frequencies
+from view.timings_reports.timings_frequencies_prob01 import show_timings_frequencies
 
 #async def create_menu(indicEnv):
 def create_menu(indicEnv):
