@@ -19,20 +19,26 @@ function showTimingsByPrefixesAndLastModified(timingsByCategoriesByPrefixes) {
         return a.lastTiming.millisUntilNow > b.lastTiming.millisUntilNow;
       });
 
+      let hGraphic = new TimingsHistogramsGraphic(byPrefixesLst);
+      hGraphic.initCanvas();
+      hGraphic.redraw();
+
       return withChildren(document.createElement("li"),
         withChildren(document.createElement("div"),
           withChildren(document.createElement("span"),
             document.createTextNode(key)
           ),
-          withChildren(document.createElement("div"),
-            showFrequenciesOfCategoryInCanvas(byPrefixesLst)
-          ),
+          withChildren(document.createElement("div"), hGraphic.elem),
           withChildren(document.createElement("ul"),
             ...byPrefixesLst.map(prefixObj => {
               return withChildren(document.createElement("li"),
-                withChildren(document.createElement("span"),
-                  document.createTextNode(prefixObj.prefix)
-                )
+                (function() {
+                  let aLink = document.createElement("a");
+                  aLink.addEventListener("click", (eve) => {
+                    hGraphic.highlightProcess(prefixObj.prefix);
+                  });
+                  return withChildren(aLink, document.createTextNode(prefixObj.prefix));
+                })()
               );
             })
           )
@@ -46,21 +52,14 @@ function showTimingsByPrefixesAndLastModified(timingsByCategoriesByPrefixes) {
   wrapper.appendChild(resultElem);
 }
 
-function showFrequenciesOfCategoryInCanvas(processes) { // processes[n] = {prefix:"...",timings:[], lastTiming:{...}}
 
-  let hGraphic = new TimingsHistogramsGraphic(processes);
-  hGraphic.initCanvas();
-  hGraphic.redraw();
-
-  return hGraphic.elem;
-}
-
-function TimingsHistogramsGraphic(processes) {
+function TimingsHistogramsGraphic(processes) { // processes[n] = {prefix:"...",timings:[], lastTiming:{...}}
   this.processes = processes;
   this.rangeX = {from: 0, to: 100};
   this.rangeY = {from: 0, to: 100};
   this.scrollbarBreadth = 20;
   this.canvas = null; // invoke initCanvas()
+  this.highlightedProcessName = null; // invoke highlightProcess
 }
 
 TimingsHistogramsGraphic.prototype.setRangeX = function(from, to) {
@@ -71,6 +70,11 @@ TimingsHistogramsGraphic.prototype.setRangeX = function(from, to) {
 TimingsHistogramsGraphic.prototype.setRangeY = function(from, to) {
   this.rangeY.from = from;
   this.rangeY.to = to;
+};
+
+TimingsHistogramsGraphic.prototype.highlightProcess = function(processName) {
+  this.highlightedProcessName = processName;
+  this.redraw();
 };
 
 TimingsHistogramsGraphic.prototype.initCanvas = function() {
@@ -189,6 +193,9 @@ TimingsHistogramsGraphic.prototype.initCanvas = function() {
         that.setRangeX(that.rangeX.from, eve.offsetX);
         that.redraw();
       } else {
+
+        let isOnGraph = eve.offsetX < that.canvasWidth - that.scrollbarBreadth &&
+          eve.offsetY < that.canvasHeight - that.scrollbarBreadth;
 
         let isOnVScrollbar = eve.offsetX > that.canvasWidth - that.scrollbarBreadth &&
           eve.offsetY < that.canvasHeight - that.scrollbarBreadth;
@@ -358,8 +365,11 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   });
   ctx.fillStyle = 'rgba(0, 0, 255, 1)';
 
-  that.processes.forEach(p => {
-    p.timings.forEach(t => {
+  function drawTimingsOfProcess(p, colorRGBA, lastTimingColorRGBA) {
+    if (colorRGBA) {
+      ctx.fillStyle = colorRGBA;
+    }
+    function drawTiming(t) {
       let time = now.getTime() - t.fromdate.getTime();
       if (withinTimeRange(time, millisFrom, millisTo)) {
         //let xFrom = (time - millisFrom) * xRatio
@@ -371,8 +381,37 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
           yTo: t.millisUntilNext / yRatio
         });
       }
-    });
-  });
+    }
+    p.timings.forEach(t => drawTiming(t));
+    if (lastTimingColorRGBA) {
+      ctx.fillStyle = lastTimingColorRGBA;
+      if (p.lastTiming) {
+        drawTiming(p.lastTiming);
+      } else {
+        window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
+          "TimingsHistogramsGraphic.redraw drawTimingsOfProcess. NO LAST TIMING");
+      }
+    }
+  }
+
+  if (that.highlightedProcessName) {
+    let timingsColor = 'rgba(0, 85, 255, 1)';
+    let lastTimingColor = 'rgba(0, 50, 150, 1)';
+    that.processes
+      .filter(p => p.prefix != that.highlightedProcessName)
+      .forEach(p => drawTimingsOfProcess(p, timingsColor, lastTimingColor));
+
+    let highlightedProcess = that.processes.find(p => p.prefix == that.highlightedProcessName);
+    if (highlightedProcess) {
+      timingsColor = 'rgba(190, 0, 20, 1)';
+      lastTimingColor = 'rgba(140, 0, 15, 1)';
+      drawTimingsOfProcess(highlightedProcess, timingsColor, lastTimingColor);
+    }
+  } else {
+    let timingsColor = 'rgba(0, 85, 255, 1)';
+    let lastTimingColor = 'rgba(0, 50, 150, 1)';
+    that.processes.forEach(p => drawTimingsOfProcess(p, timingsColor, lastTimingColor));
+  }
 
   // 0   rangeX.from     rangeX.to    oldestRecordMillis
   // 0   rangeY.from     rangeY.to    maxWavelength
