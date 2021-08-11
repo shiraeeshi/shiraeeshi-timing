@@ -3,7 +3,7 @@ function handleServerMessage(msg) {
   window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage start ");
   my.timings = msg;
   let timingsBySubcategoriesTree = handleTimings(my.timings);
-  showTimingsBySubcategoriesAndLastModified(timingsByCategoriesByPrefixes);
+  showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree);
   window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage end ");
 }
 
@@ -108,10 +108,11 @@ function handleTimings(timingsByCategories) {
 
   let timingsBySubcategoriesTree = {}; // obj.childrenByName[subCategoryName].childrenByName[subCategoryName] = {timings: []}
   timingsBySubcategoriesTree.childrenByName = {};
+  timingsBySubcategoriesTree.children = [];
 
   // populate each timing's fromdate field
   Object.keys(timingsByCategories).forEach(key => {
-    let thisTimingsByDays = my.timings[key];
+    let thisTimingsByDays = timingsByCategories[key];
     for (let i = thisTimingsByDays.length - 1; i >= 0; i--) {
       let eachTimingDay = thisTimingsByDays[i];
       let dt = eachTimingDay.date;
@@ -123,20 +124,24 @@ function handleTimings(timingsByCategories) {
   });
 
   Object.keys(timingsByCategories).forEach(key => {
-    let thisTimingsByDays = my.timings[key];
-    for (let i = thisTimingsByDays.length - 1; i >= 0; i--) {
+    let categoryRootNode = {
+      name: key,
+      children: [],
+      childrenByName: {},
+      timings: []
+    };
+    let node = categoryRootNode;
+    timingsBySubcategoriesTree.childrenByName[key] = node;
+    timingsBySubcategoriesTree.children.push(node);
+
+    let thisTimingsByDays = timingsByCategories[key];
+
+    for (let i = 0; i < thisTimingsByDays.length; i++) {
       let eachTimingDay = thisTimingsByDays[i];
       let dt = eachTimingDay.date;
       eachTimingDay.timings.forEach(t => {
+        node = categoryRootNode;
         let yamlValue = t.value;
-        let node = {
-          name: key,
-          children: [],
-          childrenByName: {},
-          timings: []
-        };
-        timingsBySubcategoriesTree.childrenByName[key] = node;
-        timingsBySubcategoriesTree.children.push(node);
         if (yamlValue.constructor !== Array) {
           throw Error("wrong format: timing's categories should be list-typed");
         }
@@ -189,7 +194,7 @@ function ProcessesSubcategoriesViewBuilder() {
 
 ProcessesSubcategoriesViewBuilder.prototype.buildViews = function(timingsBySubcategoriesTree) {
   let that = this;
-  for (let subtree in timingsBySubcategoriesTree) {
+  for (let subtree of timingsBySubcategoriesTree.children) {
     that.addSubtree(subtree);
   }
 };
@@ -198,25 +203,8 @@ ProcessesSubcategoriesViewBuilder.prototype.addSubtree = function(timingsBySubca
   let that = this;
   let htmls = that.htmls;
   let views = that.views;
-  let treeView = new ProcessSubcategoryNodeView(processesTree);
+  let treeView = new ProcessSubcategoryNodeView(timingsBySubcategoriesSubtree);
   views[views.length] = treeView;
-
-  // let wrapperDiv = document.createElement('div');
-  // let headerElem = document.createElement('h3');
-  // let headerTxt = document.createTextNode(treeView.name);
-
-  // treeView.children.forEach(childNode => childNode.buildAsHtmlLiElement());
-  // let treeHtml =
-  //   withChildren(wrapperDiv,
-  //     withChildren(headerElem,
-  //       headerTxt),
-  //     withChildren(document.createElement('ul'),
-  //       ...treeView.children.map(childNode => childNode.html)
-  //     )
-  //   );
-  // treeView.html = treeHtml;
-
-  // htmls[htmls.length] = treeHtml;
 
   treeView.buildAsHtmlLiElement();
   htmls.push(treeView.html);
@@ -400,6 +388,11 @@ function timingDateArrays2Date(dateArray, hourMinuteArray) {
   d.setHours(hourMinuteArray[0]);
   d.setMinutes(hourMinuteArray[1]);
   return d;
+}
+
+function withClass(elem, cls) {
+  elem.classList.add(cls);
+  return elem;
 }
 
 function withChildren(elem, ...children) {

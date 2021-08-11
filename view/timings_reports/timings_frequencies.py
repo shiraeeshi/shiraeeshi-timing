@@ -105,7 +105,10 @@ def show_timings_frequencies():
 
     app_html_file = os.path.join(ROOT_DIR, "frontend", "timings_reports", "timings_frequencies.html")
     with open(app_html_file) as f:
-        base_uri = "file:///"
+        #base_uri = "file:///"
+        from urllib.parse import urljoin
+        from urllib.request import pathname2url
+        base_uri = urljoin('file:', pathname2url(ROOT_DIR)) + "/"
         webview.load_html(f.read(), base_uri)
 
     scrolled_window.add(webview)
