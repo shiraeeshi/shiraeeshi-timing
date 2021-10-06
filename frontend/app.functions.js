@@ -194,7 +194,7 @@ function yamlObject2treeNode(yamlObject) {
       children: nodeChildren
     };
   } catch (err) {
-    window.webkit.messageHandlers.foobar.postMessage("js yamlObject2treeNode error msg: " + err.message);
+    window.webkit.messageHandlers.foobar.postMessage("js yamlObject2treeNode error msg: " + err.message + " yaml object keys: " + Object.keys(yamlObject));
     throw err;
   }
 }

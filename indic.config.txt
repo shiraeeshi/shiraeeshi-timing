@@ -2,16 +2,64 @@
 	"timings": [
 		{
 			"name": "timing",
-			"filepath": "~/timing"
+			"format": "yaml",
+			"filepath": "~/timing.yaml"
 		} , {
 			"name": "other-timing",
-			"filepath": "~/other-timing"
-		} , {
-			"name": "btiming",
-			"filepath": "~/btiming"
+			"format": "yaml",
+			"filepath": "~/other-timing.yaml"
 		} , {
 			"name": "background-tasks",
-			"filepath": "~/qbackground"
+			"format": "yaml",
+			"filepath": "~/qbackground.yaml"
+		} , {
+			"name": "fromcloud-books",
+			"format": "yaml",
+			"filepath": "~/qbokfromcloud.yaml"
+		} , {
+			"name": "btiming",
+			"format": "yaml",
+			"filepath": "~/btiming.yaml"
+		}, {
+			"name": "graphics-krita",
+			"format": "yaml",
+			"filepath": "~/qgraphics-krita.yaml"
+		} , {
+			"name": "godot",
+			"format": "yaml",
+			"filepath": "~/qgodot.yaml"
+		} , {
+			"name": "mus_prod",
+			"format": "yaml",
+			"filepath": "~/qmus-prod.yaml"
+		} , {
+			"name": "eng",
+			"format": "yaml",
+			"filepath": "~/qenglish.yaml"
+		} , {
+			"name": "freelance-go",
+			"format": "yaml",
+			"filepath": "~/qfreelance-go.yaml"
+		} , {
+			"name": "freelance-react",
+			"format": "yaml",
+			"filepath": "~/qfreelance-react.yaml"
+		} , {
+			"name": "freelance-racket",
+			"format": "yaml",
+			"filepath": "~/qfreelance-racket.yaml"
+		} , {
+			"name": "freelance-cpp",
+			"format": "yaml",
+			"filepath": "~/qfreelance-cpp.yaml"
+		} , {
+			"name": "freelance-java",
+			"format": "yaml",
+			"filepath": "~/qfreelance-java.yaml"
+		} , {
+			"name": "freelance-erlang",
+			"format": "yaml",
+			"filepath": "~/qfreelance-erlang.yaml"
 		}
 	],
 	"processes-filepath": "~/qprocesses.yaml"

@@ -205,6 +205,8 @@ def parse_timing_file_lines(lines):
 
 def compute_minutes(from_hour, from_minute, to_hour, to_minute):
     hour_diff = to_hour - from_hour
+    if hour_diff < 0:
+        hour_diff += 24
     minutes = to_minute - from_minute + 60*hour_diff
     return minutes
 
