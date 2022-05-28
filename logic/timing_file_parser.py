@@ -7,7 +7,7 @@ def read_timings(config):
         timing_name = timing.get("name")
         filepath = os.path.expanduser(timing.get("filepath"))
         frmt = timing.get("format")
-        with open(filepath) as f:
+        with open(filepath, encoding='utf-8') as f:
             if frmt == "txt" or frmt == None:
                 lines = f.readlines()
                 lines = map(lambda l:l.rstrip(), lines)
@@ -73,7 +73,7 @@ def parse_yaml_timings(parsed_yaml):
             minutes = int(minutes)
 
         import json
-        name = json.dumps(v)
+        name = json.dumps(v, ensure_ascii=False)
 
         current_day_timings.append({
             "from": [from_hour, from_minute],

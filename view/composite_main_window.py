@@ -140,13 +140,14 @@ def show_composite_main_window():
         page_communicator.config_loaded(config)
         processes_info = parse_processes_file(config.processes_filepath)
         timings_contents = read_timings(config)
+        #print("timings contents: {}".format(timings_contents))
         composed_info = {
                 "processes": processes_info,
                 "timings": timings_contents
                 }
         #await page_communicator.load_finished_event.wait()
         app_state.after_page_loaded(
-                lambda : page_communicator.send_json(json.dumps(composed_info)))
+                lambda : page_communicator.send_json(json.dumps(composed_info, ensure_ascii=False)))
         
     wallpapers_dir = os.path.join(ROOT_DIR, "wallpapers")
     wallpapers = os.listdir(wallpapers_dir)
