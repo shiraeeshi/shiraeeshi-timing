@@ -6,11 +6,12 @@ from logic.page_communicator import PageCommunicator
 from logic.window_app_state import WindowAppState
 from models.config_info import json2config
 from logic.processes_file_parser import parse_processes_file
-from logic.timing_file_parser import read_timings
+#from logic.timing_file_parser import read_timings
+from logic.timing_file_parser import read_timings_of_today
 
 #async def show_window():
 #async def show_window(_):
-def show_composite_main_window():
+def show_composite_main_window(indicEnv):
     window = gtk.Window(gtk.WindowType.TOPLEVEL)
     #window = gtk.Window()
     window.set_title("Something")
@@ -139,7 +140,8 @@ def show_composite_main_window():
         app_state.config = config
         page_communicator.config_loaded(config)
         processes_info = parse_processes_file(config.processes_filepath)
-        timings_contents = read_timings(config)
+        #timings_contents = read_timings(config)
+        timings_contents = read_timings_of_today(config, indicEnv.timing2indexFilename)
         #print("timings contents: {}".format(timings_contents))
         composed_info = {
                 "processes": processes_info,

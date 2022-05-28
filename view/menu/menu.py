@@ -24,7 +24,7 @@ def create_menu(indicEnv):
     #menu.append(item_command_one)
 
     item_command_one = gtk.MenuItem('Main Window')
-    item_command_one.connect('activate', lambda _: show_composite_main_window())
+    item_command_one.connect('activate', lambda _: show_composite_main_window(indicEnv))
     menu.append(item_command_one)
 
     item_command_two = gtk.MenuItem('Processes')

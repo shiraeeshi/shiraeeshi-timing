@@ -1,5 +1,7 @@
 import os
 import re
+from datetime import datetime
+from logic.timing_index_manager import read_index
 
 def read_timings(config):
     result = {}
@@ -20,6 +22,56 @@ def read_timings(config):
                 import yaml
                 parsed_yaml = yaml.load(f)
                 parsed_timings = parse_yaml_timings(parsed_yaml)
+                result[timing_name] = parsed_timings
+    return result
+
+def read_timings_of_today(config, timing2indexFilename):
+    result = {}
+    current_time = datetime.now()
+    today_str = current_time.strftime("%d.%m.%Y")
+    for timing in config.timings:
+        timing_name = timing.get("name")
+        filepath = os.path.expanduser(timing.get("filepath"))
+        indexFilename = timing2indexFilename[timing_name]
+        offsets_by_date = read_index(indexFilename)
+        offsets_of_today = None
+        if today_str in offsets_by_date:
+            offsets_of_today = offsets_by_date[today_str]
+        frmt = timing.get("format")
+        with open(filepath, encoding='utf-8') as f:
+            if frmt == "txt" or frmt == None:
+                lines = None
+                if offsets_of_today == None:
+                    lines = f.readlines()
+                    lines = map(lambda l:l.rstrip(), lines)
+                    #result[timing_name] = lines
+                else:
+                    f.seek(offsets_of_today["offset_from"])
+                    a_string = f.read(offsets_of_today["offset_to"] - offsets_of_today["offset_from"])
+                    lines = a_string.splitlines()
+                timings = parse_timing_file_lines(lines)
+                result[timing_name] = timings
+                #import json
+                #print(json.dumps(timings))
+            elif frmt == "yaml":
+                import yaml
+                parsed_yaml = None
+                if offsets_of_today == None:
+                    #parsed_yaml = yaml.load(f)
+                    parsed_yaml = {}
+                    pass
+                else:
+                    #import json
+                    #print("offsets_of_today: {}".format(json.dumps(offsets_of_today)))
+                    f.seek(offsets_of_today["offset_from"])
+                    a_string = f.read(offsets_of_today["offset_to"] - offsets_of_today["offset_from"])
+                    print("debug index: timing: {}, a_string: {}".format(timing_name, a_string))
+                    parsed_yaml = yaml.safe_load(a_string)
+                parsed_timings = parse_yaml_timings(parsed_yaml)
+
+                import json
+                print("debug index: parsed_timings: {}".format(json.dumps(parsed_timings)))
+
                 result[timing_name] = parsed_timings
     return result
 
