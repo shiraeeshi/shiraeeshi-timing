@@ -101,7 +101,7 @@ def show_timings_frequencies():
         page_communicator.config_loaded(config)
         timings_contents = read_timings(config)
         app_state.after_page_loaded(
-                lambda : page_communicator.send_json(json.dumps(timings_contents)))
+                lambda : page_communicator.send_json(json.dumps(timings_contents, ensure_ascii=False).encode('utf8')))
 
     app_html_file = os.path.join(ROOT_DIR, "frontend", "timings_reports", "timings_frequencies_prob01.html")
     with open(app_html_file) as f:
