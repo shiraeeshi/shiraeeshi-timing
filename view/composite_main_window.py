@@ -8,6 +8,7 @@ from models.config_info import json2config
 from logic.processes_file_parser import parse_processes_file
 #from logic.timing_file_parser import read_timings
 from logic.timing_file_parser import read_timings_of_today
+from logic.timing_index_manager import create_or_refresh_index
 
 #async def show_window():
 #async def show_window(_):
@@ -141,7 +142,8 @@ def show_composite_main_window(indicEnv):
         page_communicator.config_loaded(config)
         processes_info = parse_processes_file(config.processes_filepath)
         #timings_contents = read_timings(config)
-        timings_contents = read_timings_of_today(config, indicEnv.timing2indexFilename)
+        timing2indexFilename = create_or_refresh_index()
+        timings_contents = read_timings_of_today(config, timing2indexFilename)
         #print("timings contents: {}".format(timings_contents))
         composed_info = {
                 "processes": processes_info,

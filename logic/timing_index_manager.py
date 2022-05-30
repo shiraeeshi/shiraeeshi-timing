@@ -7,7 +7,7 @@ import uuid
 from definitions import ROOT_DIR
 from models.config_info import json2config
 
-def create_index():
+def create_or_refresh_index():
 
     config_file = os.path.join(ROOT_DIR, "indic.config.txt")
 
@@ -78,36 +78,63 @@ def _refresh_index(timing, index_name, tmp_dir):
 
             if index_last_modified == timing_last_modified:
                 print("index_last_modified is the same as timing_last_modified, skipping recreating index for timing {}".format(timing_name))
-                pass # do nothing, no need to recreate the index
+                pass # do nothing, no need to refresh or recreate the index
             elif index_last_modified is None:
                 print("couldn't read index_last_modified for timing {}, recreating index".format(timing_name))
                 tmp_index_filepath = os.path.join(tmp_dir, index_name)
                 os.remove(tmp_index_filepath) # wipe out the old contents
                 _create_index_for_timing(timing, index_name, tmp_dir)
             else:
-                tmp_index_filepath = os.path.join(tmp_dir, index_name)
-                os.remove(tmp_index_filepath) # wipe out the old contents TODO implement index refresh
-                _create_index_for_timing(timing, index_name, tmp_dir)
+                print("index_last_modified != timing_last_modified, going to refresh the index for timing {}".format(timing_name))
+                _truncate_after_first_diff_and_append_to_index(timing, index_name, tmp_dir)
+                print("refreshed the index for timing {}".format(timing_name))
 
-def _create_index_for_timing(timing, index_name, tmp_dir):
+def _truncate_after_first_diff_and_append_to_index(timing, index_name, tmp_dir):
     timing_name = timing.get("name")
-    print("timing: {}".format(timing_name))
     timing_filepath = os.path.expanduser(timing.get("filepath"))
+    with open(timing_filepath, encoding='utf-8') as timing_file:
+        _traverse_index_prefix_and_truncate_after_first_diff(timing, index_name, tmp_dir, timing_file)
+        tmp_index_filepath = os.path.join(tmp_dir, index_name)
+        with open(tmp_index_filepath, 'a', encoding='utf-8') as index_file:
+            _append_to_index_for_timing(timing_file, index_file)
+        _remember_timing_last_modified(timing_filepath, index_name, tmp_dir)
+
+# traverse the prefix of index that is safe to append to, and truncate the rest
+def _traverse_index_prefix_and_truncate_after_first_diff(timing, index_name, tmp_dir, timing_file):
+    timing_name = timing.get("name")
     tmp_index_filepath = os.path.join(tmp_dir, index_name)
-    with open(timing_filepath, encoding='utf-8') as f:
-        with open(tmp_index_filepath, 'a', encoding='utf-8') as f_out:
-            f_out.write("date,offset_from,offset_to\n")
-            prev_index_entry = None
+    with open(tmp_index_filepath, "r+", encoding='utf-8') as f_ind_in:
+        first_line_of_index = f_ind_in.readline().rstrip()
+        if (first_line_of_index != "date,offset_from,offset_to"):
+            raise Exception("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\"). timing: {}, index file: {}".format(timing_name, index_name))
+        prev_index_entry = None
+        while True:
+            index_offset = f_ind_in.tell()
+            line_of_index = f_ind_in.readline()
+            if line_of_index == "":
+                print("_traverse_index_prefix_and_truncate_after_first_diff: about to return (reached the end of index) for timing {}".format(timing_name));
+                return
+            line_of_index = line_of_index.rstrip()
             while True:
-                offset = f.tell()
-                line = f.readline()
+                offset = timing_file.tell()
+                line_timing = timing_file.readline()
 
-                if line == "":
+                if line_timing == "":
                     if prev_index_entry != None:
-                        f_out.write("{},{},{}\n".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset))
-                    break
+                        expected_index_line = "{},{},{}".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset)
+                        if line_of_index != expected_index_line:
+                            print("_traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing {}: line_of_index != expected_index_line, line_of_index: {}, expected_index_line: {}".format(timing_name, line_of_index, expected_index_line))
+                            f_ind_in.seek(index_offset)
+                            f_ind_in.truncate()
+                            timing_file.seek(prev_index_entry["offset_from"])
+                            return
+                    end_of_index_reached = f_ind_in.readline() == ""
+                    if end_of_index_reached == False:
+                        print("_traverse_index_prefix_and_truncate_after_first_diff: about to truncate (end_of_index_reached is False) for timing {}".format(timing_name));
+                        f_ind_in.truncate()
+                    return
 
-                match = re.match(pattern_date_and_timing, line)
+                match = re.match(pattern_date_and_timing, line_timing)
                 if match is None:
                     continue
                 day_of_month = match.group(1)
@@ -121,9 +148,58 @@ def _create_index_for_timing(timing, index_name, tmp_dir):
                     prev_index_entry = {"date": a_date, "offset_from": offset}
                     continue
                 if a_date != prev_index_entry["date"]:
-                    f_out.write("{},{},{}\n".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset))
-                    prev_index_entry = {"date": a_date, "offset_from": offset}
+                    expected_index_line = "{},{},{}".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset)
+                    if line_of_index != expected_index_line:
+                        print("_traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing {}: line_of_index != expected_index_line, line_of_index: {}, expected_index_line: {}".format(timing_name, line_of_index, expected_index_line))
+                        f_ind_in.seek(index_offset)
+                        f_ind_in.truncate()
+                        timing_file.seek(prev_index_entry["offset_from"])
+                        return
+                    else:
+                        prev_index_entry = {"date": a_date, "offset_from": offset}
+                        break
 
+def _append_to_index_for_timing(timing_file, index_file):
+    prev_index_entry = None
+    while True:
+        offset = timing_file.tell()
+        line = timing_file.readline()
+
+        if line == "":
+            if prev_index_entry != None:
+                index_file.write("{},{},{}\n".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset))
+            break
+
+        match = re.match(pattern_date_and_timing, line)
+        if match is None:
+            continue
+        day_of_month = match.group(1)
+        month = match.group(2)
+        year = match.group(3)
+        year = int(year)
+        if year < 100:
+            year += 2000
+        a_date = "{}.{}.{}".format(day_of_month, month, year)
+        if prev_index_entry == None:
+            prev_index_entry = {"date": a_date, "offset_from": offset}
+            continue
+        if a_date != prev_index_entry["date"]:
+            index_file.write("{},{},{}\n".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset))
+            prev_index_entry = {"date": a_date, "offset_from": offset}
+
+def _create_index_for_timing(timing, index_name, tmp_dir):
+    timing_name = timing.get("name")
+    print("timing: {}".format(timing_name))
+    timing_filepath = os.path.expanduser(timing.get("filepath"))
+    tmp_index_filepath = os.path.join(tmp_dir, index_name)
+    with open(timing_filepath, encoding='utf-8') as timing_file:
+        with open(tmp_index_filepath, 'a', encoding='utf-8') as index_file:
+            index_file.write("date,offset_from,offset_to\n")
+            _append_to_index_for_timing(timing_file, index_file)
+
+    _remember_timing_last_modified(timing_filepath, index_name, tmp_dir)
+
+def _remember_timing_last_modified(timing_filepath, index_name, tmp_dir):
     index_last_modified_filepath = os.path.join(tmp_dir, index_name + ".last_modified")
     timing_last_modified = os.path.getmtime(timing_filepath)
     with open(index_last_modified_filepath, 'w') as f_ilm:
@@ -135,7 +211,7 @@ def read_index(indexFilename):
     with open(filepath, encoding='utf-8') as f:
         first_line = f.readline().rstrip()
         if (first_line != "date,offset_from,offset_to"):
-            raise "error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")"
+            raise Exception("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")")
         line_number = 0
         while True:
             line_number += 1
@@ -146,7 +222,7 @@ def read_index(indexFilename):
             words = line.split(",")
 
             if len(words) != 3:
-                raise "error while parsing timing index: wrong format (len(line.split(\",\")) != 3). line {}: {}".format(line_number, line)
+                raise Exception("error while parsing timing index: wrong format (len(line.split(\",\")) != 3). line {}: {}".format(line_number, line))
 
             date = words[0]
             offset_from = words[1]
