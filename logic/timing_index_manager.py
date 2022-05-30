@@ -113,6 +113,7 @@ def _traverse_index_prefix_and_truncate_after_first_diff(timing, index_name, tmp
             line_of_index = f_ind_in.readline()
             if line_of_index == "":
                 print("_traverse_index_prefix_and_truncate_after_first_diff: about to return (reached the end of index) for timing {}".format(timing_name));
+                timing_file.seek(prev_index_entry["offset_from"])
                 return
             line_of_index = line_of_index.rstrip()
             while True:
