@@ -96,6 +96,7 @@ def _create_index_for_timing(timing, index_name, tmp_dir):
     tmp_index_filepath = os.path.join(tmp_dir, index_name)
     with open(timing_filepath, encoding='utf-8') as f:
         with open(tmp_index_filepath, 'a', encoding='utf-8') as f_out:
+            f_out.write("date,offset_from,offset_to\n")
             prev_index_entry = None
             while True:
                 offset = f.tell()
@@ -103,7 +104,7 @@ def _create_index_for_timing(timing, index_name, tmp_dir):
 
                 if line == "":
                     if prev_index_entry != None:
-                        f_out.write("date: {}, offset_from: {}, offset_to: {}\n".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset))
+                        f_out.write("{},{},{}\n".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset))
                     break
 
                 match = re.match(pattern_date_and_timing, line)
@@ -120,7 +121,7 @@ def _create_index_for_timing(timing, index_name, tmp_dir):
                     prev_index_entry = {"date": a_date, "offset_from": offset}
                     continue
                 if a_date != prev_index_entry["date"]:
-                    f_out.write("date: {}, offset_from: {}, offset_to: {}\n".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset))
+                    f_out.write("{},{},{}\n".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset))
                     prev_index_entry = {"date": a_date, "offset_from": offset}
 
     index_last_modified_filepath = os.path.join(tmp_dir, index_name + ".last_modified")
@@ -132,24 +133,33 @@ def read_index(indexFilename):
     filepath = os.path.join(ROOT_DIR, "tmp", indexFilename)
     offsets_by_date = {}
     with open(filepath, encoding='utf-8') as f:
-        lines = f.readlines()
-        lines = map(lambda l:l.rstrip(), lines)
-        pattern_index_entry = "date: ([0-9]{2}\.[0-9]{2}\.[0-9]{2,4}), offset_from: ([0-9]+), offset_to: ([0-9]+)"
+        first_line = f.readline().rstrip()
+        if (first_line != "date,offset_from,offset_to"):
+            raise "error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")"
         line_number = 0
-        for line in lines:
+        while True:
             line_number += 1
-            match = re.match(pattern_index_entry, line)
-            if match is None:
-                print("error while parsing timing index. line {}: {}".format(line_number, line))
-                continue
-            date = match.group(1)
-            offset_from = match.group(2)
-            offset_to = match.group(3)
+            line = f.readline()
+            if line == "":
+                break
+            line = line.rstrip()
+            words = line.split(",")
 
-            offset_from = int(offset_from)
-            offset_to = int(offset_to)
+            if len(words) != 3:
+                raise "error while parsing timing index: wrong format (len(line.split(\",\")) != 3). line {}: {}".format(line_number, line)
 
-            offsets_by_date[date] = {"offset_from": offset_from, "offset_to": offset_to}
+            date = words[0]
+            offset_from = words[1]
+            offset_to = words[2]
+
+            try:
+                offset_from = int(offset_from)
+                offset_to = int(offset_to)
+
+                offsets_by_date[date] = {"offset_from": offset_from, "offset_to": offset_to}
+            except ValueError as err:
+                print("error while parsing timing index: wrong format (couldn't parse as int). line {}: {}".format(line_number, line))
+                raise err
 
 
     return offsets_by_date
