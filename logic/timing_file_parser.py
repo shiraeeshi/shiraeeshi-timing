@@ -1,7 +1,8 @@
 import os
 import re
-from datetime import datetime
-from logic.timing_index_manager import read_index
+import yaml
+from datetime import datetime, timedelta
+from logic.timing_index_manager import read_index, read_index_for_set_of_dates
 
 def read_timings(config):
     result = {}
@@ -19,10 +20,83 @@ def read_timings(config):
                 #import json
                 #print(json.dumps(timings))
             elif frmt == "yaml":
-                import yaml
                 parsed_yaml = yaml.load(f)
                 parsed_timings = parse_yaml_timings(parsed_yaml)
                 result[timing_name] = parsed_timings
+    return result
+
+def read_timings_for_three_last_days(config, timing2indexFilename):
+
+    today = datetime.now()
+    yesterday = today - timedelta(days = 1)
+    day_before_yesterday = yesterday - timedelta(days = 1)
+
+    list_of_dates = list(map(lambda a_datetime: a_datetime.strftime("%d.%m.%Y"),
+        [day_before_yesterday,
+         yesterday,
+         today]))
+
+    set_of_dates = set(list_of_dates)
+
+    return read_timings_for_set_of_dates(config, timing2indexFilename, set_of_dates)
+
+def read_timings_for_set_of_dates(config, timing2indexFilename, set_of_dates):
+    result = {}
+    current_time = datetime.now()
+    today_str = current_time.strftime("%d.%m.%Y")
+    for timing in config.timings:
+        timing_name = timing.get("name")
+        filepath = os.path.expanduser(timing.get("filepath"))
+        indexFilename = timing2indexFilename[timing_name]
+        offsets_by_date = read_index_for_set_of_dates(indexFilename, set_of_dates)
+        frmt = timing.get("format")
+        with open(filepath, encoding='utf-8') as f:
+            if frmt == "txt" or frmt == None:
+
+                result[timing_name] = []
+
+                for a_date, offsets in offsets_by_date.items():
+                    f.seek(offsets["offset_from"])
+                    a_string = f.read(offsets["offset_to"] - offsets["offset_from"])
+                    print("debug index: timing: {}, date: {}, a_string: {}".format(timing_name, a_date, a_string))
+                    lines = a_string.splitlines()
+                    timings = parse_timing_file_lines(lines)
+
+                    if len(timings) > 1:
+                        raise Exception("expected one item corresponding to timings of one date from parse_timing_file_lines. len(timings) = {}".format(len(timings)))
+
+                    if len(timings) == 0:
+                        continue
+
+                    parsed_timings_of_date = timings[0]
+
+                    #import json
+                    #print("debug index: parsed_timings: {}".format(json.dumps(parsed_timings_of_date)))
+
+                    result[timing_name].append(parsed_timings_of_date)
+            elif frmt == "yaml":
+                parsed_yaml = None
+                result[timing_name] = []
+
+                for a_date, offsets in offsets_by_date.items():
+                    f.seek(offsets["offset_from"])
+                    a_string = f.read(offsets["offset_to"] - offsets["offset_from"])
+                    print("debug index: timing: {}, date: {}, a_string: {}".format(timing_name, a_date, a_string))
+                    parsed_yaml = yaml.safe_load(a_string)
+                    parsed_timings = parse_yaml_timings(parsed_yaml)
+
+                    if len(parsed_timings) > 1:
+                        raise Exception("expected one item corresponding to timings of one date from parse_yaml_timings. len(parsed_timings) = {}".format(len(parsed_timings)))
+
+                    if len(parsed_timings) == 0:
+                        continue
+
+                    parsed_timings_of_date = parsed_timings[0]
+
+                    #import json
+                    #print("debug index: parsed_timings: {}".format(json.dumps(parsed_timings_of_date)))
+
+                    result[timing_name].append(parsed_timings_of_date)
     return result
 
 def read_timings_of_today(config, timing2indexFilename):
@@ -54,7 +128,6 @@ def read_timings_of_today(config, timing2indexFilename):
                 #import json
                 #print(json.dumps(timings))
             elif frmt == "yaml":
-                import yaml
                 parsed_yaml = None
                 if offsets_of_today == None:
                     #parsed_yaml = yaml.load(f)

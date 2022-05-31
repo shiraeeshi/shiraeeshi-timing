@@ -206,6 +206,45 @@ def _remember_timing_last_modified(timing_filepath, index_name, tmp_dir):
     with open(index_last_modified_filepath, 'w') as f_ilm:
         f_ilm.write("{}".format(timing_last_modified))
 
+def read_index_for_set_of_dates(indexFilename, set_of_dates):
+    filepath = os.path.join(ROOT_DIR, "tmp", indexFilename)
+    offsets_by_date = {}
+    with open(filepath, encoding='utf-8') as f:
+        first_line = f.readline().rstrip()
+        if (first_line != "date,offset_from,offset_to"):
+            raise Exception("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")")
+        line_number = 0
+        while True:
+            line_number += 1
+            line = f.readline()
+            if line == "":
+                break
+            line = line.rstrip()
+            words = line.split(",")
+
+            if len(words) != 3:
+                raise Exception("error while parsing timing index: wrong format (len(line.split(\",\")) != 3). line {}: {}".format(line_number, line))
+
+            date = words[0]
+
+            if not date in set_of_dates:
+                continue
+
+            offset_from = words[1]
+            offset_to = words[2]
+
+            try:
+                offset_from = int(offset_from)
+                offset_to = int(offset_to)
+
+                offsets_by_date[date] = {"offset_from": offset_from, "offset_to": offset_to}
+            except ValueError as err:
+                print("error while parsing timing index: wrong format (couldn't parse as int). line {}: {}".format(line_number, line))
+                raise err
+
+
+    return offsets_by_date
+
 def read_index(indexFilename):
     filepath = os.path.join(ROOT_DIR, "tmp", indexFilename)
     offsets_by_date = {}
