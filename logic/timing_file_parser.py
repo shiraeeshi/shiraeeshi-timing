@@ -155,7 +155,7 @@ def parse_yaml_timings(parsed_yaml):
     current_day = None
 
     pattern_date = "([0-9]{2})\.([0-9]{2})\.([0-9]{2,4})"
-    pattern_timing = "([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})( [- *] \(([0-9]+) m\) )?"
+    pattern_timing = "([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})(?: [- *] \(([0-9]+) m\))?"
     pattern_date_and_timing = pattern_date + " " + pattern_timing
     for k, v in parsed_yaml.items():
         time_from_to = k
@@ -186,8 +186,7 @@ def parse_yaml_timings(parsed_yaml):
         from_minute = match.group(5)
         to_hour = match.group(6)
         to_minute = match.group(7)
-        minutes = match.group(9)
-        #name = match.group(10)
+        minutes = match.group(8)
         from_hour = int(from_hour)
         from_minute = int(from_minute)
         to_hour = int(to_hour)
@@ -330,6 +329,8 @@ def parse_timing_file_lines(lines):
 
 def compute_minutes(from_hour, from_minute, to_hour, to_minute):
     hour_diff = to_hour - from_hour
+    if (hour_diff < 0):
+        hour_diff += 24
     minutes = to_minute - from_minute + 60*hour_diff
     return minutes
 
