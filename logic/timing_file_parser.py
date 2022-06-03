@@ -80,7 +80,8 @@ def read_timings_for_set_of_dates(config, timing2indexFilename, set_of_dates):
 
                 for a_date, offsets in offsets_by_date.items():
                     f.seek(offsets["offset_from"])
-                    a_string = f.read(offsets["offset_to"] - offsets["offset_from"])
+                    #a_string = f.read(offsets["offset_to"] - offsets["offset_from"]) # encoding issue, utf-8 characters
+                    a_string = _read_until_position(f, offsets["offset_to"])
                     print("debug index: timing: {}, date: {}, a_string: {}".format(timing_name, a_date, a_string))
                     parsed_yaml = yaml.safe_load(a_string)
                     parsed_timings = parse_yaml_timings(parsed_yaml)
@@ -98,6 +99,19 @@ def read_timings_for_set_of_dates(config, timing2indexFilename, set_of_dates):
 
                     result[timing_name].append(parsed_timings_of_date)
     return result
+
+def _read_until_position(f, position):
+    lines = []
+    while True:
+        line = f.readline()
+        if line == "":
+            break
+        line = line.rstrip()
+        lines.append(line)
+        current_position = f.tell()
+        if current_position == position:
+            break
+    return "\n".join(lines)
 
 def read_timings_of_today(config, timing2indexFilename):
     result = {}
@@ -150,6 +164,9 @@ def read_timings_of_today(config, timing2indexFilename):
 
 def parse_yaml_timings(parsed_yaml):
     result = []
+
+    if parsed_yaml is None:
+        return result
 
     current_day_timings = []
     current_day = None
