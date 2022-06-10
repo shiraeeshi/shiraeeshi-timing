@@ -52,9 +52,26 @@ def show_timings_frequencies():
         if load_event == WebKit2.LoadEvent.FINISHED:
             app_state.page_loaded()
     webview.connect("load_changed", load_changed_handler);
+
     webview.get_user_content_manager().connect("script-message-received::timings_frequencies_msgs"
             , lambda userContentManager, value: page_communicator.handleScriptMessage(value))
     webview.get_user_content_manager().register_script_message_handler("timings_frequencies_msgs")
+
+    def handle_request_timings_for_period(userContentManager, value):
+        dates_as_strings = json.loads(value.get_js_value().to_json(2)).split(" - ")
+        if len(dates_as_strings) != 2:
+            print("handle_request_timings_for_period. error: unexpected request parameter value (expected two dates with ' - ' between them)")
+            return
+        periodFrom = dates_as_strings[0]
+        periodTo = dates_as_strings[1]
+        print("handle_request_timings_for_period. from: {}, to: {}".format(periodFrom, periodTo))
+        pass
+
+    webview.get_user_content_manager().connect("script-message-received::timings_frequencies_msgs__timings_for_period"
+            , handle_request_timings_for_period)
+    webview.get_user_content_manager().register_script_message_handler("timings_frequencies_msgs__timings_for_period")
+
+
 
     def webview_key_press_handler(a_webview, eve):
         keyval = eve.keyval
@@ -100,8 +117,10 @@ def show_timings_frequencies():
         app_state.config = config
         page_communicator.config_loaded(config)
         timings_contents = read_timings(config)
+        # app_state.after_page_loaded(
+        #         lambda : page_communicator.send_json(json.dumps(timings_contents, ensure_ascii=False).encode('utf8')))
         app_state.after_page_loaded(
-                lambda : page_communicator.send_json(json.dumps(timings_contents, ensure_ascii=False).encode('utf8')))
+                lambda : page_communicator.send_json(json.dumps(timings_contents, ensure_ascii=False)))
 
     app_html_file = os.path.join(ROOT_DIR, "frontend", "timings_reports", "timings_frequencies_prob01.html")
     with open(app_html_file) as f:

@@ -1,13 +1,17 @@
 
 function handleServerMessage(msg) {
-  window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage start ");
-  if (msg.msg_type == 'keypress_event') {
-    return;
+  try {
+    window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage start ");
+    if (msg.msg_type == 'keypress_event') {
+      return;
+    }
+    my.timings = msg;
+    let timingsBySubcategoriesTree = handleTimings(my.timings);
+    showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree);
+    window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage end ");
+  } catch (err) {
+    window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage. error: " + err.message);
   }
-  my.timings = msg;
-  let timingsBySubcategoriesTree = handleTimings(my.timings);
-  showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree);
-  window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage end ");
 }
 
 function showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree) {
@@ -994,6 +998,8 @@ function ProcessCategoryNodeView(processNode) {
   that.processNode = processNode;
   that.name = processNode.name;
   that.isCollapsed = false;
+  that.currentPeriod = createCurrentPeriodInitial();
+  that.htmlSpanPeriodInfo = createHtmlSpanPeriodInfo(that.currentPeriod);
   that.hGraphic = new TimingsHistogramsGraphic(processNode);
   that.children = processNode.children.map(childNode => new ProcessSubcategoryNodeView(childNode, that.hGraphic));
   that.childrenByName = {};
@@ -1002,9 +1008,45 @@ function ProcessCategoryNodeView(processNode) {
   });
 }
 
+function createCurrentPeriodInitial() {
+  let dateTo = new Date();
+
+  let dateFrom = new Date();
+
+  let millisInWeek = 7*24*60*60*1000;
+  dateFrom.setTime(dateFrom.getTime() - millisInWeek);
+
+  return {
+    from: dateFrom,
+    to: dateTo
+  };
+}
+
 for (let propName in ProcessSubcategoryNodeView.prototype) {
   ProcessCategoryNodeView.prototype[propName] = ProcessSubcategoryNodeView.prototype[propName];
 }
+
+function createHtmlSpanPeriodInfo(initialPeriod) {
+  return withChildren(document.createElement('span'),
+    document.createTextNode(periodInfoText(initialPeriod))
+  )
+}
+
+function periodInfoText(period) {
+  let that = this;
+  let fromDateStr = date2TimingDateStr(period.from)
+  let toDateStr = date2TimingDateStr(period.to)
+  let periodInfoText = "period: " + fromDateStr + " - " + toDateStr;
+  return periodInfoText;
+}
+
+ProcessCategoryNodeView.prototype.requestTimingsForPeriod = function(periodFrom, periodTo) {
+  window.webkit.messageHandlers.timings_frequencies_msgs__timings_for_period.postMessage(
+    date2TimingDateStr(periodFrom) +
+    " - " +
+    date2TimingDateStr(periodTo)
+  );
+};
 
 ProcessCategoryNodeView.prototype.buildAsHtmlLiElement = function() {
   let that = this;
@@ -1032,6 +1074,7 @@ ProcessCategoryNodeView.prototype.buildAsHtmlLiElement = function() {
         })(),
         withChildren(document.createElement('div'),
           that.name2html(),
+          that.buildPeriodButtonsRow(),
           withChildren(document.createElement('div'),
             hGraphic.elem
           )
@@ -1044,6 +1087,41 @@ ProcessCategoryNodeView.prototype.buildAsHtmlLiElement = function() {
   that.html = htmlElement;
 };
 
+ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
+  let that = this;
+  function buttonWithText(text) {
+    let btn = document.createElement('button');
+    return withChildren(btn, document.createTextNode(text));
+  }
+  let btnPlusHalfYear = buttonWithText('+6months');
+  let btnPlusMonth = buttonWithText('+month');
+  btnPlusHalfYear.onclick = function() {
+    console.log('+6months');
+    let oldPeriodFrom = that.currentPeriod.from;
+    let newPeriodFrom = new Date();
+    let millisInMonth = 6*30*24*60*60*1000;
+    newPeriodFrom.setTime(oldPeriodFrom.getTime() - millisInMonth);
+    that.currentPeriod.from = newPeriodFrom;
+    that.htmlSpanPeriodInfo.innerHTML = periodInfoText(that.currentPeriod);
+    that.requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom);
+  };
+  btnPlusMonth.onclick = function() {
+    console.log('+month');
+    let oldPeriodFrom = that.currentPeriod.from;
+    let newPeriodFrom = new Date();
+    let millisInMonth = 30*24*60*60*1000;
+    newPeriodFrom.setTime(oldPeriodFrom.getTime() - millisInMonth);
+    that.currentPeriod.from = newPeriodFrom;
+    that.htmlSpanPeriodInfo.innerHTML = periodInfoText(that.currentPeriod);
+    that.requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom);
+  };
+  return withChildren(document.createElement('div'),
+    btnPlusHalfYear,
+    btnPlusMonth,
+    that.htmlSpanPeriodInfo
+  );
+};
+
 function timingDateArrays2Date(dateArray, hourMinuteArray) {
   let d = new Date();
   d.setDate(1);
@@ -1053,6 +1131,18 @@ function timingDateArrays2Date(dateArray, hourMinuteArray) {
   d.setHours(hourMinuteArray[0]);
   d.setMinutes(hourMinuteArray[1]);
   return d;
+}
+
+function date2timingDateArray(dt) {
+  return [
+    dt.getDate(),
+    dt.getMonth() + 1,
+    dt.getFullYear()
+  ];
+}
+
+function date2TimingDateStr(dt) {
+  return date2timingDateArray(dt).join(".");
 }
 
 function withClass(elem, cls) {
