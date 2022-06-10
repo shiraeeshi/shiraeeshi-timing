@@ -6,11 +6,13 @@ from logic.page_communicator import PageCommunicator
 from logic.window_app_state import WindowAppState
 from models.config_info import json2config
 from logic.processes_file_parser import parse_processes_file
-from logic.timing_file_parser import read_timings
+#from logic.timing_file_parser import read_timings
+from logic.timing_file_parser import read_timings_for_three_last_days
+from logic.timing_index_manager import create_or_refresh_index
 
 #async def show_window():
 #async def show_window(_):
-def show_composite_main_window():
+def show_composite_main_window(indicEnv):
     window = gtk.Window(gtk.WindowType.TOPLEVEL)
     #window = gtk.Window()
     window.set_title("Something")
@@ -139,14 +141,17 @@ def show_composite_main_window():
         app_state.config = config
         page_communicator.config_loaded(config)
         processes_info = parse_processes_file(config.processes_filepath)
-        timings_contents = read_timings(config)
+        #timings_contents = read_timings(config)
+        timing2indexFilename = create_or_refresh_index()
+        timings_contents = read_timings_for_three_last_days(config, timing2indexFilename)
+        #print("timings contents: {}".format(timings_contents))
         composed_info = {
                 "processes": processes_info,
                 "timings": timings_contents
                 }
         #await page_communicator.load_finished_event.wait()
         app_state.after_page_loaded(
-                lambda : page_communicator.send_json(json.dumps(composed_info)))
+                lambda : page_communicator.send_json(json.dumps(composed_info, ensure_ascii=False)))
         
     wallpapers_dir = os.path.join(ROOT_DIR, "wallpapers")
     wallpapers = os.listdir(wallpapers_dir)

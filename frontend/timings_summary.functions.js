@@ -1,3 +1,4 @@
+
 function handleServerMessage(msg) {
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage start ");
   if (msg.type == "wallpapers") {
@@ -20,9 +21,7 @@ function handleServerMessage(msg) {
       if (my.minimalTextForTimings) {
         clearTimingsTextWrapper();
       } else {
-        if (my.currentlyDisplayedTimings) {
-          displayTimingsAsText(my.currentlyDisplayedTimings);
-        }
+        makeTimingsTextElementsUnminimized();
       }
     }
     return;
@@ -72,7 +71,7 @@ function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlig
       let diffFrom = (now.getTime() - dtFrom.getTime()) / (60*1000.0);
       let xFrom = (maxDiff - diffFrom) * canvasWidth * 1.0 / minutesRange;
 
-      if (categoryToHighlight && timingItem.category == categoryToHighlight) {
+      if (categoryToHighlight && isToHighlightTimingItem(timingItem, categoryToHighlight)) {
         ctx.fillStyle = 'rgba(5, 168, 82, 0.5)';
       } else {
         ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
@@ -100,9 +99,13 @@ function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlig
       if (!timingAtOffset) {
         if (my.isHighlightingTimingRowInText) {
           my.isHighlightingTimingRowInText = false;
-          let previouslyHighlightedTimingRow = document.querySelector("[data-timing-start = '" + my.highlightedTimingItemStart + "']");
+          // let previouslyHighlightedTimingRow = document.querySelector("[data-timing-start = '" + my.highlightedTimingItemStart + "']");
+          // if (previouslyHighlightedTimingRow) {
+          //   previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
+          // }
+          let previouslyHighlightedTimingRow = document.querySelector(".highlighted-from-canvas");
           if (previouslyHighlightedTimingRow) {
-            Object.assign(previouslyHighlightedTimingRow.style, my.highlightedTimingItemPreviousStyle);
+            previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
           }
         }
         if (my.minimalTextForTimings) {
@@ -126,34 +129,69 @@ function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlig
       window.webkit.messageHandlers.timings_summary_msgs.postMessage("canvas mousemove. error: " + err.message);
     }
   });
+
+  canvas.addEventListener('mouseleave', function() {
+    // console.log("canvas.mouseleave my.isHighlightingTimingRowInText: " + my.isHighlightingTimingRowInText);
+    if (!my.isHighlightingTimingRowInText) {
+      return;
+    }
+    my.isHighlightingTimingRowInText = false;
+    let previouslyHighlightedTimingRow = document.querySelector(".highlighted-from-canvas");
+    if (previouslyHighlightedTimingRow) {
+      previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
+    }
+    if (my.minimalTextForTimings) {
+      clearTimingsTextWrapper();
+    }
+    // let previouslyHighlightedTimingRow = document.querySelector("[data-timing-start = '" + my.highlightedTimingItemStart + "']");
+    // if (previouslyHighlightedTimingRow) {
+    //   previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
+    // }
+  });
+}
+
+function isToHighlightTimingItem(timingItem, categoryToHighlightFullName) {
+  //console.log("isToHighlightTimingItem. categoryToHighlightFullName: " + categoryToHighlightFullName)
+  if (categoryToHighlightFullName.length == 0) {
+    //console.log("isToHighlightTimingItem. returning false prematurely. empty category")
+    return false;
+  }
+  if (timingItem.value.length + 1 < categoryToHighlightFullName.length) {
+    //console.log("isToHighlightTimingItem. returning false prematurely")
+    return false;
+  }
+  function getTimingItemValueSegment(index) {
+    if (index == 0) {
+      return timingItem.category;
+    }
+    let segment = timingItem.value[index - 1];
+    let type = typeof(segment);
+    if (type == "string") {
+      return segment;
+    } else if (type == "object") {
+      return Object.keys(segment)[0];
+    } else {
+      throw Error("isToHighlightTimingItem: unexpected type of timingItem.value[index] (expected 'string' or 'object'). index: " + index + ", type: " + type);
+    }
+  }
+  for (let i=0; i<categoryToHighlightFullName.length; i++) {
+    let categoryNameSegment = categoryToHighlightFullName[i];
+    let timingItemValueSegment = getTimingItemValueSegment(i);
+    //console.log("isToHighlightTimingItem. index: " + i + ", categoryNameSegment: " + categoryNameSegment + ", timingItemValueSegment: " + timingItemValueSegment)
+    if (timingItemValueSegment != categoryNameSegment) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function highlightTimingInText(timingAtOffset) {
   try {
-    if (my.highlightedCategory) {
-      let trs = document.getElementsByClassName("timing-row");
-      for (let i=0; i<trs.length; i++) {
-        trs[i].style.color = 'white';
-        trs[i].style.opacity = '.3';
-      }
-      let ctrs = document.getElementsByClassName("timing-row-of-" + my.highlightedCategory);
-      for (let i=0; i<ctrs.length; i++) {
-        ctrs[i].style.color = 'white';
-        ctrs[i].style.opacity = '1';
-      }
-    } else {
-      let trs = document.getElementsByClassName("timing-row");
-      for (let i=0; i<trs.length; i++) {
-        trs[i].style.color = 'white';
-        trs[i].style.opacity = '1';
-      }
-    }
     let timingRowToHighlight = document.querySelector("[data-timing-start = '" + timingAtOffset.from.join(".") + "']");
     if (timingRowToHighlight) {
       my.isHighlightingTimingRowInText = true;
-      my.highlightedTimingItemPreviousStyle = Object.assign({}, timingRowToHighlight.style);
       my.highlightedTimingItemStart = timingAtOffset.from.join(".");
-      Object.assign(timingRowToHighlight.style, {color: 'red', opacity: '1'});
+      timingRowToHighlight.classList.add('highlighted-from-canvas');
     }
   } catch (err) {
     window.webkit.messageHandlers.timings_summary_msgs.postMessage("highlightTimingInText. error: " + err.message);
@@ -162,25 +200,14 @@ function highlightTimingInText(timingAtOffset) {
 
 function highlightTimingInMinimalText(timingItem) {
   try {
-    // let timingRowToHighlight = document.querySelector("[data-timing-start = '" + timingAtOffset.from.join(".") + "']");
-    // if (timingRowToHighlight) {
-    //   my.isHighlightingTimingRowInText = true;
-    //   my.highlightedTimingItemPreviousStyle = Object.assign({}, timingRowToHighlight.style);
-    //   my.highlightedTimingItemStart = timingAtOffset.from.join(".");
-    //   Object.assign(timingRowToHighlight.style, {color: 'red', opacity: '1'});
-    // }
-    let container = document.getElementById("inner-content-wrapper");
-    container.innerHTML = "";
-    let txt = document.createTextNode([
-      timingItem.dtstr,
-      timingItem.from.join("."),
-      "-",
-      timingItem.to.join("."),
-      timingItem2symbol(timingItem),
-      ['(',timingItem.minutes,' m)'].join(""),
-      timingItem.name
-    ].join(" "));
-    container.appendChild(txt);
+
+    let visibleLis = document.querySelectorAll('li.timing-row-parent-li:not(.minimized-to-invisibility)');
+    for (let li of visibleLis) {
+      li.classList.add('minimized-to-invisibility');
+    }
+    timingItem.htmlElem.classList.remove('minimized-to-invisibility');
+    my.isHighlightingTimingRowInText = true;
+
   } catch (err) {
     window.webkit.messageHandlers.timings_summary_msgs.postMessage("highlightTimingInMinimalText. error: " + err.message);
   }
@@ -226,8 +253,8 @@ function addListenersToButtons() {
       my.currentlyDisplayedTimings = timings;
       setImageMinutesRange(24*60);
       setImageMinutesMaxDiff(24*60);
-      displayTimings(timings);
-      createAndAppendFilterByCategory(timings);
+      my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
+      displayTimings(timings, my.timingsCategoryNodeViewRoot);
       my.periodButtonsRowVisibilityToggle.toInitialState();
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
@@ -239,8 +266,8 @@ function addListenersToButtons() {
     my.currentlyDisplayedTimings = timings;
     setImageMinutesRange(12*60);
     setImageMinutesMaxDiff(12*60);
-    displayTimings(timings);
-    createAndAppendFilterByCategory(timings);
+    my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
+    displayTimings(timings, my.timingsCategoryNodeViewRoot);
     my.periodButtonsRowVisibilityToggle.toInitialState();
   });
   btnFromZeroHours.addEventListener("click", function() {
@@ -249,8 +276,8 @@ function addListenersToButtons() {
       my.currentlyDisplayedTimings = timings;
       setImageMinutesRange(24 * 60);
       setImageMinutesMaxDiff(calculateDifferenceBetweenNowAndStartOfDay() / (60.0 * 1000));
-      displayTimings(timings);
-      createAndAppendFilterByCategory(timings);
+      my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
+      displayTimings(timings, my.timingsCategoryNodeViewRoot);
       my.periodButtonsRowVisibilityToggle.toInitialState();
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
@@ -262,8 +289,8 @@ function addListenersToButtons() {
     my.currentlyDisplayedTimings = timings;
     setImageMinutesRange(2.5 * 24 * 60);
     setImageMinutesMaxDiff(millisOfCurrentAbstractDayOfYear(2.5) / (60.0 * 1000));
-    displayTimings(timings);
-    createAndAppendFilterByCategory(timings);
+    my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
+    displayTimings(timings, my.timingsCategoryNodeViewRoot);
     my.periodButtonsRowVisibilityToggle.toInitialState();
   });
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("addListenersToButtons end ");
@@ -277,22 +304,30 @@ function setImageMinutesRange(minutesRange) {
   my.imageInfo.minutesRange = minutesRange;
 }
 
-function displayTimings(timings) {
+function displayTimings(timings, timingsCategoryNodeViewRoot) {
   my.currentFilteredTimings = timings;
+  displayTimingsAsText(timings, timingsCategoryNodeViewRoot);
   if (my.minimalTextForTimings) {
     clearTimingsTextWrapper();
-  } else {
-    displayTimingsAsText(timings);
   }
   displayTimingsAsImage(timings);
 }
 
 function clearTimingsTextWrapper() {
-  let innerContentWrapper = document.getElementById("inner-content-wrapper");
-  innerContentWrapper.innerHTML = "";
+  let allTimingTextViews = my.timingsCategoryNodeViewRoot.getTimingTextViewsRecursively();
+  for (let i=0; i < allTimingTextViews.length; i++) {
+    allTimingTextViews[i].classList.add('minimized-to-invisibility');
+  }
 }
 
-function displayTimingsAsText(timings) {
+function makeTimingsTextElementsUnminimized() {
+  let allTimingTextViews = my.timingsCategoryNodeViewRoot.getTimingTextViewsRecursively();
+  for (let i=0; i < allTimingTextViews.length; i++) {
+    allTimingTextViews[i].classList.remove('minimized-to-invisibility');
+  }
+}
+
+function displayTimingsAsText(timings, timingsCategoryNodeViewRoot) {
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("displayTimings start ");
   try {
     let innerContentWrapper = document.getElementById("inner-content-wrapper");
@@ -305,8 +340,10 @@ function displayTimingsAsText(timings) {
       let ul = document.createElement('ul');
       let lis = oneDayTiming.timings.map(timingItem => {
         let li = document.createElement('li');
+        li.setAttribute("class", "timing-row-parent-li");
         let span = document.createElement('span');
-        span.setAttribute("class", "timing-row timing-row-of-" + timingItem.category);
+        // span.setAttribute("class", "timing-row timing-row-of-" + timingItem.category);
+        span.setAttribute("class", "timing-row");
         let timingDateStr = oneDayTiming.date.join(".")
         let timingItemBeginningStr = timingItem.from.join(".")
         span.setAttribute("data-timing-day", timingDateStr)
@@ -319,19 +356,34 @@ function displayTimingsAsText(timings) {
           ['(',timingItem.minutes,' m)'].join(""),
           timingItem.name
         ].join(" "));
-        span.onmouseover = function (eve) {
+        span.onmouseenter = function (eve) {
           window.webkit.messageHandlers.timings_summary_msgs.postMessage(
-            "timing onmouseover. timing: " + timingItem.name);
+            "timing onmouseenter. timing: " + timingItem.name);
           my.isHighlightingTimingItemInImage = true;
           displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory, timingItem);
 
           if (my.isHighlightingTimingRowInText) {
-            let lastHighlightedTimingRow = document.querySelector("[data-timing-start = '" + my.highlightedTimingItemStart + "']");
-            Object.assign(lastHighlightedTimingRow.style, my.highlightedTimingItemPreviousStyle);
+            let previouslyHighlightedTimingRow = document.querySelector(".highlighted-from-canvas");
+            if (previouslyHighlightedTimingRow) {
+              previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
+            }
+            // let lastHighlightedTimingRow = document.querySelector("[data-timing-start = '" + my.highlightedTimingItemStart + "']");
             my.isHighlightingTimingRowInText = false;
+            // lastHighlightedTimingRow.classList.remove('highlighted-from-canvas');
           }
+          function unhighlight() {
+            console.log("span.onmouseleave unhighlight");
+            my.isHighlightingTimingItemInImage = false;
+            displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+            span.removeEventListener('mouseleave', unhighlight);
+          }
+          span.addEventListener('mouseleave', unhighlight);
         };
-        return withChildren(li, withChildren(span, txt));
+        let timingItemView = withChildren(li, withChildren(span, txt));
+        timingItem.htmlElem = timingItemView;
+        timingItemView.timingItem = timingItem;
+        addTimingItemViewToCategory(timingItem, timingItemView, timingsCategoryNodeViewRoot);
+        return timingItemView;
       });
       return withChildren(oneDayTimingWrapper,
         withChildren(dateParagraph, dateTextNode),
@@ -343,6 +395,26 @@ function displayTimingsAsText(timings) {
     window.webkit.messageHandlers.timings_summary_msgs.postMessage("displayTimings error msg: " + err.message);
   }
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("displayTimings end ");
+}
+
+function addTimingItemViewToCategory(timingItem, timingItemView, timingsCategoryNodeViewRoot) {
+  let currentCategoryNode = timingsCategoryNodeViewRoot.subcategoryView(timingItem.category);
+  for (let ind=0; ind < timingItem.value.length; ind++) {
+    let timingValueOuterListItem = timingItem.value[ind];
+    let type = typeof(timingValueOuterListItem)
+    if (type == "string") {
+      let subcategoryName = timingValueOuterListItem;
+      console.log("addTimingItemViewToCategory. currentCategoryNode: " + currentCategoryNode + ", subcategoryName: " + subcategoryName);
+      currentCategoryNode = currentCategoryNode.subcategoryView(subcategoryName);
+    } else if (type == "object") {
+      let timingValueObject = timingValueOuterListItem;
+      let subcategoryName = Object.keys(timingValueObject)[0];
+      console.log("addTimingItemViewToCategory. currentCategoryNode: " + currentCategoryNode + ", subcategoryName: " + subcategoryName);
+      currentCategoryNode = currentCategoryNode.subcategoryView(subcategoryName);
+      currentCategoryNode.appendTimingTextView(timingItemView);
+      break; // should be last item
+    }
+  }
 }
 
 let PeriodButtonsRow = (function() {
@@ -392,77 +464,433 @@ let PeriodButtonsRowVisibilityToggle = (function() {
   return InitFunction;
 })();
 
+let TimingsCategoryTreeNode = (function() {
+  function InitFunction(name, parentCategory) {
+    this.name = name;
+    this.parentCategory = parentCategory;
+    this.subcategories = [];
+    this.subcategoriesByName = {};
+    this.timings = [];
+    this.timingsCountRecursive = 0;
+  }
+  InitFunction.prototype.subcategory = function(name) {
+    let childExists = Object.hasOwnProperty.call(this.subcategoriesByName, name);
+    if (childExists) {
+      return this.subcategoriesByName[name];
+    } else {
+      let newSubcategory = new TimingsCategoryTreeNode(name, this);
+      this.subcategoriesByName[name] = newSubcategory;
+      this.subcategories[this.subcategories.length] = newSubcategory;
+      return newSubcategory;
+    }
+  }
+  InitFunction.prototype.appendTiming = function(timing) {
+    this.timings[this.timings.length] = timing;
+    incrementTimingsCountRecursive(this);
+  }
+  InitFunction.prototype.fullName = function() {
+    if (this.parentCategory === undefined) {
+      return [];
+    } else {
+      let parentFullName = this.parentCategory.fullName();
+      return parentFullName.concat(this.name)
+    }
+  }
+  let incrementTimingsCountRecursive = function(categoryNode) {
+    categoryNode.timingsCountRecursive++;
+    if (categoryNode.parentCategory !== undefined) {
+      incrementTimingsCountRecursive(categoryNode.parentCategory);
+    }
+  }
+  return InitFunction;
+})();
+
+TimingsCategoryTreeNode.createRootCategory = function() {
+  return new TimingsCategoryTreeNode("all");
+}
+
 function createAndAppendFilterByCategory(timingsByDates) {
-  let categories2timings = new Map();
+  let categoriesTreeRoot = TimingsCategoryTreeNode.createRootCategory();
   timingsByDates.forEach(dt => {
     dt.timings.forEach(t => {
-      if (categories2timings.has(t.category)) {
-        let c = categories2timings.get(t.category);
-        categories2timings.set(t.category, c + 1);
-      } else {
-        categories2timings.set(t.category, 1);
+      console.log("about to call subcategory function. t.category: " + t.category)
+      let currentCategoryNode = categoriesTreeRoot.subcategory(t.category);
+      for (let ind=0; ind<t.value.length; ind++) {
+        let timingValueOuterListItem = t.value[ind];
+        let type = typeof(timingValueOuterListItem)
+        if (type == "string") {
+          let subcategoryName = timingValueOuterListItem;
+          console.log("about to call currentCategoryNode.subcategory. 1. subcategoryName: " + subcategoryName)
+          currentCategoryNode = currentCategoryNode.subcategory(subcategoryName);
+        } else if (type == "object") {
+          let timingValueObject = timingValueOuterListItem;
+          let subcategoryName = Object.keys(timingValueObject)[0];
+          console.log("about to call currentCategoryNode.subcategory. 2. subcategoryName: " + subcategoryName)
+          currentCategoryNode = currentCategoryNode.subcategory(subcategoryName);
+          currentCategoryNode.appendTiming(t);
+          break; // should be last item
+        } else {
+          throw Error("createAndAppendFilterByCategory: unexpected type of timingItem.value[index] (expected 'string' or 'object'). index: " + ind + ", type: " + type);
+        }
       }
     });
   });
   let btnsContainer = document.getElementById('timing-category-btns-container');
   btnsContainer.innerHTML = "";
-  let overallCount = 0;
-  categories2timings.forEach((count, cat) => {
-    overallCount += count;
+
+  let timingsCategoryNodeViewRoot = new TimingsCategoryNodeView(categoriesTreeRoot);
+  timingsCategoryNodeViewRoot.buildAsHtmlLiElement();
+  btnsContainer.appendChild(
+    withChildren(
+      withClass(document.createElement("ul"), "timings-categories-tree"),
+      timingsCategoryNodeViewRoot.html
+    )
+  );
+  return timingsCategoryNodeViewRoot;
+}
+
+function TimingsCategoryNodeView(timingsCategoryNode) {
+  let that = this;
+  that.timingsCategoryNode = timingsCategoryNode;
+  that.name = timingsCategoryNode.name;
+  that.isCollapsed = false;
+  that.isUnhighlighted = false;
+  that.viewState = TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD;
+  that.children = timingsCategoryNode.subcategories.map(childNode => new TimingsCategoryNodeView(childNode));
+  that.childrenByName = {};
+  that.children.forEach(childView => {
+    that.childrenByName[childView.name] = childView;
   });
+  that.timingTextViews = [];
+}
 
-  let allBtn = document.createElement('button');
-  let txt = document.createTextNode("all (" + overallCount + ")");
-  allBtn.onmouseover = function (eve) {
-    window.webkit.messageHandlers.timings_summary_msgs.postMessage(
-      "category onmouseover. all categories ");
-    delete my.highlightedCategory;
-    displayTimingsAsImage(my.currentFilteredTimings);
+let TimingsCategoryNodeViewState = (function() {
+  let InitFunction = function() {}
+  InitFunction.UNHIGHLIGHTED = new InitFunction();
+  InitFunction.HIGHLIGHTED = new InitFunction();
+  InitFunction.HIGHLIGHTED_AS_CHILD = new InitFunction();
+  InitFunction.EXTRA_HIGHLIGHTED = new InitFunction();
+  return InitFunction;
+})();
 
-    let trs = document.getElementsByClassName("timing-row");
-    for (let i=0; i<trs.length; i++) {
-      trs[i].style.color = 'white';
-      trs[i].style.opacity = '1';
-    }
+TimingsCategoryNodeView.prototype.subcategoryView = function(subCategoryName) {
+  let that = this;
+  let hasSubcategory = Object.hasOwnProperty.call(that.childrenByName, subCategoryName);
+  if (!hasSubcategory) {
+    throw Error("TimingsCategoryNodeView.subcategoryView: no child found with name: " + subCategoryName);
   }
-  btnsContainer.appendChild(withChildren(allBtn, txt));
+  return that.childrenByName[subCategoryName];
+}
 
-  categories2timings.forEach((count, cat) => {
-    let buttonText = cat + " (" + count + ")";
-    let btn = document.createElement('button');
-    let txt = document.createTextNode(buttonText);
-    btn.onmouseover = function (eve) {
+TimingsCategoryNodeView.prototype.appendTimingTextView = function(timingTextView) {
+  this.timingTextViews[this.timingTextViews.length] = timingTextView;
+}
+
+TimingsCategoryNodeView.prototype.getTimingTextViewsRecursively = function(timingTextView) {
+  let that = this;
+  let result = that.timingTextViews;
+  for (let subcategory of that.children) {
+    result = result.concat(subcategory.getTimingTextViewsRecursively());
+  }
+  return result;
+}
+
+TimingsCategoryNodeView.prototype.isHighlighted = function() {
+  return !this.isUnhighlighted;
+};
+
+TimingsCategoryNodeView.prototype.highlightTree = function() {
+  let that = this;
+  that.isUnhighlighted = false;
+  that.viewState = TimingsCategoryNodeViewState.HIGHLIGHTED;
+  that.html.classList.remove('unhighlighted-node');
+  for (let subcategory of that.children) {
+    subcategory.highlightSubtree();
+  }
+};
+
+TimingsCategoryNodeView.prototype.highlightSubtree = function() {
+  let that = this;
+  that.isUnhighlighted = false;
+  that.viewState = TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD;
+  that.html.classList.remove('unhighlighted-node');
+  for (let subcategory of that.children) {
+    subcategory.highlightSubtree();
+  }
+};
+
+TimingsCategoryNodeView.prototype.unhighlightTree = function() {
+  let that = this;
+  that.isUnhighlighted = true;
+  that.viewState = TimingsCategoryNodeViewState.UNHIGHLIGHTED;
+  that.html.classList.add('unhighlighted-node');
+  for (let subcategory of that.children) {
+    subcategory.unhighlightTree();
+  }
+};
+
+TimingsCategoryNodeView.prototype.name2html = function() {
+  let that = this;
+  let a = document.createElement('a');
+  a.onclick = function() {
+    let viewState = that.viewState;
+    if (viewState === TimingsCategoryNodeViewState.UNHIGHLIGHTED) {
+      my.timingsCategoryNodeViewRoot.unhighlightTree();
+      that.highlightTree();
+      let categoryFullName = that.timingsCategoryNode.fullName();
+      my.highlightedCategory = categoryFullName;
+      displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
+
+      console.log("a.onclick. categoryFullName: " + categoryFullName);
+
+      let trs = document.getElementsByClassName("timing-row-parent-li");
+      for (let i=0; i < trs.length; i++) {
+        trs[i].classList.add('greyed-out');
+        trs[i].classList.remove('extra-unhighlighted');
+      }
+      let timingTextViews = that.getTimingTextViewsRecursively();
+      for (let i=0; i < timingTextViews.length; i++) {
+        timingTextViews[i].classList.remove('greyed-out');
+        timingTextViews[i].classList.remove('extra-unhighlighted');
+      }
+      function unhighlight() {
+        // console.log("TimingsCategoryNodeView.onclick unhighlight (set when viewState was UNHIGHLIGHTED)");
+        if (my.highlightedCategory !== undefined
+          && my.highlightedCategory.length > 0
+          && !that.isHighlighted()) {
+          a.removeEventListener('mouseleave', unhighlight);
+          return;
+        }
+        displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+        a.removeEventListener('mouseleave', unhighlight);
+      }
+      a.addEventListener('mouseleave', unhighlight)
+
+    } else if (viewState === TimingsCategoryNodeViewState.HIGHLIGHTED) {
+
+      that.viewState = TimingsCategoryNodeViewState.EXTRA_HIGHLIGHTED;
+      let trs = document.getElementsByClassName("timing-row-parent-li");
+      for (let i=0; i < trs.length; i++) {
+        trs[i].classList.add('extra-unhighlighted');
+      }
+      let timingTextViews = that.getTimingTextViewsRecursively();
+      console.log("a.onlick. timingTextViews.length: " + timingTextViews.length);
+      for (let i=0; i < timingTextViews.length; i++) {
+        timingTextViews[i].classList.remove('greyed-out');
+        timingTextViews[i].classList.remove('extra-unhighlighted');
+      }
+
+    } else if (viewState === TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD) {
+      my.timingsCategoryNodeViewRoot.unhighlightTree();
+      that.highlightTree();
+      let categoryFullName = that.timingsCategoryNode.fullName();
+      my.highlightedCategory = categoryFullName;
+      displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
+
+      console.log("a.onclick. categoryFullName: " + categoryFullName);
+
+      let trs = document.querySelectorAll(".timing-row-parent-li:not(.greyed-out)");
+      for (let i=0; i < trs.length; i++) {
+        trs[i].classList.add('greyed-out');
+      }
+      let timingTextViews = that.getTimingTextViewsRecursively();
+      for (let i=0; i < timingTextViews.length; i++) {
+        timingTextViews[i].classList.remove('greyed-out');
+      }
+      function unhighlight() {
+        // console.log("TimingsCategoryNodeView.onclick unhighlight (set when viewState was HIGHLIGHTED_AS_CHILD)");
+        if (my.highlightedCategory !== undefined
+          && my.highlightedCategory.length > 0
+          && !that.isHighlighted()) {
+          a.removeEventListener('mouseleave', unhighlight);
+          return;
+        }
+        // my.highlightedCategory = [];
+        displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+        for (let i=0; i < trs.length; i++) {
+          trs[i].classList.remove('greyed-out');
+        }
+        a.removeEventListener('mouseleave', unhighlight);
+      }
+      a.addEventListener('mouseleave', unhighlight)
+    } else if (viewState === TimingsCategoryNodeViewState.EXTRA_HIGHLIGHTED) {
+      my.timingsCategoryNodeViewRoot.highlightTree();
+      my.highlightedCategory = [];
+      let categoryFullName = that.timingsCategoryNode.fullName();
+      displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
+
+      let allTimingTextViews = my.timingsCategoryNodeViewRoot.getTimingTextViewsRecursively();
+      for (let i=0; i < allTimingTextViews.length; i++) {
+        allTimingTextViews[i].classList.add('greyed-out');
+        allTimingTextViews[i].classList.remove('extra-unhighlighted');
+      }
+      let timingTextViews = that.getTimingTextViewsRecursively();
+      for (let i=0; i < timingTextViews.length; i++) {
+        timingTextViews[i].classList.remove('greyed-out');
+      }
+      function unhighlight() {
+        // console.log("TimingsCategoryNodeView.onclick unhighlight (set when viewState was EXTRA_HIGHLIGHTED)");
+        if (my.highlightedCategory !== undefined
+          && my.highlightedCategory.length > 0
+          && !that.isHighlighted()) {
+          a.removeEventListener('mouseleave', unhighlight);
+          return;
+        }
+        // my.highlightedCategory = [];
+        displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+        for (let i=0; i < allTimingTextViews.length; i++) {
+          allTimingTextViews[i].classList.remove('greyed-out')
+        }
+        a.removeEventListener('mouseleave', unhighlight);
+      }
+      a.addEventListener('mouseleave', unhighlight)
+    } else {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
-        "category onmouseover. category: " + cat);
-      my.highlightedCategory = cat;
-      displayTimingsAsImage(my.currentFilteredTimings, cat);
+        "TimingsCategoryNodeView.onclick. unexpected viewState (expected a member of TimingsCategoryNodeViewState enum): " + viewState);
+    }
+  };
+  a.onmouseenter = function(eve) {
+    if (my.highlightedCategory !== undefined
+       && my.highlightedCategory.length > 0
+       && !that.isHighlighted()) {
+      return;
+    }
+    let categoryFullName = that.timingsCategoryNode.fullName();
+    // my.highlightedCategory = categoryFullName;
+    displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
 
-      let trs = document.getElementsByClassName("timing-row");
-      for (let i=0; i<trs.length; i++) {
-        trs[i].style.backgroundColor = "";
-        //trs[i].style.color = '#BEBEBE';
-        trs[i].style.color = 'white';
-        trs[i].style.opacity = ".3";
+    console.log("a.onmouseenter. categoryFullName: " + categoryFullName);
+
+    let trs = document.getElementsByClassName("timing-row-parent-li");
+    let trsHighlighted = document.querySelectorAll(".timing-row-parent-li:not(.greyed-out)");
+    for (let i=0; i < trs.length; i++) {
+      trs[i].classList.add('greyed-out');
+    }
+    let timingTextViews = that.getTimingTextViewsRecursively();
+    for (let i=0; i < timingTextViews.length; i++) {
+      timingTextViews[i].classList.remove('greyed-out');
+    }
+    function unhighlight() {
+      console.log("TimingsCategoryNodeView.onmouseenter unhighlight");
+
+      let noCategoryIsHighlighted =
+        my.highlightedCategory === undefined ||
+        my.highlightedCategory.length === 0;
+
+      if (noCategoryIsHighlighted) {
+        displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+        for (let i=0; i < trs.length; i++) {
+          trs[i].classList.remove('greyed-out');
+          trs[i].classList.remove('extra-unhighlighted');
+        }
+      } else if (that.viewState === TimingsCategoryNodeViewState.UNHIGHLIGHTED) {
+        for (let i=0; i < timingTextViews.length; i++) {
+          timingTextViews[i].classList.add('greyed-out');
+        }
+      } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED ||
+                 that.viewState === TimingsCategoryNodeViewState.EXTRA_HIGHLIGHTED) {
+        // do nothing
+      } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD) {
+        displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+        for (let i=0; i < trsHighlighted.length; i++) {
+          trsHighlighted[i].classList.remove('greyed-out');
+        }
+      } else {
+        window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+          "TimingsCategoryNodeView.onmousemove. unexpected viewState (expected a member of TimingsCategoryNodeViewState enum): " + that.viewState);
       }
-      let ctrs = document.getElementsByClassName("timing-row-of-" + cat);
-      for (let i=0; i<ctrs.length; i++) {
-        //ctrs[i].style.backgroundColor = 'white';
-        ctrs[i].style.color = 'white';
-        ctrs[i].style.opacity = "1";
-      }
-    };
-    btnsContainer.appendChild(withChildren(btn, txt));
-  });
+      a.removeEventListener('mouseleave', unhighlight);
+    }
+    a.addEventListener('mouseleave', unhighlight)
+  };
+  if (that.name.includes("\n")) {
+    let timingsCount = that.timingsCategoryNode.timingsCountRecursive;
+    return
+      withChildren(a,
+        withChildren(document.createElement('div'),
+          ...that.name.split("\n")
+                      .map(line => document.createTextNode(line))
+                      .flatMap(el => [el,document.createElement("br")])
+                      .slice(0, -1)
+                      .concat(document.createTextNode(" (" + timingsCount + ")"))
+        )
+      );
+  } else {
+    let timingsCount = that.timingsCategoryNode.timingsCountRecursive;
+    return withChildren(a,
+            document.createTextNode(that.name + " (" + timingsCount + ")")
+          );
+  }
 }
 
-function filterTimingsByCategory(category, timingsByDates) {
-  return timingsByDates.map(dt => {
-    return {
-      date: dt.date,
-      timings: dt.timings.filter(t => t.category === category)
-    };
-  });
-}
+TimingsCategoryNodeView.prototype.buildAsHtmlLiElement = function() {
+  let that = this;
+  if (that.children.length == 0) {
+    let htmlElement = withClass(withChildren(document.createElement('li'), that.name2html()), 'proc-leaf');
+    that.html = htmlElement;
+    return;
+  }
+
+  that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
+  let htmlElement =
+    withChildren(
+      withChildren(withClass(document.createElement('li'), 'proc-node', 'proc-node-open'),
+        (function() {
+          let elem = document.createElement('span');
+          elem.classList.add('proc-node-icon');
+          elem.addEventListener('click', eve => {
+            that.toggleCollapse();
+          });
+          return elem;
+        })(),
+        that.name2html()
+      ),
+      withChildren(document.createElement('ul'),
+        ...that.children.map(childNode => childNode.html)
+      )
+    );
+  that.html = htmlElement;
+};
+
+TimingsCategoryNodeView.prototype.isLeaf = function() {
+  return this.children.length == 0;
+};
+
+TimingsCategoryNodeView.prototype.toggleCollapse = function() {
+  let that = this;
+  if (that.isCollapsed) {
+    that.uncollapse();
+  } else {
+    that.collapse();
+  }
+};
+
+TimingsCategoryNodeView.prototype.collapse = function() {
+  let that = this;
+  that.isCollapsed = true;
+  if (that.html.classList.contains("proc-node-open")) {
+    that.html.classList.remove("proc-node-open");
+    that.html.classList.add("proc-node-closed");
+  }
+};
+
+TimingsCategoryNodeView.prototype.uncollapse = function() {
+  let that = this;
+  that.isCollapsed = false;
+  if (that.html.classList.contains("proc-node-closed")) {
+    that.html.classList.remove("proc-node-closed");
+    that.html.classList.add("proc-node-open");
+  }
+  that.children.forEach(childView => childView.parentUncollapsed());
+};
+
+TimingsCategoryNodeView.prototype.parentUncollapsed = function() {
+  let that = this;
+  if (!that.isCollapsed) {
+    that.collapse();
+  }
+};
+
 
 function filterTimingsByDifference(differenceInMillis) {
   let today = new Date();
@@ -618,6 +1046,13 @@ function yesterdayAsADate() {
 
 function withChildren(elem, ...children) {
   children.forEach(child => elem.appendChild(child));
+  return elem;
+}
+
+function withClass(elem, ...classes) {
+  for (let cls of classes) {
+    elem.classList.add(cls);
+  }
   return elem;
 }
 

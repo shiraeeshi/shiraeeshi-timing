@@ -19,3 +19,71 @@ body {
 #timing-category-btns-container {
   flex: 1;
 }
+
+li.timing-row-parent-li > span.timing-row {
+  color: white;
+  opacity: 1;
+}
+
+li.timing-row-parent-li.greyed-out > span.timing-row {
+  color: white;
+  opacity: .3;
+}
+
+li.timing-row-parent-li.minimized-to-invisibility ,
+li.timing-row-parent-li.extra-unhighlighted {
+  display: none;
+}
+
+.timing-row.highlighted-from-canvas {
+  color: red !important;
+}
+
+ul.timings-categories-tree {
+  color: white;
+}
+
+.proc-node > a, .proc-leaf > a {
+  cursor: pointer;
+}
+
+.proc-node.unhighlighted-node > a,
+.proc-leaf.unhighlighted-node > a {
+  opacity: 0.3;
+}
+
+li.proc-node-open, li.proc-node-closed, li.proc-leaf {
+  list-style-type: none;
+}
+
+li.proc-node-open > div, li.proc-node-closed > div, li.proc-leaf > div {
+  display: inline;
+}
+
+li.proc-leaf {
+  margin-left: 14px;
+}
+
+.proc-node-icon {
+  cursor: pointer;
+}
+
+.proc-node-open .proc-node-icon {
+  background: url('frontend/img/proc-node-minus.png') no-repeat top left;
+}
+
+.proc-node-closed .proc-node-icon {
+  background: url('frontend/img/proc-node-plus.png') no-repeat top left;
+}
+
+.proc-node-open .proc-node-icon, .proc-node-closed .proc-node-icon {
+  background-size: contain;
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.proc-node-closed > ul {
+  display: none;
+}

@@ -5,9 +5,11 @@ from definitions import ROOT_DIR
 from logic.page_communicator import PageCommunicator
 from logic.window_app_state import WindowAppState
 from models.config_info import json2config
-from logic.timing_file_parser import read_timings
+from logic.timing_file_parser import read_timings_for_set_of_dates
+from logic.timing_index_manager import create_or_refresh_index
 
 def show_timings_history_latest():
+    timing2indexFilename = create_or_refresh_index()
     window = gtk.Window()
     window.set_title("Something")
     window.connect("destroy", gtk.main_quit)
@@ -20,12 +22,26 @@ def show_timings_history_latest():
 
     scrolled_window = gtk.ScrolledWindow()
 
-    show_web_inspector = False
+    show_web_inspector = True
 
     webview = WebKit2.WebView()
 
     if (show_web_inspector):
         webview.get_settings().set_enable_developer_extras(True)
+
+    app_functions_file = os.path.join(ROOT_DIR, "frontend", "timings_summary.functions.js")
+    with open(app_functions_file) as f:
+        contents = f.read()
+        webview.get_user_content_manager().add_script(
+                WebKit2.UserScript.new(contents, 0, 1, None, None)
+                )
+
+    app_functions_file = os.path.join(ROOT_DIR, "frontend", "timings_history", "latest.my.js")
+    with open(app_functions_file) as f:
+        contents = f.read()
+        webview.get_user_content_manager().add_script(
+                WebKit2.UserScript.new(contents, 0, 1, None, None)
+                )
 
     app_functions_file = os.path.join(ROOT_DIR, "frontend", "timings_history", "latest.functions.js")
     with open(app_functions_file) as f:
@@ -48,9 +64,28 @@ def show_timings_history_latest():
         if load_event == WebKit2.LoadEvent.FINISHED:
             app_state.page_loaded()
     webview.connect("load_changed", load_changed_handler);
+
     webview.get_user_content_manager().connect("script-message-received::timings_history_latest_msgs"
             , lambda userContentManager, value: page_communicator.handleScriptMessage(value))
     webview.get_user_content_manager().register_script_message_handler("timings_history_latest_msgs")
+
+    def handle_request_for_timings(userContentManager, value):
+        # print("handle_request_for_timings. value: " + value.get_js_value().to_json(2))
+        dates_as_strings = json.loads(value.get_js_value().to_json(2)).split(",")
+        # print("handle_request_for_timings. dates_as_strings: " + ",".join(dates_as_strings))
+        # print("handle_request_for_timings. dates_as_strings: " + json.dumps(timing2indexFilename))
+        timings = read_timings_for_set_of_dates(app_state.config, timing2indexFilename, set(dates_as_strings))
+        response = json.dumps({"msg_type": "timings_query_response", "timings": timings});
+        # print("handle_request_for_timings. response: " + response)
+        page_communicator.send_json(response)
+
+    webview.get_user_content_manager().connect("script-message-received::timings_history_latest__get_timings"
+            , handle_request_for_timings)
+    webview.get_user_content_manager().register_script_message_handler("timings_history_latest__get_timings")
+
+    webview.get_user_content_manager().connect("script-message-received::timings_summary_msgs"
+            , lambda userContentManager, value: page_communicator.handleScriptMessage(value))
+    webview.get_user_content_manager().register_script_message_handler("timings_summary_msgs")
 
     def webview_key_press_handler(a_webview, eve):
         keyval = eve.keyval
@@ -73,6 +108,15 @@ def show_timings_history_latest():
                 window.fullscreen()
             app_state.is_fullscreen = not app_state.is_fullscreen 
             return True
+        elif keyval_name == "m":
+            msg = {
+                    "msg_type": "keypress_event",
+                    "keyval": keyval_name
+                    }
+            page_communicator.send_json(json.dumps(msg))
+            return True
+        elif (keyval_name == "J" or keyval_name == "j") and (eve.state & Gdk.ModifierType.SHIFT_MASK != 0) and (eve.state & Gdk.ModifierType.CONTROL_MASK != 0):
+            webview.get_inspector().show()
     webview.connect("key_press_event", webview_key_press_handler);
 
     def webview_button_press_handler(a_webview, eve):
@@ -92,17 +136,20 @@ def show_timings_history_latest():
         config = json2config(contents)
         app_state.config = config
         page_communicator.config_loaded(config)
-        timings_contents = read_timings(config)
+        #timings_contents = read_timings(config)
         app_state.after_page_loaded(
-                lambda : page_communicator.send_json(json.dumps(timings_contents)))
+                lambda : page_communicator.send_json("{\"msg_type\": \"dummy_message\"}"))
 
     app_html_file = os.path.join(ROOT_DIR, "frontend", "timings_history", "latest.html")
     with open(app_html_file) as f:
-        base_uri = "file:///"
+        # base_uri = "file:///"
+        from urllib.parse import urljoin
+        from urllib.request import pathname2url
+        base_uri = urljoin('file:', pathname2url(ROOT_DIR)) + "/"
         webview.load_html(f.read(), base_uri)
 
-    if (show_web_inspector):
-        webview.get_inspector().show()
+    # if (show_web_inspector):
+    #     webview.get_inspector().show()
 
     scrolled_window.add(webview)
 

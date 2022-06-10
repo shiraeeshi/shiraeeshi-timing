@@ -1,5 +1,6 @@
 import os
 from common import gtk
+from definitions import ROOT_DIR, icon_of_default_mode, icon_of_active_timer_mode
 from enum import Enum
 from view.some_window import show_window
 from view.composite_main_window import show_composite_main_window
@@ -25,7 +26,7 @@ def create_menu(indicEnv):
     #menu.append(item_command_one)
 
     item_command_one = gtk.MenuItem('Main Window')
-    item_command_one.connect('activate', lambda _: show_composite_main_window())
+    item_command_one.connect('activate', lambda _: show_composite_main_window(indicEnv))
     menu.append(item_command_one)
 
     item_command_two = gtk.MenuItem('Processes')
@@ -58,9 +59,9 @@ def create_menu(indicEnv):
 
     def change_icon():
         if indicEnv.timing_manager.has_timing():
-            indicEnv.indicator.set_icon("user-invisible-panel");
+            indicEnv.indicator.set_icon(icon_of_active_timer_mode());
         else:
-            indicEnv.indicator.set_icon("clock-icon");
+            indicEnv.indicator.set_icon(icon_of_default_mode());
 
     menu.show_all()
     return menu
@@ -101,9 +102,9 @@ def second_menu(indicEnv, timing_name):
 
     def change_icon():
         if indicEnv.timing_manager.has_timing():
-            indicEnv.indicator.set_icon("user-invisible-panel");
+            indicEnv.indicator.set_icon(icon_of_active_timer_mode());
         else:
-            indicEnv.indicator.set_icon("clock-icon");
+            indicEnv.indicator.set_icon(icon_of_default_mode());
 
     exittray = gtk.MenuItem('Exit Something')
     exittray.connect('activate', quit)
