@@ -11,13 +11,41 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    my.timings = msg;
-    let timingsBySubcategoriesTree = handleTimings(my.timings);
-    showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree);
+
+    // old
+    // my.timings = msg;
+    // let timingsBySubcategoriesTree = handleTimings(my.timings);
+    // showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree);
+
+    // new
+    initViewBuilder();
+
+    let millisInWeek = 7*24*60*60*1000;
+
+    let initialPeriodTo = new Date();
+    let initialPeriodFrom = new Date();
+    initialPeriodFrom.setTime(initialPeriodFrom.getTime() - millisInWeek)
+    requestTimingsForPeriod(initialPeriodFrom, initialPeriodTo).then(timings => {
+      console.log('initial handleServerMessage. timings keys:');
+      console.dir(Object.keys(timings));
+      my.timings = handleTimings(timings, undefined);
+      my.viewBuilder.buildViews(my.timings);
+    }).catch(err => {
+      window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
+        "initial handleServerMessage. err: " + err);
+    });
+
     window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage end ");
   } catch (err) {
     window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage. error: " + err.message);
   }
+}
+
+function initViewBuilder() {
+  let wrapper = document.getElementById("main-content-wrapper");
+  wrapper.innerHTML = "";
+  my.viewBuilder = new ProcessesSubcategoriesViewBuilder();
+  wrapper.appendChild(my.viewBuilder.getResultHtml());
 }
 
 function showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree) {
@@ -581,64 +609,64 @@ function findMax(defaultValue, arr) {
   });
 }
 
-function handleTimings(timingsByCategories) {
-  let timingsByCategoriesByPrefixes = {}; // obj[cat][prefix] = {prefix:"...",timings:[], lastTiming:{...}}
-
-  Object.keys(timingsByCategories).forEach(key => {
-    let byPrefixes = {};
-    timingsByCategoriesByPrefixes[key] = byPrefixes;
-
-    let thisTimingsByDays = my.timings[key];
-    for (let i = thisTimingsByDays.length - 1; i >= 0; i--) {
-      let eachTimingDay = thisTimingsByDays[i];
-      let dt = eachTimingDay.date;
-      if (eachTimingDay === undefined || eachTimingDay.timings === undefined) {
-        continue; // TODO fix
-      }
-      eachTimingDay.timings.forEach(t => {
-        let prefix = t.name;
-        if (t.name.includes("(")) {
-          prefix = t.name.slice(0, t.name.indexOf("("));
-        }
-        prefix = prefix.trim();
-        if (!byPrefixes.hasOwnProperty(prefix)) {
-          byPrefixes[prefix] = {
-            prefix: prefix,
-            timings: []
-          };
-        }
-        byPrefixes[prefix].timings.push(t);
-
-        let d = timingDateArrays2Date(dt, t.from);
-        t.fromdate = d;
-      });
-    }
-  });
-  Object.keys(timingsByCategoriesByPrefixes).forEach(key => {
-    let byPrefixes = timingsByCategoriesByPrefixes[key];
-    Object.keys(byPrefixes).forEach(prefix => {
-      let timings = byPrefixes[prefix].timings;
-      timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
-      let previousTiming = timings[0];
-      let i = 1;
-      while (i < timings.length) {
-        let timing = timings[i];
-        let diff = timing.fromdate.getTime() - previousTiming.fromdate.getTime();
-        previousTiming.millisUntilNext = diff;
-        timing.millisFromPrevious = diff;
-        previousTiming = timing;
-        i++;
-      }
-      let lastTiming = timings[timings.length - 1];
-      let now = new Date();
-      let millisUntilNow = now.getTime() - lastTiming.fromdate.getTime();
-      lastTiming.millisUntilNow = millisUntilNow;
-      lastTiming.millisUntilNext = millisUntilNow;
-      byPrefixes[prefix].lastTiming = lastTiming;
-    });
-  });
-  return timingsByCategoriesByPrefixes;
-}
+// function handleTimings(timingsByCategories) {
+//   let timingsByCategoriesByPrefixes = {}; // obj[cat][prefix] = {prefix:"...",timings:[], lastTiming:{...}}
+// 
+//   Object.keys(timingsByCategories).forEach(key => {
+//     let byPrefixes = {};
+//     timingsByCategoriesByPrefixes[key] = byPrefixes;
+// 
+//     let thisTimingsByDays = my.timings[key];
+//     for (let i = thisTimingsByDays.length - 1; i >= 0; i--) {
+//       let eachTimingDay = thisTimingsByDays[i];
+//       let dt = eachTimingDay.date;
+//       if (eachTimingDay === undefined || eachTimingDay.timings === undefined) {
+//         continue; // TODO fix
+//       }
+//       eachTimingDay.timings.forEach(t => {
+//         let prefix = t.name;
+//         if (t.name.includes("(")) {
+//           prefix = t.name.slice(0, t.name.indexOf("("));
+//         }
+//         prefix = prefix.trim();
+//         if (!byPrefixes.hasOwnProperty(prefix)) {
+//           byPrefixes[prefix] = {
+//             prefix: prefix,
+//             timings: []
+//           };
+//         }
+//         byPrefixes[prefix].timings.push(t);
+// 
+//         let d = timingDateArrays2Date(dt, t.from);
+//         t.fromdate = d;
+//       });
+//     }
+//   });
+//   Object.keys(timingsByCategoriesByPrefixes).forEach(key => {
+//     let byPrefixes = timingsByCategoriesByPrefixes[key];
+//     Object.keys(byPrefixes).forEach(prefix => {
+//       let timings = byPrefixes[prefix].timings;
+//       timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
+//       let previousTiming = timings[0];
+//       let i = 1;
+//       while (i < timings.length) {
+//         let timing = timings[i];
+//         let diff = timing.fromdate.getTime() - previousTiming.fromdate.getTime();
+//         previousTiming.millisUntilNext = diff;
+//         timing.millisFromPrevious = diff;
+//         previousTiming = timing;
+//         i++;
+//       }
+//       let lastTiming = timings[timings.length - 1];
+//       let now = new Date();
+//       let millisUntilNow = now.getTime() - lastTiming.fromdate.getTime();
+//       lastTiming.millisUntilNow = millisUntilNow;
+//       lastTiming.millisUntilNext = millisUntilNow;
+//       byPrefixes[prefix].lastTiming = lastTiming;
+//     });
+//   });
+//   return timingsByCategoriesByPrefixes;
+// }
 
 function resetMillisUntilNextForProcessNode(processNode, selectedProcessNode) {
   //console.log("[start] resetMillisUntilNextForProcessNode");
@@ -702,12 +730,14 @@ function sortTimings(processNode) {
 }
 
 
-function handleTimings(timingsByCategories) {
+function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
+  if (timingsBySubcategoriesTree === undefined) {
+    timingsBySubcategoriesTree = {}; // obj.childrenByName[subCategoryName].childrenByName[subCategoryName] = {timings: []}
 
-  let timingsBySubcategoriesTree = {}; // obj.childrenByName[subCategoryName].childrenByName[subCategoryName] = {timings: []}
-  timingsBySubcategoriesTree.childrenByName = {};
-  timingsBySubcategoriesTree.children = [];
-  timingsBySubcategoriesTree.timings = [];
+    timingsBySubcategoriesTree.childrenByName = {};
+    timingsBySubcategoriesTree.children = [];
+    timingsBySubcategoriesTree.timings = [];
+  }
 
   // populate each timing's fromdate field
   Object.keys(timingsByCategories).forEach(key => {
@@ -723,15 +753,18 @@ function handleTimings(timingsByCategories) {
   });
 
   Object.keys(timingsByCategories).forEach(key => {
-    let categoryRootNode = {
-      name: key,
-      children: [],
-      childrenByName: {},
-      timings: []
-    };
+    let categoryRootNode = timingsBySubcategoriesTree.childrenByName[key];
+    if (categoryRootNode === undefined) {
+      categoryRootNode = {
+        name: key,
+        children: [],
+        childrenByName: {},
+        timings: []
+      };
+      timingsBySubcategoriesTree.childrenByName[key] = categoryRootNode;
+      timingsBySubcategoriesTree.children.push(categoryRootNode);
+    }
     let node = categoryRootNode;
-    timingsBySubcategoriesTree.childrenByName[key] = node;
-    timingsBySubcategoriesTree.children.push(node);
 
     let thisTimingsByDays = timingsByCategories[key];
 
@@ -789,8 +822,11 @@ function handleTimings(timingsByCategories) {
 }
 
 function ProcessesSubcategoriesViewBuilder() {
+  this.subtreesByName = {};
   this.htmls = [];
   this.views = [];
+  this.viewsByName = {};
+  this.htmlChildrenContainerUl = document.createElement('ul');
 }
 
 ProcessesSubcategoriesViewBuilder.prototype.buildViews = function(timingsBySubcategoriesTree) {
@@ -801,19 +837,30 @@ ProcessesSubcategoriesViewBuilder.prototype.buildViews = function(timingsBySubca
 };
 
 ProcessesSubcategoriesViewBuilder.prototype.addSubtree = function(timingsBySubcategoriesSubtree) {
+  console.log("ProcessesSubcategoriesViewBuilder.prototype.addSubtree. name: " + timingsBySubcategoriesSubtree.name);
   let that = this;
   let htmls = that.htmls;
   let views = that.views;
-  let treeView = new ProcessCategoryNodeView(timingsBySubcategoriesSubtree);
-  views[views.length] = treeView;
+  let oldChild = that.viewsByName[timingsBySubcategoriesSubtree.name];
+  if (oldChild !== undefined) {
+    console.log("ProcessesSubcategoriesViewBuilder.prototype.addSubtree. about to invoke oldChild.mergeWithNewTimings()");
+    oldChild.mergeWithNewTimings(timingsBySubcategoriesSubtree);
+  } else {
+    console.log("ProcessesSubcategoriesViewBuilder.prototype.addSubtree. oldChild is undefined.");
+    that.subtreesByName[timingsBySubcategoriesSubtree.name] = timingsBySubcategoriesSubtree;
+    let treeView = new ProcessCategoryNodeView(timingsBySubcategoriesSubtree);
+    views.push(treeView);
+    treeView.buildAsHtmlLiElement();
+    htmls.push(treeView.html);
+    that.viewsByName[timingsBySubcategoriesSubtree.name] = treeView;
 
-  treeView.buildAsHtmlLiElement();
-  htmls.push(treeView.html);
+    that.htmlChildrenContainerUl.appendChild(treeView.html);
+  }
 };
 
 ProcessesSubcategoriesViewBuilder.prototype.getResultHtml = function() {
   let that = this;
-  return withChildren(document.createElement('ul'),
+  return withChildren(that.htmlChildrenContainerUl,
     ...that.htmls
   );
 };
@@ -837,7 +884,25 @@ function ProcessSubcategoryNodeView(processNode, hGraphic) {
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
   });
+  that.htmlChildrenContainerUl = document.createElement('ul');
 }
+
+ProcessSubcategoryNodeView.prototype.mergeWithNewTimings = function(processNode) {
+  let that = this;
+  that.processNode = processNode;
+  processNode.children.forEach(childNode => {
+    let oldChild = that.childrenByName[childNode.name];
+    if (oldChild === undefined) {
+      let newChildView = new ProcessSubcategoryNodeView(childNode, that.hGraphic);
+      newChildView.buildAsHtmlLiElement();
+      that.children.push(newChildView);
+      that.childrenByName[childNode.name] = newChildView;
+      that.htmlChildrenContainerUl.appendChild(newChildView.html);
+    } else {
+      oldChild.mergeWithNewTimings(childNode);
+    }
+  });
+};
 
 ProcessSubcategoryNodeView.prototype.name2html = function() {
   let that = this;
@@ -881,25 +946,36 @@ ProcessSubcategoryNodeView.prototype.buildAsHtmlLiElement = function() {
     return;
   }
 
-  that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
-  let htmlElement =
-    withChildren(
-      withChildren(withClass(document.createElement('li'), 'proc-node-open'),
-        (function() {
-          let elem = document.createElement('span');
-          elem.classList.add('proc-node-icon');
-          elem.addEventListener('click', eve => {
-            that.toggleCollapse();
-          });
-          return elem;
-        })(),
-        that.name2html()
-      ),
-      withChildren(document.createElement('ul'),
-        ...that.children.map(childNode => childNode.html)
-      )
-    );
-  that.html = htmlElement;
+  if (that.html !== undefined) {
+    for (let childNode of that.children) {
+      if (childNode.html !== undefined) {
+        continue;
+      } else {
+        childNode.buildAsHtmlLiElement();
+        that.htmlChildrenContainerUl.appendChild(childNode.html);
+      }
+    }
+  } else {
+    that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
+    let htmlElement =
+      withChildren(
+        withChildren(withClass(document.createElement('li'), 'proc-node-open'),
+          (function() {
+            let elem = document.createElement('span');
+            elem.classList.add('proc-node-icon');
+            elem.addEventListener('click', eve => {
+              that.toggleCollapse();
+            });
+            return elem;
+          })(),
+          that.name2html()
+        ),
+        withChildren(that.htmlChildrenContainerUl,
+          ...that.children.map(childNode => childNode.html)
+        )
+      );
+    that.html = htmlElement;
+  }
 };
 
 ProcessSubcategoryNodeView.prototype.isLeaf = function() {
@@ -1012,7 +1088,29 @@ function ProcessCategoryNodeView(processNode) {
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
   });
+  that.htmlChildrenContainerUl = document.createElement('ul');
 }
+
+for (let propName in ProcessSubcategoryNodeView.prototype) {
+  ProcessCategoryNodeView.prototype[propName] = ProcessSubcategoryNodeView.prototype[propName];
+}
+
+ProcessCategoryNodeView.prototype.mergeWithNewTimings = function(processNode) {
+  let that = this;
+  that.processNode = processNode;
+  processNode.children.forEach(childNode => {
+    let oldChild = that.childrenByName[childNode.name];
+    if (oldChild === undefined) {
+      let newChildView = new ProcessSubcategoryNodeView(childNode, that.hGraphic);
+      newChildView.buildAsHtmlLiElement();
+      that.children.push(newChildView);
+      that.childrenByName[childNode.name] = newChildView;
+      that.htmlChildrenContainerUl.appendChild(newChildView.html);
+    } else {
+      oldChild.mergeWithNewTimings(childNode);
+    }
+  });
+};
 
 function createCurrentPeriodInitial() {
   let dateTo = new Date();
@@ -1026,10 +1124,6 @@ function createCurrentPeriodInitial() {
     from: dateFrom,
     to: dateTo
   };
-}
-
-for (let propName in ProcessSubcategoryNodeView.prototype) {
-  ProcessCategoryNodeView.prototype[propName] = ProcessSubcategoryNodeView.prototype[propName];
 }
 
 function createHtmlSpanPeriodInfo(initialPeriod) {
@@ -1046,7 +1140,7 @@ function periodInfoText(period) {
   return periodInfoText;
 }
 
-ProcessCategoryNodeView.prototype.requestTimingsForPeriod = function(periodFrom, periodTo) {
+function requestTimingsForPeriod(periodFrom, periodTo) {
   return new Promise((resolve, reject) => {
     window.webkit.messageHandlers.timings_frequencies_msgs__timings_for_period.postMessage(
       date2TimingDateStr(periodFrom) +
@@ -1067,35 +1161,45 @@ ProcessCategoryNodeView.prototype.buildAsHtmlLiElement = function() {
     return;
   }
 
-  let hGraphic = that.hGraphic;
-  hGraphic.initCanvas();
-  hGraphic.redraw();
+  if (that.html !== undefined) {
+    for (let childNode of that.children) {
+      if (childNode.html !== undefined) {
+        continue;
+      }
+      childNode.buildAsHtmlLiElement();
+      that.htmlChildrenContainerUl.appendChild(childNode.html);
+    }
+  } else {
+    let hGraphic = that.hGraphic;
+    hGraphic.initCanvas();
+    hGraphic.redraw();
 
-  that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
-  let htmlElement =
-    withChildren(
-      withChildren(withClass(document.createElement('li'), 'proc-node-open'),
-        (function() {
-          let elem = document.createElement('span');
-          elem.classList.add('proc-node-icon');
-          elem.addEventListener('click', eve => {
-            that.toggleCollapse();
-          });
-          return elem;
-        })(),
-        withChildren(document.createElement('div'),
-          that.name2html(),
-          that.buildPeriodButtonsRow(),
+    that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
+    let htmlElement =
+      withChildren(
+        withChildren(withClass(document.createElement('li'), 'proc-node-open'),
+          (function() {
+            let elem = document.createElement('span');
+            elem.classList.add('proc-node-icon');
+            elem.addEventListener('click', eve => {
+              that.toggleCollapse();
+            });
+            return elem;
+          })(),
           withChildren(document.createElement('div'),
-            hGraphic.elem
+            that.name2html(),
+            that.buildPeriodButtonsRow(),
+            withChildren(document.createElement('div'),
+              hGraphic.elem
+            )
           )
+        ),
+        withChildren(that.htmlChildrenContainerUl,
+          ...that.children.map(childNode => childNode.html)
         )
-      ),
-      withChildren(document.createElement('ul'),
-        ...that.children.map(childNode => childNode.html)
-      )
-    );
-  that.html = htmlElement;
+      );
+    that.html = htmlElement;
+  }
 };
 
 ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
@@ -1114,12 +1218,13 @@ ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
     newPeriodFrom.setTime(oldPeriodFrom.getTime() - millisInMonth);
     that.currentPeriod.from = newPeriodFrom;
     that.htmlSpanPeriodInfo.innerHTML = periodInfoText(that.currentPeriod);
-    that.requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom).then(timings => {
+    requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom).then(timings => {
       console.log('btnPlusHalfYear.onclick timings keys:');
       console.dir(Object.keys(timings));
-      let mergedTimings = mergeTimings(my.timings, timings);
+      my.timings = handleTimings(timings, my.timings);
+      my.viewBuilder.buildViews(my.timings);
     }).catch(err => {
-      window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
+      window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "btnPlusHalfYear.onclick err: " + err);
     });
   };
@@ -1131,12 +1236,13 @@ ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
     newPeriodFrom.setTime(oldPeriodFrom.getTime() - millisInMonth);
     that.currentPeriod.from = newPeriodFrom;
     that.htmlSpanPeriodInfo.innerHTML = periodInfoText(that.currentPeriod);
-    that.requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom).then(timings => {
+    requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom).then(timings => {
       console.log('btnPlusMonth.onclick timings keys:');
       console.dir(Object.keys(timings));
-      let mergedTimings = mergeTimings(my.timings, timings);
+      my.timings = handleTimings(timings, my.timings);
+      my.viewBuilder.buildViews(my.timings);
     }).catch(err => {
-      window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
+      window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "btnPlusMonth.onclick err: " + err);
     });
   };
