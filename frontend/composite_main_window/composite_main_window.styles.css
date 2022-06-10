@@ -40,6 +40,38 @@ body {
   font-size: xx-small;
 }
 
+li.timing-row-parent-li > span.timing-row {
+  color: white;
+  opacity: 1;
+}
+
+li.timing-row-parent-li.greyed-out > span.timing-row {
+  color: white;
+  opacity: .3;
+}
+
+li.timing-row-parent-li.minimized-to-invisibility ,
+li.timing-row-parent-li.extra-unhighlighted {
+  display: none;
+}
+
+.timing-row.highlighted-from-canvas {
+  color: red !important;
+}
+
+ul.timings-categories-tree {
+  color: white;
+}
+
+.proc-node > a, .proc-leaf > a {
+  cursor: pointer;
+}
+
+.proc-node.unhighlighted-node > a,
+.proc-leaf.unhighlighted-node > a {
+  opacity: 0.3;
+}
+
 li.proc-node-open, li.proc-node-closed, li.proc-leaf {
   list-style-type: none;
 }

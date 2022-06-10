@@ -41,6 +41,8 @@ def read_timings_for_three_last_days(config, timing2indexFilename):
     return read_timings_for_set_of_dates(config, timing2indexFilename, set_of_dates)
 
 def read_timings_for_set_of_dates(config, timing2indexFilename, set_of_dates):
+    import json
+    print("read_timings_for_set_of_dates. set_of_dates len: " + json.dumps(list(set_of_dates)))
     result = {}
     current_time = datetime.now()
     today_str = current_time.strftime("%d.%m.%Y")
@@ -49,6 +51,7 @@ def read_timings_for_set_of_dates(config, timing2indexFilename, set_of_dates):
         filepath = os.path.expanduser(timing.get("filepath"))
         indexFilename = timing2indexFilename[timing_name]
         offsets_by_date = read_index_for_set_of_dates(indexFilename, set_of_dates)
+        print("read_timings_for_set_of_dates. timing_name: " + timing_name + ", offsets_by_date: " + json.dumps(offsets_by_date))
         frmt = timing.get("format")
         with open(filepath, encoding='utf-8') as f:
             if frmt == "txt" or frmt == None:

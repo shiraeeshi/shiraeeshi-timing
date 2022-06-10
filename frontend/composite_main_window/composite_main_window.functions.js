@@ -25,25 +25,13 @@ function handleServerMessage(msg) {
         if (my.minimalTextForTimings) {
           clearTimingsTextWrapper();
         } else {
-          if (my.currentlyDisplayedTimings) {
-            displayTimingsAsText(my.currentlyDisplayedTimings);
-          }
+          makeTimingsTextElementsUnminimized();
         }
       }
       return;
     }
     initPeriodButtonsRow();
     my.timings = msg.timings;
-    /*
-    let processes_object = msg.processes;
-    let forest = yamlRootObject2forest(msg.processes);
-    my.processesForest = forest;
-    showTagsAndLinks(forest);
-    let viewBuilder = new ProcessesForestViewBuilder();
-    viewBuilder.buildView(forest);
-    my.processesForestViews = viewBuilder.getProcessesForestViews();
-    appendProcessesForestHtml(viewBuilder.getHtmlElements());
-    */
 
     let processes_object = msg.processes;
     let forest = yamlRootObject2forest(msg.processes);

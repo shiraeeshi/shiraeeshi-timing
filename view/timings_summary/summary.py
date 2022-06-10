@@ -5,7 +5,9 @@ from definitions import ROOT_DIR
 from logic.page_communicator import PageCommunicator
 from logic.window_app_state import WindowAppState
 from models.config_info import json2config
-from logic.timing_file_parser import read_timings
+#from logic.timing_file_parser import read_timings
+from logic.timing_file_parser import read_timings_for_three_last_days
+from logic.timing_index_manager import create_or_refresh_index
 
 def show_timings_summary(summary_type):
     print(summary_type)
@@ -112,7 +114,9 @@ def show_timings_summary(summary_type):
         config = json2config(contents)
         app_state.config = config
         page_communicator.config_loaded(config)
-        timings_contents = read_timings(config)
+        #timings_contents = read_timings(config)
+        timing2indexFilename = create_or_refresh_index()
+        timings_contents = read_timings_for_three_last_days(config, timing2indexFilename)
         #await page_communicator.load_finished_event.wait()
         app_state.after_page_loaded(
                 lambda : page_communicator.send_json(json.dumps(timings_contents)))
