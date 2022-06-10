@@ -2,7 +2,7 @@ import os
 import re
 import yaml
 from datetime import datetime, timedelta
-from logic.timing_index_manager import read_index, read_index_for_set_of_dates
+from logic.timing_index_manager import read_index, yield_index_for_range_of_dates, read_index_for_set_of_dates
 
 def read_timings(config):
     result = {}
@@ -23,6 +23,66 @@ def read_timings(config):
                 parsed_yaml = yaml.load(f)
                 parsed_timings = parse_yaml_timings(parsed_yaml)
                 result[timing_name] = parsed_timings
+    return result
+
+def read_timings_for_range_of_dates(config, timing2indexFilename, dateFrom, dateTo):
+    result = {}
+    for timing in config.timings:
+        timing_name = timing.get("name")
+        filepath = os.path.expanduser(timing.get("filepath"))
+        indexFilename = timing2indexFilename[timing_name]
+        frmt = timing.get("format")
+        with open(filepath, encoding='utf-8') as f:
+            if frmt == "txt" or frmt == None:
+
+                result[timing_name] = []
+
+                for offset_line_obj in yield_index_for_range_of_dates(indexFilename, dateFrom, dateTo):
+                    a_date = offset_line_obj["date"]
+                    f.seek(offset_line_obj["offset_from"])
+                    #a_string = f.read(offset_line_obj["offset_to"] - offset_line_obj["offset_from"])
+                    a_string = _read_lines_until_position(f, offset_line_obj["offset_to"])
+                    print("debug index: timing: {}, date: {}, a_string: {}".format(timing_name, a_date, a_string))
+                    lines = a_string.splitlines()
+                    timings = parse_timing_file_lines(lines)
+
+                    if len(timings) > 1:
+                        raise Exception("expected one item corresponding to timings of one date from parse_timing_file_lines. len(timings) = {}".format(len(timings)))
+
+                    if len(timings) == 0:
+                        continue
+
+                    parsed_timings_of_date = timings[0]
+
+                    #import json
+                    #print("debug index: parsed_timings: {}".format(json.dumps(parsed_timings_of_date)))
+
+                    result[timing_name].append(parsed_timings_of_date)
+            elif frmt == "yaml":
+                parsed_yaml = None
+                result[timing_name] = []
+
+                for offset_line_obj in yield_index_for_range_of_dates(indexFilename, dateFrom, dateTo):
+                    a_date = offset_line_obj["date"]
+                    f.seek(offset_line_obj["offset_from"])
+                    #a_string = f.read(offset_line_obj["offset_to"] - offset_line_obj["offset_from"]) # encoding issue, utf-8 characters
+                    a_string = _read_lines_until_position(f, offset_line_obj["offset_to"])
+                    print("debug index: timing: {}, date: {}, a_string: {}".format(timing_name, a_date, a_string))
+                    parsed_yaml = yaml.safe_load(a_string)
+                    parsed_timings = parse_yaml_timings(parsed_yaml)
+
+                    if len(parsed_timings) > 1:
+                        raise Exception("expected one item corresponding to timings of one date from parse_yaml_timings. len(parsed_timings) = {}".format(len(parsed_timings)))
+
+                    if len(parsed_timings) == 0:
+                        continue
+
+                    parsed_timings_of_date = parsed_timings[0]
+
+                    #import json
+                    #print("debug index: parsed_timings: {}".format(json.dumps(parsed_timings_of_date)))
+
+                    result[timing_name].append(parsed_timings_of_date)
     return result
 
 def read_timings_for_three_last_days(config, timing2indexFilename):
@@ -60,7 +120,8 @@ def read_timings_for_set_of_dates(config, timing2indexFilename, set_of_dates):
 
                 for a_date, offsets in offsets_by_date.items():
                     f.seek(offsets["offset_from"])
-                    a_string = f.read(offsets["offset_to"] - offsets["offset_from"])
+                    #a_string = f.read(offsets["offset_to"] - offsets["offset_from"])
+                    a_string = _read_lines_until_position(f, offsets["offset_to"])
                     print("debug index: timing: {}, date: {}, a_string: {}".format(timing_name, a_date, a_string))
                     lines = a_string.splitlines()
                     timings = parse_timing_file_lines(lines)

@@ -3,6 +3,7 @@
 import os
 import re
 import uuid
+from datetime import datetime
 
 from definitions import ROOT_DIR
 from models.config_info import json2config
@@ -205,6 +206,45 @@ def _remember_timing_last_modified(timing_filepath, index_name, tmp_dir):
     timing_last_modified = os.path.getmtime(timing_filepath)
     with open(index_last_modified_filepath, 'w') as f_ilm:
         f_ilm.write("{}".format(timing_last_modified))
+
+def yield_index_for_range_of_dates(indexFilename, dateFrom, dateTo):
+    filepath = os.path.join(ROOT_DIR, "tmp", indexFilename)
+    with open(filepath, encoding='utf-8') as f:
+        first_line = f.readline().rstrip()
+        if (first_line != "date,offset_from,offset_to"):
+            raise Exception("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")")
+        line_number = 0
+        while True:
+            line_number += 1
+            line = f.readline()
+            if line == "":
+                break
+            line = line.rstrip()
+            words = line.split(",")
+
+            if len(words) != 3:
+                raise Exception("error while parsing timing index: wrong format (len(line.split(\",\")) != 3). line {}: {}".format(line_number, line))
+
+            dateAsStr = words[0]
+            date = datetime.strptime(dateAsStr, "%d.%m.%Y")
+
+            if date < dateFrom:
+                continue
+            if date > dateTo:
+                break
+
+            offset_from = words[1]
+            offset_to = words[2]
+
+            try:
+                offset_from = int(offset_from)
+                offset_to = int(offset_to)
+
+                offsets_line_obj = {"date": dateAsStr, "offset_from": offset_from, "offset_to": offset_to}
+                yield offsets_line_obj
+            except ValueError as err:
+                print("error while parsing timing index: wrong format (couldn't parse as int). line {}: {}".format(line_number, line))
+                raise err
 
 def read_index_for_set_of_dates(indexFilename, set_of_dates):
     filepath = os.path.join(ROOT_DIR, "tmp", indexFilename)

@@ -5,6 +5,12 @@ function handleServerMessage(msg) {
     if (msg.msg_type == 'keypress_event') {
       return;
     }
+    if (msg.msg_type == "timings_query_response") {
+      if (my.timingsQueryResponseCallback !== undefined) {
+        my.timingsQueryResponseCallback(msg.timings);
+      }
+      return;
+    }
     my.timings = msg;
     let timingsBySubcategoriesTree = handleTimings(my.timings);
     showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree);
@@ -1041,11 +1047,16 @@ function periodInfoText(period) {
 }
 
 ProcessCategoryNodeView.prototype.requestTimingsForPeriod = function(periodFrom, periodTo) {
-  window.webkit.messageHandlers.timings_frequencies_msgs__timings_for_period.postMessage(
-    date2TimingDateStr(periodFrom) +
-    " - " +
-    date2TimingDateStr(periodTo)
-  );
+  return new Promise((resolve, reject) => {
+    window.webkit.messageHandlers.timings_frequencies_msgs__timings_for_period.postMessage(
+      date2TimingDateStr(periodFrom) +
+      " - " +
+      date2TimingDateStr(periodTo)
+    );
+    my.timingsQueryResponseCallback = function(timings) {
+      resolve(timings);
+    };
+  });
 };
 
 ProcessCategoryNodeView.prototype.buildAsHtmlLiElement = function() {
@@ -1103,7 +1114,14 @@ ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
     newPeriodFrom.setTime(oldPeriodFrom.getTime() - millisInMonth);
     that.currentPeriod.from = newPeriodFrom;
     that.htmlSpanPeriodInfo.innerHTML = periodInfoText(that.currentPeriod);
-    that.requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom);
+    that.requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom).then(timings => {
+      console.log('btnPlusHalfYear.onclick timings keys:');
+      console.dir(Object.keys(timings));
+      let mergedTimings = mergeTimings(my.timings, timings);
+    }).catch(err => {
+      window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
+        "btnPlusHalfYear.onclick err: " + err);
+    });
   };
   btnPlusMonth.onclick = function() {
     console.log('+month');
@@ -1113,7 +1131,14 @@ ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
     newPeriodFrom.setTime(oldPeriodFrom.getTime() - millisInMonth);
     that.currentPeriod.from = newPeriodFrom;
     that.htmlSpanPeriodInfo.innerHTML = periodInfoText(that.currentPeriod);
-    that.requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom);
+    that.requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom).then(timings => {
+      console.log('btnPlusMonth.onclick timings keys:');
+      console.dir(Object.keys(timings));
+      let mergedTimings = mergeTimings(my.timings, timings);
+    }).catch(err => {
+      window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
+        "btnPlusMonth.onclick err: " + err);
+    });
   };
   return withChildren(document.createElement('div'),
     btnPlusHalfYear,
@@ -1121,6 +1146,10 @@ ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
     that.htmlSpanPeriodInfo
   );
 };
+
+function mergeTimings(timingsA, timingsB) {
+  return timingsB;
+}
 
 function timingDateArrays2Date(dateArray, hourMinuteArray) {
   let d = new Date();

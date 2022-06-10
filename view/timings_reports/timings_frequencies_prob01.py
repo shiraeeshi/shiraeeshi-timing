@@ -1,13 +1,16 @@
 import os
 import json
+from datetime import datetime
 from common import gtk, WebKit2, Gdk
 from definitions import ROOT_DIR
 from logic.page_communicator import PageCommunicator
 from logic.window_app_state import WindowAppState
 from models.config_info import json2config
-from logic.timing_file_parser import read_timings
+from logic.timing_file_parser import read_timings, read_timings_for_range_of_dates
+from logic.timing_index_manager import create_or_refresh_index
 
 def show_timings_frequencies():
+    timing2indexFilename = create_or_refresh_index()
     window = gtk.Window()
     window.set_title("Something")
     window.connect("destroy", gtk.main_quit)
@@ -62,9 +65,15 @@ def show_timings_frequencies():
         if len(dates_as_strings) != 2:
             print("handle_request_timings_for_period. error: unexpected request parameter value (expected two dates with ' - ' between them)")
             return
-        periodFrom = dates_as_strings[0]
-        periodTo = dates_as_strings[1]
+        strPeriodFrom = dates_as_strings[0]
+        strPeriodTo = dates_as_strings[1]
+        periodFrom = datetime.strptime(strPeriodFrom, "%d.%m.%Y")
+        periodTo = datetime.strptime(strPeriodTo, "%d.%m.%Y")
         print("handle_request_timings_for_period. from: {}, to: {}".format(periodFrom, periodTo))
+        timings = read_timings_for_range_of_dates(app_state.config, timing2indexFilename, periodFrom, periodTo)
+        response = json.dumps({"msg_type": "timings_query_response", "timings": timings});
+        # print("handle_request_timings_for_period. response: " + response)
+        page_communicator.send_json(response)
         pass
 
     webview.get_user_content_manager().connect("script-message-received::timings_frequencies_msgs__timings_for_period"
@@ -117,8 +126,10 @@ def show_timings_frequencies():
         app_state.config = config
         page_communicator.config_loaded(config)
         timings_contents = read_timings(config)
+
         # app_state.after_page_loaded(
         #         lambda : page_communicator.send_json(json.dumps(timings_contents, ensure_ascii=False).encode('utf8')))
+
         app_state.after_page_loaded(
                 lambda : page_communicator.send_json(json.dumps(timings_contents, ensure_ascii=False)))
 
