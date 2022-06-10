@@ -845,12 +845,14 @@ ProcessesSubcategoriesViewBuilder.prototype.addSubtree = function(timingsBySubca
   if (oldChild !== undefined) {
     console.log("ProcessesSubcategoriesViewBuilder.prototype.addSubtree. about to invoke oldChild.mergeWithNewTimings()");
     oldChild.mergeWithNewTimings(timingsBySubcategoriesSubtree);
+    oldChild.hGraphic.redraw();
   } else {
     console.log("ProcessesSubcategoriesViewBuilder.prototype.addSubtree. oldChild is undefined.");
     that.subtreesByName[timingsBySubcategoriesSubtree.name] = timingsBySubcategoriesSubtree;
     let treeView = new ProcessCategoryNodeView(timingsBySubcategoriesSubtree);
     views.push(treeView);
     treeView.buildAsHtmlLiElement();
+    treeView.hGraphic.redraw();
     htmls.push(treeView.html);
     that.viewsByName[timingsBySubcategoriesSubtree.name] = treeView;
 
