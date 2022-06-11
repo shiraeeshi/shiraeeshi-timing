@@ -31,6 +31,7 @@ function handleServerMessage(msg) {
       return;
     }
     initPeriodButtonsRow();
+    my.imageInfo = new ImageInfo();
     my.timings = msg.timings;
 
     let processes_object = msg.processes;

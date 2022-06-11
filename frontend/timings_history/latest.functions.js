@@ -50,6 +50,7 @@ function handleServerMessage(msg) {
   }
   window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage start ");
   addListenersToButtons();
+  my.imageInfo = new ImageInfo();
   // my.timings = msg;
   showTimingsOf60HourDay();
   window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage end ");
@@ -130,12 +131,7 @@ function showTimingsOf24HourDay() {
   timingsPromise.then(timings => {
     //window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
     //  "showTimingsOf24HourDay (promise.then) timings len: " + timings.length);
-    date.setHours(0);
-    date.setMinutes(0);
-    date.setSeconds(0);
-    let maxDiff = (new Date().getTime() - date.getTime()) / (60.0 * 1000);
-    setImageMinutesMaxDiff(maxDiff);
-    setImageMinutesRange(24*60);
+    my.imageInfo.updateAsPeriodType(PeriodType.PERIOD_OF_24_HOURS);
 
     my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
     displayTimings(timings, my.timingsCategoryNodeViewRoot);
@@ -159,8 +155,7 @@ function showTimingsOf60HourDay() {
   timingsPromise.then(timings => {
     window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
       "showTimingsOf60HourDay timings len: " + timings.length);
-    setImageMinutesMaxDiff(diffFrom / (60.0 * 1000));
-    setImageMinutesRange(2.5*24*60);
+    my.imageInfo.updateAsPeriodType(PeriodType.PERIOD_OF_60_HOURS);
 
     my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
     displayTimings(timings, my.timingsCategoryNodeViewRoot);
@@ -182,13 +177,54 @@ function showTimingsOf60HourDay() {
   });
 }
 
-function setImageMinutesMaxDiff(maxDiff) {
-  my.imageInfo.minutesMaxDiff = maxDiff;
+function PeriodType() {};
+
+PeriodType.PERIOD_OF_24_HOURS = new PeriodType();
+PeriodType.PERIOD_OF_60_HOURS = new PeriodType();
+
+function ImageInfo() {
+  this.minutesMaxDiff = 0;
+  this.minutesRange = 0;
+  this.periodType = PeriodType.PERIOD_OF_60_HOURS;
+  this.minutesMaxDiffLastModified = 0;
 }
 
-function setImageMinutesRange(minutesRange) {
-  my.imageInfo.minutesRange = minutesRange;
-}
+ImageInfo.prototype.updateAsPeriodType = function(periodType) {
+  let that = this;
+  that.periodType = periodType;
+  if (periodType == PeriodType.PERIOD_OF_24_HOURS) {
+    let date = new Date();
+    date.setTime(date.getTime() - my.dayOffset*24*60*60*1000);
+    date.setHours(0);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    let maxDiff = (new Date().getTime() - date.getTime()) / (60.0 * 1000);
+    that.minutesRange = 24*60;
+    that.minutesMaxDiff = maxDiff;
+    that.minutesMaxDiffLastModified = new Date();
+  } else if (periodType == PeriodType.PERIOD_OF_60_HOURS) {
+    let millisIn24hours = 24*60*60*1000;
+    let currentAbstractDayDiff = millisOfCurrentAbstractDayOfYear(2.5);
+    let diffFrom = currentAbstractDayDiff + my.dayOffset * 2.5 * millisIn24hours;
+
+    let maxDiff = diffFrom / (60.0 * 1000);
+  
+    that.minutesRange = 2.5 * 24 * 60;
+    that.minutesMaxDiff = maxDiff;
+    that.minutesMaxDiffLastModified = new Date();
+  }
+};
+
+ImageInfo.prototype.updateIfNeeded = function() {
+  let that = this;
+  let now = new Date();
+  let millisSinceLastModified = that.minutesMaxDiffLastModified.getTime() - now.getTime();
+  let millisIn5Minutes = 5*60*1000;
+  if (millisSinceLastModified > millisIn5Minutes) {
+    that.updateAsPeriodType(that.periodType)
+  }
+};
+
 
 function displayTimings(timings, timingsCategoryNodeViewRoot) {
   my.currentFilteredTimings = timings;
