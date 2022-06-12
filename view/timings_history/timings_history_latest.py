@@ -1,7 +1,7 @@
 import os
 import json
 from common import gtk, WebKit2, Gdk
-from definitions import ROOT_DIR
+from definitions import ROOT_DIR, icon_of_window
 from logic.page_communicator import PageCommunicator
 from logic.window_app_state import WindowAppState
 from models.config_info import json2config
@@ -12,6 +12,7 @@ def show_timings_history_latest():
     timing2indexFilename = create_or_refresh_index()
     window = gtk.Window()
     window.set_title("Something")
+    window.set_icon_from_file(icon_of_window())
     window.connect("destroy", gtk.main_quit)
     window.set_default_size(800, 900)
     window.set_position(gtk.WindowPosition.CENTER)
