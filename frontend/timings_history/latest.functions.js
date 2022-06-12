@@ -219,10 +219,8 @@ ImageInfo.prototype.updateIfNeeded = function() {
   let that = this;
   let now = new Date();
   let millisSinceLastModified = that.minutesMaxDiffLastModified.getTime() - now.getTime();
-  let millisIn5Minutes = 5*60*1000;
-  if (millisSinceLastModified > millisIn5Minutes) {
-    that.updateAsPeriodType(that.periodType)
-  }
+  that.minutesMaxDiff += (millisSinceLastModified / (60.0 * 1000));
+  that.minutesMaxDiffLastModified = now;
 };
 
 
