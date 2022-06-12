@@ -336,7 +336,7 @@ ImageInfo.prototype.updateIfNeeded = function() {
   if (that.periodType == PeriodType.FROM_ZERO_HOURS_OF_24_HOUR_PERIOD ||
       that.periodType == PeriodType.FROM_ZERO_HOURS_OF_60_HOUR_PERIOD) {
     let now = new Date();
-    let millisSinceLastModified = that.minutesMaxDiffLastModified.getTime() - now.getTime();
+    let millisSinceLastModified = now.getTime() - that.minutesMaxDiffLastModified.getTime();
     that.minutesMaxDiff += (millisSinceLastModified / (60.0 * 1000));
     that.minutesMaxDiffLastModified = now;
   }

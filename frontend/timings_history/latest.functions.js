@@ -218,7 +218,7 @@ ImageInfo.prototype.updateAsPeriodType = function(periodType) {
 ImageInfo.prototype.updateIfNeeded = function() {
   let that = this;
   let now = new Date();
-  let millisSinceLastModified = that.minutesMaxDiffLastModified.getTime() - now.getTime();
+  let millisSinceLastModified = now.getTime() - that.minutesMaxDiffLastModified.getTime();
   that.minutesMaxDiff += (millisSinceLastModified / (60.0 * 1000));
   that.minutesMaxDiffLastModified = now;
 };
