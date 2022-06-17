@@ -107,6 +107,8 @@ function TimingsHistogramsGraphic(processNode) {
   this.processNode = processNode;
   this.rangeX = {from: 0, to: 100};
   this.rangeY = {from: 0, to: 100};
+  this.distortionX = {a: 0, b: 1, c: 0};
+  this.distortionY = {a: 1};
   this.scrollbarBreadth = 20;
   this.canvas = null; // invoke initCanvas()
   //this.highlightedProcessName = null; // invoke highlightProcess
@@ -364,8 +366,86 @@ TimingsHistogramsGraphic.prototype.initCanvas = function() {
 
   this.elem = withChildren(document.createElement('div'),
     canvas,
+    that.buildDistortionButtonsPanel(),
     buttonsPanel,
   );
+};
+
+TimingsHistogramsGraphic.prototype.setDistortionXa = function(newValue) {
+  this.distortionX.a = newValue;
+};
+TimingsHistogramsGraphic.prototype.setDistortionXb = function(newValue) {
+  this.distortionX.b = newValue;
+};
+TimingsHistogramsGraphic.prototype.setDistortionXc = function(newValue) {
+  this.distortionX.c = newValue;
+};
+
+TimingsHistogramsGraphic.prototype.setDistortionY = function(newValue) {
+  this.distortionY.a = newValue;
+};
+
+TimingsHistogramsGraphic.prototype.buildDistortionButtonsPanel = function() {
+  let that = this;
+
+  let inputDistortionXa = document.createElement('input');
+  inputDistortionXa.type = 'text';
+  inputDistortionXa.value = that.distortionX.a;
+
+  let inputDistortionXb = document.createElement('input');
+  inputDistortionXb.type = 'text';
+  inputDistortionXb.value = that.distortionX.b;
+
+  let inputDistortionXc = document.createElement('input');
+  inputDistortionXc.type = 'text';
+  inputDistortionXc.value = that.distortionX.c;
+
+  let inputDistortionY = document.createElement('input');
+  inputDistortionY.type = 'text';
+  inputDistortionY.value = that.distortionY.a;
+
+  function addEnterListener(input, handler) {
+    input.addEventListener('keyup', (eve) => {
+      if (eve.key == 'Enter') {
+        handler(input.value);
+      }
+    });
+  }
+
+  function setDistorionXAndRedraw() {
+    that.setDistortionXa(parseFloat(inputDistortionXa.value));
+    that.setDistortionXb(parseFloat(inputDistortionXb.value));
+    that.setDistortionXc(parseFloat(inputDistortionXc.value));
+    that.redraw();
+  }
+
+  addEnterListener(inputDistortionXa, setDistorionXAndRedraw);
+  addEnterListener(inputDistortionXb, setDistorionXAndRedraw);
+  addEnterListener(inputDistortionXc, setDistorionXAndRedraw);
+
+  function setDistorionYAndRedraw() {
+    that.setDistortionY(parseFloat(inputDistortionY.value));
+    that.redraw();
+  }
+
+  addEnterListener(inputDistortionY, setDistorionYAndRedraw);
+
+  let buttonsPanel =
+    withChildren(document.createElement('div'),
+      withChildren(document.createElement('div'),
+        withChildren(document.createElement('span'), document.createTextNode('distortion x: a:')),
+        inputDistortionXa,
+        withChildren(document.createElement('span'), document.createTextNode('b:')),
+        inputDistortionXb,
+        withChildren(document.createElement('span'), document.createTextNode('c:')),
+        inputDistortionXc
+      ),
+      withChildren(document.createElement('div'),
+        withChildren(document.createElement('span'), document.createTextNode('distortion y:')),
+        inputDistortionY
+      )
+    );
+  return buttonsPanel;
 };
 
 TimingsHistogramsGraphic.prototype.redraw = function() {
@@ -416,10 +496,12 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
 
   let millisFrom = oldestRecordMillis * (graphicWidth - that.rangeX.from) / graphicWidth;
   let millisTo = oldestRecordMillis * (graphicWidth - that.rangeX.to) / graphicWidth;
+  let timeRange = millisFrom - millisTo;
   let xRatio = (millisFrom - millisTo) / graphicWidth;
 
   let wavelengthFrom = maxWavelength * that.rangeY.from / graphicHeight;
   let wavelengthTo = maxWavelength * that.rangeY.to / graphicHeight;
+  let wavelengthRange = wavelengthTo - wavelengthFrom;
   let yRatio = (wavelengthTo - wavelengthFrom) / graphicHeight;
 
   window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
@@ -478,16 +560,37 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     if (colorRGBA) {
       ctx.fillStyle = colorRGBA;
     }
+    //function distort(timeDiff, y) {
+    function distort(y) {
+      // let xa = that.distortionX.a;
+      // let xb = that.distortionX.b;
+      // let xc = that.distortionX.c;
+
+      let ya = that.distortionY.a;
+
+      // let coeff = (ya*Math.sqrt(timeDiff / timeRange) + yb*(timeDiff / timeRange) + yc);
+      // let coeff = Math.exp(Math.log(timeDiff/timeRange) / ya) / (timeDiff/timeRange);
+      // return coeff * y;
+      let wr = wavelengthRange;
+      //let normal = (wr - y)/wr;
+      let normal = y/wr;
+      let root = Math.exp(Math.log(normal) / ya);
+      let coeff = (root - normal) / normal;
+      return y + y*coeff;
+    }
     function drawTiming(t) {
-      let time = now.getTime() - t.fromdate.getTime();
-      if (withinTimeRange(time, millisFrom, millisTo)) {
-        //let xFrom = (time - millisFrom) * xRatio
-        let xFrom = graphicWidth * (millisFrom - time) / (millisFrom - millisTo);
+      let timeDiff = now.getTime() - t.fromdate.getTime();
+      if (withinTimeRange(timeDiff, millisFrom, millisTo)) {
+        //let xFrom = (timeDiff - millisFrom) * xRatio
+        //let xFrom = graphicWidth * (millisFrom - timeDiff) / (millisFrom - millisTo);
+        let xFrom = (millisFrom - timeDiff) / xRatio;
         that.fillRect(ctx, {
           xFrom: xFrom,
           xTo: xFrom + 5,
           yFrom: 0,
-          yTo: t.millisUntilNext / yRatio
+          //yTo: t.millisUntilNext / yRatio
+          //yTo: distort(millisFrom - timeDiff, t.millisUntilNext) / yRatio
+          yTo: distort(t.millisUntilNext) / yRatio
         });
       }
     }
@@ -1157,11 +1260,11 @@ function requestTimingsForPeriod(periodFrom, periodTo) {
 
 ProcessCategoryNodeView.prototype.buildAsHtmlLiElement = function() {
   let that = this;
-  if (that.children.length == 0) {
-    let htmlElement = withClass(withChildren(document.createElement('li'), that.name2html()), 'proc-leaf');
-    that.html = htmlElement;
-    return;
-  }
+  // if (that.children.length == 0) {
+  //   let htmlElement = withClass(withChildren(document.createElement('li'), that.name2html()), 'proc-leaf');
+  //   that.html = htmlElement;
+  //   return;
+  // }
 
   if (that.html !== undefined) {
     for (let childNode of that.children) {
