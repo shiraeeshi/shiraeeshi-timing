@@ -116,14 +116,64 @@ function TimingsHistogramsGraphic(processNode) {
   this.highlightedSubprocessOfSelectedProcessNode = null; // invoke highlightSubprocessOfSelectedProcessNode
 }
 
-TimingsHistogramsGraphic.prototype.setRangeX = function(from, to) {
-  this.rangeX.from = from;
-  this.rangeX.to = to;
+TimingsHistogramsGraphic.prototype.setRangeXFrom = function(from) {
+  if (from < 0) {
+    this.rangeX.from = 0;
+  } else {
+    this.rangeX.from = from;
+  }
+};
+TimingsHistogramsGraphic.prototype.setRangeXTo = function(to) {
+  let maxX = this.canvas.width - this.scrollbarBreadth;
+  if (to > maxX) {
+    this.rangeX.to = maxX;
+  } else {
+    this.rangeX.to = to;
+  }
+};
+TimingsHistogramsGraphic.prototype.shiftRangeX = function(newFrom, newTo) {
+  let range = this.rangeX.to - this.rangeX.from;
+  if (newFrom < 0) {
+    newFrom = 0;
+    newTo = range;
+  }
+  let maxX = this.canvas.width - this.scrollbarBreadth;
+  if (newTo > maxX) {
+    newTo = maxX;
+    newFrom = maxX - range;
+  }
+  this.rangeX.from = newFrom;
+  this.rangeX.to = newTo;
 };
 
-TimingsHistogramsGraphic.prototype.setRangeY = function(from, to) {
-  this.rangeY.from = from;
-  this.rangeY.to = to;
+TimingsHistogramsGraphic.prototype.setRangeYFrom = function(from) {
+  if (from < 0) {
+    this.rangeY.from = 0;
+  } else {
+    this.rangeY.from = from;
+  }
+};
+TimingsHistogramsGraphic.prototype.setRangeYTo = function(to) {
+  let maxY = this.canvas.height - this.scrollbarBreadth;
+  if (to > maxY) {
+    this.rangeY.to = maxY;
+  } else {
+    this.rangeY.to = to;
+  }
+};
+TimingsHistogramsGraphic.prototype.shiftRangeY = function(newFrom, newTo) {
+  let range = this.rangeY.to - this.rangeY.from;
+  if (newFrom < 0) {
+    newFrom = 0;
+    newTo = range;
+  }
+  let maxY = this.canvas.height - this.scrollbarBreadth;
+  if (newTo > maxY) {
+    newTo = maxY;
+    newFrom = maxY - range;
+  }
+  this.rangeY.from = newFrom;
+  this.rangeY.to = newTo;
 };
 
 TimingsHistogramsGraphic.prototype.selectProcess = function(selectedProcessNode) {
@@ -137,6 +187,23 @@ TimingsHistogramsGraphic.prototype.selectProcess = function(selectedProcessNode)
 TimingsHistogramsGraphic.prototype.highlightProcess = function(processNode) {
   this.highlightedProcessNode = processNode;
   this.redraw();
+};
+
+TimingsHistogramsGraphic.prototype.getCanvasPosition = function() {
+  let that = this;
+  let canvas = that.canvas;
+  let box = canvas.getBoundingClientRect();
+  let de = document.documentElement;
+  //let top = box.top - de.scrollTop - de.clientTop;
+  //let top = box.top - de.scrollTop;
+  let top = box.top - de.clientTop;
+  //let left = box.left - de.scrollLeft - de.clientLeft;
+  //let left = box.left - de.scrollLeft;
+  let left = box.left - de.clientLeft;
+  return {
+    top: top,
+    left: left
+  }
 };
 
 TimingsHistogramsGraphic.prototype.initCanvas = function() {
@@ -157,6 +224,14 @@ TimingsHistogramsGraphic.prototype.initCanvas = function() {
     isOnHScrollbarThumb: false,
     isOnHScrollbarThumbLeftEdge: false,
     isOnHScrollbarThumbRightEdge: false,
+    isInAnyDragMode: function() {
+      return this.isInDragModeVMove ||
+             this.isInDragModeVResizeTop ||
+             this.isInDragModeVResizeBottom ||
+             this.isInDragModeHMove ||
+             this.isInDragModeHResizeLeft ||
+             this.isInDragModeHResizeRight;
+    },
     resetDragModes: function() {
       this.dragModeStartedAt = 0;
       this.dragModeStartedAtRange = null;
@@ -201,16 +276,34 @@ TimingsHistogramsGraphic.prototype.initCanvas = function() {
     try {
       if (canvasMouseState.isOnVScrollbarThumbTopEdge) {
         canvasMouseState.enterDragModeVResizeTop();
+        document.documentElement.addEventListener('mouseup', canvasMouseUp);
+        document.documentElement.addEventListener('mousemove', canvasMouseMove);
       } else if (canvasMouseState.isOnVScrollbarThumbBottomEdge) {
         canvasMouseState.enterDragModeVResizeBottom();
+        document.documentElement.addEventListener('mouseup', canvasMouseUp);
+        document.documentElement.addEventListener('mousemove', canvasMouseMove);
       } else if (canvasMouseState.isOnVScrollbarThumb) {
-        canvasMouseState.enterDragModeVMove(eve.offsetY);
+        let canvasRect = that.getCanvasPosition();
+        let offsetY = eve.clientY - canvasRect.top;
+
+        canvasMouseState.enterDragModeVMove(offsetY);
+        document.documentElement.addEventListener('mouseup', canvasMouseUp);
+        document.documentElement.addEventListener('mousemove', canvasMouseMove);
       } else if (canvasMouseState.isOnHScrollbarThumbLeftEdge) {
         canvasMouseState.enterDragModeHResizeLeft();
+        document.documentElement.addEventListener('mouseup', canvasMouseUp);
+        document.documentElement.addEventListener('mousemove', canvasMouseMove);
       } else if (canvasMouseState.isOnHScrollbarThumbRightEdge) {
         canvasMouseState.enterDragModeHResizeRight();
+        document.documentElement.addEventListener('mouseup', canvasMouseUp);
+        document.documentElement.addEventListener('mousemove', canvasMouseMove);
       } else if (canvasMouseState.isOnHScrollbarThumb) {
-        canvasMouseState.enterDragModeHMove(eve.offsetX);
+        let canvasRect = that.getCanvasPosition();
+        let offsetX = eve.clientX - canvasRect.left;
+
+        canvasMouseState.enterDragModeHMove(offsetX);
+        document.documentElement.addEventListener('mouseup', canvasMouseUp);
+        document.documentElement.addEventListener('mousemove', canvasMouseMove);
       } else {
         canvasMouseState.resetDragModes();
       }
@@ -218,156 +311,182 @@ TimingsHistogramsGraphic.prototype.initCanvas = function() {
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("canvas mousedown. error: " + err.message);
     }
   });
-  canvas.addEventListener('mouseup', function(eve) {
+
+  function canvasMouseUp(eve) {
     try {
       canvasMouseState.resetDragModes();
+      document.documentElement.removeEventListener('mouseup', canvasMouseUp);
+      document.documentElement.removeEventListener('mousemove', canvasMouseMove);
+      document.documentElement.style.cursor = 'initial';
     } catch (err) {
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("canvas mouseup. error: " + err.message);
     }
+  }
+
+  canvas.addEventListener('mouseleave', function(eve) {
+    try {
+      if (!canvasMouseState.isInAnyDragMode()) {
+        document.documentElement.removeEventListener('mouseup', canvasMouseUp);
+        document.documentElement.removeEventListener('mousemove', canvasMouseMove);
+        document.documentElement.style.cursor = 'initial';
+      }
+    } catch (err) {
+      window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("canvas mouseleave. error: " + err.message);
+    }
   });
-  canvas.addEventListener('mousemove', function(eve) {
+
+  canvas.addEventListener('mousemove', canvasMouseMove);
+
+  function canvasMouseMove(eve) {
     try {
 
+      let canvasRect = that.getCanvasPosition();
+      let offsetY = eve.clientY - canvasRect.top;
+      let offsetX = eve.clientX - canvasRect.left;
+
       if (canvasMouseState.isInDragModeVMove) {
-        let diff = eve.offsetY - canvasMouseState.dragModeStartedAt;
+        let diff = offsetY - canvasMouseState.dragModeStartedAt;
         let startRange = canvasMouseState.dragModeStartedAtRange
         let from = startRange.from + diff;
         let to = startRange.to + diff;
-        that.setRangeY(from, to);
+        that.shiftRangeY(from, to);
         that.redraw();
       } else if (canvasMouseState.isInDragModeVResizeTop) {
-        that.setRangeY(eve.offsetY, that.rangeY.to);
+        that.setRangeYFrom(offsetY);
         that.redraw();
       } else if (canvasMouseState.isInDragModeVResizeBottom) {
-        that.setRangeY(that.rangeY.from, eve.offsetY);
+        that.setRangeYTo(offsetY);
         that.redraw();
       } else if (canvasMouseState.isInDragModeHMove) {
-        let diff = eve.offsetX - canvasMouseState.dragModeStartedAt;
+        let diff = offsetX - canvasMouseState.dragModeStartedAt;
         let startRange = canvasMouseState.dragModeStartedAtRange
         let from = startRange.from + diff;
         let to = startRange.to + diff;
-        that.setRangeX(from, to);
+        that.shiftRangeX(from, to);
         that.redraw();
       } else if (canvasMouseState.isInDragModeHResizeLeft) {
-        that.setRangeX(eve.offsetX, that.rangeX.to);
+        that.setRangeXFrom(offsetX);
         that.redraw();
       } else if (canvasMouseState.isInDragModeHResizeRight) {
-        that.setRangeX(that.rangeX.from, eve.offsetX);
+        that.setRangeXTo(offsetX);
         that.redraw();
       } else {
+        if (eve.target !== canvas) {
+          return;
+        }
 
-        let isOnGraph = eve.offsetX < that.canvasWidth - that.scrollbarBreadth &&
-          eve.offsetY < that.canvasHeight - that.scrollbarBreadth;
+        let isOnGraph = offsetX < that.canvasWidth - that.scrollbarBreadth &&
+          offsetY < that.canvasHeight - that.scrollbarBreadth;
 
-        let isOnVScrollbar = eve.offsetX > that.canvasWidth - that.scrollbarBreadth &&
-          eve.offsetY < that.canvasHeight - that.scrollbarBreadth;
+        let isOnVScrollbar = offsetY < that.canvasHeight - that.scrollbarBreadth &&
+          offsetX > that.canvasWidth - that.scrollbarBreadth;
 
         let isOnVScrollbarThumb = isOnVScrollbar &&
-          eve.offsetY > that.rangeY.from &&
-          eve.offsetY < that.rangeY.to;
+          offsetY > that.rangeY.from &&
+          offsetY < that.rangeY.to;
 
         let isOnVScrollbarThumbTopEdge = isOnVScrollbar &&
-            withinRangeOf(eve.offsetY, that.rangeY.from, 5);
+            withinRangeOf(offsetY, that.rangeY.from, 5);
 
         let isOnVScrollbarThumbBottomEdge = isOnVScrollbar &&
-            withinRangeOf(eve.offsetY, that.rangeY.to, 5);
+            withinRangeOf(offsetY, that.rangeY.to, 5);
 
         canvasMouseState.isOnVScrollbarThumb = isOnVScrollbarThumb;
         canvasMouseState.isOnVScrollbarThumbTopEdge = isOnVScrollbarThumbTopEdge;
         canvasMouseState.isOnVScrollbarThumbBottomEdge = isOnVScrollbarThumbBottomEdge;
           
 
-        let isOnHScrollbar = eve.offsetY > that.canvasHeight - that.scrollbarBreadth &&
-          eve.offsetX < that.canvasWidth - that.scrollbarBreadth;
+        let isOnHScrollbar = offsetX < that.canvasWidth - that.scrollbarBreadth &&
+          offsetY > that.canvasHeight - that.scrollbarBreadth;
 
         let isOnHScrollbarThumb = isOnHScrollbar &&
-          eve.offsetX > that.rangeX.from &&
-          eve.offsetX < that.rangeX.to;
+          offsetX > that.rangeX.from &&
+          offsetX < that.rangeX.to;
 
         let isOnHScrollbarThumbLeftEdge = isOnHScrollbar &&
-            withinRangeOf(eve.offsetX, that.rangeX.from, 5);
+            withinRangeOf(offsetX, that.rangeX.from, 5);
 
         let isOnHScrollbarThumbRightEdge = isOnHScrollbar &&
-            withinRangeOf(eve.offsetX, that.rangeX.to, 5);
+            withinRangeOf(offsetX, that.rangeX.to, 5);
 
         canvasMouseState.isOnHScrollbarThumb = isOnHScrollbarThumb;
         canvasMouseState.isOnHScrollbarThumbLeftEdge = isOnHScrollbarThumbLeftEdge;
         canvasMouseState.isOnHScrollbarThumbRightEdge = isOnHScrollbarThumbRightEdge;
 
         if (isOnVScrollbarThumbTopEdge || isOnVScrollbarThumbBottomEdge) {
-          that.canvas.style.cursor = 'ns-resize';
+          document.documentElement.style.cursor = 'ns-resize';
         } else if (isOnHScrollbarThumbLeftEdge || isOnHScrollbarThumbRightEdge) {
-          that.canvas.style.cursor = 'ew-resize';
+          document.documentElement.style.cursor = 'ew-resize';
         } else if (isOnVScrollbarThumb) {
-          //that.canvas.style.cursor = "url(frontend/img/cursor-hand-36px.png)";
-          that.canvas.style.cursor = 'grab';
-          //that.canvas.style.cursor = 'ns-resize';
+          //document.documentElement.style.cursor = "url(frontend/img/cursor-hand-36px.png)";
+          document.documentElement.style.cursor = 'grab';
+          //document.documentElement.style.cursor = 'ns-resize';
         } else if (isOnHScrollbarThumb) {
-          //that.canvas.style.cursor = "url(frontend/img/cursor-hand-36px.png)";
-          that.canvas.style.cursor = 'grab';
-          //that.canvas.style.cursor = 'ew-resize';
+          //document.documentElement.style.cursor = "url(frontend/img/cursor-hand-36px.png)";
+          document.documentElement.style.cursor = 'grab';
+          //document.documentElement.style.cursor = 'ew-resize';
         } else {
-          that.canvas.style.cursor = 'initial';
+          document.documentElement.style.cursor = 'initial';
         }
       }
 
     } catch (err) {
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("canvas mousemove. error: " + err.message);
     }
-  });
-
-  let inputXFrom = document.createElement('input');
-  inputXFrom.type = 'text';
-  inputXFrom.value = that.rangeX.from;
-  let inputXTo = document.createElement('input');
-  inputXTo.type = 'text';
-  inputXTo.value = that.rangeX.to;
-  let inputYFrom = document.createElement('input');
-  inputYFrom.type = 'text';
-  inputYFrom.value = that.rangeY.from;
-  let inputYTo = document.createElement('input');
-  inputYTo.type = 'text';
-  inputYTo.value = that.rangeY.to;
-
-  function addEnterListener(input, handler) {
-    input.addEventListener('keyup', (eve) => {
-      if (eve.key == 'Enter') {
-        handler(input.value);
-      }
-    });
   }
 
-  addEnterListener(inputXFrom, (value) => {
-    this.setRangeX(parseInt(value), parseInt(inputXTo.value));
-    this.redraw();
-  });
-  addEnterListener(inputXTo, (value) => {
-    this.setRangeX(parseInt(inputXFrom.value), parseInt(value));
-    this.redraw();
-  });
-  addEnterListener(inputYFrom, (value) => {
-    this.setRangeY(parseInt(value), parseInt(inputYTo.value));
-    this.redraw();
-  });
-  addEnterListener(inputYTo, (value) => {
-    this.setRangeY(parseInt(inputYFrom.value), parseInt(value));
-    this.redraw();
-  });
+  // let inputXFrom = document.createElement('input');
+  // inputXFrom.type = 'text';
+  // inputXFrom.value = that.rangeX.from;
+  // let inputXTo = document.createElement('input');
+  // inputXTo.type = 'text';
+  // inputXTo.value = that.rangeX.to;
+  // let inputYFrom = document.createElement('input');
+  // inputYFrom.type = 'text';
+  // inputYFrom.value = that.rangeY.from;
+  // let inputYTo = document.createElement('input');
+  // inputYTo.type = 'text';
+  // inputYTo.value = that.rangeY.to;
+
+  // function addEnterListener(input, handler) {
+  //   input.addEventListener('keyup', (eve) => {
+  //     if (eve.key == 'Enter') {
+  //       handler(input.value);
+  //     }
+  //   });
+  // }
+
+  // addEnterListener(inputXFrom, (value) => {
+  //   this.setRangeX(parseInt(value), parseInt(inputXTo.value));
+  //   this.redraw();
+  // });
+  // addEnterListener(inputXTo, (value) => {
+  //   this.setRangeX(parseInt(inputXFrom.value), parseInt(value));
+  //   this.redraw();
+  // });
+  // addEnterListener(inputYFrom, (value) => {
+  //   this.setRangeY(parseInt(value), parseInt(inputYTo.value));
+  //   this.redraw();
+  // });
+  // addEnterListener(inputYTo, (value) => {
+  //   this.setRangeY(parseInt(inputYFrom.value), parseInt(value));
+  //   this.redraw();
+  // });
 
 
-  let buttonsPanel = withChildren(document.createElement('div'),
-    withChildren(document.createElement('span'), document.createTextNode('x:')),
-    inputXFrom,
-    inputXTo,
-    withChildren(document.createElement('span'), document.createTextNode('y:')),
-    inputYFrom,
-    inputYTo,
-  );
+  // let buttonsPanel = withChildren(document.createElement('div'),
+  //   withChildren(document.createElement('span'), document.createTextNode('x:')),
+  //   inputXFrom,
+  //   inputXTo,
+  //   withChildren(document.createElement('span'), document.createTextNode('y:')),
+  //   inputYFrom,
+  //   inputYTo,
+  // );
 
-  this.elem = withChildren(document.createElement('div'),
-    canvas,
-    that.buildDistortionButtonsPanel(),
-    buttonsPanel,
+  this.elem = withChildren(document.createElement('div')
+    , canvas
+    , that.buildDistortionButtonsPanel()
+    // , buttonsPanel
   );
 };
 
