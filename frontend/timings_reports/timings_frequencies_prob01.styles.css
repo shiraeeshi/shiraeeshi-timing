@@ -1,3 +1,11 @@
+.proc-node > a, .proc-leaf > a {
+  cursor: pointer;
+}
+
+.proc-node.unhighlighted-node > a,
+.proc-leaf.unhighlighted-node > a {
+  opacity: 0.3;
+}
 
 li.proc-node-open, li.proc-node-closed, li.proc-leaf {
   list-style-type: none;
