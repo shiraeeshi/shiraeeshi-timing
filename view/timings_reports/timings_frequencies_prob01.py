@@ -15,7 +15,7 @@ def show_timings_frequencies():
     window.set_title("Something")
     window.set_icon_from_file(icon_of_window())
     window.connect("destroy", gtk.main_quit)
-    window.set_default_size(800, 900)
+    window.set_default_size(1010, 900)
     window.set_position(gtk.WindowPosition.CENTER)
 
     headerbar = gtk.HeaderBar()
