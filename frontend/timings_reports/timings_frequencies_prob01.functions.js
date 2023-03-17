@@ -956,6 +956,7 @@ function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
   if (timingsBySubcategoriesTree === undefined) {
     timingsBySubcategoriesTree = {}; // obj.childrenByName[subCategoryName].childrenByName[subCategoryName] = {timings: []}
 
+    timingsBySubcategoriesTree.name = "all";
     timingsBySubcategoriesTree.childrenByName = {};
     timingsBySubcategoriesTree.children = [];
     timingsBySubcategoriesTree.timings = [];
@@ -1053,6 +1054,7 @@ function ProcessesSubcategoriesViewBuilder() {
 
 ProcessesSubcategoriesViewBuilder.prototype.buildViews = function(timingsBySubcategoriesTree) {
   let that = this;
+  that.addSubtree(timingsBySubcategoriesTree);
   for (let subtree of timingsBySubcategoriesTree.children) {
     that.addSubtree(subtree);
   }
