@@ -1,126 +1,118 @@
-import os
-import json
-from common import gtk, WebKit2, Gdk
-from definitions import ROOT_DIR, icon_of_window
-from logic.page_communicator import PageCommunicator
-from logic.window_app_state import WindowAppState
-from models.config_info import json2config
-from logic.processes_file_parser import parse_processes_file
+const electron = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, MenuItem } = electron;
+const path = require('path')
+const fs = require('fs');
+const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.js');
+const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
+const { parseNotebook } = require('../../logic/notebook_parser.js');
 
-#async def show_window():
-#async def show_window(_):
-def show_window():
-    window = gtk.Window(gtk.WindowType.TOPLEVEL)
-    #window = gtk.Window()
-    window.set_title("Something")
-    window.set_icon_from_file(icon_of_window())
-    window.connect("destroy", gtk.main_quit)
-    window.set_default_size(1200, 800)
+export async function showNotebook() {
 
-    headerbar = gtk.HeaderBar()
-    headerbar.set_show_close_button(True)
-    window.set_titlebar(headerbar)
+  await createWindow();
 
-    scrolled_window = gtk.ScrolledWindow()
+}
 
-    webview = WebKit2.WebView()
+const createWindow = async () => {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    // frame: false,
+		webPreferences: {
+      preload: path.join(__dirname, 'view/notebook/preload.js')
+		}
+  })
 
-    #webview.get_settings().set_allow_file_access_from_file_urls(True)
+  win.loadFile('dist-frontend/notebook/notebook.html')
 
-    webview.get_settings().set_enable_developer_extras(True)
+  setMenuAndKeyboardShortcuts(win);
 
-    app_functions_file = os.path.join(ROOT_DIR, "frontend", "app.functions.js")
-    with open(app_functions_file) as f:
-        contents = f.read()
-        webview.get_user_content_manager().add_script(
-                WebKit2.UserScript.new(contents, 0, 1, None, None)
-                )
+  await init(win);
+}
 
-    app_functions_file = os.path.join(ROOT_DIR, "frontend", "app.my.js")
-    with open(app_functions_file) as f:
-        contents = f.read()
-        webview.get_user_content_manager().add_script(
-                WebKit2.UserScript.new(contents, 0, 1, None, None)
-                )
+function setMenuAndKeyboardShortcuts(win) {
 
-    app_styles_file = os.path.join(ROOT_DIR, "frontend", "app.styles.css")
-    with open(app_styles_file) as f:
-        contents = f.read()
-        webview.get_user_content_manager().add_style_sheet(
-                WebKit2.UserStyleSheet.new(contents, 0, 0, None, None)
-                )
+  let isFullScreen = false;
+  
+  const menu = new Menu();
+  menu.append(new MenuItem({
+    label: 'Shiraeeshi',
+    submenu: [
+      {
+        label: 'toggle fullscreen',
+        accelerator: process.platform === 'darwin' ? 'f' : 'f',
+        click: () => {
+          isFullScreen = !isFullScreen;
+          // let window = electron.remote.getCurrentWindow();
+          win.setFullScreen(isFullScreen);
+        }
+      },
+      {
+        label: 'Escape',
+        accelerator: 'Escape',
+        click: () => {
+          if (isFullScreen) {
+            isFullScreen = false;
+            win.setFullScreen(false);
+          } else {
+            win.close();
+          }
+        }
+      },
+      {
+        label: 'open devtools',
+        accelerator: 'Ctrl+Shift+J',
+        click: () => {
+          win.openDevTools();
+        }
+      },
+      {
+        role: 'help',
+        accelerator: process.platform === 'darwin' ? 'h' : 'h',
+        click: () => {
+          console.log('---===[ menu item clicked ]===---')
+        }
+      }
+    ]
+  }));
+  
+  Menu.setApplicationMenu(menu);
+}
 
-    page_communicator = PageCommunicator(webview)
-    app_state = WindowAppState(page_communicator)
+async function init(win) {
 
-    def load_changed_handler(a_webview, load_event):
-        if load_event == WebKit2.LoadEvent.FINISHED:
-            app_state.page_loaded()
-    webview.connect("load_changed", load_changed_handler);
-    webview.get_user_content_manager().connect("script-message-received::foobar"
-            , lambda userContentManager, value: page_communicator.handleScriptMessage(value))
-    webview.get_user_content_manager().register_script_message_handler("foobar")
+  ipcMain.on('msg', (_event, msg) => {
+    console.log(`[main.js] message from notebook: ${msg}`);
+  });
 
-    def webview_key_press_handler(a_webview, eve):
-        keyval = eve.keyval
-        keyval_name = Gdk.keyval_name(keyval)
-        print ("webview_key_press_handler. keyval: " + keyval_name)
-        if keyval_name == "Escape":
-            if not window.emit("delete-event", Gdk.Event(Gdk.EventType.DELETE)):
-                window.destroy()
-            return True
-        if keyval_name == "f":
-            if app_state.is_fullscreen:
-                window.unfullscreen()
-            else:
-                window.fullscreen()
-            app_state.is_fullscreen = not app_state.is_fullscreen 
-            return True
-        #if keyval_name == "n":
-        #    Gdk.notify_startup_complete()
-        #    return True
-        if (keyval_name == "J" or keyval_name == "j") and (eve.state & Gdk.ModifierType.SHIFT_MASK != 0) and (eve.state & Gdk.ModifierType.CONTROL_MASK != 0):
-            webview.get_inspector().show()
-    webview.connect("key_press_event", webview_key_press_handler);
+  function func(msg) {
+    console.log('[main.js] createWindow -> func');
+    let hasWindowLoaded = false;
+    let hasDataBeenSent = false;
 
-    def webview_button_press_handler(a_webview, eve):
-        if eve.type == Gdk.EventType.DOUBLE_BUTTON_PRESS:
-            if app_state.is_fullscreen:
-                window.unfullscreen()
-            else:
-                window.fullscreen()
-            app_state.is_fullscreen = not app_state.is_fullscreen 
-            return True
-    webview.connect("button_press_event", webview_button_press_handler);
+    win.webContents.once('dom-ready', () => {
+      hasWindowLoaded = true;
+      if (!hasDataBeenSent) {
+        win.webContents.send('message-from-backend', msg);
+        hasDataBeenSent = true;
+      }
+    });
 
-    config_file = os.path.join(ROOT_DIR, "indic.config.txt")
-    with open(config_file) as f:
-        contents = f.read().rstrip()
-        #print("config contents: {}".format(contents))
-        config = json2config(contents)
-        app_state.config = config
-        page_communicator.config_loaded(config)
-        processes_info = parse_processes_file(config.processes_filepath)
-        composed_info = {
-                "processes": processes_info
-                }
-        #await page_communicator.load_finished_event.wait()
-        app_state.after_page_loaded(
-                lambda : page_communicator.send_json(json.dumps(composed_info)))
-        
-    app_html_file = os.path.join(ROOT_DIR, "frontend", "app.html")
-    with open(app_html_file) as f:
-        from urllib.parse import urljoin
-        from urllib.request import pathname2url
-        base_uri = urljoin('file:', pathname2url(ROOT_DIR)) + "/"
-        webview.load_html(f.read(), base_uri)
+    if (!hasDataBeenSent && hasWindowLoaded) {
+      win.webContents.send('message-from-backend', msg);
+      hasDataBeenSent = true;
+    }
+  }
 
-    scrolled_window.add(webview)
+  const homeDirPath = app.getPath('home');
 
-    window.add(scrolled_window)
-    #window.set_keep_above(True)
-    window.show_all()
-    #app_state.after_page_loaded(lambda : window.set_keep_above(False))
+  const configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+  console.log(`configFilepath: ${configFilepath}`);
+  const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
+  const config = JSON.parse(configFileContents);
+  const notebookContentsParsed = await parseNotebook(config['notebook-filepath']);
 
-    gtk.main()
+  func({
+    "processes": notebookContentsParsed,
+  });
+}
 

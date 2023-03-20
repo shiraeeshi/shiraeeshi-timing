@@ -1,46 +1,81 @@
-import os
-import math
-from datetime import datetime
-from models.timing_timer_info import TimingTimerInfo
+const fs = require('fs');
 
-class TimingTimerManager(object):
-    def __init__(self):
-        self.current_timing_info = None;
+export function TimingTimerManager(timingStartFilepath, timingFilepath) {
+  this.timingStartFilepath = timingStartFilepath;
+  this.timingFilepath = timingFilepath;
+  this.currentTimingInfo = undefined;
+}
 
-    def has_timing(self):
-        return self.current_timing_info is not None;
+TimingTimerManager.prototype.hasTiming = function() {
+  return this.currentTimingInfo !== undefined;
+};
 
-    def start_timing(self, timing_name):
-        current_time = datetime.now()
-        self.current_timing_info = TimingTimerInfo(timing_name, current_time)
+TimingTimerManager.prototype.startTiming = async function(timingName) {
+  let that = this;
+  let currentTime = new Date();
+  that.currentTimingInfo = new TimingTimerInfo(timingName, currentTime);
+  let currentDateStr = dateAsDayMonthYearWithDots(currentTime);
+  let timingStartStr = timeAsHoursAndMinutes(currentTime);
+  let row = `${currentDateStr} ${timingStartStr}\n`;
+  const timingStartFile = fs.createWriteStream(that.timingStartFilepath, { flags: 'a', encoding: 'utf8' });
+  await _writeToStream(timingStartFile, row);
+};
 
-        current_date_str = current_time.strftime("%d.%m.%Y")
-        timing_start_str = current_time.strftime("%H:%M")
-        row = "{} {}".format(
-                current_date_str,
-                timing_start_str)
-        os.system("echo '{}' >> $HOME/timing_start".format(row))
+TimingTimerManager.prototype.stopTiming = async function() {
+  let that = this;
+  if (!that.hasTiming()) {
+    throw new Error("timing manager can't stop non-existent timing.");
+  }
+  let currentTime = new Date();
+  let startedAt = that.currentTimingInfo.startedAt;
 
-    def stop_timing(self):
-        if not self.has_timing():
-            raise Exception("timing manager can't stop non-existent timing.")
-        current_time = datetime.now()
-        started_at = self.current_timing_info.started_at
+  let currentDateStr = dateAsDayMonthYearWithDots(startedAt);
+  let timingStartStr = timeAsHoursAndMinutes(startedAt);
+  let timingEndStr = timeAsHoursAndMinutes(currentTime);
 
-        current_date_str = started_at.strftime("%d.%m.%Y")
-        timing_start_str = started_at.strftime("%H:%M")
-        timing_end_str = current_time.strftime("%H:%M")
+  let delta = currentTime.getTime() - startedAt.getTime();
+  let deltaMinutes = Math.floor(delta / 60000);
+  let deltaStr = `${deltaMinutes} m`;
 
-        delta = current_time - started_at
-        delta_str = "{} m".format(math.floor(delta.seconds / 60))
+  let row = `${currentDateStr} ${timingStartStr} - ${timingEndStr}   (${deltaStr}) ${that.currentTimingInfo.timingName}\n`;
 
-        row = "{} {} - {}   ({}) {}".format(
-                current_date_str,
-                timing_start_str,
-                timing_end_str,
-                delta_str,
-                self.current_timing_info.name)
-        os.system("echo '{}' >> $HOME/testtiming".format(row))
+  const timingFile = fs.createWriteStream(that.timingFilepath, { flags: 'a', encoding: 'utf8' });
+  await _writeToStream(timingFile, row);
 
-        self.current_timing_info = None
+  delete that.currentTimingInfo;
+};
 
+function TimingTimerInfo(timingName, startedAt) {
+  this.timingName = timingName;
+  this.startedAt = startedAt;
+}
+
+function _writeToStream(stream, data) {
+  return new Promise((resolve, err) => {
+    function func() {
+      if (stream.write(data)) {
+        resolve(undefined);
+      } else {
+        stream.once('drain', func);
+      }
+    }
+    func();
+  });
+}
+
+function pad(v) {
+  return `0${v}`.slice(-2);
+}
+
+function dateAsDayMonthYearWithDots(date) {
+  let year = date.getFullYear();
+  let month = pad(date.getMonth() + 1)
+  let day = pad(date.getDate());
+  return `${day}.${month}.${year}`;
+}
+
+function timeAsHoursAndMinutes(date) {
+  let hours = pad(date.getHours());
+  let minutes = pad(date.getMinutes());
+  return `${hours}:${minutes}`;
+}

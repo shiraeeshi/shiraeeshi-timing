@@ -1,9 +1,12 @@
-import os
-import yaml
+const fs = require('fs');
+const YAML = require('yaml');
+const { expanduser } = require('./file_utils.js');
 
-def parse_processes_file(filepath):
-    expanded_filepath = os.path.expanduser(filepath)
+export async function parseNotebook(filepath) {
 
-    #f = file(expanded_filepath, 'r')
-    f = open(expanded_filepath, 'r')
-    return yaml.load(f)
+  let filepathExpanded = expanduser(filepath);
+  let fileContents = await fs.promises.readFile(filepathExpanded, { encoding: 'utf8' });
+  let parsedYaml = YAML.parse(fileContents);
+  return parsedYaml;
+}
+

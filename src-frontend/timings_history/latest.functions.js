@@ -1,4 +1,6 @@
 
+window.webkit.messageHandlers.timings_history_latest_msgs.onMessage(handleServerMessage);
+
 function handleServerMessage(msg) {
   if (msg.msg_type == "keypress_event") {
     let radioBtn24Hours = document.getElementById("day-of-24-hours");

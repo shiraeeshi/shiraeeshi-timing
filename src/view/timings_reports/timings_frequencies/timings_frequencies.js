@@ -1,153 +1,173 @@
-import os
-import json
-from datetime import datetime
-from common import gtk, WebKit2, Gdk
-from definitions import ROOT_DIR, icon_of_window
-from logic.page_communicator import PageCommunicator
-from logic.window_app_state import WindowAppState
-from models.config_info import json2config
-from logic.timing_file_parser import read_timings, read_timings_for_range_of_dates
-from logic.timing_index_manager import create_or_refresh_index
+const electron = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, MenuItem } = electron;
+const path = require('path')
+const fs = require('fs');
+const { readTimingsForRangeOfDates } = require('../../../logic/timing_file_parser.js');
+const { createOrRefreshIndex } = require('../../../logic/timing_index_manager.js');
 
-def show_timings_frequencies():
-    timing2indexFilename = create_or_refresh_index()
-    window = gtk.Window()
-    window.set_title("Something")
-    window.set_icon_from_file(icon_of_window())
-    window.connect("destroy", gtk.main_quit)
-    window.set_default_size(1010, 900)
-    window.set_position(gtk.WindowPosition.CENTER)
+export async function showFrequencies() {
 
-    headerbar = gtk.HeaderBar()
-    headerbar.set_show_close_button(True)
-    window.set_titlebar(headerbar)
+  await createWindow();
 
-    scrolled_window = gtk.ScrolledWindow()
+}
 
-    webview = WebKit2.WebView()
+const createWindow = async () => {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    // frame: false,
+		webPreferences: {
+      preload: path.join(__dirname, 'view/timings_reports/timings_frequencies/preload.js')
+		}
+  })
 
-    webview.get_settings().set_enable_developer_extras(True)
+  win.loadFile('dist-frontend/timings_reports/timings_frequencies.html')
 
-    app_my_file = os.path.join(ROOT_DIR, "frontend", "timings_reports", "timings_frequencies_prob01.my.js")
-    with open(app_my_file) as f:
-        contents = f.read()
-        webview.get_user_content_manager().add_script(
-                WebKit2.UserScript.new(contents, 0, 1, None, None)
-                )
+  setMenuAndKeyboardShortcuts(win);
 
-    app_functions_file = os.path.join(ROOT_DIR, "frontend", "timings_reports", "timings_frequencies_prob01.functions.js")
-    with open(app_functions_file) as f:
-        contents = f.read()
-        webview.get_user_content_manager().add_script(
-                WebKit2.UserScript.new(contents, 0, 1, None, None)
-                )
+  await init(win);
+}
 
-    app_styles_file = os.path.join(ROOT_DIR, "frontend", "timings_reports", "timings_frequencies_prob01.styles.css")
-    with open(app_styles_file) as f:
-        contents = f.read()
-        webview.get_user_content_manager().add_style_sheet(
-                WebKit2.UserStyleSheet.new(contents, 0, 0, None, None)
-                )
+function setMenuAndKeyboardShortcuts(win) {
 
-    page_communicator = PageCommunicator(webview)
-    app_state = WindowAppState(page_communicator)
+  let isFullScreen = false;
+  
+  const menu = new Menu();
+  menu.append(new MenuItem({
+    label: 'Shiraeeshi',
+    submenu: [
+      {
+        label: 'toggle fullscreen',
+        accelerator: process.platform === 'darwin' ? 'f' : 'f',
+        click: () => {
+          isFullScreen = !isFullScreen;
+          // let window = electron.remote.getCurrentWindow();
+          win.setFullScreen(isFullScreen);
+        }
+      },
+      {
+        label: 'Escape',
+        accelerator: 'Escape',
+        click: () => {
+          if (isFullScreen) {
+            isFullScreen = false;
+            win.setFullScreen(false);
+          } else {
+            win.close();
+          }
+        }
+      },
+      {
+        label: 'open devtools',
+        accelerator: 'Ctrl+Shift+J',
+        click: () => {
+          win.openDevTools();
+        }
+      },
+      {
+        role: 'help',
+        accelerator: process.platform === 'darwin' ? 'h' : 'h',
+        click: () => {
+          console.log('---===[ menu item clicked ]===---')
+        }
+      }
+    ]
+  }));
+  
+  Menu.setApplicationMenu(menu);
+}
 
-    def load_changed_handler(a_webview, load_event):
-        if load_event == WebKit2.LoadEvent.FINISHED:
-            app_state.page_loaded()
-    webview.connect("load_changed", load_changed_handler);
+async function init(win) {
 
-    webview.get_user_content_manager().connect("script-message-received::timings_frequencies_msgs"
-            , lambda userContentManager, value: page_communicator.handleScriptMessage(value))
-    webview.get_user_content_manager().register_script_message_handler("timings_frequencies_msgs")
+  function func(msg) {
+    console.log('[main.js] createWindow -> func');
+    let hasWindowLoaded = false;
+    let hasDataBeenSent = false;
 
-    def handle_request_timings_for_period(userContentManager, value):
-        dates_as_strings = json.loads(value.get_js_value().to_json(2)).split(" - ")
-        if len(dates_as_strings) != 2:
-            print("handle_request_timings_for_period. error: unexpected request parameter value (expected two dates with ' - ' between them)")
-            return
-        strPeriodFrom = dates_as_strings[0]
-        strPeriodTo = dates_as_strings[1]
-        periodFrom = datetime.strptime(strPeriodFrom, "%d.%m.%Y")
-        periodTo = datetime.strptime(strPeriodTo, "%d.%m.%Y")
-        print("handle_request_timings_for_period. from: {}, to: {}".format(periodFrom, periodTo))
-        timings = read_timings_for_range_of_dates(app_state.config, timing2indexFilename, periodFrom, periodTo)
-        response = json.dumps({"msg_type": "timings_query_response", "timings": timings});
-        # print("handle_request_timings_for_period. response: " + response)
-        page_communicator.send_json(response)
-        pass
+    win.webContents.once('dom-ready', () => {
+      hasWindowLoaded = true;
+      if (!hasDataBeenSent) {
+        win.webContents.send('message-from-backend', msg);
+        hasDataBeenSent = true;
+      }
+    });
 
-    webview.get_user_content_manager().connect("script-message-received::timings_frequencies_msgs__timings_for_period"
-            , handle_request_timings_for_period)
-    webview.get_user_content_manager().register_script_message_handler("timings_frequencies_msgs__timings_for_period")
+    if (!hasDataBeenSent && hasWindowLoaded) {
+      win.webContents.send('message-from-backend', msg);
+      hasDataBeenSent = true;
+    }
+  }
 
+  func({
+    "msg_type": "dummy_message",
+  });
 
+  await initMessageHandlers(win);
+}
 
-    def webview_key_press_handler(a_webview, eve):
-        keyval = eve.keyval
-        keyval_name = Gdk.keyval_name(keyval)
-        print ("webview_key_press_handler. keyval: " + keyval_name)
-        if keyval_name == "Escape":
-            if not window.emit("delete-event", Gdk.Event(Gdk.EventType.DELETE)):
-                window.destroy()
-            return True
-        #if keyval_name == "Left":
-        #    page_communicator.send_json("{\"msg_type\": \"keypress_event\", \"keyval\": \"Left\"}")
-        #    return True
-        #if keyval_name == "Right":
-        #    page_communicator.send_json("{\"msg_type\": \"keypress_event\", \"keyval\": \"Right\"}")
-        #    return True
-        if keyval_name == "f":
-            if app_state.is_fullscreen:
-                window.unfullscreen()
-            else:
-                window.fullscreen()
-            app_state.is_fullscreen = not app_state.is_fullscreen 
-            return True
+async function initMessageHandlers(win) {
+  const homeDirPath = app.getPath('home');
 
-        if (keyval_name == "J" or keyval_name == "j") and (eve.state & Gdk.ModifierType.SHIFT_MASK != 0) and (eve.state & Gdk.ModifierType.CONTROL_MASK != 0):
-            webview.get_inspector().show()
-    webview.connect("key_press_event", webview_key_press_handler);
+  const configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+  console.log(`configFilepath: ${configFilepath}`);
+  const indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
+  console.log(`indexDirFilepath: ${indexDirFilepath}`);
+  const timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
+  console.log('[init] 1');
+  const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
+  console.log('[init] 2');
+  const config = JSON.parse(configFileContents);
 
-    def webview_button_press_handler(a_webview, eve):
-        if eve.type == Gdk.EventType.DOUBLE_BUTTON_PRESS:
-            if app_state.is_fullscreen:
-                window.unfullscreen()
-            else:
-                window.fullscreen()
-            app_state.is_fullscreen = not app_state.is_fullscreen 
-            return True
-    webview.connect("button_press_event", webview_button_press_handler);
+  ipcMain.on('timings_frequencies_msgs', (_event, msg) => {
+    console.log(`[main.js] message from timing_frequencies: ${msg}`);
+  });
 
-    config_file = os.path.join(ROOT_DIR, "indic.config.txt")
-    with open(config_file) as f:
-        contents = f.read().rstrip()
-        print("config contents: {}".format(contents))
-        config = json2config(contents)
-        app_state.config = config
-        page_communicator.config_loaded(config)
-        # timings_contents = read_timings(config)
+  // ipcMain.handle('request_for_timings', async (_event, dateFrom, dateTo) => {
+  //   const timings = await readTimingsForRangeOfDates(config, timing2indexFilename, dateFrom, dateTo);
+  //   console.log(`[main.js] about to send timings to timing_history_latest: ${JSON.stringify(timings)}`);
+  //   return timings;
+  // });
 
-        # app_state.after_page_loaded(
-        #         lambda : page_communicator.send_json(json.dumps(timings_contents, ensure_ascii=False)))
-
-        app_state.after_page_loaded(
-                lambda : page_communicator.send_json("{\"msg_type\": \"dummy_message\"}"))
-
-    app_html_file = os.path.join(ROOT_DIR, "frontend", "timings_reports", "timings_frequencies_prob01.html")
-    with open(app_html_file) as f:
-        #base_uri = "file:///"
-        from urllib.parse import urljoin
-        from urllib.request import pathname2url
-        base_uri = urljoin('file:', pathname2url(ROOT_DIR)) + "/"
-        webview.load_html(f.read(), base_uri)
-
-    scrolled_window.add(webview)
-
-    window.add(scrolled_window)
-    window.show_all()
-
-    gtk.main()
+  ipcMain.on('timings_frequencies_msgs__timings_for_period', async (_event, periodStr) => {
+    let datesWithDots = periodStr.split(' - ');
+    if (datesWithDots.length !== 2) {
+      throw new Error("timings_frequencies_msgs__timings_for_period handler. error: unexpected request parameter value (expected two dates with ' - ' between them)");
+    }
+    let firstDateWithDots = datesWithDots[0];
+    let lastDateWithDots = datesWithDots[1];
+    console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
+    let dateFrom = parseDateWithDots(firstDateWithDots);
+    let dateTo = parseDateWithDots(lastDateWithDots);
+    const timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
+    // console.log(`[main.js] about to send timings to timing_history_latest.`);
+    // for (const timingName in timings) {
+    //   console.log(`  ${timingName} length: ${timings[timingName].length}`);
+    // }
+    let msg = {
+      msg_type: "timings_query_response",
+      timings: timings,
+    };
+    win.webContents.send('message-from-backend', msg);
+  });
+}
 
 
+function parseDateWithDots(input) {
+  let pad = v => `0${v}`.slice(-2);
+
+  let parts = input.split('\.')
+  let datePart = pad(parts[0]);
+  let monthPart = pad(parts[1]);
+  let yearPart = parts[2];
+  let result = new Date();
+  // console.log(`[parseDateWithDots] about to parse date "${input}": invoking Date.parse with ${yearPart}-${monthPart}-${datePart}T00:00:00`);
+  result.setTime(Date.parse(`${yearPart}-${monthPart}-${datePart}T00:00:00`));
+  // result.setFullYear(yearPart);
+  // result.setMonth(monthPart);
+  // result.setDate(datePart);
+  // result.setHours(0);
+  // result.setMinutes(0);
+  // result.setSeconds(0);
+  return result;
+}
 

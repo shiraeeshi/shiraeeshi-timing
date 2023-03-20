@@ -1,151 +1,198 @@
-import os
-import json
-from common import gtk, WebKit2, Gdk
-from definitions import ROOT_DIR, icon_of_window
-from logic.page_communicator import PageCommunicator
-from logic.window_app_state import WindowAppState
-from models.config_info import json2config
-#from logic.timing_file_parser import read_timings
-from logic.timing_file_parser import read_timings_for_three_last_days
-from logic.timing_index_manager import create_or_refresh_index
+const electron = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, MenuItem } = electron;
+const path = require('path')
+const fs = require('fs');
+const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.js');
+const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 
-def show_timings_summary(summary_type):
-    print(summary_type)
-    window = gtk.Window()
-    window.set_title("Something")
-    window.set_icon_from_file(icon_of_window())
-    window.connect("destroy", gtk.main_quit)
-    window.set_default_size(800, 600)
-    window.set_position(gtk.WindowPosition.CENTER)
+export async function showTimingsSummary() {
 
-    headerbar = gtk.HeaderBar()
-    headerbar.set_show_close_button(True)
-    window.set_titlebar(headerbar)
+  ipcMain.on('msg', (_event, msg) => {
+    console.log(`[main.js] message from timing_summary: ${msg}`);
+  });
 
-    scrolled_window = gtk.ScrolledWindow()
+  await createWindow();
 
-    #show_web_inspector = False
+}
 
-    webview = WebKit2.WebView()
+const createWindow = async () => {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    // frame: false,
+		webPreferences: {
+      preload: path.join(__dirname, 'view/timings_summary/preload.js')
+		}
+  })
 
-    #if (show_web_inspector):
-    #    webview.get_settings().set_enable_developer_extras(True)
-    webview.get_settings().set_enable_developer_extras(True)
-    #webview.open("https://www.gnome.org/")
+  win.loadFile('dist-frontend/timings_summary.html')
 
-    app_functions_file = os.path.join(ROOT_DIR, "frontend", "timings_summary.functions.js")
-    with open(app_functions_file) as f:
-        contents = f.read()
-        webview.get_user_content_manager().add_script(
-                WebKit2.UserScript.new(contents, 0, 1, None, None)
-                )
+  setMenuAndKeyboardShortcuts(win);
 
-    app_functions_file = os.path.join(ROOT_DIR, "frontend", "timings_summary.my.js")
-    with open(app_functions_file) as f:
-        contents = f.read()
-        webview.get_user_content_manager().add_script(
-                WebKit2.UserScript.new(contents, 0, 1, None, None)
-                )
+  await init(win);
+}
 
-    app_styles_file = os.path.join(ROOT_DIR, "frontend", "timings_summary.styles.css")
-    with open(app_styles_file) as f:
-        contents = f.read()
-        webview.get_user_content_manager().add_style_sheet(
-                WebKit2.UserStyleSheet.new(contents, 0, 0, None, None)
-                )
+function setMenuAndKeyboardShortcuts(win) {
 
-    page_communicator = PageCommunicator(webview)
-    app_state = WindowAppState(page_communicator)
+  let isFullScreen = false;
+  
+  const menu = new Menu();
+  menu.append(new MenuItem({
+    label: 'Shiraeeshi',
+    submenu: [
+      {
+        label: 'toggle fullscreen',
+        accelerator: process.platform === 'darwin' ? 'f' : 'f',
+        click: () => {
+          isFullScreen = !isFullScreen;
+          // let window = electron.remote.getCurrentWindow();
+          win.setFullScreen(isFullScreen);
+        }
+      },
+      {
+        label: 'toggle minimal text mode',
+        accelerator: 'm',
+        click: () => {
+          const msg = {
+            "type": "key_pressed",
+            "keyval": "m"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
+        label: 'Escape',
+        accelerator: 'Escape',
+        click: () => {
+          if (isFullScreen) {
+            isFullScreen = false;
+            win.setFullScreen(false);
+          } else {
+            win.close();
+          }
+        }
+      },
+      {
+        label: 'change wallpaper',
+        accelerator: 'w',
+        click: () => {
+          const msg = {
+            "type": "key_pressed",
+            "keyval": "w"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
+        label: 'open devtools',
+        accelerator: 'Ctrl+Shift+J',
+        click: () => {
+          win.openDevTools();
+        }
+      },
+      {
+        role: 'help',
+        accelerator: process.platform === 'darwin' ? 'h' : 'h',
+        click: () => {
+          console.log('---===[ menu item clicked ]===---')
+        }
+      }
+    ]
+  }));
+  
+  Menu.setApplicationMenu(menu);
+}
 
-    def load_changed_handler(a_webview, load_event):
-        if load_event == WebKit2.LoadEvent.FINISHED:
-            app_state.page_loaded()
-    webview.connect("load_changed", load_changed_handler);
-    webview.get_user_content_manager().connect("script-message-received::timings_summary_msgs"
-            , lambda userContentManager, value: page_communicator.handleScriptMessage(value))
-    webview.get_user_content_manager().register_script_message_handler("timings_summary_msgs")
+async function init(win) {
 
-    def webview_key_press_handler(a_webview, eve):
-        keyval = eve.keyval
-        keyval_name = Gdk.keyval_name(keyval)
-        print ("webview_key_press_handler. keyval: " + keyval_name)
-        if keyval_name == "Escape":
-            if not window.emit("delete-event", Gdk.Event(Gdk.EventType.DELETE)):
-                window.destroy()
-            return True
-        if keyval_name == "f":
-            if app_state.is_fullscreen:
-                window.unfullscreen()
-            else:
-                window.fullscreen()
-            app_state.is_fullscreen = not app_state.is_fullscreen 
-            return True
-        if keyval_name == "w":
-            msg = {
-                    "type": "key_pressed",
-                    "keyval": keyval_name
-                    }
-            page_communicator.send_json(json.dumps(msg))
-            return True
-        if keyval_name == "m":
-            msg = {
-                    "type": "key_pressed",
-                    "keyval": keyval_name
-                    }
-            page_communicator.send_json(json.dumps(msg))
-            return True
-        if (keyval_name == "J" or keyval_name == "j") and (eve.state & Gdk.ModifierType.SHIFT_MASK != 0) and (eve.state & Gdk.ModifierType.CONTROL_MASK != 0):
-            webview.get_inspector().show()
-    webview.connect("key_press_event", webview_key_press_handler);
+  function func(msg) {
+    console.log('[main.js] createWindow -> func');
+    let hasWindowLoaded = false;
+    let hasDataBeenSent = false;
 
-    def webview_button_press_handler(a_webview, eve):
-        if eve.type == Gdk.EventType.DOUBLE_BUTTON_PRESS:
-            if app_state.is_fullscreen:
-                window.unfullscreen()
-            else:
-                window.fullscreen()
-            app_state.is_fullscreen = not app_state.is_fullscreen 
-            return True
-    webview.connect("button_press_event", webview_button_press_handler);
+    win.webContents.once('dom-ready', () => {
+      hasWindowLoaded = true;
+      if (!hasDataBeenSent) {
+        win.webContents.send('message-from-backend', msg);
+        hasDataBeenSent = true;
+      }
+    });
 
-    config_file = os.path.join(ROOT_DIR, "indic.config.txt")
-    with open(config_file) as f:
-        contents = f.read().rstrip()
-        print("config contents: {}".format(contents))
-        config = json2config(contents)
-        app_state.config = config
-        page_communicator.config_loaded(config)
-        #timings_contents = read_timings(config)
-        timing2indexFilename = create_or_refresh_index()
-        timings_contents = read_timings_for_three_last_days(config, timing2indexFilename)
-        #await page_communicator.load_finished_event.wait()
-        app_state.after_page_loaded(
-                lambda : page_communicator.send_json(json.dumps(timings_contents)))
+    if (!hasDataBeenSent && hasWindowLoaded) {
+      win.webContents.send('message-from-backend', msg);
+      hasDataBeenSent = true;
+    }
+  }
 
-    wallpapers_dir = os.path.join(ROOT_DIR, "wallpapers")
-    wallpapers = os.listdir(wallpapers_dir)
-    print("wallpapers: {}".format(wallpapers))
-    wallpapers_msg = {
-            "type": "wallpapers",
-            "wallpapers": wallpapers
-            }
-    app_state.after_page_loaded(
-            lambda : page_communicator.send_json(json.dumps(wallpapers_msg)))
+  const homeDirPath = app.getPath('home');
 
-    app_html_file = os.path.join(ROOT_DIR, "frontend", "timings_summary.html")
-    with open(app_html_file) as f:
-        from urllib.parse import urljoin
-        from urllib.request import pathname2url
-        base_uri = urljoin('file:', pathname2url(ROOT_DIR)) + "/"
-        print("base_uri: " + base_uri)
-        webview.load_html(f.read(), base_uri)
+  const configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+  console.log(`configFilepath: ${configFilepath}`);
+  const indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
+  console.log(`indexDirFilepath: ${indexDirFilepath}`);
+  const timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
+  console.log('[init] 1');
+  const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
+  console.log('[init] 2');
+  const config = JSON.parse(configFileContents);
+  const today = new Date();
+  const fiveDaysAgo = new Date();
 
-    #if (show_web_inspector):
-    #    webview.get_inspector().show()
+  fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
 
-    scrolled_window.add(webview)
+  // today.setTime(Date.parse(dateAsYearMonthDayWithHyphens(today) + "T00:00:00")); // format: "YYYY-mm-ddT00:00:00"
+  today.setHours(0);
+  today.setMinutes(0);
+  today.setSeconds(0);
+  // fiveDaysAgo.setTime(Date.parse(dateAsYearMonthDayWithHyphens(fiveDaysAgo) + "T00:00:00")); // format: "YYYY-mm-ddT00:00:00"
+  fiveDaysAgo.setHours(0);
+  fiveDaysAgo.setMinutes(0);
+  fiveDaysAgo.setSeconds(0);
 
-    window.add(scrolled_window)
-    window.show_all()
+  // console.log(`[main.js] fiveDaysAgo: ${fiveDaysAgo}, today: ${today}`);
+  // console.log(`[main.js] fiveDaysAgo: ${dateAsDayMonthYearWithDots(fiveDaysAgo)}, today: ${dateAsDayMonthYearWithDots(today)}`);
 
-    gtk.main()
+  console.log('[init] 3');
+  const timingsOfFiveLastDays = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, fiveDaysAgo, today);
+  console.log('[init] 4');
+
+  console.log(`[main.js] timingsOfFiveLastDays: ${JSON.stringify(timingsOfFiveLastDays)}`);
+  console.log('[init] 5');
+
+  func(timingsOfFiveLastDays);
+  console.log('[init] 6');
+
+  const wallpapersDirPath = path.join(homeDirPath, 'test_pm_app2', 'wallpapers');
+  const wallpapersFilenames = await fs.promises.readdir(wallpapersDirPath, { encoding: 'utf8' });
+  console.log('[init] 7');
+  console.log(`wallpapersFilenames: ${wallpapersFilenames}`);
+  const relativePathToWallpapersDir = path.relative('dist-frontend', wallpapersDirPath);
+  console.log(`relativePathToWallpapersDir: ${relativePathToWallpapersDir}`);
+
+
+  func({
+    "type": "wallpapers",
+    "wallpapers": wallpapersFilenames.map(n => path.join(relativePathToWallpapersDir, n))
+  });
+}
+
+// app.whenReady().then(async () => {
+// 
+//   ipcMain.on('msg', (_event, msg) => {
+//     console.log(`[main.js] message from timing_summary: ${msg}`);
+//   });
+// 
+//   await createWindow()
+// 
+//   app.on('activate', () => {
+//     if (BrowserWindow.getAllWindows().length === 0) createWindow()
+//   })
+// })
+
+// app.on('window-all-closed', () => {
+//   if (process.platform !== 'darwin') app.quit()
+// })
+
+// let window = electron.remote.getCurrentWindow();
+
+

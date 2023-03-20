@@ -1,3 +1,5 @@
+window.webkit.messageHandlers.foobar.onMessage(handleServerMessage);
+
 function extractTag(str) {
   if (str.startsWith(">>")) {
     return str.slice(2, str.indexOf(" "));

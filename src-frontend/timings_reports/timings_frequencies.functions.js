@@ -1,3 +1,4 @@
+window.webkit.messageHandlers.timings_frequencies_msgs.onMessage(handleServerMessage);
 
 function handleServerMessage(msg) {
   try {

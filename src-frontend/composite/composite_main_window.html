@@ -1,6 +1,10 @@
 <!doctype html>
 <html>
   <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <link rel="stylesheet" href="./composite_main_window.styles.css">
   </head>
   <body>
     <div id="topmost-wrapper" class="row">
@@ -44,5 +48,9 @@
       </div>
     </div>
   </body>
+  <script src="../notebook/notebook.functions.js"></script>
+  <script src="../timings_summary.functions.js"></script>
+  <script src="./composite_main_window.my.js"></script>
+  <script src="./composite_main_window.functions.js"></script>
 </html>
 

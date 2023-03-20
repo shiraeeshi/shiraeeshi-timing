@@ -1,10 +1,12 @@
 
+window.webkit.messageHandlers.timings_summary_msgs.onMessage(handleServerMessage);
+
 function handleServerMessage(msg) {
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage start ");
   if (msg.type == "wallpapers") {
     my.wallpapers.lst = msg.wallpapers;
     let randomIndex = getRandomInt(my.wallpapers.lst.length);
-    document.body.style.backgroundImage = "url(wallpapers/" + my.wallpapers.lst[randomIndex] + ")";
+    document.body.style.backgroundImage = "url(" + my.wallpapers.lst[randomIndex] + ")";
     return;
   }
   if (msg.type == "key_pressed") {
@@ -15,7 +17,8 @@ function handleServerMessage(msg) {
       }
       window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage current wallpaper: " +
         my.wallpapers.lst[my.wallpapers.idx]);
-      document.body.style.backgroundImage = "url(wallpapers/" + my.wallpapers.lst[my.wallpapers.idx] + ")";
+      // document.body.style.backgroundImage = "url(wallpapers/" + my.wallpapers.lst[my.wallpapers.idx] + ")";
+      document.body.style.backgroundImage = "url(" + my.wallpapers.lst[my.wallpapers.idx] + ")";
     } else if (msg.keyval == "m") {
       my.minimalTextForTimings = !my.minimalTextForTimings;
       if (my.minimalTextForTimings) {

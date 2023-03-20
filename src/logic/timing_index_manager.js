@@ -1,332 +1,404 @@
-#!/usr/bin/env python3.8
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { LineReader } = require('./line_reader.js');
+const { PATTERN_DATE_AND_TIMING } = require('./timing_file_parser_patterns.js');
+const { expanduser } = require('./file_utils.js');
 
-import os
-import re
-import uuid
-from datetime import datetime
+const _fileExists = async filePath => fs.promises.stat(filePath).then(() => true, (e) => {console.log(`err: ${e}`); return false;});
 
-from definitions import ROOT_DIR
-from models.config_info import json2config
+export async function createOrRefreshIndex(configFilepath, indexDirFilepath) {
+  console.log(`configFilepath: ${configFilepath}\nindexDirFilepath: ${indexDirFilepath}`);
+  const indexNamesFilepath = path.join(indexDirFilepath, 'filenames_of_indexes');
+  const timing2indexFilename = {};
+  const indexNamesFileExists = await _fileExists(indexNamesFilepath);
+  console.log(`indexNamesFileExists: ${indexNamesFileExists}`);
+  if (indexNamesFileExists) {
+    const patternNames = /index-name: ([a-z0-9-]+), timing-name: (.+)$/;
+    const lineReader = new LineReader(indexNamesFilepath, { encoding: 'utf8' });
+    while (true) {
+      let { line, isEOF } = await lineReader.readline();
+      if (isEOF) {
+        break;
+      }
+      console.log(`line: ${line}`);
+      const match = line.match(patternNames);
+      const indexName = match[1];
+      const timingName = match[2];
+      console.log(`  parsed index-name: '${indexName}'\n  parsed timings file name: '${timingName}'`);
+      timing2indexFilename[timingName] = indexName;
+    }
+  }
+  const configFileContents = await fs.promises.readFile(configFilepath, 'utf8');
+  const config = JSON.parse(configFileContents);
+  for (const timing of config.timings) {
+    const timingName = timing['name'];
+    const indexName = timing2indexFilename[timingName];
+    if (indexName) {
+       const timingFilepath = expanduser(timing['filepath']);
+       const indexFilepath = path.join(indexDirFilepath, indexName);
+       const indexFileExists = await _fileExists(indexFilepath);
+       if (indexFileExists) {
+         console.log(`refresh_index() for timing ${timingName}`);
+         await _refreshIndex(timing, indexName, indexDirFilepath);
+       } else {
+         console.log(`create_index_for_timing() for timing ${timingName}`);
+         await _createIndexForTiming(timing, indexName, indexDirFilepath);
+       }
+    } else {
+      const uuid = crypto.randomUUID();
+      timing2indexFilename[timingName] = uuid;
+      console.log(`create_index_for_timing() for timing ${timingName} with new uuid as index name`);
+      await _createIndexForTiming(timing, uuid, indexDirFilepath);
+    }
+  }
+  console.log('[createOrRefreshIndex] 1');
+  const fileIndexNames = fs.createWriteStream(indexNamesFilepath, { encoding: 'utf8' });
+  console.log('[createOrRefreshIndex] 2 before loop over timing2indexFilename');
+  for (const [timingName, indexName] of Object.entries(timing2indexFilename)) {
+    await _writeToStream(fileIndexNames, `index-name: ${indexName}, timing-name: ${timingName}\n`);
+  }
+  console.log('[createOrRefreshIndex] about to return');
+  return timing2indexFilename;
+}
 
-def create_or_refresh_index():
+async function _refreshIndex(timing, indexName, indexesDirFilepath) {
+  const timingName = timing['name'];
+  const timingFilepath = expanduser(timing['filepath']);
+  console.log(`timingFilepath: ${timingFilepath} (before _fileExists)`);
+  const timingFileExists = await _fileExists(timingFilepath);
+  console.log(`timingFilepath: ${timingFilepath} (after _fileExists, result: ${timingFileExists})`);
+  if (!timingFileExists) {
+    console.log(`error: cannot refresh index: timing file doesn't exist: ${timingName}. filepath: ${timingFilepath}`);
+    return;
+  }
+  const { mtimeMs: timingLastModified } = await fs.promises.stat(timingFilepath);
 
-    config_file = os.path.join(ROOT_DIR, "indic.config.txt")
+  const indexLastModifiedFilepath = path.join(indexesDirFilepath, indexName + '.last_modified');
+  const existsILM = await _fileExists(indexLastModifiedFilepath);
+  if (existsILM) {
+    const indexLastModified = await fs.promises.readFile(indexLastModifiedFilepath).then(lmStr => Number(lmStr), _err => null);
+    if (indexLastModified === null) {
+      console.log(`couldn't read index_last_modified for timing ${timingName}, recreating index`);
+      const indexFilepath = path.join(indexesDirFilepath, indexName);
+      await fs.promises.rm(indexFilepath);
+      _createIndexForTiming(timing, indexName, indexesDirFilepath);
+    } else if (indexLastModified === timingLastModified) {
+      console.log(`index_last_modified is the same as timing_last_modified, skipping recreating index for timing ${timingName}`);
+    } else {
+      console.log(`index_last_modified != timing_last_modified, going to refresh the index for timing ${timingName}`);
+      await _truncateAfterFirstDiffAndAppendToIndex(timing, indexName, indexesDirFilepath);
+      console.log(`refreshed the index for timing ${timingName}`);
+    }
+  }
+}
 
-    tmp_dir = os.path.join(ROOT_DIR, "tmp")
-    if not os.path.exists(tmp_dir):
-        os.makedirs(tmp_dir)
+async function _truncateAfterFirstDiffAndAppendToIndex(timing, indexName, indexesDirFilepath) {
+  const timingName = timing['name'];
+  const timingFilepath = expanduser(timing['filepath']);
+  const indexFilepath = path.join(indexesDirFilepath, indexName);
+  const traversalResult = await _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexName, indexFilepath);
+  const resultType = traversalResult.resultType;
 
-    file_index_names = os.path.join(tmp_dir, "filenames_of_indexes")
-
-    timing2indexFilename = {}
-
-    if os.path.exists(file_index_names):
-        pattern_names = "index-name: ([a-z0-9-]+), timing-name: (.+)$"
-        with open(file_index_names) as f:
-            lines = f.readlines()
-            for line in lines:
-                match = re.match(pattern_names, line)
-                if match is None:
-                    continue
-                index_name = match.group(1)
-                timing_name = match.group(2)
-                timing2indexFilename[timing_name] = index_name
-
-    with open(config_file) as f:
-        contents = f.read().rstrip()
-        #print("config contents: {}".format(contents))
-        config = json2config(contents)
-
-        for timing in config.timings:
-            timing_name = timing.get("name")
-            index_name = None
-            if timing_name in timing2indexFilename:
-                index_name = timing2indexFilename[timing_name]
-                timing_filepath = os.path.expanduser(timing.get("filepath"))
-                tmp_index_filepath = os.path.join(tmp_dir, index_name)
-                if os.path.isfile(tmp_index_filepath):
-                    _refresh_index(timing, index_name, tmp_dir)
-                else:
-                    _create_index_for_timing(timing, index_name, tmp_dir)
-            else:
-                timing_uuid = uuid.uuid4()
-                index_name = str(timing_uuid)
-                timing2indexFilename[timing_name] = index_name
-                _create_index_for_timing(timing, index_name, tmp_dir)
-
-    with open(file_index_names, 'w') as f:
-        for timing_name, index_name in timing2indexFilename.items():
-            f.write("index-name: {}, timing-name: {}\n".format(index_name, timing_name))
-
-    return timing2indexFilename
-
-def _refresh_index(timing, index_name, tmp_dir):
-    timing_name = timing.get("name")
-    timing_filepath = os.path.expanduser(timing.get("filepath"))
-    timing_last_modified = os.path.getmtime(timing_filepath)
-
-    index_last_modified_filepath = os.path.join(tmp_dir, index_name + ".last_modified")
-    if os.path.isfile(index_last_modified_filepath):
-        with open(index_last_modified_filepath) as f_ilm:
-            index_last_modified = None
-            ilm_str = ""
-            try:
-                ilm_str = f_ilm.read()
-                index_last_modified = float(ilm_str)
-            except:
-                print("error reading index_last_modified for timing {}, value: {}".format(timing_name, ilm_str))
-                index_last_modified = None
-
-            if index_last_modified == timing_last_modified:
-                print("index_last_modified is the same as timing_last_modified, skipping recreating index for timing {}".format(timing_name))
-                pass # do nothing, no need to refresh or recreate the index
-            elif index_last_modified is None:
-                print("couldn't read index_last_modified for timing {}, recreating index".format(timing_name))
-                tmp_index_filepath = os.path.join(tmp_dir, index_name)
-                os.remove(tmp_index_filepath) # wipe out the old contents
-                _create_index_for_timing(timing, index_name, tmp_dir)
-            else:
-                print("index_last_modified != timing_last_modified, going to refresh the index for timing {}".format(timing_name))
-                _truncate_after_first_diff_and_append_to_index(timing, index_name, tmp_dir)
-                print("refreshed the index for timing {}".format(timing_name))
-
-def _truncate_after_first_diff_and_append_to_index(timing, index_name, tmp_dir):
-    timing_name = timing.get("name")
-    timing_filepath = os.path.expanduser(timing.get("filepath"))
-    with open(timing_filepath, encoding='utf-8') as timing_file:
-        _traverse_index_prefix_and_truncate_after_first_diff(timing, index_name, tmp_dir, timing_file)
-        tmp_index_filepath = os.path.join(tmp_dir, index_name)
-        with open(tmp_index_filepath, 'a', encoding='utf-8') as index_file:
-            _append_to_index_for_timing(timing_file, index_file)
-        _remember_timing_last_modified(timing_filepath, index_name, tmp_dir)
-
-# traverse the prefix of index that is safe to append to, and truncate the rest
-def _traverse_index_prefix_and_truncate_after_first_diff(timing, index_name, tmp_dir, timing_file):
-    timing_name = timing.get("name")
-    tmp_index_filepath = os.path.join(tmp_dir, index_name)
-    with open(tmp_index_filepath, "r+", encoding='utf-8') as f_ind_in:
-        first_line_of_index = f_ind_in.readline().rstrip()
-        if (first_line_of_index != "date,offset_from,offset_to"):
-            raise Exception("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\"). timing: {}, index file: {}".format(timing_name, index_name))
-        prev_index_entry = None
-        while True:
-            index_offset = f_ind_in.tell()
-            line_of_index = f_ind_in.readline()
-            if line_of_index == "":
-                print("_traverse_index_prefix_and_truncate_after_first_diff: about to return (reached the end of index) for timing {}".format(timing_name));
-                timing_file.seek(prev_index_entry["offset_from"])
-                return
-            line_of_index = line_of_index.rstrip()
-            while True:
-                offset = timing_file.tell()
-                line_timing = timing_file.readline()
-
-                if line_timing == "":
-                    if prev_index_entry != None:
-                        expected_index_line = "{},{},{}".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset)
-                        if line_of_index != expected_index_line:
-                            print("_traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing {}: line_of_index != expected_index_line, line_of_index: {}, expected_index_line: {}".format(timing_name, line_of_index, expected_index_line))
-                            f_ind_in.seek(index_offset)
-                            f_ind_in.truncate()
-                            timing_file.seek(prev_index_entry["offset_from"])
-                            return
-                    end_of_index_reached = f_ind_in.readline() == ""
-                    if end_of_index_reached == False:
-                        print("_traverse_index_prefix_and_truncate_after_first_diff: about to truncate (end_of_index_reached is False) for timing {}".format(timing_name));
-                        f_ind_in.truncate()
-                    return
-
-                match = re.match(pattern_date_and_timing, line_timing)
-                if match is None:
-                    continue
-                day_of_month = match.group(1)
-                month = match.group(2)
-                year = match.group(3)
-                year = int(year)
-                if year < 100:
-                    year += 2000
-                a_date = "{}.{}.{}".format(day_of_month, month, year)
-                if prev_index_entry == None:
-                    prev_index_entry = {"date": a_date, "offset_from": offset}
-                    continue
-                if a_date != prev_index_entry["date"]:
-                    expected_index_line = "{},{},{}".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset)
-                    if line_of_index != expected_index_line:
-                        print("_traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing {}: line_of_index != expected_index_line, line_of_index: {}, expected_index_line: {}".format(timing_name, line_of_index, expected_index_line))
-                        f_ind_in.seek(index_offset)
-                        f_ind_in.truncate()
-                        timing_file.seek(prev_index_entry["offset_from"])
-                        return
-                    else:
-                        prev_index_entry = {"date": a_date, "offset_from": offset}
-                        break
-
-def _append_to_index_for_timing(timing_file, index_file):
-    prev_index_entry = None
-    while True:
-        offset = timing_file.tell()
-        line = timing_file.readline()
-
-        if line == "":
-            if prev_index_entry != None:
-                index_file.write("{},{},{}\n".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset))
-            break
-
-        match = re.match(pattern_date_and_timing, line)
-        if match is None:
-            continue
-        day_of_month = match.group(1)
-        month = match.group(2)
-        year = match.group(3)
-        year = int(year)
-        if year < 100:
-            year += 2000
-        a_date = "{}.{}.{}".format(day_of_month, month, year)
-        if prev_index_entry == None:
-            prev_index_entry = {"date": a_date, "offset_from": offset}
-            continue
-        if a_date != prev_index_entry["date"]:
-            index_file.write("{},{},{}\n".format(prev_index_entry["date"], prev_index_entry["offset_from"], offset))
-            prev_index_entry = {"date": a_date, "offset_from": offset}
-
-def _create_index_for_timing(timing, index_name, tmp_dir):
-    timing_name = timing.get("name")
-    print("timing: {}".format(timing_name))
-    timing_filepath = os.path.expanduser(timing.get("filepath"))
-    tmp_index_filepath = os.path.join(tmp_dir, index_name)
-    with open(timing_filepath, encoding='utf-8') as timing_file:
-        with open(tmp_index_filepath, 'a', encoding='utf-8') as index_file:
-            index_file.write("date,offset_from,offset_to\n")
-            _append_to_index_for_timing(timing_file, index_file)
-
-    _remember_timing_last_modified(timing_filepath, index_name, tmp_dir)
-
-def _remember_timing_last_modified(timing_filepath, index_name, tmp_dir):
-    index_last_modified_filepath = os.path.join(tmp_dir, index_name + ".last_modified")
-    timing_last_modified = os.path.getmtime(timing_filepath)
-    with open(index_last_modified_filepath, 'w') as f_ilm:
-        f_ilm.write("{}".format(timing_last_modified))
-
-def yield_index_for_range_of_dates(indexFilename, dateFrom, dateTo):
-    filepath = os.path.join(ROOT_DIR, "tmp", indexFilename)
-    with open(filepath, encoding='utf-8') as f:
-        first_line = f.readline().rstrip()
-        if (first_line != "date,offset_from,offset_to"):
-            raise Exception("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")")
-        line_number = 0
-        while True:
-            line_number += 1
-            line = f.readline()
-            if line == "":
-                break
-            line = line.rstrip()
-            words = line.split(",")
-
-            if len(words) != 3:
-                raise Exception("error while parsing timing index: wrong format (len(line.split(\",\")) != 3). line {}: {}".format(line_number, line))
-
-            dateAsStr = words[0]
-            date = datetime.strptime(dateAsStr, "%d.%m.%Y")
-
-            if date < dateFrom:
-                continue
-            if date > dateTo:
-                break
-
-            offset_from = words[1]
-            offset_to = words[2]
-
-            try:
-                offset_from = int(offset_from)
-                offset_to = int(offset_to)
-
-                offsets_line_obj = {"date": dateAsStr, "offset_from": offset_from, "offset_to": offset_to}
-                yield offsets_line_obj
-            except ValueError as err:
-                print("error while parsing timing index: wrong format (couldn't parse as int). line {}: {}".format(line_number, line))
-                raise err
-
-def read_index_for_set_of_dates(indexFilename, set_of_dates):
-    filepath = os.path.join(ROOT_DIR, "tmp", indexFilename)
-    offsets_by_date = {}
-    with open(filepath, encoding='utf-8') as f:
-        first_line = f.readline().rstrip()
-        if (first_line != "date,offset_from,offset_to"):
-            raise Exception("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")")
-        line_number = 0
-        while True:
-            line_number += 1
-            line = f.readline()
-            if line == "":
-                break
-            line = line.rstrip()
-            words = line.split(",")
-
-            if len(words) != 3:
-                raise Exception("error while parsing timing index: wrong format (len(line.split(\",\")) != 3). line {}: {}".format(line_number, line))
-
-            date = words[0]
-
-            if not date in set_of_dates:
-                continue
-
-            offset_from = words[1]
-            offset_to = words[2]
-
-            try:
-                offset_from = int(offset_from)
-                offset_to = int(offset_to)
-
-                offsets_by_date[date] = {"offset_from": offset_from, "offset_to": offset_to}
-            except ValueError as err:
-                print("error while parsing timing index: wrong format (couldn't parse as int). line {}: {}".format(line_number, line))
-                raise err
+  if (resultType === TypeOfResultOfIndexTraverse.NO_DIFF) {
+    // do nothing
+  } else if (resultType === TypeOfResultOfIndexTraverse.REACHED_THE_DIFF) {
+    await fs.promises.truncate(indexFilepath, traversalResult.truncateIndexAt);
+    await _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, traversalResult.traversedTimingUntil);
+  } else if (resultType === TypeOfResultOfIndexTraverse.REACHED_THE_END_OF_INDEX) {
+    await _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, traversalResult.traversedTimingUntil);
+  } else if (resultType === TypeOfResultOfIndexTraverse.INDEX_IS_LONGER_THAN_TIMING) {
+    await fs.promises.truncate(indexFilepath, traversalResult.truncateIndexAt);
+  } else {
+    throw new Error(`unknown type of ResultOfIndexTraverse: ${resultType}`);
+  }
+  await _rememberTimingLastModified(timingFilepath, indexName, indexesDirFilepath);
+}
 
 
-    return offsets_by_date
+function TypeOfResultOfIndexTraverse() { }
+TypeOfResultOfIndexTraverse.NO_DIFF = new TypeOfResultOfIndexTraverse();
+TypeOfResultOfIndexTraverse.REACHED_THE_DIFF = new TypeOfResultOfIndexTraverse();
+TypeOfResultOfIndexTraverse.REACHED_THE_END_OF_INDEX = new TypeOfResultOfIndexTraverse();
+TypeOfResultOfIndexTraverse.INDEX_IS_LONGER_THAN_TIMING = new TypeOfResultOfIndexTraverse();
 
-def read_index(indexFilename):
-    filepath = os.path.join(ROOT_DIR, "tmp", indexFilename)
-    offsets_by_date = {}
-    with open(filepath, encoding='utf-8') as f:
-        first_line = f.readline().rstrip()
-        if (first_line != "date,offset_from,offset_to"):
-            raise Exception("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")")
-        line_number = 0
-        while True:
-            line_number += 1
-            line = f.readline()
-            if line == "":
-                break
-            line = line.rstrip()
-            words = line.split(",")
+function ResultOfIndexTraverse(typeOfResult, params) {
+  this.resultType = typeOfResult;
+  this.truncateIndexAt = params.truncateIndexAt;
+  this.traversedTimingUntil = params.traversedTimingUntil;
+}
 
-            if len(words) != 3:
-                raise Exception("error while parsing timing index: wrong format (len(line.split(\",\")) != 3). line {}: {}".format(line_number, line))
+ResultOfIndexTraverse.noDiff = function() {
+  return new ResultOfIndexTraverse(TypeOfResultOfIndexTraverse.NO_DIFF, {});
+};
+ResultOfIndexTraverse.reachedTheDiff = function(params) {
+  return new ResultOfIndexTraverse(TypeOfResultOfIndexTraverse.REACHED_THE_DIFF, params);
+};
+ResultOfIndexTraverse.reachedTheEndOfIndex = function(params) {
+  return new ResultOfIndexTraverse(TypeOfResultOfIndexTraverse.REACHED_THE_END_OF_INDEX, params);
+};
+ResultOfIndexTraverse.indexIsLongerThanTiming = function(params) {
+  return new ResultOfIndexTraverse(TypeOfResultOfIndexTraverse.INDEX_IS_LONGER_THAN_TIMING, params);
+};
 
-            date = words[0]
-            offset_from = words[1]
-            offset_to = words[2]
+async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexName, indexFilepath) {
+  const indexReader = new LineReader(indexFilepath, { encoding: 'utf8' });
+  const timingReader = new LineReader(timingFilepath, { encoding: 'utf8' });
+  const { line: firstLineOfIndex, isEOF: indexIsEmpty } = await indexReader.readline();
+  if (indexIsEmpty || firstLineOfIndex !== "date,offset_from,offset_to") {
+    throw new Error(`error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\"). timing: ${timingName}, index file: ${indexName}`);
+  }
+  console.log('index file starts with header \"date,offset_from,offset_to\"');
+  let prevIndexEntry = null;
+  while (true) {
+    let indexOffset = indexReader.getOffset();
+    let { line: lineOfIndex, isEOF: indexEOF } = await indexReader.readline();
+    if (indexEOF) {
+      console.log(`_traverseIndexUntilFirstDiff: about to return (reached the end of the index) for timing ${timingName}`);
+      console.log('reachedTheEndOfIndex' + JSON.stringify({
+        traversedTimingUntil: prevIndexEntry.offsetFrom
+      }));
+      return ResultOfIndexTraverse.reachedTheEndOfIndex({
+        traversedTimingUntil: prevIndexEntry.offsetFrom
+      });
+    }
+    while (true) {
+      let offset = timingReader.getOffset();
+      let { line: lineTiming, isEOF: timingEOF } = await timingReader.readline();
+      console.log(`line of timing: ${lineTiming}, offset: ${offset}`);
+      if (timingEOF) {
+        if (prevIndexEntry !== null) {
+          let expectedIndexLine = `${prevIndexEntry.date},${prevIndexEntry.offsetFrom},${offset}`;
+          if (lineOfIndex !== expectedIndexLine) {
+            console.log(`(last line) _traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing ${timingName}: line_of_index != expected_index_line, line_of_index: ${lineOfIndex}, expected_index_line: ${expectedIndexLine}`);
+            console.log('reachedTheDiff' + JSON.stringify({
+              truncateIndexAt: indexOffset,
+              traversedTimingUntil: prevIndexEntry.offsetFrom
+            }));
+            return ResultOfIndexTraverse.reachedTheDiff({
+              truncateIndexAt: indexOffset,
+              traversedTimingUntil: prevIndexEntry.offsetFrom
+            });
+	  }
+	}
+	let { line: tmpIndexLine, isEOF: endOfIndexReached } = await indexReader.readline();
+	if (endOfIndexReached) {
+	  return ResultOfIndexTraverse.noDiff();
+	} else {
+	  console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate (end_of_index_reached is False) for timing ${timingName}`);
+	  console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate (end_of_index_reached is False) for timing ${timingName}. index line: ${tmpIndexLine}`);
+	  console.log('indexIsLongerThanTiming' + JSON.stringify({
+            truncateIndexAt: indexReader.getOffset(),
+	  }));
+	  return ResultOfIndexTraverse.indexIsLongerThanTiming({
+            truncateIndexAt: indexReader.getOffset(),
+	  });
+	}
+      }
+      let match = lineTiming.match(new RegExp(PATTERN_DATE_AND_TIMING));
+      if (match === null) {
+        continue;
+      }
+      let dayOfMonth = match[1];
+      let month = match[2];
+      let year = match[3];
+      year = Number(year);
+      if (year < 100) {
+        year += 2000;
+      }
+      let aDate = `${dayOfMonth}.${month}.${year}`;
+      console.log(`aDate: ${aDate}`);
+      if (prevIndexEntry === null) {
+        prevIndexEntry = {date: aDate, offsetFrom: offset};
+        continue;
+      }
+      if (aDate !== prevIndexEntry.date) {
+        let expectedIndexLine = `${prevIndexEntry.date},${prevIndexEntry.offsetFrom},${offset}`;
+        if (lineOfIndex !== expectedIndexLine) {
+          console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing ${timingName}: line_of_index != expected_index_line, line_of_index: ${lineOfIndex}, expected_index_line: ${expectedIndexLine}`);
+          console.log('reachedTheDiff' + JSON.stringify({
+            truncateIndexAt: indexOffset,
+            traversedTimingUntil: prevIndexEntry.offsetFrom
+          }));
+          return ResultOfIndexTraverse.reachedTheDiff({
+            truncateIndexAt: indexOffset,
+            traversedTimingUntil: prevIndexEntry.offsetFrom
+          });
+        } else {
+          prevIndexEntry = {date: aDate, offsetFrom: offset};
+          break;
+        }
+      }
+    }
+  }
+}
 
-            try:
-                offset_from = int(offset_from)
-                offset_to = int(offset_to)
+async function _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, startingPositionInTimingFile) {
+  const timingReader = new LineReader(timingFilepath, { encoding: 'utf8', start: startingPositionInTimingFile});
+  // const { size: indexFileSize } = await fs.promises.stat(indexFilepath);
+  // console.log(`[_appendToIndexForTiming] indexFileSize: ${indexFileSize}`);
+  // const indexFile = fs.createWriteStream(indexFilepath, { encoding: 'utf8', start: indexFileSize });
+  const indexFile = fs.createWriteStream(indexFilepath, { flags: 'a', encoding: 'utf8' });
+  let prevIndexEntry = null;
+  while (true) {
+    let offset = timingReader.getOffset();
+    let { line: lineTiming, isEOF: timingEOF } = await timingReader.readline();
+    // console.log(`line of timing: ${lineTiming}, offset: ${offset}`);
+    if (timingEOF) {
+      if (prevIndexEntry !== null) {
+        await _writeToStream(indexFile, `${prevIndexEntry.date},${prevIndexEntry.offsetFrom},${offset}\n`);
+      }
+      indexFile.end();
+      break;
+    }
+    let match = lineTiming.match(new RegExp(PATTERN_DATE_AND_TIMING));
+    if (match === null) {
+      continue;
+    }
+    let dayOfMonth = match[1];
+    let month = match[2];
+    let year = match[3];
+    year = Number(year);
+    if (year < 100) {
+      year += 2000;
+    }
+    let aDate = `${dayOfMonth}.${month}.${year}`;
+    // console.log(`aDate: ${aDate}`);
+    if (prevIndexEntry === null) {
+      prevIndexEntry = {date: aDate, offsetFrom: offset};
+      continue;
+    }
+    if (aDate !== prevIndexEntry.date) {
+      await _writeToStream(indexFile, `${prevIndexEntry.date},${prevIndexEntry.offsetFrom},${offset}\n`);
+      prevIndexEntry = {date: aDate, offsetFrom: offset};
+    }
+  }
+}
 
-                offsets_by_date[date] = {"offset_from": offset_from, "offset_to": offset_to}
-            except ValueError as err:
-                print("error while parsing timing index: wrong format (couldn't parse as int). line {}: {}".format(line_number, line))
-                raise err
+function _writeToStream(stream, data) {
+  return new Promise((resolve, err) => {
+    function func() {
+      if (stream.write(data)) {
+        resolve(undefined);
+      } else {
+        stream.once('drain', func);
+      }
+    }
+    func();
+  });
+}
 
+async function _createIndexForTiming(timing, indexName, indexDirFilepath) {
+  const timingName = timing['name'];
+  const timingFilepath = expanduser(timing['filepath']);
+  const indexFilepath = path.join(indexDirFilepath, indexName);
 
-    return offsets_by_date
+  await fs.promises.writeFile(indexFilepath, "date,offset_from,offset_to\n", { encoding: 'utf8' });
+  // <debug>
+  const { size: indexFileSize } = await fs.promises.stat(indexFilepath);
+  console.log(`[_createIndexForTiming] indexFileSize: ${indexFileSize}`);
+  // </debug>
+  console.log(`[_createIndexForTiming] before _appendToIndexForTiming. timingFilepath: ${timingFilepath}`);
+  await _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, 0);
+  console.log('[_createIndexForTiming] after _appendToIndexForTiming');
+  console.log('[_createIndexForTiming] before _rememberTimingLastModified');
+  await _rememberTimingLastModified(timingFilepath, indexName, indexDirFilepath);
+  console.log('[_createIndexForTiming] after _rememberTimingLastModified');
+}
 
-pattern_date = "([0-9]{2})\.([0-9]{2})\.([0-9]{2,4})"
-pattern_timing = "([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})( [- *] \(([0-9]+) m\) )?"
-pattern_date_and_timing = pattern_date + " " + pattern_timing
+async function _rememberTimingLastModified(timingFilepath, indexName, indexDirFilepath) {
+  const indexLM_Filepath = path.join(indexDirFilepath, indexName + '.last_modified');
+  const { mtimeMs: timingLastModified } = await fs.promises.stat(timingFilepath);
+  await fs.promises.writeFile(indexLM_Filepath, `${timingLastModified}`);
+}
 
-def main():
-    create_index()
+export async function* yieldIndexForRangeOfDates(indexFilepath, dateFrom, dateTo) {
+  const f = new LineReader(indexFilepath, { encoding: 'utf8' });
+  let lineNumber = 0;
+  while (true) {
+    let { line, isEOF } = await f.readline();
+    // console.log(`[yieldIndexForRangeOfDates] line: ${line}, isEOF: ${isEOF}`);
+    if (isEOF) {
+      break;
+    }
+    lineNumber++;
+    if (lineNumber === 1) {
+      const firstLine = line;
+      if (firstLine !== "date,offset_from,offset_to") {
+        throw new Error("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")");
+      }
+      continue;
+    }
+    let words = line.split(",");
+    if (words.length != 3) {
+      throw new Error(`error while parsing timing index: wrong format (line.split(",").length != 3). line ${lineNumber}: ${line}`);
+    }
+    let dateAsStr = words[0];
+    let dateAsStrSplitted = dateAsStr.split("."); // format: "%d.%m.%Y"
+    let dayOfMonth = dateAsStrSplitted[0];
+    let month = dateAsStrSplitted[1];
+    let year = dateAsStrSplitted[2];
 
-if __name__ == "__main__":
-    #asyncio.run(main())
-    main()
+    let date = new Date();
+    date.setTime(Date.parse(`${year}-${month}-${dayOfMonth}T00:00:00`));
+
+    if (date < dateFrom) {
+      continue;
+    }
+    if (date > dateTo) {
+      break;
+    }
+
+    let offsetFrom = words[1];
+    let offsetTo = words[2];
+    try {
+      offsetFrom = parseInt(offsetFrom);
+      offsetTo = parseInt(offsetTo);
+      let offsetsLineObj = {date: dateAsStr, offsetFrom: offsetFrom, offsetTo: offsetTo};
+      yield offsetsLineObj;
+    } catch (err) {
+      console.log(`error while parsing timing index: wrong format (couldn't parse as int). line ${lineNumber}: ${line}`);
+      throw err;
+    }
+  }
+}
+
+async function readIndexForSetOfDates(indexFilepath, setOfDates) {
+  const f = new LineReader(indexFilepath, { encoding: 'utf8' });
+  let lineNumber = 0;
+  let offsetsByDate = {};
+  while (true) {
+    let { line, isEOF } = await f.readline();
+    if (isEOF) {
+      break;
+    }
+    lineNumber++;
+    if (lineNumber === 1) {
+      const firstLine = line;
+      if (firstLine !== "date,offset_from,offset_to") {
+        throw new Error("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")");
+      }
+      continue;
+    }
+    let words = line.split(",");
+    if (words.length != 3) {
+      throw new Error(`error while parsing timing index: wrong format (line.split(",").length != 3). line ${lineNumber}: ${line}`);
+    }
+    let dateAsStr = words[0];
+    if (!setOfDates.has(dateAsStr)) {
+      continue;
+    }
+
+    let offsetFrom = words[1];
+    let offsetTo = words[2];
+    try {
+      offsetFrom = parseInt(offsetFrom);
+      offsetTo = parseInt(offsetTo);
+      offsetsByDate[dateAsStr] = {offsetFrom: offsetFrom, offsetTo: offsetTo};
+    } catch (err) {
+      console.log(`error while parsing timing index: wrong format (couldn't parse as int). line ${lineNumber}: ${line}`);
+      throw err;
+    }
+  }
+  return offsetsByDate;
+}
