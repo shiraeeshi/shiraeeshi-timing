@@ -119,7 +119,7 @@ async function initMessageHandlers(appEnv, win) {
   }
   console.log(`configFilepath: ${configFilepath}`);
   console.log(`indexDirFilepath: ${indexDirFilepath}`);
-  const timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
+  let timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
   console.log('[init] 1');
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   console.log('[init] 2');
@@ -147,6 +147,7 @@ async function initMessageHandlers(appEnv, win) {
     let dateTo = parseDateWithDots(lastDateWithDots);
     let timings;
     try {
+      timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
       timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
     } catch (err) {
       let msg = {
