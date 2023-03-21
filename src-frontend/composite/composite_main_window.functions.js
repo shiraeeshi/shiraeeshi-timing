@@ -35,6 +35,9 @@ function handleServerMessage(msg) {
       if (msg.error_source == "timings") {
         let innerContentWrapper = document.getElementById("inner-content-wrapper");
         let errorMessage = msg.message;
+        if (msg.lineNumOffset) {
+          errorMessage = addOffsetToLineNumberInErrorMessage(errorMessage, msg.lineNumOffset);
+        }
         if (msg.source_timing) {
           errorMessage = `(source timing: ${msg.source_timing})\n${errorMessage}`;
         }

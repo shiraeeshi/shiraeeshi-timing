@@ -167,6 +167,7 @@ async function init(appEnv, win) {
     func({
       "type": "error_message",
       "source_timing": err.source_timing,
+      "lineNumOffset": err.lineNumOffset,
       "message": err.message
     });
   }

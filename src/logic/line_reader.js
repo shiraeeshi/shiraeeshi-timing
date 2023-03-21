@@ -31,6 +31,7 @@ export function LineReader(filepath, readStreamConfig) {
   that.position = readStreamConfig.start !== undefined ? readStreamConfig.start : 0;
   that.prevBeginningIndexInChunk = 0;
   that.lastBeginningOfLinePosition = that.position;
+  that.lineNumOffset = readStreamConfig.lineNumOffset !== undefined ? readStreamConfig.lineNumOffset : 0;
   that.chunk = null;
   that.isWaitingForNewChunk = true;
   that.lastLinePrefix = '';
@@ -68,6 +69,11 @@ LineReader.prototype.readline = function() {
 LineReader.prototype.getOffset = function() {
   const that = this;
   return that.lastBeginningOfLinePosition;
+};
+
+LineReader.prototype.getLineNumOffset = function() {
+  const that = this;
+  return that.lineNumOffset;
 };
 
 LineReader.prototype._initStream = function() {
@@ -171,6 +177,7 @@ LineReader.prototype._tryResolvePromise = function() {
       that.currentPromiseResolve = null;
       that.currentPromiseErr = null;
       that.isWaitingToResolvePromise = false;
+      that.lineNumOffset++;
       return;
     }
     i++;

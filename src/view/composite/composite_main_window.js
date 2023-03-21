@@ -184,6 +184,7 @@ async function init(appEnv, win) {
         "type": "error_message",
         "error_source": "timings",
         "source_timing": err.source_timing,
+        "lineNumOffset": err.lineNumOffset,
         "message": err.message
       });
     });

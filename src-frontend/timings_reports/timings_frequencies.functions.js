@@ -15,6 +15,9 @@ function handleServerMessage(msg) {
     if (msg.msg_type == "error_message") {
       let wrapper = document.getElementById("main-content-wrapper");
       let errorMessage = msg.message;
+      if (msg.lineNumOffset) {
+        errorMessage = addOffsetToLineNumberInErrorMessage(errorMessage, msg.lineNumOffset);
+      }
       if (msg.source_timing) {
         errorMessage = `(source timing: ${msg.source_timing})\n${errorMessage}`;
       }
@@ -1828,6 +1831,13 @@ function turnWhitespacePrefixIntoNbsp(line) {
   let nbsps = Array.prototype.map.call(prefix, _ => '&nbsp;').join('');
   elem.innerHTML = nbsps + afterPrefix;
   return elem;
+}
+
+function addOffsetToLineNumberInErrorMessage(text, offset) {
+  return text.replace(/at line (\d+)/g, (_, n) => {
+    n = parseInt(n);
+    return `at line ${n + offset}`;
+  });
 }
 
 function withClass(elem, ...classes) {

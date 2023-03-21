@@ -51,8 +51,8 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
         if (done) {
           break;
         }
-        let {date, offsetFrom, offsetTo} = value;
-        let f = new LineReader(filepath, { encoding: 'utf8', start: offsetFrom });
+        let {date, lineNumOffsetFrom, offsetFrom, offsetTo} = value;
+        let f = new LineReader(filepath, { encoding: 'utf8', start: offsetFrom, lineNumOffset: lineNumOffsetFrom });
         let lines = await _readLinesUntilPosition(f, offsetTo);
         let timings = parseTimingFileLines(lines);
 
@@ -76,8 +76,8 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
         if (done) {
           break;
         }
-        let {date, offsetFrom, offsetTo} = value;
-        let f = new LineReader(filepath, { encoding: 'utf8', start: offsetFrom });
+        let {date, lineNumOffsetFrom, offsetFrom, offsetTo} = value;
+        let f = new LineReader(filepath, { encoding: 'utf8', start: offsetFrom, lineNumOffset: lineNumOffsetFrom });
         console.log(`[readTimingsForRangeOfDates] about to call _readLinesUntilPosition. date: ${date}, (dateFrom: ${dateFrom}), offsetFrom: ${offsetFrom}, offsetTo: ${offsetTo}`);
         let yamlOfDate = await _readLinesUntilPosition(f, offsetTo);
         yamlOfDate = yamlOfDate.join('\n');
@@ -86,6 +86,7 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
           parsedYaml = YAML.parse(yamlOfDate);
         } catch (err) {
           err.source_timing = timingName;
+          err.lineNumOffset = lineNumOffsetFrom;
           throw err;
         }
         let parsedTimings = parseYamlTimings(parsedYaml);
@@ -165,7 +166,8 @@ async function readTimingsOfToday(config, timing2indexFilename, indexDirFilepath
     if (frmt === 'txt' || !frmt) {
       let timings = [];
       if (offsetsOfToday !== null) {
-        let f = new LineReader(filepath, { encoding: 'utf8', start: offsetFrom });
+        let {offsetFrom, offsetTo, lineNumOffsetFrom} = offsetsOfToday;
+        let f = new LineReader(filepath, { encoding: 'utf8', start: offsetFrom, lineNumOffset: lineNumOffsetFrom });
         let lines = await _readLinesUntilPosition(f, offsetTo);
         timings = parseTimingFileLines(lines);
       }
@@ -173,7 +175,8 @@ async function readTimingsOfToday(config, timing2indexFilename, indexDirFilepath
     } else if (frmt === 'yaml') {
       let parsedYaml = {};
       if (offsetsOfToday !== null) {
-        let f = new LineReader(filepath, { encoding: 'utf8', start: offsetFrom });
+        let {offsetFrom, offsetTo, lineNumOffsetFrom} = offsetsOfToday;
+        let f = new LineReader(filepath, { encoding: 'utf8', start: offsetFrom, lineNumOffset: lineNumOffsetFrom });
         let yamlOfDate = await _readLinesUntilPosition(f, offsetTo);
         yamlOfDate = yamlOfDate.join('\n');
         parsedYaml = YAML.parse(yamlOfDate);

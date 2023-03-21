@@ -104,9 +104,9 @@ async function _truncateAfterFirstDiffAndAppendToIndex(timing, indexName, indexe
     // do nothing
   } else if (resultType === TypeOfResultOfIndexTraverse.REACHED_THE_DIFF) {
     await fs.promises.truncate(indexFilepath, traversalResult.truncateIndexAt);
-    await _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, traversalResult.traversedTimingUntil);
+    await _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, traversalResult.traversedTimingUntil, traversalResult.traversedTimingUntilLineNum);
   } else if (resultType === TypeOfResultOfIndexTraverse.REACHED_THE_END_OF_INDEX) {
-    await _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, traversalResult.traversedTimingUntil);
+    await _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, traversalResult.traversedTimingUntil, traversalResult.traversedTimingUntilLineNum);
   } else if (resultType === TypeOfResultOfIndexTraverse.INDEX_IS_LONGER_THAN_TIMING) {
     await fs.promises.truncate(indexFilepath, traversalResult.truncateIndexAt);
   } else {
@@ -126,6 +126,7 @@ function ResultOfIndexTraverse(typeOfResult, params) {
   this.resultType = typeOfResult;
   this.truncateIndexAt = params.truncateIndexAt;
   this.traversedTimingUntil = params.traversedTimingUntil;
+  this.traversedTimingUntilLineNum = params.traversedTimingUntilLineNum;
 }
 
 ResultOfIndexTraverse.noDiff = function() {
@@ -145,10 +146,10 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
   const indexReader = new LineReader(indexFilepath, { encoding: 'utf8' });
   const timingReader = new LineReader(timingFilepath, { encoding: 'utf8' });
   const { line: firstLineOfIndex, isEOF: indexIsEmpty } = await indexReader.readline();
-  if (indexIsEmpty || firstLineOfIndex !== "date,offset_from,offset_to") {
-    throw new Error(`error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\"). timing: ${timingName}, index file: ${indexName}`);
+  if (indexIsEmpty || firstLineOfIndex !== "date,line_num_offset,offset_from,offset_to") {
+    throw new Error(`error reading index: wrong format (doesn't start with header \"date,line_num_offset,offset_from,offset_to\"). timing: ${timingName}, index file: ${indexName}`);
   }
-  console.log('index file starts with header \"date,offset_from,offset_to\"');
+  console.log('index file starts with header \"date,line_num_offset,offset_from,offset_to\"');
   let prevIndexEntry = null;
   while (true) {
     let indexOffset = indexReader.getOffset();
@@ -156,14 +157,17 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
     if (indexEOF) {
       console.log(`_traverseIndexUntilFirstDiff: about to return (reached the end of the index) for timing ${timingName}`);
       console.log('reachedTheEndOfIndex' + JSON.stringify({
-        traversedTimingUntil: prevIndexEntry.offsetFrom
+        traversedTimingUntil: prevIndexEntry.offsetFrom,
+        traversedTimingUntilLineNum: timingReader.getLineNumOffset()
       }));
       return ResultOfIndexTraverse.reachedTheEndOfIndex({
-        traversedTimingUntil: prevIndexEntry.offsetFrom
+        traversedTimingUntil: prevIndexEntry.offsetFrom,
+        traversedTimingUntilLineNum: timingReader.getLineNumOffset()
       });
     }
     while (true) {
       let offset = timingReader.getOffset();
+      let lineNumOffset = timingReader.getLineNumOffset();
       let { line: lineTiming, isEOF: timingEOF } = await timingReader.readline();
       console.log(`line of timing: ${lineTiming}, offset: ${offset}`);
       if (timingEOF) {
@@ -173,27 +177,29 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
             console.log(`(last line) _traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing ${timingName}: line_of_index != expected_index_line, line_of_index: ${lineOfIndex}, expected_index_line: ${expectedIndexLine}`);
             console.log('reachedTheDiff' + JSON.stringify({
               truncateIndexAt: indexOffset,
-              traversedTimingUntil: prevIndexEntry.offsetFrom
+              traversedTimingUntil: prevIndexEntry.offsetFrom,
+              traversedTimingUntilLineNum: lineNumOffset
             }));
             return ResultOfIndexTraverse.reachedTheDiff({
               truncateIndexAt: indexOffset,
-              traversedTimingUntil: prevIndexEntry.offsetFrom
+              traversedTimingUntil: prevIndexEntry.offsetFrom,
+              traversedTimingUntilLineNum: lineNumOffset
             });
-	  }
-	}
-	let { line: tmpIndexLine, isEOF: endOfIndexReached } = await indexReader.readline();
-	if (endOfIndexReached) {
-	  return ResultOfIndexTraverse.noDiff();
-	} else {
-	  console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate (end_of_index_reached is False) for timing ${timingName}`);
-	  console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate (end_of_index_reached is False) for timing ${timingName}. index line: ${tmpIndexLine}`);
-	  console.log('indexIsLongerThanTiming' + JSON.stringify({
+          }
+        }
+        let { line: tmpIndexLine, isEOF: endOfIndexReached } = await indexReader.readline();
+        if (endOfIndexReached) {
+          return ResultOfIndexTraverse.noDiff();
+        } else {
+          console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate (end_of_index_reached is False) for timing ${timingName}`);
+          console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate (end_of_index_reached is False) for timing ${timingName}. index line: ${tmpIndexLine}`);
+          console.log('indexIsLongerThanTiming' + JSON.stringify({
             truncateIndexAt: indexReader.getOffset(),
-	  }));
-	  return ResultOfIndexTraverse.indexIsLongerThanTiming({
+          }));
+          return ResultOfIndexTraverse.indexIsLongerThanTiming({
             truncateIndexAt: indexReader.getOffset(),
-	  });
-	}
+          });
+        }
       }
       let match = lineTiming.match(new RegExp(PATTERN_DATE_AND_TIMING));
       if (match === null) {
@@ -218,11 +224,13 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
           console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing ${timingName}: line_of_index != expected_index_line, line_of_index: ${lineOfIndex}, expected_index_line: ${expectedIndexLine}`);
           console.log('reachedTheDiff' + JSON.stringify({
             truncateIndexAt: indexOffset,
-            traversedTimingUntil: prevIndexEntry.offsetFrom
+            traversedTimingUntil: prevIndexEntry.offsetFrom,
+            traversedTimingUntilLineNum: lineNumOffset
           }));
           return ResultOfIndexTraverse.reachedTheDiff({
             truncateIndexAt: indexOffset,
-            traversedTimingUntil: prevIndexEntry.offsetFrom
+            traversedTimingUntil: prevIndexEntry.offsetFrom,
+            traversedTimingUntilLineNum: lineNumOffset
           });
         } else {
           prevIndexEntry = {date: aDate, offsetFrom: offset};
@@ -233,8 +241,8 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
   }
 }
 
-async function _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, startingPositionInTimingFile) {
-  const timingReader = new LineReader(timingFilepath, { encoding: 'utf8', start: startingPositionInTimingFile});
+async function _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, startingPositionInTimingFile, lineNumOffsetInTimingFile) {
+  const timingReader = new LineReader(timingFilepath, { encoding: 'utf8', start: startingPositionInTimingFile, lineNumOffset: lineNumOffsetInTimingFile});
   // const { size: indexFileSize } = await fs.promises.stat(indexFilepath);
   // console.log(`[_appendToIndexForTiming] indexFileSize: ${indexFileSize}`);
   // const indexFile = fs.createWriteStream(indexFilepath, { encoding: 'utf8', start: indexFileSize });
@@ -242,11 +250,12 @@ async function _appendToIndexForTiming(timingName, timingFilepath, indexName, in
   let prevIndexEntry = null;
   while (true) {
     let offset = timingReader.getOffset();
+    let lineNumOffset = timingReader.getLineNumOffset();
     let { line: lineTiming, isEOF: timingEOF } = await timingReader.readline();
     // console.log(`line of timing: ${lineTiming}, offset: ${offset}`);
     if (timingEOF) {
       if (prevIndexEntry !== null) {
-        await _writeToStream(indexFile, `${prevIndexEntry.date},${prevIndexEntry.offsetFrom},${offset}\n`);
+        await _writeToStream(indexFile, `${prevIndexEntry.date},${prevIndexEntry.lineNumOffsetFrom},${prevIndexEntry.offsetFrom},${offset}\n`);
       }
       indexFile.end();
       break;
@@ -265,12 +274,12 @@ async function _appendToIndexForTiming(timingName, timingFilepath, indexName, in
     let aDate = `${dayOfMonth}.${month}.${year}`;
     // console.log(`aDate: ${aDate}`);
     if (prevIndexEntry === null) {
-      prevIndexEntry = {date: aDate, offsetFrom: offset};
+      prevIndexEntry = {date: aDate, lineNumOffsetFrom: lineNumOffset, offsetFrom: offset};
       continue;
     }
     if (aDate !== prevIndexEntry.date) {
-      await _writeToStream(indexFile, `${prevIndexEntry.date},${prevIndexEntry.offsetFrom},${offset}\n`);
-      prevIndexEntry = {date: aDate, offsetFrom: offset};
+      await _writeToStream(indexFile, `${prevIndexEntry.date},${prevIndexEntry.lineNumOffsetFrom},${prevIndexEntry.offsetFrom},${offset}\n`);
+      prevIndexEntry = {date: aDate, lineNumOffsetFrom: lineNumOffset, offsetFrom: offset};
     }
   }
 }
@@ -293,13 +302,13 @@ async function _createIndexForTiming(timing, indexName, indexDirFilepath) {
   const timingFilepath = expanduser(timing['filepath']);
   const indexFilepath = path.join(indexDirFilepath, indexName);
 
-  await fs.promises.writeFile(indexFilepath, "date,offset_from,offset_to\n", { encoding: 'utf8' });
+  await fs.promises.writeFile(indexFilepath, "date,line_num_offset,offset_from,offset_to\n", { encoding: 'utf8' });
   // <debug>
   const { size: indexFileSize } = await fs.promises.stat(indexFilepath);
   console.log(`[_createIndexForTiming] indexFileSize: ${indexFileSize}`);
   // </debug>
   console.log(`[_createIndexForTiming] before _appendToIndexForTiming. timingFilepath: ${timingFilepath}`);
-  await _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, 0);
+  await _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, 0, 0);
   console.log('[_createIndexForTiming] after _appendToIndexForTiming');
   console.log('[_createIndexForTiming] before _rememberTimingLastModified');
   await _rememberTimingLastModified(timingFilepath, indexName, indexDirFilepath);
@@ -324,14 +333,14 @@ export async function* yieldIndexForRangeOfDates(indexFilepath, dateFrom, dateTo
     lineNumber++;
     if (lineNumber === 1) {
       const firstLine = line;
-      if (firstLine !== "date,offset_from,offset_to") {
-        throw new Error("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")");
+      if (firstLine !== "date,line_num_offset,offset_from,offset_to") {
+        throw new Error("error reading index: wrong format (doesn't start with header \"date,line_num_offset,offset_from,offset_to\")");
       }
       continue;
     }
     let words = line.split(",");
-    if (words.length != 3) {
-      throw new Error(`error while parsing timing index: wrong format (line.split(",").length != 3). line ${lineNumber}: ${line}`);
+    if (words.length != 4) {
+      throw new Error(`error while parsing timing index: wrong format (line.split(",").length != 4). line ${lineNumber}: ${line}`);
     }
     let dateAsStr = words[0];
     let dateAsStrSplitted = dateAsStr.split("."); // format: "%d.%m.%Y"
@@ -349,12 +358,14 @@ export async function* yieldIndexForRangeOfDates(indexFilepath, dateFrom, dateTo
       break;
     }
 
-    let offsetFrom = words[1];
-    let offsetTo = words[2];
+    let lineNumOffsetFrom = words[1];
+    let offsetFrom = words[2];
+    let offsetTo = words[3];
     try {
+      lineNumOffsetFrom = parseInt(lineNumOffsetFrom);
       offsetFrom = parseInt(offsetFrom);
       offsetTo = parseInt(offsetTo);
-      let offsetsLineObj = {date: dateAsStr, offsetFrom: offsetFrom, offsetTo: offsetTo};
+      let offsetsLineObj = {date: dateAsStr, lineNumOffsetFrom: lineNumOffsetFrom, offsetFrom: offsetFrom, offsetTo: offsetTo};
       yield offsetsLineObj;
     } catch (err) {
       console.log(`error while parsing timing index: wrong format (couldn't parse as int). line ${lineNumber}: ${line}`);
@@ -375,26 +386,28 @@ async function readIndexForSetOfDates(indexFilepath, setOfDates) {
     lineNumber++;
     if (lineNumber === 1) {
       const firstLine = line;
-      if (firstLine !== "date,offset_from,offset_to") {
-        throw new Error("error reading index: wrong format (doesn't start with header \"date,offset_from,offset_to\")");
+      if (firstLine !== "date,line_num_offset,offset_from,offset_to") {
+        throw new Error("error reading index: wrong format (doesn't start with header \"date,line_num_offset,offset_from,offset_to\")");
       }
       continue;
     }
     let words = line.split(",");
-    if (words.length != 3) {
-      throw new Error(`error while parsing timing index: wrong format (line.split(",").length != 3). line ${lineNumber}: ${line}`);
+    if (words.length != 4) {
+      throw new Error(`error while parsing timing index: wrong format (line.split(",").length != 4). line ${lineNumber}: ${line}`);
     }
     let dateAsStr = words[0];
     if (!setOfDates.has(dateAsStr)) {
       continue;
     }
 
-    let offsetFrom = words[1];
-    let offsetTo = words[2];
+    let lineNumOffsetFrom = words[1];
+    let offsetFrom = words[2];
+    let offsetTo = words[3];
     try {
+      lineNumOffsetFrom = parseInt(lineNumOffsetFrom);
       offsetFrom = parseInt(offsetFrom);
       offsetTo = parseInt(offsetTo);
-      offsetsByDate[dateAsStr] = {offsetFrom: offsetFrom, offsetTo: offsetTo};
+      offsetsByDate[dateAsStr] = {lineNumOffsetFrom: lineNumOffsetFrom, offsetFrom: offsetFrom, offsetTo: offsetTo};
     } catch (err) {
       console.log(`error while parsing timing index: wrong format (couldn't parse as int). line ${lineNumber}: ${line}`);
       throw err;
