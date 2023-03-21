@@ -160,7 +160,16 @@ async function init(appEnv, win) {
   // console.log(`[main.js] fiveDaysAgo: ${dateAsDayMonthYearWithDots(fiveDaysAgo)}, today: ${dateAsDayMonthYearWithDots(today)}`);
 
   console.log('[init] 3');
-  const timingsOfFiveLastDays = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, fiveDaysAgo, today);
+  let timingsOfFiveLastDays;
+  try {
+    timingsOfFiveLastDays = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, fiveDaysAgo, today);
+  } catch (err) {
+    func({
+      "type": "error_message",
+      "source_timing": err.source_timing,
+      "message": err.message
+    });
+  }
   console.log('[init] 4');
 
   console.log(`[main.js] timingsOfFiveLastDays: ${JSON.stringify(timingsOfFiveLastDays)}`);

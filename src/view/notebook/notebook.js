@@ -114,7 +114,17 @@ async function init(appEnv, win) {
   console.log(`configFilepath: ${configFilepath}`);
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   const config = JSON.parse(configFileContents);
-  const notebookContentsParsed = await parseNotebook(config['notebook-filepath']);
+
+  let notebookContentsParsed;
+  try {
+    notebookContentsParsed = await parseNotebook(config['notebook-filepath']);
+  } catch (err) {
+    func({
+      "type": "error_message",
+      "message": err.message
+    });
+    return;
+  }
 
   func({
     "processes": notebookContentsParsed,

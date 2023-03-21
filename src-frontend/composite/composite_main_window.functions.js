@@ -31,28 +31,53 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    initPeriodButtonsRow();
-    my.imageInfo = new ImageInfo();
-    my.timings = msg.timings;
+    if (msg.type == "error_message") {
+      if (msg.error_source == "timings") {
+        let innerContentWrapper = document.getElementById("inner-content-wrapper");
+        let errorMessage = msg.message;
+        if (msg.source_timing) {
+          errorMessage = `(source timing: ${msg.source_timing})\n${errorMessage}`;
+        }
+        innerContentWrapper.innerHTML = "";
+        let errorMessageHtml = turnMultilineTextIntoHtml(errorMessage);
+        innerContentWrapper.appendChild(errorMessageHtml);
+        return;
+      } else if (msg.error_source == "notebook") {
+        let notebookContentWrapper = document.getElementById("processes-content-wrapper");
+        notebookContentWrapper.innerHTML = "";
+        let errorMessageHtml = turnMultilineTextIntoHtml(msg.message);
+        notebookContentWrapper.appendChild(errorMessageHtml);
+        return;
+      }
+    }
+    if (msg.type == "timings") {
+      initPeriodButtonsRow();
+      my.imageInfo = new ImageInfo();
+      my.timings = msg.timings;
+      return;
+    }
 
-    let processes_object = msg.processes;
-    let forest = yamlRootObject2forest(msg.processes);
-    my.processesForest = forest;
+    if (msg.type == "notebook") {
+      let processes_object = msg.processes;
+      let forest = yamlRootObject2forest(msg.processes);
+      my.processesForest = forest;
 
-    // showTagsAndLinks(forest);
-    let taggedNodes = extractTagsFromRootForest(forest);
-    let tagsAndLinksForest = buildTagsAndLinksForest(taggedNodes);
+      // showTagsAndLinks(forest);
+      let taggedNodes = extractTagsFromRootForest(forest);
+      let tagsAndLinksForest = buildTagsAndLinksForest(taggedNodes);
 
-    let viewBuilder = new ProcessesForestViewBuilder();
-    viewBuilder.buildView(forest);
-    my.processesForestViews = viewBuilder.getProcessesForestViews();
-    appendProcessesForestHtml(viewBuilder.getHtmlElements());
+      let viewBuilder = new ProcessesForestViewBuilder();
+      viewBuilder.buildView(forest);
+      my.processesForestViews = viewBuilder.getProcessesForestViews();
+      appendProcessesForestHtml(viewBuilder.getHtmlElements());
 
-    let currentProcessesForest = buildCurrentProcessesForest(tagsAndLinksForest);
-    highlightProcessesInForest(my.processesForestViews, currentProcessesForest);
+      let currentProcessesForest = buildCurrentProcessesForest(tagsAndLinksForest);
+      highlightProcessesInForest(my.processesForestViews, currentProcessesForest);
 
-    let mainContentWrapper = document.getElementById("main-content-wrapper");
-    let keys = Object.keys(msg);
+      let mainContentWrapper = document.getElementById("main-content-wrapper");
+      let keys = Object.keys(msg);
+      return;
+    }
     window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage end ");
 
 

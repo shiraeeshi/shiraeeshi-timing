@@ -1,4 +1,3 @@
-
 window.webkit.messageHandlers.timings_summary_msgs.onMessage(handleServerMessage);
 
 function handleServerMessage(msg) {
@@ -27,6 +26,17 @@ function handleServerMessage(msg) {
         makeTimingsTextElementsUnminimized();
       }
     }
+    return;
+  }
+  if (msg.type == "error_message") {
+    let innerContentWrapper = document.getElementById("inner-content-wrapper");
+    let errorMessage = msg.message;
+    if (msg.source_timing) {
+      errorMessage = `(source timing: ${msg.source_timing})\n${errorMessage}`;
+    }
+    innerContentWrapper.innerHTML = "";
+    let errorMessageHtml = turnMultilineTextIntoHtml(errorMessage);
+    innerContentWrapper.appendChild(errorMessageHtml);
     return;
   }
   initPeriodButtonsRow();
@@ -1095,6 +1105,29 @@ function withClass(elem, ...classes) {
   for (let cls of classes) {
     elem.classList.add(cls);
   }
+  return elem;
+}
+
+function turnMultilineTextIntoHtml(text) {
+  return withChildren(document.createElement('div'),
+    ...text.split("\n")
+      .map(line => turnWhitespacePrefixIntoNbsp(line))
+      .flatMap(el => [el,document.createElement("br")])
+      .slice(0, -1)
+  )
+}
+
+function turnWhitespacePrefixIntoNbsp(line) {
+  let match = line.match(/^(\s+)(.*)/);
+  let elem = document.createElement('span');
+  if (!match) {
+    elem.innerHTML = line;
+    return elem;
+  }
+  let prefix = match[1];
+  let afterPrefix = match[2];
+  let nbsps = Array.prototype.map.call(prefix, _ => '&nbsp;').join('');
+  elem.innerHTML = nbsps + afterPrefix;
   return elem;
 }
 

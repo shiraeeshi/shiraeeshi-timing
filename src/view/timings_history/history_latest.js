@@ -157,7 +157,18 @@ async function initMessageHandlers(appEnv, win) {
     console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
     let dateFrom = parseDateWithDots(firstDateWithDots);
     let dateTo = parseDateWithDots(lastDateWithDots);
-    const timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
+    let timings;
+    try {
+      timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
+    } catch (err) {
+      let msg = {
+        "msg_type": "error_message",
+        "source_timing": err.source_timing,
+        "message": err.message
+      };
+      win.webContents.send('message-from-backend', msg);
+      return;
+    }
     // console.log(`[main.js] about to send timings to timing_history_latest: ${JSON.stringify(timings)}`);
     console.log(`[main.js] about to send timings to timing_history_latest.`);
     for (const timingName in timings) {

@@ -171,20 +171,37 @@ async function init(appEnv, win) {
   // console.log(`[main.js] fiveDaysAgo: ${dateAsDayMonthYearWithDots(fiveDaysAgo)}, today: ${dateAsDayMonthYearWithDots(today)}`);
 
   console.log('[init] 3');
-  const timingsOfFiveLastDays = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, fiveDaysAgo, today);
-  console.log('[init] 4');
+  readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, fiveDaysAgo, today)
+    .then(timingsOfFiveLastDays => {
+      console.log(`[main.js] timingsOfFiveLastDays: ${JSON.stringify(timingsOfFiveLastDays)}`);
+      func({
+        "type": "timings",
+        "timings": timingsOfFiveLastDays,
+      });
+    })
+    .catch(err => {
+      func({
+        "type": "error_message",
+        "error_source": "timings",
+        "source_timing": err.source_timing,
+        "message": err.message
+      });
+    });
 
-  console.log(`[main.js] timingsOfFiveLastDays: ${JSON.stringify(timingsOfFiveLastDays)}`);
-  console.log('[init] 5');
-
-  const notebookContentsParsed = await parseNotebook(config['notebook-filepath']);
-
-  console.log('[init] 6');
-
-  func({
-    "processes": notebookContentsParsed,
-    "timings": timingsOfFiveLastDays,
-  });
+  parseNotebook(config['notebook-filepath'])
+    .then(notebookContentsParsed => {
+      func({
+        "type": "notebook",
+        "processes": notebookContentsParsed,
+      });
+    })
+    .catch(err => {
+      func({
+        "type": "error_message",
+        "error_source": "notebook",
+        "message": err.message
+      });
+    });
 
   let wallpapersDirPath;
   if (appEnv.stage === 'production') {
@@ -193,16 +210,18 @@ async function init(appEnv, win) {
     wallpapersDirPath = path.join(homeDirPath, 'test_pm_app2', 'wallpapers');
   }
   const wallpapersFilenames = await fs.promises.readdir(wallpapersDirPath, { encoding: 'utf8' });
-  console.log('[init] 7');
-  console.log(`wallpapersFilenames: ${wallpapersFilenames}`);
-  const pathOfComposite = path.join('dist-frontend', 'composite')
-  const relativePathToWallpapersDir = path.relative(pathOfComposite, wallpapersDirPath);
-  console.log(`relativePathToWallpapersDir: ${relativePathToWallpapersDir}`);
+  fs.promises.readdir(wallpapersDirPath, { encoding: 'utf8' })
+    .then(wallpapersFilenames => {
+      console.log(`wallpapersFilenames: ${wallpapersFilenames}`);
+      const pathOfComposite = path.join('dist-frontend', 'composite')
+      const relativePathToWallpapersDir = path.relative(pathOfComposite, wallpapersDirPath);
+      console.log(`relativePathToWallpapersDir: ${relativePathToWallpapersDir}`);
 
+      func({
+        "type": "wallpapers",
+        "wallpapers": wallpapersFilenames.map(n => path.join(relativePathToWallpapersDir, n))
+      });
+    });
 
-  func({
-    "type": "wallpapers",
-    "wallpapers": wallpapersFilenames.map(n => path.join(relativePathToWallpapersDir, n))
-  });
 }
 

@@ -81,7 +81,13 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
         console.log(`[readTimingsForRangeOfDates] about to call _readLinesUntilPosition. date: ${date}, (dateFrom: ${dateFrom}), offsetFrom: ${offsetFrom}, offsetTo: ${offsetTo}`);
         let yamlOfDate = await _readLinesUntilPosition(f, offsetTo);
         yamlOfDate = yamlOfDate.join('\n');
-        let parsedYaml = YAML.parse(yamlOfDate);
+        let parsedYaml;
+        try {
+          parsedYaml = YAML.parse(yamlOfDate);
+        } catch (err) {
+          err.source_timing = timingName;
+          throw err;
+        }
         let parsedTimings = parseYamlTimings(parsedYaml);
 
         if (parsedTimings.length > 1) {
