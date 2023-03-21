@@ -57,8 +57,8 @@ LineReader.prototype.readline = function() {
       that.currentPromiseResolve = resolve;
       that.currentPromiseErr = err;
       that.isWaitingToResolvePromise = true;
+      that._tryResolvePromise();
     });
-    that._tryResolvePromise();
     return promise;
   } else if (that.state === LineReaderState.STREAM_ENDED) {
     return new Promise((resolve) => resolve(LineReaderResponse.EOF));
