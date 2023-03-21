@@ -158,11 +158,11 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
       console.log(`_traverseIndexUntilFirstDiff: about to return (reached the end of the index) for timing ${timingName}`);
       console.log('reachedTheEndOfIndex' + JSON.stringify({
         traversedTimingUntil: prevIndexEntry.offsetFrom,
-        traversedTimingUntilLineNum: timingReader.getLineNumOffset()
+        traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
       }));
       return ResultOfIndexTraverse.reachedTheEndOfIndex({
         traversedTimingUntil: prevIndexEntry.offsetFrom,
-        traversedTimingUntilLineNum: timingReader.getLineNumOffset()
+        traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
       });
     }
     while (true) {
@@ -172,18 +172,18 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
       console.log(`line of timing: ${lineTiming}, offset: ${offset}`);
       if (timingEOF) {
         if (prevIndexEntry !== null) {
-          let expectedIndexLine = `${prevIndexEntry.date},${prevIndexEntry.offsetFrom},${offset}`;
+          let expectedIndexLine = `${prevIndexEntry.date},${prevIndexEntry.lineNumOffset},${prevIndexEntry.offsetFrom},${offset}`;
           if (lineOfIndex !== expectedIndexLine) {
             console.log(`(last line) _traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing ${timingName}: line_of_index != expected_index_line, line_of_index: ${lineOfIndex}, expected_index_line: ${expectedIndexLine}`);
             console.log('reachedTheDiff' + JSON.stringify({
               truncateIndexAt: indexOffset,
               traversedTimingUntil: prevIndexEntry.offsetFrom,
-              traversedTimingUntilLineNum: lineNumOffset
+              traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
             }));
             return ResultOfIndexTraverse.reachedTheDiff({
               truncateIndexAt: indexOffset,
               traversedTimingUntil: prevIndexEntry.offsetFrom,
-              traversedTimingUntilLineNum: lineNumOffset
+              traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
             });
           }
         }
@@ -215,25 +215,25 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
       let aDate = `${dayOfMonth}.${month}.${year}`;
       console.log(`aDate: ${aDate}`);
       if (prevIndexEntry === null) {
-        prevIndexEntry = {date: aDate, offsetFrom: offset};
+        prevIndexEntry = {date: aDate, lineNumOffset: lineNumOffset, offsetFrom: offset};
         continue;
       }
       if (aDate !== prevIndexEntry.date) {
-        let expectedIndexLine = `${prevIndexEntry.date},${prevIndexEntry.offsetFrom},${offset}`;
+        let expectedIndexLine = `${prevIndexEntry.date},${prevIndexEntry.lineNumOffset},${prevIndexEntry.offsetFrom},${offset}`;
         if (lineOfIndex !== expectedIndexLine) {
           console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing ${timingName}: line_of_index != expected_index_line, line_of_index: ${lineOfIndex}, expected_index_line: ${expectedIndexLine}`);
           console.log('reachedTheDiff' + JSON.stringify({
             truncateIndexAt: indexOffset,
             traversedTimingUntil: prevIndexEntry.offsetFrom,
-            traversedTimingUntilLineNum: lineNumOffset
+            traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
           }));
           return ResultOfIndexTraverse.reachedTheDiff({
             truncateIndexAt: indexOffset,
             traversedTimingUntil: prevIndexEntry.offsetFrom,
-            traversedTimingUntilLineNum: lineNumOffset
+            traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
           });
         } else {
-          prevIndexEntry = {date: aDate, offsetFrom: offset};
+          prevIndexEntry = {date: aDate, lineNumOffset: lineNumOffset, offsetFrom: offset};
           break;
         }
       }
