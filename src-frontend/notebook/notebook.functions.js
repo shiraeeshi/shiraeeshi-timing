@@ -11,7 +11,11 @@ function handleServerMessage(msg) {
     if (msg.type == "error_message") {
       let notebookContentWrapper = document.getElementById("processes-content-wrapper");
       notebookContentWrapper.innerHTML = "";
-      let msgHtml = turnMultilineTextIntoHtml(msg.message);
+      let errorMessage = msg.message;
+      if (msg.notebook_location) {
+        errorMessage = `file location: ${msg.notebook_location}\n${errorMessage}`;
+      }
+      let msgHtml = turnMultilineTextIntoHtml(errorMessage);
       notebookContentWrapper.appendChild(msgHtml);
       return;
     }

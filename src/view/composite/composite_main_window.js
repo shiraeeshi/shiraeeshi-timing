@@ -184,6 +184,7 @@ async function init(appEnv, win) {
         "type": "error_message",
         "error_source": "timings",
         "source_timing": err.source_timing,
+        "source_timing_location": err.source_timing_location,
         "lineNumOffset": err.lineNumOffset,
         "message": err.message
       });
@@ -200,6 +201,7 @@ async function init(appEnv, win) {
       func({
         "type": "error_message",
         "error_source": "notebook",
+        "notebook_location": config['notebook-filepath'],
         "message": err.message
       });
     });

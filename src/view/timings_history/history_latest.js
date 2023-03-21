@@ -165,6 +165,7 @@ async function initMessageHandlers(appEnv, win) {
       let msg = {
         "msg_type": "error_message",
         "source_timing": err.source_timing,
+        "source_timing_location": err.source_timing_location,
         "lineNumOffset": err.lineNumOffset,
         "message": err.message
       };

@@ -38,6 +38,9 @@ function handleServerMessage(msg) {
         if (msg.lineNumOffset) {
           errorMessage = addOffsetToLineNumberInErrorMessage(errorMessage, msg.lineNumOffset);
         }
+        if (msg.source_timing_location) {
+          errorMessage = `(source timing location: ${msg.source_timing_location})\n${errorMessage}`;
+        }
         if (msg.source_timing) {
           errorMessage = `(source timing: ${msg.source_timing})\n${errorMessage}`;
         }
@@ -48,7 +51,11 @@ function handleServerMessage(msg) {
       } else if (msg.error_source == "notebook") {
         let notebookContentWrapper = document.getElementById("processes-content-wrapper");
         notebookContentWrapper.innerHTML = "";
-        let errorMessageHtml = turnMultilineTextIntoHtml(msg.message);
+        let errorMessage = msg.message;
+        if (msg.notebook_location) {
+          errorMessage = `file location: ${msg.notebook_location}\n${errorMessage}`;
+        }
+        let errorMessageHtml = turnMultilineTextIntoHtml(errorMessage);
         notebookContentWrapper.appendChild(errorMessageHtml);
         return;
       }

@@ -86,6 +86,7 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
           parsedYaml = YAML.parse(yamlOfDate);
         } catch (err) {
           err.source_timing = timingName;
+          err.source_timing_location = filepath;
           err.lineNumOffset = lineNumOffsetFrom;
           throw err;
         }

@@ -121,6 +121,7 @@ async function init(appEnv, win) {
   } catch (err) {
     func({
       "type": "error_message",
+      "notebook_location": config['notebook-filepath'],
       "message": err.message
     });
     return;
