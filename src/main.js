@@ -6,14 +6,12 @@ let tray;
 
 app.whenReady().then(() => {
 
-  console.log(`process.argv: ${JSON.stringify(process.argv)}`);
-
   const appEnv = {
-    stage: 'development'
+    stage: 'production'
   };
 
-  if (app.isPackaged || process.argv[2] === 'stage=prod') {
-    appEnv.stage = 'production';
+  if (process.env.APP_ENV === 'development') {
+    appEnv.stage = 'development';
   }
 
   const cedarIconDataUrl = require('../icons/cedar-svgrepo-com.png').default;

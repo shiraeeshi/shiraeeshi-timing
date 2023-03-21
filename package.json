@@ -6,8 +6,7 @@
   "private": true,
   "scripts": {
     "start": "electron-forge start",
-    "start-dev": "npm run start -- -- stage=dev",
-    "start-prod": "npm run start -- -- stage=prod",
+    "start-dev": "APP_ENV=development npm run start",
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1",
     "package": "electron-forge package",
