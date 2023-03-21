@@ -5,13 +5,13 @@ const fs = require('fs');
 const { readTimingsForRangeOfDates } = require('../../../logic/timing_file_parser.js');
 const { createOrRefreshIndex } = require('../../../logic/timing_index_manager.js');
 
-export async function showFrequencies() {
+export async function showFrequencies(appEnv) {
 
-  await createWindow();
+  await createWindow(appEnv);
 
 }
 
-const createWindow = async () => {
+const createWindow = async (appEnv) => {
   const win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -25,7 +25,7 @@ const createWindow = async () => {
 
   setMenuAndKeyboardShortcuts(win);
 
-  await init(win);
+  await init(appEnv, win);
 }
 
 function setMenuAndKeyboardShortcuts(win) {
@@ -77,7 +77,7 @@ function setMenuAndKeyboardShortcuts(win) {
   Menu.setApplicationMenu(menu);
 }
 
-async function init(win) {
+async function init(appEnv, win) {
 
   function func(msg) {
     console.log('[main.js] createWindow -> func');
@@ -102,15 +102,22 @@ async function init(win) {
     "msg_type": "dummy_message",
   });
 
-  await initMessageHandlers(win);
+  await initMessageHandlers(appEnv, win);
 }
 
-async function initMessageHandlers(win) {
+async function initMessageHandlers(appEnv, win) {
   const homeDirPath = app.getPath('home');
 
-  const configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+  let configFilepath;
+  let indexDirFilepath;
+  if (appEnv.stage === 'production') {
+    configFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'config', 'indic.config.txt');
+    indexDirFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'indexes');
+  } else {
+    configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+    indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
+  }
   console.log(`configFilepath: ${configFilepath}`);
-  const indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
   console.log(`indexDirFilepath: ${indexDirFilepath}`);
   const timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
   console.log('[init] 1');

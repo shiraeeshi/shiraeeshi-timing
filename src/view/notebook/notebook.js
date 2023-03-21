@@ -6,13 +6,13 @@ const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.j
 const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 const { parseNotebook } = require('../../logic/notebook_parser.js');
 
-export async function showNotebook() {
+export async function showNotebook(appEnv) {
 
-  await createWindow();
+  await createWindow(appEnv);
 
 }
 
-const createWindow = async () => {
+const createWindow = async (appEnv) => {
   const win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -26,7 +26,7 @@ const createWindow = async () => {
 
   setMenuAndKeyboardShortcuts(win);
 
-  await init(win);
+  await init(appEnv, win);
 }
 
 function setMenuAndKeyboardShortcuts(win) {
@@ -78,7 +78,7 @@ function setMenuAndKeyboardShortcuts(win) {
   Menu.setApplicationMenu(menu);
 }
 
-async function init(win) {
+async function init(appEnv, win) {
 
   ipcMain.on('msg', (_event, msg) => {
     console.log(`[main.js] message from notebook: ${msg}`);
@@ -105,7 +105,12 @@ async function init(win) {
 
   const homeDirPath = app.getPath('home');
 
-  const configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+  let configFilepath;
+  if (appEnv.stage === 'production') {
+    configFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'config', 'indic.config.txt');
+  } else {
+    configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+  }
   console.log(`configFilepath: ${configFilepath}`);
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   const config = JSON.parse(configFileContents);

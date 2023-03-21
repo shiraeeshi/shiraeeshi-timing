@@ -7,7 +7,7 @@ const { showNotebook } = require('./notebook/notebook.js');
 const { showCompositeMainWindow } = require('./composite/composite_main_window.js');
 const { TimingTimerManager } = require('../logic/timing_timer_manager.js');
 
-export function createMenu(tray) {
+export function createMenu(appEnv, tray) {
 
   let homeDirPath = app.getPath('home');
   let timingStartFilepath = path.join(homeDirPath, 'timing_start');
@@ -25,37 +25,37 @@ export function createMenu(tray) {
         const greyCircleIconDataUrl = require('../../icons/grey-circle.png').default;
         const icon = nativeImage.createFromDataURL(greyCircleIconDataUrl);
         tray.setImage(icon);
-        tray.setContextMenu(createSecondMenu(menu, tray, timerManager));
+        tray.setContextMenu(createSecondMenu(appEnv, menu, tray, timerManager));
       }
     },
     {
       label: 'Main Window',
       click: async () => {
-        await showCompositeMainWindow();
+        await showCompositeMainWindow(appEnv);
       }
     },
     {
       label: 'Notebook',
       click: async () => {
-        await showNotebook();
+        await showNotebook(appEnv);
       }
     },
     {
       label: 'Timings Frequencies',
       click: async () => {
-        await showFrequencies();
+        await showFrequencies(appEnv);
       }
     },
     {
       label: 'Timings History Latest',
       click: async () => {
-        await showHistoryLatest();
+        await showHistoryLatest(appEnv);
       }
     },
     {
       label: 'Timings Summary',
       click: async () => {
-        await showTimingsSummary();
+        await showTimingsSummary(appEnv);
       }
     },
     {
@@ -69,7 +69,7 @@ export function createMenu(tray) {
   return menu;
 }
 
-function createSecondMenu(firstMenu, tray, timerManager) {
+function createSecondMenu(appEnv, firstMenu, tray, timerManager) {
 
   const secondMenu = Menu.buildFromTemplate([
     {
@@ -88,31 +88,31 @@ function createSecondMenu(firstMenu, tray, timerManager) {
         {
           label: 'Main Window',
           click: async () => {
-            await showCompositeMainWindow();
+            await showCompositeMainWindow(appEnv);
           }
         },
         {
           label: 'Notebook',
           click: async () => {
-            await showNotebook();
+            await showNotebook(appEnv);
           }
         },
         {
           label: 'Timings Frequencies',
           click: async () => {
-            await showFrequencies();
+            await showFrequencies(appEnv);
           }
         },
         {
           label: 'Timings History Latest',
           click: async () => {
-            await showHistoryLatest();
+            await showHistoryLatest(appEnv);
           }
         },
         {
           label: 'Timings Summary',
           click: async () => {
-            await showTimingsSummary();
+            await showTimingsSummary(appEnv);
           }
         },
         {

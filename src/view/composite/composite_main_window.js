@@ -6,13 +6,13 @@ const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.j
 const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 const { parseNotebook } = require('../../logic/notebook_parser.js');
 
-export async function showCompositeMainWindow() {
+export async function showCompositeMainWindow(appEnv) {
 
-  await createWindow();
+  await createWindow(appEnv);
 
 }
 
-const createWindow = async () => {
+const createWindow = async (appEnv) => {
   const win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -26,7 +26,7 @@ const createWindow = async () => {
 
   setMenuAndKeyboardShortcuts(win);
 
-  await init(win);
+  await init(appEnv, win);
 }
 
 function setMenuAndKeyboardShortcuts(win) {
@@ -100,7 +100,7 @@ function setMenuAndKeyboardShortcuts(win) {
   Menu.setApplicationMenu(menu);
 }
 
-async function init(win) {
+async function init(appEnv, win) {
 
   ipcMain.on('msg_from_timing_summary', (_event, msg) => {
     console.log(`[main.js] message from timing_summary: ${msg}`);
@@ -133,12 +133,21 @@ async function init(win) {
     }
   }
 
+  console.log(`process.argv: ${JSON.stringify(process.argv)}`);
+
   const homeDirPath = app.getPath('home');
 
-  const configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
-  console.log(`configFilepath: ${configFilepath}`);
-  const indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
-  console.log(`indexDirFilepath: ${indexDirFilepath}`);
+  let configFilepath;
+  let indexDirFilepath;
+  if (appEnv.stage === 'production') {
+    configFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'config', 'indic.config.txt');
+    indexDirFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'indexes');
+  } else {
+    configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+    indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
+  }
+  console.log(`[composite_main_window] configFilepath: ${configFilepath}`);
+  console.log(`[composite_main_window] indexDirFilepath: ${indexDirFilepath}`);
   const timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
   console.log('[init] 1');
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
@@ -177,7 +186,12 @@ async function init(win) {
     "timings": timingsOfFiveLastDays,
   });
 
-  const wallpapersDirPath = path.join(homeDirPath, 'test_pm_app2', 'wallpapers');
+  let wallpapersDirPath;
+  if (appEnv.stage === 'production') {
+    wallpapersDirPath = path.join(homeDirPath, 'pm_app', 'wallpapers');
+  } else {
+    wallpapersDirPath = path.join(homeDirPath, 'test_pm_app2', 'wallpapers');
+  }
   const wallpapersFilenames = await fs.promises.readdir(wallpapersDirPath, { encoding: 'utf8' });
   console.log('[init] 7');
   console.log(`wallpapersFilenames: ${wallpapersFilenames}`);
