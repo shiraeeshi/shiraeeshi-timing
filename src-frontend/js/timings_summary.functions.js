@@ -1,57 +1,5 @@
-window.webkit.messageHandlers.timings_summary_msgs.onMessage(handleServerMessage);
-
-function handleServerMessage(msg) {
-  window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage start ");
-  if (msg.type == "wallpapers") {
-    my.wallpapers.lst = msg.wallpapers;
-    let randomIndex = getRandomInt(my.wallpapers.lst.length);
-    document.body.style.backgroundImage = "url(" + my.wallpapers.lst[randomIndex] + ")";
-    return;
-  }
-  if (msg.type == "key_pressed") {
-    if (msg.keyval == "w") {
-      my.wallpapers.idx++;
-      if (my.wallpapers.idx >= my.wallpapers.lst.length) {
-        my.wallpapers.idx = 0;
-      }
-      window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage current wallpaper: " +
-        my.wallpapers.lst[my.wallpapers.idx]);
-      // document.body.style.backgroundImage = "url(wallpapers/" + my.wallpapers.lst[my.wallpapers.idx] + ")";
-      document.body.style.backgroundImage = "url(" + my.wallpapers.lst[my.wallpapers.idx] + ")";
-    } else if (msg.keyval == "m") {
-      my.minimalTextForTimings = !my.minimalTextForTimings;
-      if (my.minimalTextForTimings) {
-        clearTimingsTextWrapper();
-      } else {
-        makeTimingsTextElementsUnminimized();
-      }
-    }
-    return;
-  }
-  if (msg.type == "error_message") {
-    let innerContentWrapper = document.getElementById("inner-content-wrapper");
-    let errorMessage = msg.message;
-    if (msg.lineNumOffset) {
-      errorMessage = addOffsetToLineNumberInErrorMessage(errorMessage, msg.lineNumOffset);
-    }
-    if (msg.source_timing_location) {
-      errorMessage = `(source timing location: ${msg.source_timing_location})\n${errorMessage}`;
-    }
-    if (msg.source_timing) {
-      errorMessage = `(source timing: ${msg.source_timing})\n${errorMessage}`;
-    }
-    innerContentWrapper.innerHTML = "";
-    let errorMessageHtml = turnMultilineTextIntoHtml(errorMessage);
-    innerContentWrapper.appendChild(errorMessageHtml);
-    return;
-  }
-  initPeriodButtonsRow();
-  my.imageInfo = new ImageInfo();
-  my.timings = msg;
-  let mainContentWrapper = document.getElementById("main-content-wrapper");
-  let keys = Object.keys(msg);
-  window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage end ");
-}
+const { getRandomInt } = require('./utils.js');
+const { withChildren, withClass } = require('./html_utils.js');
 
 function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlight) {
   my.imageInfo.updateIfNeeded();
@@ -253,7 +201,7 @@ function findTimingItemByOffset(offsetX) {
   }
 }
 
-function initPeriodButtonsRow() {
+export function initPeriodButtonsRow() {
 
   let periodButtonsRow = new PeriodButtonsRow();
   my.periodButtonsRowVisibilityToggle = new PeriodButtonsRowVisibilityToggle(periodButtonsRow);
@@ -320,7 +268,7 @@ PeriodType.LAST_12_HOURS = new PeriodType();
 PeriodType.FROM_ZERO_HOURS_OF_24_HOUR_PERIOD = new PeriodType();
 PeriodType.FROM_ZERO_HOURS_OF_60_HOUR_PERIOD = new PeriodType();
 
-function ImageInfo() {
+export function ImageInfo() {
   this.minutesMaxDiff = 0;
   this.minutesRange = 0;
   this.periodType = PeriodType.FROM_ZERO_HOURS_OF_60_HOUR_PERIOD;
@@ -371,14 +319,14 @@ function displayTimings(timings, timingsCategoryNodeViewRoot) {
   displayTimingsAsImage(timings);
 }
 
-function clearTimingsTextWrapper() {
+export function clearTimingsTextWrapper() {
   let allTimingTextViews = my.timingsCategoryNodeViewRoot.getTimingTextViewsRecursively();
   for (let i=0; i < allTimingTextViews.length; i++) {
     allTimingTextViews[i].classList.add('minimized-to-invisibility');
   }
 }
 
-function makeTimingsTextElementsUnminimized() {
+export function makeTimingsTextElementsUnminimized() {
   let allTimingTextViews = my.timingsCategoryNodeViewRoot.getTimingTextViewsRecursively();
   for (let i=0; i < allTimingTextViews.length; i++) {
     allTimingTextViews[i].classList.remove('minimized-to-invisibility');
@@ -1102,48 +1050,6 @@ function yesterdayAsADate() {
   return date;
 }
 
-function withChildren(elem, ...children) {
-  children.forEach(child => elem.appendChild(child));
-  return elem;
-}
-
-function withClass(elem, ...classes) {
-  for (let cls of classes) {
-    elem.classList.add(cls);
-  }
-  return elem;
-}
-
-function turnMultilineTextIntoHtml(text) {
-  return withChildren(document.createElement('div'),
-    ...text.split("\n")
-      .map(line => turnWhitespacePrefixIntoNbsp(line))
-      .flatMap(el => [el,document.createElement("br")])
-      .slice(0, -1)
-  )
-}
-
-function turnWhitespacePrefixIntoNbsp(line) {
-  let match = line.match(/^(\s+)(.*)/);
-  let elem = document.createElement('span');
-  if (!match) {
-    elem.innerHTML = line;
-    return elem;
-  }
-  let prefix = match[1];
-  let afterPrefix = match[2];
-  let nbsps = Array.prototype.map.call(prefix, _ => '&nbsp;').join('');
-  elem.innerHTML = nbsps + afterPrefix;
-  return elem;
-}
-
-function addOffsetToLineNumberInErrorMessage(text, offset) {
-  return text.replace(/at line (\d+)/g, (_, n) => {
-    n = parseInt(n);
-    return `at line ${n + offset}`;
-  });
-}
-
 function timingItemEquals(a, b) {
     return a.name == b.name &&
     a.from.join(".") == b.from.join(".") &&
@@ -1158,8 +1064,4 @@ function timingItem2symbol(timingItem) {
   } else {
     return " ";
   }
-}
-
-function getRandomInt(max) {
-  return Math.floor(Math.random() * Math.floor(max));
 }

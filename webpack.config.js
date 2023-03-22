@@ -109,5 +109,13 @@ module.exports = [
       filename: 'notebook.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/notebook'),
     },
-  }
+  },
+  {
+    entry: './src-frontend/composite/composite_main_window.renderer.js',
+    target: "electron-renderer",
+    output: {
+      filename: 'composite_main_window.bundle.js',
+      path: path.resolve(__dirname, 'dist-frontend/composite'),
+    },
+  },
 ];

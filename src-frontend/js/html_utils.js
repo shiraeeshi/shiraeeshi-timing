@@ -23,6 +23,13 @@ function turnWhitespacePrefixIntoNbsp(line) {
   return elem;
 }
 
+export function addOffsetToLineNumberInErrorMessage(text, offset) {
+  return text.replace(/at line (\d+)/g, (_, n) => {
+    n = parseInt(n);
+    return `at line ${n + offset}`;
+  });
+}
+
 export function withChildren(elem, ...children) {
   children.forEach(child => elem.appendChild(child));
   return elem;

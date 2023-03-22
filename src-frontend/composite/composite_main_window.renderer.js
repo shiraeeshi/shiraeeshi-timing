@@ -9,6 +9,37 @@ const {
   appendProcessesForestHtml,
 } = notebook_functions;
 
+const {
+  initPeriodButtonsRow,
+  ImageInfo,
+  clearTimingsTextWrapper,
+  makeTimingsTextElementsUnminimized,
+} = require('../js/timings_summary.functions.js');
+
+const { turnMultilineTextIntoHtml, addOffsetToLineNumberInErrorMessage } = require('../js/html_utils.js');
+const { getRandomInt } = require('../js/utils.js');
+
+
+let my = {
+
+  // processes state
+  processesForest: null,
+
+  // timings state
+  timings: null,
+
+  // imageInfo: { // imageInfo = new ImageInfo()
+  //   minutesRange: 0,
+  //   minutesMaxDiff: 0
+  // },
+
+  wallpapers: {
+    lst: null,
+    idx: 0
+  }
+
+};
+
 window.webkit.messageHandlers.composite_main_window.onMessage(handleServerMessage);
 
 function handleServerMessage(msg) {
