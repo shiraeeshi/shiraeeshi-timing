@@ -118,4 +118,12 @@ module.exports = [
       path: path.resolve(__dirname, 'dist-frontend/composite'),
     },
   },
+  {
+    entry: './src-frontend/timings_summary.renderer.js',
+    target: "electron-renderer",
+    output: {
+      filename: 'timings_summary.bundle.js',
+      path: path.resolve(__dirname, 'dist-frontend'),
+    },
+  },
 ];
