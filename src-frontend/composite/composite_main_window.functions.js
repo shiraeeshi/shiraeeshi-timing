@@ -1,3 +1,14 @@
+const notebook_functions = require('../js/notebook.functions.js');
+const {
+  addTagNodeLinksToForest,
+  highlightProcessesInForest,
+  buildTagsAndLinksForest,
+  yamlRootObject2forest,
+  extractTagsFromRootForest,
+  ProcessesForestViewBuilder,
+  appendProcessesForestHtml,
+} = notebook_functions;
+
 window.webkit.messageHandlers.composite_main_window.onMessage(handleServerMessage);
 
 function handleServerMessage(msg) {

@@ -1,4 +1,4 @@
-window.webkit.messageHandlers.foobar.onMessage(handleServerMessage);
+const { withChildren, withClass } = require('./html_utils.js');
 
 function extractTag(str) {
   if (str.startsWith(">>")) {
@@ -6,61 +6,7 @@ function extractTag(str) {
   }
 }
 
-function handleServerMessage(msg) {
-  try {
-    if (msg.type == "error_message") {
-      let notebookContentWrapper = document.getElementById("processes-content-wrapper");
-      notebookContentWrapper.innerHTML = "";
-      let errorMessage = msg.message;
-      if (msg.notebook_location) {
-        errorMessage = `file location: ${msg.notebook_location}\n${errorMessage}`;
-      }
-      let msgHtml = turnMultilineTextIntoHtml(errorMessage);
-      notebookContentWrapper.appendChild(msgHtml);
-      return;
-    }
-    let processes_object = msg.processes;
-    let forest = yamlRootObject2forest(msg.processes);
-    my.processesForest = forest;
-    showTagsAndLinks(forest);
-    let viewBuilder = new ProcessesForestViewBuilder();
-    viewBuilder.buildView(forest);
-    my.processesForestViews = viewBuilder.getProcessesForestViews();
-    appendProcessesForestHtml(viewBuilder.getHtmlElements());
-  } catch (err) {
-    window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
-  }
-}
-
-function turnMultilineTextIntoHtml(text) {
-  return withChildren(document.createElement('div'),
-    ...text.split("\n")
-      .map(line => turnWhitespacePrefixIntoNbsp(line))
-      .flatMap(el => [el,document.createElement("br")])
-      .slice(0, -1)
-  )
-}
-
-function turnWhitespacePrefixIntoNbsp(line) {
-  let match = line.match(/^(\s+)(.*)/);
-  let elem = document.createElement('span');
-  if (!match) {
-    elem.innerHTML = line;
-    return elem;
-  }
-  let prefix = match[1];
-  let afterPrefix = match[2];
-  let nbsps = Array.prototype.map.call(prefix, _ => '&nbsp;').join('');
-  elem.innerHTML = nbsps + afterPrefix;
-  return elem;
-}
-
-function withChildren(elem, ...children) {
-  children.forEach(child => elem.appendChild(child));
-  return elem;
-}
-
-function showTagsAndLinks(forest) {
+export function showTagsAndLinks(forest) {
   try {
     let mainWrapper = document.getElementById("tags-and-links-content-wrapper");
     let taggedNodes = extractTagsFromRootForest(forest);
@@ -113,7 +59,7 @@ function searchByTag(tagNode) {
   highlightProcessesInForest(my.processesForestViews, resultForest);
 }
 
-function addTagNodeLinksToForest(tagNode, resultForest) {
+export function addTagNodeLinksToForest(tagNode, resultForest) {
   window.webkit.messageHandlers.foobar.postMessage("js addTagNodeLinksToForest tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
   for (let link of tagNode.links) {
     window.webkit.messageHandlers.foobar.postMessage("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
@@ -140,7 +86,7 @@ function addTagNodeLinksToForest(tagNode, resultForest) {
   }
 }
 
-function highlightProcessesInForest(processesForestViews, forestToHighlight) {
+export function highlightProcessesInForest(processesForestViews, forestToHighlight) {
   try {
     processesForestViews.forEach(treeView => treeView.hide());
 
@@ -157,7 +103,7 @@ function highlightProcessesInForest(processesForestViews, forestToHighlight) {
   }
 }
 
-function buildTagsAndLinksForest(taggedNodes) {
+export function buildTagsAndLinksForest(taggedNodes) {
   let preResult = {
     children: [],
     subTags: {}
@@ -186,7 +132,7 @@ function buildTagsAndLinksForest(taggedNodes) {
   return preResult.subTags;
 }
 
-function yamlRootObject2forest(yamlRootObject) {
+export function yamlRootObject2forest(yamlRootObject) {
   try {
     let keys = Object.keys(yamlRootObject);
     let result = keys.map(key => {
@@ -252,7 +198,7 @@ function yamlList2SubtreesList(yamlList) {
   }
 }
 
-function extractTagsFromRootForest(forest) {
+export function extractTagsFromRootForest(forest) {
   let result = [];
   forest.forEach(tree => {
     result = result.concat(extractTagsFromNode(tree, []));
@@ -280,7 +226,7 @@ function extractTagsFromNode(node, ancestry) {
   return result;
 }
 
-function ProcessesForestViewBuilder() {
+export function ProcessesForestViewBuilder() {
   let that = this;
   that.htmls = [];
   that.views = [];
@@ -514,7 +460,7 @@ ProcessNodeView.prototype.parentIsHighlighted = function() {
   }
 };
 
-function appendProcessesForestHtml(processesForestHtmlElements) {
+export function appendProcessesForestHtml(processesForestHtmlElements) {
   let processesWrapper = document.getElementById("processes-content-wrapper");
   processesWrapper.innerHTML = "";
   processesForestHtmlElements.forEach(el => processesWrapper.appendChild(el));
@@ -551,21 +497,21 @@ let ProcessTagsTreeNodeView = (function() {
 
 })();
 
-function withClass(elem, cls) {
-  elem.classList.add(cls);
-  return elem;
-}
+// function withClass(elem, cls) {
+//   elem.classList.add(cls);
+//   return elem;
+// }
 
-function string2li(value) {
-  let li = document.createElement('li');
-  let span = document.createElement('span');
-  let txt = document.createTextNode(value);
-  return withChildren(li,
-    withChildren(span, txt)
-  );
-}
+// function string2li(value) {
+//   let li = document.createElement('li');
+//   let span = document.createElement('span');
+//   let txt = document.createTextNode(value);
+//   return withChildren(li,
+//     withChildren(span, txt)
+//   );
+// }
 
-function tmpLi() {
-  return document.createElement('li');
-}
+// function tmpLi() {
+//   return document.createElement('li');
+// }
 

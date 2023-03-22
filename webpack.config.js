@@ -102,4 +102,12 @@ module.exports = [
       path: path.resolve(__dirname, 'dist/js/view/composite'),
     },
   },
+  {
+    entry: './src-frontend/notebook/notebook.renderer.js',
+    target: "electron-renderer",
+    output: {
+      filename: 'notebook.bundle.js',
+      path: path.resolve(__dirname, 'dist-frontend/notebook'),
+    },
+  }
 ];
