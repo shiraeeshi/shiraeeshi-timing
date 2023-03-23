@@ -3,13 +3,13 @@ const { withChildren, withClass } = require('./html_utils.js');
 const { timingDateArrays2Date, date2timingDateArray } = require('./date_utils.js');
 
 export function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlight) {
-  my.imageInfo.updateIfNeeded();
+  window.my.imageInfo.updateIfNeeded();
   let innerContentWrapper = document.getElementById("canvas-wrapper");
   innerContentWrapper.innerHTML = "";
 
   let canvas = document.createElement("canvas");
   let canvasWidth = 800;
-  my.imageInfo.canvasWidth = canvasWidth;
+  window.my.imageInfo.canvasWidth = canvasWidth;
   canvas.width = canvasWidth;
   canvas.height = 50;
 
@@ -30,8 +30,8 @@ export function displayTimingsAsImage(timings, categoryToHighlight, timingItemTo
   //let firstDay = timings[0];
   //let dtFirstTimingFrom = timingDateArrays2Date(firstDay.date, firstDay.timings[0].from);
   //let maxDiff = (now.getTime() - dtFirstTimingFrom.getTime()) / (60*1000.0);
-  let minutesRange = my.imageInfo.minutesRange;
-  let maxDiff = my.imageInfo.minutesMaxDiff;
+  let minutesRange = window.my.imageInfo.minutesRange;
+  let maxDiff = window.my.imageInfo.minutesMaxDiff;
 
   ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
 
@@ -60,16 +60,16 @@ export function displayTimingsAsImage(timings, categoryToHighlight, timingItemTo
 
   canvas.addEventListener('mousemove', function(eve) {
     try {
-      if (my.isHighlightingTimingItemInImage) {
+      if (window.my.isHighlightingTimingItemInImage) {
         displayTimingsAsImage(timings, categoryToHighlight);
-        my.isHighlightingTimingItemInImage = false;
+        window.my.isHighlightingTimingItemInImage = false;
         return;
       }
       let timingAtOffset = findTimingItemByOffset(eve.offsetX);
       if (!timingAtOffset) {
-        if (my.isHighlightingTimingRowInText) {
-          my.isHighlightingTimingRowInText = false;
-          // let previouslyHighlightedTimingRow = document.querySelector("[data-timing-start = '" + my.highlightedTimingItemStart + "']");
+        if (window.my.isHighlightingTimingRowInText) {
+          window.my.isHighlightingTimingRowInText = false;
+          // let previouslyHighlightedTimingRow = document.querySelector("[data-timing-start = '" + window.my.highlightedTimingItemStart + "']");
           // if (previouslyHighlightedTimingRow) {
           //   previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
           // }
@@ -78,18 +78,18 @@ export function displayTimingsAsImage(timings, categoryToHighlight, timingItemTo
             previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
           }
         }
-        if (my.minimalTextForTimings) {
+        if (window.my.minimalTextForTimings) {
           clearTimingsTextWrapper();
         }
         return;
       }
-      if (my.isHighlightingTimingRowInText &&
-            my.highlightedTimingItemStart == timingAtOffset.from.join(".")) {
+      if (window.my.isHighlightingTimingRowInText &&
+            window.my.highlightedTimingItemStart == timingAtOffset.from.join(".")) {
         return;
       }
       window.webkit.messageHandlers.timings_summary_msgs.postMessage("canvas mousemove. timingAtOffset.name: " + timingAtOffset.name);
 
-      if (my.minimalTextForTimings) {
+      if (window.my.minimalTextForTimings) {
         highlightTimingInMinimalText(timingAtOffset);
       } else {
         highlightTimingInText(timingAtOffset);
@@ -101,19 +101,19 @@ export function displayTimingsAsImage(timings, categoryToHighlight, timingItemTo
   });
 
   canvas.addEventListener('mouseleave', function() {
-    // console.log("canvas.mouseleave my.isHighlightingTimingRowInText: " + my.isHighlightingTimingRowInText);
-    if (!my.isHighlightingTimingRowInText) {
+    // console.log("canvas.mouseleave window.my.isHighlightingTimingRowInText: " + window.my.isHighlightingTimingRowInText);
+    if (!window.my.isHighlightingTimingRowInText) {
       return;
     }
-    my.isHighlightingTimingRowInText = false;
+    window.my.isHighlightingTimingRowInText = false;
     let previouslyHighlightedTimingRow = document.querySelector(".highlighted-from-canvas");
     if (previouslyHighlightedTimingRow) {
       previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
     }
-    if (my.minimalTextForTimings) {
+    if (window.my.minimalTextForTimings) {
       clearTimingsTextWrapper();
     }
-    // let previouslyHighlightedTimingRow = document.querySelector("[data-timing-start = '" + my.highlightedTimingItemStart + "']");
+    // let previouslyHighlightedTimingRow = document.querySelector("[data-timing-start = '" + window.my.highlightedTimingItemStart + "']");
     // if (previouslyHighlightedTimingRow) {
     //   previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
     // }
@@ -159,8 +159,8 @@ function highlightTimingInText(timingAtOffset) {
   try {
     let timingRowToHighlight = document.querySelector("[data-timing-start = '" + timingAtOffset.from.join(".") + "']");
     if (timingRowToHighlight) {
-      my.isHighlightingTimingRowInText = true;
-      my.highlightedTimingItemStart = timingAtOffset.from.join(".");
+      window.my.isHighlightingTimingRowInText = true;
+      window.my.highlightedTimingItemStart = timingAtOffset.from.join(".");
       timingRowToHighlight.classList.add('highlighted-from-canvas');
     }
   } catch (err) {
@@ -176,7 +176,7 @@ function highlightTimingInMinimalText(timingItem) {
       li.classList.add('minimized-to-invisibility');
     }
     timingItem.htmlElem.classList.remove('minimized-to-invisibility');
-    my.isHighlightingTimingRowInText = true;
+    window.my.isHighlightingTimingRowInText = true;
 
   } catch (err) {
     window.webkit.messageHandlers.timings_summary_msgs.postMessage("highlightTimingInMinimalText. error: " + err.message);
@@ -185,10 +185,10 @@ function highlightTimingInMinimalText(timingItem) {
 
 function findTimingItemByOffset(offsetX) {
   let now = new Date();
-  let canvasWidth = my.imageInfo.canvasWidth;
-  let maxDiff = my.imageInfo.minutesMaxDiff;
-  let minutesRange = my.imageInfo.minutesRange;
-  for (let oneDayTiming of my.currentFilteredTimings) {
+  let canvasWidth = window.my.imageInfo.canvasWidth;
+  let maxDiff = window.my.imageInfo.minutesMaxDiff;
+  let minutesRange = window.my.imageInfo.minutesRange;
+  for (let oneDayTiming of window.my.currentFilteredTimings) {
     for (let timingItem of oneDayTiming.timings) {
       let dtFrom = timingDateArrays2Date(oneDayTiming.date, timingItem.from);
       let diffFrom = (now.getTime() - dtFrom.getTime()) / (60*1000.0);
@@ -205,7 +205,7 @@ function findTimingItemByOffset(offsetX) {
 export function initPeriodButtonsRow() {
 
   let periodButtonsRow = new PeriodButtonsRow();
-  my.periodButtonsRowVisibilityToggle = new PeriodButtonsRowVisibilityToggle(periodButtonsRow);
+  window.my.periodButtonsRowVisibilityToggle = new PeriodButtonsRowVisibilityToggle(periodButtonsRow);
 
   addListenersToButtons();
 }
@@ -220,11 +220,11 @@ function addListenersToButtons() {
   btnLast24Hours.addEventListener("click", function() {
     try {
       let timings = filterLast24HourTimings();
-      my.currentlyDisplayedTimings = timings;
-      my.imageInfo.updateAsPeriodType(PeriodType.LAST_24_HOURS);
-      my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-      displayTimings(timings, my.timingsCategoryNodeViewRoot);
-      my.periodButtonsRowVisibilityToggle.toInitialState();
+      window.my.currentlyDisplayedTimings = timings;
+      window.my.imageInfo.updateAsPeriodType(PeriodType.LAST_24_HOURS);
+      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
+      displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
+      window.my.periodButtonsRowVisibilityToggle.toInitialState();
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "btnLast24Hours click handler error msg: " + err.message);
@@ -232,20 +232,20 @@ function addListenersToButtons() {
   });
   btnLast12Hours.addEventListener("click", function() {
     let timings = filterLast12HourTimings();
-    my.currentlyDisplayedTimings = timings;
-    my.imageInfo.updateAsPeriodType(PeriodType.LAST_12_HOURS);
-    my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-    displayTimings(timings, my.timingsCategoryNodeViewRoot);
-    my.periodButtonsRowVisibilityToggle.toInitialState();
+    window.my.currentlyDisplayedTimings = timings;
+    window.my.imageInfo.updateAsPeriodType(PeriodType.LAST_12_HOURS);
+    window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
+    displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
+    window.my.periodButtonsRowVisibilityToggle.toInitialState();
   });
   btnFromZeroHours.addEventListener("click", function() {
     try {
       let timings = filterTodaysTimings();
-      my.currentlyDisplayedTimings = timings;
-      my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_24_HOUR_PERIOD);
-      my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-      displayTimings(timings, my.timingsCategoryNodeViewRoot);
-      my.periodButtonsRowVisibilityToggle.toInitialState();
+      window.my.currentlyDisplayedTimings = timings;
+      window.my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_24_HOUR_PERIOD);
+      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
+      displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
+      window.my.periodButtonsRowVisibilityToggle.toInitialState();
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "btnFromZeroHours click handler error msg: " + err.message);
@@ -253,11 +253,11 @@ function addListenersToButtons() {
   });
   btnFromZeroTwoAndAHalfHours.addEventListener("click", function() {
     let timings = filterCurrentTwoAndAHalfDaysTimings();
-    my.currentlyDisplayedTimings = timings;
-    my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_60_HOUR_PERIOD);
-    my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-    displayTimings(timings, my.timingsCategoryNodeViewRoot);
-    my.periodButtonsRowVisibilityToggle.toInitialState();
+    window.my.currentlyDisplayedTimings = timings;
+    window.my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_60_HOUR_PERIOD);
+    window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
+    displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
+    window.my.periodButtonsRowVisibilityToggle.toInitialState();
   });
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("addListenersToButtons end ");
 }
@@ -312,23 +312,23 @@ ImageInfo.prototype.updateIfNeeded = function() {
 
 
 function displayTimings(timings, timingsCategoryNodeViewRoot) {
-  my.currentFilteredTimings = timings;
+  window.my.currentFilteredTimings = timings;
   displayTimingsAsText(timings, timingsCategoryNodeViewRoot);
-  if (my.minimalTextForTimings) {
+  if (window.my.minimalTextForTimings) {
     clearTimingsTextWrapper();
   }
   displayTimingsAsImage(timings);
 }
 
 export function clearTimingsTextWrapper() {
-  let allTimingTextViews = my.timingsCategoryNodeViewRoot.getTimingTextViewsRecursively();
+  let allTimingTextViews = window.my.timingsCategoryNodeViewRoot.getTimingTextViewsRecursively();
   for (let i=0; i < allTimingTextViews.length; i++) {
     allTimingTextViews[i].classList.add('minimized-to-invisibility');
   }
 }
 
 export function makeTimingsTextElementsUnminimized() {
-  let allTimingTextViews = my.timingsCategoryNodeViewRoot.getTimingTextViewsRecursively();
+  let allTimingTextViews = window.my.timingsCategoryNodeViewRoot.getTimingTextViewsRecursively();
   for (let i=0; i < allTimingTextViews.length; i++) {
     allTimingTextViews[i].classList.remove('minimized-to-invisibility');
   }
@@ -366,22 +366,22 @@ export function displayTimingsAsText(timings, timingsCategoryNodeViewRoot) {
         span.onmouseenter = function (eve) {
           window.webkit.messageHandlers.timings_summary_msgs.postMessage(
             "timing onmouseenter. timing: " + timingItem.name);
-          my.isHighlightingTimingItemInImage = true;
-          displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory, timingItem);
+          window.my.isHighlightingTimingItemInImage = true;
+          displayTimingsAsImage(window.my.currentFilteredTimings, window.my.highlightedCategory, timingItem);
 
-          if (my.isHighlightingTimingRowInText) {
+          if (window.my.isHighlightingTimingRowInText) {
             let previouslyHighlightedTimingRow = document.querySelector(".highlighted-from-canvas");
             if (previouslyHighlightedTimingRow) {
               previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
             }
-            // let lastHighlightedTimingRow = document.querySelector("[data-timing-start = '" + my.highlightedTimingItemStart + "']");
-            my.isHighlightingTimingRowInText = false;
+            // let lastHighlightedTimingRow = document.querySelector("[data-timing-start = '" + window.my.highlightedTimingItemStart + "']");
+            window.my.isHighlightingTimingRowInText = false;
             // lastHighlightedTimingRow.classList.remove('highlighted-from-canvas');
           }
           function unhighlight() {
             console.log("span.onmouseleave unhighlight");
-            my.isHighlightingTimingItemInImage = false;
-            displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+            window.my.isHighlightingTimingItemInImage = false;
+            displayTimingsAsImage(window.my.currentFilteredTimings, window.my.highlightedCategory);
             span.removeEventListener('mouseleave', unhighlight);
           }
           span.addEventListener('mouseleave', unhighlight);
@@ -639,11 +639,11 @@ TimingsCategoryNodeView.prototype.name2html = function() {
   a.onclick = function() {
     let viewState = that.viewState;
     if (viewState === TimingsCategoryNodeViewState.UNHIGHLIGHTED) {
-      my.timingsCategoryNodeViewRoot.unhighlightTree();
+      window.my.timingsCategoryNodeViewRoot.unhighlightTree();
       that.highlightTree();
       let categoryFullName = that.timingsCategoryNode.fullName();
-      my.highlightedCategory = categoryFullName;
-      displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
+      window.my.highlightedCategory = categoryFullName;
+      displayTimingsAsImage(window.my.currentFilteredTimings, categoryFullName);
 
       console.log("a.onclick. categoryFullName: " + categoryFullName);
 
@@ -659,13 +659,13 @@ TimingsCategoryNodeView.prototype.name2html = function() {
       }
       function unhighlight() {
         // console.log("TimingsCategoryNodeView.onclick unhighlight (set when viewState was UNHIGHLIGHTED)");
-        if (my.highlightedCategory !== undefined
-          && my.highlightedCategory.length > 0
+        if (window.my.highlightedCategory !== undefined
+          && window.my.highlightedCategory.length > 0
           && !that.isHighlighted()) {
           a.removeEventListener('mouseleave', unhighlight);
           return;
         }
-        displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+        displayTimingsAsImage(window.my.currentFilteredTimings, window.my.highlightedCategory);
         a.removeEventListener('mouseleave', unhighlight);
       }
       a.addEventListener('mouseleave', unhighlight)
@@ -685,11 +685,11 @@ TimingsCategoryNodeView.prototype.name2html = function() {
       }
 
     } else if (viewState === TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD) {
-      my.timingsCategoryNodeViewRoot.unhighlightTree();
+      window.my.timingsCategoryNodeViewRoot.unhighlightTree();
       that.highlightTree();
       let categoryFullName = that.timingsCategoryNode.fullName();
-      my.highlightedCategory = categoryFullName;
-      displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
+      window.my.highlightedCategory = categoryFullName;
+      displayTimingsAsImage(window.my.currentFilteredTimings, categoryFullName);
 
       console.log("a.onclick. categoryFullName: " + categoryFullName);
 
@@ -703,14 +703,14 @@ TimingsCategoryNodeView.prototype.name2html = function() {
       }
       function unhighlight() {
         // console.log("TimingsCategoryNodeView.onclick unhighlight (set when viewState was HIGHLIGHTED_AS_CHILD)");
-        if (my.highlightedCategory !== undefined
-          && my.highlightedCategory.length > 0
+        if (window.my.highlightedCategory !== undefined
+          && window.my.highlightedCategory.length > 0
           && !that.isHighlighted()) {
           a.removeEventListener('mouseleave', unhighlight);
           return;
         }
-        // my.highlightedCategory = [];
-        displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+        // window.my.highlightedCategory = [];
+        displayTimingsAsImage(window.my.currentFilteredTimings, window.my.highlightedCategory);
         for (let i=0; i < trs.length; i++) {
           trs[i].classList.remove('greyed-out');
         }
@@ -718,12 +718,12 @@ TimingsCategoryNodeView.prototype.name2html = function() {
       }
       a.addEventListener('mouseleave', unhighlight)
     } else if (viewState === TimingsCategoryNodeViewState.EXTRA_HIGHLIGHTED) {
-      my.timingsCategoryNodeViewRoot.highlightTree();
-      my.highlightedCategory = [];
+      window.my.timingsCategoryNodeViewRoot.highlightTree();
+      window.my.highlightedCategory = [];
       let categoryFullName = that.timingsCategoryNode.fullName();
-      displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
+      displayTimingsAsImage(window.my.currentFilteredTimings, categoryFullName);
 
-      let allTimingTextViews = my.timingsCategoryNodeViewRoot.getTimingTextViewsRecursively();
+      let allTimingTextViews = window.my.timingsCategoryNodeViewRoot.getTimingTextViewsRecursively();
       for (let i=0; i < allTimingTextViews.length; i++) {
         allTimingTextViews[i].classList.add('greyed-out');
         allTimingTextViews[i].classList.remove('extra-unhighlighted');
@@ -734,14 +734,14 @@ TimingsCategoryNodeView.prototype.name2html = function() {
       }
       function unhighlight() {
         // console.log("TimingsCategoryNodeView.onclick unhighlight (set when viewState was EXTRA_HIGHLIGHTED)");
-        if (my.highlightedCategory !== undefined
-          && my.highlightedCategory.length > 0
+        if (window.my.highlightedCategory !== undefined
+          && window.my.highlightedCategory.length > 0
           && !that.isHighlighted()) {
           a.removeEventListener('mouseleave', unhighlight);
           return;
         }
-        // my.highlightedCategory = [];
-        displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+        // window.my.highlightedCategory = [];
+        displayTimingsAsImage(window.my.currentFilteredTimings, window.my.highlightedCategory);
         for (let i=0; i < allTimingTextViews.length; i++) {
           allTimingTextViews[i].classList.remove('greyed-out')
         }
@@ -754,14 +754,14 @@ TimingsCategoryNodeView.prototype.name2html = function() {
     }
   };
   a.onmouseenter = function(eve) {
-    if (my.highlightedCategory !== undefined
-       && my.highlightedCategory.length > 0
+    if (window.my.highlightedCategory !== undefined
+       && window.my.highlightedCategory.length > 0
        && !that.isHighlighted()) {
       return;
     }
     let categoryFullName = that.timingsCategoryNode.fullName();
-    // my.highlightedCategory = categoryFullName;
-    displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
+    // window.my.highlightedCategory = categoryFullName;
+    displayTimingsAsImage(window.my.currentFilteredTimings, categoryFullName);
 
     console.log("a.onmouseenter. categoryFullName: " + categoryFullName);
 
@@ -778,11 +778,11 @@ TimingsCategoryNodeView.prototype.name2html = function() {
       console.log("TimingsCategoryNodeView.onmouseenter unhighlight");
 
       let noCategoryIsHighlighted =
-        my.highlightedCategory === undefined ||
-        my.highlightedCategory.length === 0;
+        window.my.highlightedCategory === undefined ||
+        window.my.highlightedCategory.length === 0;
 
       if (noCategoryIsHighlighted) {
-        displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+        displayTimingsAsImage(window.my.currentFilteredTimings, window.my.highlightedCategory);
         for (let i=0; i < trs.length; i++) {
           trs[i].classList.remove('greyed-out');
           trs[i].classList.remove('extra-unhighlighted');
@@ -795,7 +795,7 @@ TimingsCategoryNodeView.prototype.name2html = function() {
                  that.viewState === TimingsCategoryNodeViewState.EXTRA_HIGHLIGHTED) {
         // do nothing
       } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD) {
-        displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
+        displayTimingsAsImage(window.my.currentFilteredTimings, window.my.highlightedCategory);
         for (let i=0; i < trsHighlighted.length; i++) {
           trsHighlighted[i].classList.remove('greyed-out');
         }
@@ -936,8 +936,8 @@ function filterTimingsByDifference(differenceInMillis) {
     return dtDiff < differenceInMillis;
   }
 
-  Object.keys(my.timings).forEach(key => {
-    let thisTimingsByDays = my.timings[key];
+  Object.keys(window.my.timings).forEach(key => {
+    let thisTimingsByDays = window.my.timings[key];
     for (let i = thisTimingsByDays.length - 1; i >= 0; i--) {
       let eachTimingDay = thisTimingsByDays[i];
       let dt = eachTimingDay.date;
@@ -1012,7 +1012,7 @@ export function millisOfCurrentAbstractDayOfYear(earthDaysPerAbstractDay) {
   return remainder;
 }
 
-function dateDifferenceInMillis(d1, d2) {
+export function dateDifferenceInMillis(d1, d2) {
   return d1.getTime() - d2.getTime();
 }
 

@@ -15,7 +15,7 @@ export function showTagsAndLinks(forest) {
     let viewBuilder = new ProcessTagsForestViewBuilder();
     viewBuilder.buildView(tagsAndLinksForest);
 
-    my.processTagsForestViews = viewBuilder.getProcessTagsForestViews();
+    window.my.processTagsForestViews = viewBuilder.getProcessTagsForestViews();
     withChildren(mainWrapper,
       withChildren(document.createElement('div'),
         (function() {
@@ -39,10 +39,10 @@ export function showTagsAndLinks(forest) {
 
 function showAllProcesses() {
   try {
-    let resultForest = my.processesForest.map(tree => {
+    let resultForest = window.my.processesForest.map(tree => {
       return {name: tree.name, children: tree.children.map(ch => { return { name: ch.name, children: [] }; }) };
     });
-    highlightProcessesInForest(my.processesForestViews, resultForest);
+    highlightProcessesInForest(window.my.processesForestViews, resultForest);
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js showAllProcesses error msg: " + err.message);
     throw err;
@@ -56,7 +56,7 @@ function searchByTag(tagNode) {
   }
   let resultForest = [];
   addTagNodeLinksToForest(tagNode, resultForest);
-  highlightProcessesInForest(my.processesForestViews, resultForest);
+  highlightProcessesInForest(window.my.processesForestViews, resultForest);
 }
 
 export function addTagNodeLinksToForest(tagNode, resultForest) {

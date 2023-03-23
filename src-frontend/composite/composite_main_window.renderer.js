@@ -40,6 +40,8 @@ let my = {
 
 };
 
+window.my = my;
+
 window.webkit.messageHandlers.composite_main_window.onMessage(handleServerMessage);
 
 function handleServerMessage(msg) {

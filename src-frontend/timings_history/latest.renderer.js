@@ -21,6 +21,8 @@ let my = {
   dayOffset: 0
 };
 
+window.my = my;
+
 window.webkit.messageHandlers.timings_history_latest_msgs.onMessage(handleServerMessage);
 
 function handleServerMessage(msg) {

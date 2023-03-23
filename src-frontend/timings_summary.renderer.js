@@ -19,6 +19,8 @@ let my = {
   }
 };
 
+window.my = my;
+
 window.webkit.messageHandlers.timings_summary_msgs.onMessage(handleServerMessage);
 
 function handleServerMessage(msg) {

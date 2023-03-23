@@ -5,6 +5,8 @@ let my = {
   processesForest: null
 };
 
+window.my = my;
+
 window.webkit.messageHandlers.foobar.onMessage(handleServerMessage);
 
 function handleServerMessage(msg) {
