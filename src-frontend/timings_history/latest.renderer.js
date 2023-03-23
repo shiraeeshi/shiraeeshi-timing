@@ -1,8 +1,7 @@
 const {
-  displayTimingsAsImage, // invoked by displayTimings
+  displayTimings,
   clearTimingsTextWrapper,
   makeTimingsTextElementsUnminimized,
-  displayTimingsAsText, // invoked by displayTimings
   createAndAppendFilterByCategory,
   millisOfCurrentAbstractDayOfYear,
   dateDifferenceInMillis,
@@ -265,16 +264,6 @@ ImageInfo.prototype.updateIfNeeded = function() {
   that.minutesMaxDiff += (millisSinceLastModified / (60.0 * 1000));
   that.minutesMaxDiffLastModified = now;
 };
-
-
-function displayTimings(timings, timingsCategoryNodeViewRoot) {
-  my.currentFilteredTimings = timings;
-  displayTimingsAsText(timings, timingsCategoryNodeViewRoot);
-  if (my.minimalTextForTimings) {
-    clearTimingsTextWrapper();
-  }
-  displayTimingsAsImage(timings);
-}
 
 
 

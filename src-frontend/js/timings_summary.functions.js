@@ -311,7 +311,7 @@ ImageInfo.prototype.updateIfNeeded = function() {
 };
 
 
-function displayTimings(timings, timingsCategoryNodeViewRoot) {
+export function displayTimings(timings, timingsCategoryNodeViewRoot) {
   window.my.currentFilteredTimings = timings;
   displayTimingsAsText(timings, timingsCategoryNodeViewRoot);
   if (window.my.minimalTextForTimings) {
