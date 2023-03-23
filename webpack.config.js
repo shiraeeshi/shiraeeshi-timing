@@ -103,6 +103,14 @@ module.exports = [
     },
   },
   {
+    entry: './src-frontend/composite/composite_main_window.renderer.js',
+    target: "electron-renderer",
+    output: {
+      filename: 'composite_main_window.bundle.js',
+      path: path.resolve(__dirname, 'dist-frontend/composite'),
+    },
+  },
+  {
     entry: './src-frontend/notebook/notebook.renderer.js',
     target: "electron-renderer",
     output: {
@@ -111,11 +119,11 @@ module.exports = [
     },
   },
   {
-    entry: './src-frontend/composite/composite_main_window.renderer.js',
+    entry: './src-frontend/timings_reports/timings_frequencies.renderer.js',
     target: "electron-renderer",
     output: {
-      filename: 'composite_main_window.bundle.js',
-      path: path.resolve(__dirname, 'dist-frontend/composite'),
+      filename: 'timings_frequencies.bundle.js',
+      path: path.resolve(__dirname, 'dist-frontend/timings_reports'),
     },
   },
   {

@@ -1,5 +1,6 @@
 const { getRandomInt } = require('./utils.js');
 const { withChildren, withClass } = require('./html_utils.js');
+const { timingDateArrays2Date, date2timingDateArray } = require('./date_utils.js');
 
 function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlight) {
   my.imageInfo.updateIfNeeded();
@@ -570,14 +571,11 @@ function TimingsCategoryNodeView(timingsCategoryNode) {
   that.timingTextViews = [];
 }
 
-let TimingsCategoryNodeViewState = (function() {
-  let InitFunction = function() {}
-  InitFunction.UNHIGHLIGHTED = new InitFunction();
-  InitFunction.HIGHLIGHTED = new InitFunction();
-  InitFunction.HIGHLIGHTED_AS_CHILD = new InitFunction();
-  InitFunction.EXTRA_HIGHLIGHTED = new InitFunction();
-  return InitFunction;
-})();
+export function TimingsCategoryNodeViewState() {}
+TimingsCategoryNodeViewState.UNHIGHLIGHTED = new TimingsCategoryNodeViewState();
+TimingsCategoryNodeViewState.HIGHLIGHTED = new TimingsCategoryNodeViewState();
+TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD = new TimingsCategoryNodeViewState();
+TimingsCategoryNodeViewState.EXTRA_HIGHLIGHTED = new TimingsCategoryNodeViewState();
 
 TimingsCategoryNodeView.prototype.subcategoryView = function(subCategoryName) {
   let that = this;
@@ -1016,25 +1014,6 @@ function millisOfCurrentAbstractDayOfYear(earthDaysPerAbstractDay) {
 
 function dateDifferenceInMillis(d1, d2) {
   return d1.getTime() - d2.getTime();
-}
-
-function timingDateArrays2Date(dateArray, hourMinuteArray) {
-  let d = new Date();
-  d.setDate(1);
-  d.setMonth(dateArray[1] - 1);
-  d.setDate(dateArray[0]);
-  d.setFullYear(dateArray[2]);
-  d.setHours(hourMinuteArray[0]);
-  d.setMinutes(hourMinuteArray[1]);
-  return d;
-}
-
-function date2timingDateArray(dt) {
-  return [
-    dt.getDate(),
-    dt.getMonth() + 1,
-    dt.getFullYear()
-  ];
 }
 
 function timingDateEquals(timingDate, date) {

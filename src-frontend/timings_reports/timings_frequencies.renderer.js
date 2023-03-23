@@ -1,3 +1,15 @@
+const { TimingsCategoryNodeViewState } = require('../js/timings_summary.functions.js');
+
+const { turnMultilineTextIntoHtml, addOffsetToLineNumberInErrorMessage } = require('../js/html_utils.js');
+
+const { withChildren, withClass } = require('../js/html_utils.js');
+
+const { timingDateArrays2Date, date2timingDateArray } = require('../js/date_utils.js');
+
+let my = {
+  timings: null
+};
+
 window.webkit.messageHandlers.timings_frequencies_msgs.onMessage(handleServerMessage);
 
 function handleServerMessage(msg) {
@@ -1597,15 +1609,6 @@ ProcessSubcategoryNodeView.prototype.parentIsHighlighted = function() {
   }
 };
 
-let TimingsCategoryNodeViewState = (function() {
-  let InitFunction = function() {}
-  InitFunction.UNHIGHLIGHTED = new InitFunction();
-  InitFunction.HIGHLIGHTED = new InitFunction();
-  InitFunction.HIGHLIGHTED_AS_CHILD = new InitFunction();
-  InitFunction.EXTRA_HIGHLIGHTED = new InitFunction();
-  return InitFunction;
-})();
-
 function ProcessCategoryNodeView(processNode) {
   let that = this;
   that.processNode = processNode;
@@ -1811,46 +1814,4 @@ function date2timingDateArray(dt) {
 
 function date2TimingDateStr(dt) {
   return date2timingDateArray(dt).join(".");
-}
-
-function turnMultilineTextIntoHtml(text) {
-  return withChildren(document.createElement('div'),
-    ...text.split("\n")
-      .map(line => turnWhitespacePrefixIntoNbsp(line))
-      .flatMap(el => [el,document.createElement("br")])
-      .slice(0, -1)
-  )
-}
-
-function turnWhitespacePrefixIntoNbsp(line) {
-  let match = line.match(/^(\s+)(.*)/);
-  let elem = document.createElement('span');
-  if (!match) {
-    elem.innerHTML = line;
-    return elem;
-  }
-  let prefix = match[1];
-  let afterPrefix = match[2];
-  let nbsps = Array.prototype.map.call(prefix, _ => '&nbsp;').join('');
-  elem.innerHTML = nbsps + afterPrefix;
-  return elem;
-}
-
-function addOffsetToLineNumberInErrorMessage(text, offset) {
-  return text.replace(/at line (\d+)/g, (_, n) => {
-    n = parseInt(n);
-    return `at line ${n + offset}`;
-  });
-}
-
-function withClass(elem, ...classes) {
-  for (let cls of classes) {
-    elem.classList.add(cls);
-  }
-  return elem;
-}
-
-function withChildren(elem, ...children) {
-  children.forEach(child => elem.appendChild(child));
-  return elem;
 }
