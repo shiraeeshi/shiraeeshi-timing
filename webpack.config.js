@@ -127,6 +127,14 @@ module.exports = [
     },
   },
   {
+    entry: './src-frontend/timings_history/latest.renderer.js',
+    target: "electron-renderer",
+    output: {
+      filename: 'latest.bundle.js',
+      path: path.resolve(__dirname, 'dist-frontend/timings_history'),
+    },
+  },
+  {
     entry: './src-frontend/timings_summary.renderer.js',
     target: "electron-renderer",
     output: {

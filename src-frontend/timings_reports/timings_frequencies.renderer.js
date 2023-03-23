@@ -1,8 +1,6 @@
 const { TimingsCategoryNodeViewState } = require('../js/timings_summary.functions.js');
 
-const { turnMultilineTextIntoHtml, addOffsetToLineNumberInErrorMessage } = require('../js/html_utils.js');
-
-const { withChildren, withClass } = require('../js/html_utils.js');
+const { turnMultilineTextIntoHtml, addOffsetToLineNumberInErrorMessage, withChildren, withClass } = require('../js/html_utils.js');
 
 const { timingDateArrays2Date, date2timingDateArray } = require('../js/date_utils.js');
 

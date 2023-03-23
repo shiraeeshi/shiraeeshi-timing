@@ -2,7 +2,7 @@ const { getRandomInt } = require('./utils.js');
 const { withChildren, withClass } = require('./html_utils.js');
 const { timingDateArrays2Date, date2timingDateArray } = require('./date_utils.js');
 
-function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlight) {
+export function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlight) {
   my.imageInfo.updateIfNeeded();
   let innerContentWrapper = document.getElementById("canvas-wrapper");
   innerContentWrapper.innerHTML = "";
@@ -334,7 +334,7 @@ export function makeTimingsTextElementsUnminimized() {
   }
 }
 
-function displayTimingsAsText(timings, timingsCategoryNodeViewRoot) {
+export function displayTimingsAsText(timings, timingsCategoryNodeViewRoot) {
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("displayTimings start ");
   try {
     let innerContentWrapper = document.getElementById("inner-content-wrapper");
@@ -516,7 +516,7 @@ TimingsCategoryTreeNode.createRootCategory = function() {
   return new TimingsCategoryTreeNode("all");
 }
 
-function createAndAppendFilterByCategory(timingsByDates) {
+export function createAndAppendFilterByCategory(timingsByDates) {
   let categoriesTreeRoot = TimingsCategoryTreeNode.createRootCategory();
   timingsByDates.forEach(dt => {
     dt.timings.forEach(t => {
@@ -1003,7 +1003,7 @@ function filterCurrentTwoAndAHalfDaysTimings() {
   return filterTimingsByDifference(diff);
 }
 
-function millisOfCurrentAbstractDayOfYear(earthDaysPerAbstractDay) {
+export function millisOfCurrentAbstractDayOfYear(earthDaysPerAbstractDay) {
   let now = new Date();
   let start = new Date(now.getFullYear(), 0);
   let diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);

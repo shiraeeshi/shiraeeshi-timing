@@ -1,3 +1,25 @@
+const {
+  displayTimingsAsImage, // invoked by displayTimings
+  clearTimingsTextWrapper,
+  makeTimingsTextElementsUnminimized,
+  displayTimingsAsText, // invoked by displayTimings
+  createAndAppendFilterByCategory,
+  millisOfCurrentAbstractDayOfYear,
+  dateDifferenceInMillis,
+} = require('../js/timings_summary.functions.js');
+
+const { turnMultilineTextIntoHtml, addOffsetToLineNumberInErrorMessage, withChildren, withClass } = require('../js/html_utils.js');
+
+const { timingDateArrays2Date, date2timingDateArray } = require('../js/date_utils.js');
+
+let my = {
+  timings: null,
+  // imageInfo: { // imageInfo = new ImageInfo()
+  //   minutesRange: 0,
+  //   minutesMaxDiff: 0
+  // },
+  dayOffset: 0
+};
 
 window.webkit.messageHandlers.timings_history_latest_msgs.onMessage(handleServerMessage);
 
