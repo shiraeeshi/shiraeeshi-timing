@@ -7,6 +7,8 @@ const {
 
 const { turnMultilineTextIntoHtml, addOffsetToLineNumberInErrorMessage } = require('./js/html_utils.js');
 
+const { getRandomInt } = require('./js/utils.js');
+
 let my = {
   timings: null,
   // imageInfo: {  // imageInfo = new ImageInfo()

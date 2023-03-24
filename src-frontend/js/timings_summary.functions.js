@@ -1,6 +1,6 @@
 const { getRandomInt } = require('./utils.js');
 const { withChildren, withClass } = require('./html_utils.js');
-const { timingDateArrays2Date, date2timingDateArray } = require('./date_utils.js');
+const { timingDateArrays2Date, date2timingDateArray, dateArray2str, timeArray2str } = require('./date_utils.js');
 
 export function displayTimingsAsImage(timings, categoryToHighlight, timingItemToHighlight) {
   window.my.imageInfo.updateIfNeeded();
@@ -343,7 +343,7 @@ export function displayTimingsAsText(timings, timingsCategoryNodeViewRoot) {
     let timingsInDivs = timings.map(oneDayTiming => {
       let oneDayTimingWrapper = document.createElement('div');
       let dateParagraph = document.createElement('p');
-      let dateTextNode = document.createTextNode(oneDayTiming.date.join("."));
+      let dateTextNode = document.createTextNode(dateArray2str(oneDayTiming.date));
       let ul = document.createElement('ul');
       let lis = oneDayTiming.timings.map(timingItem => {
         let li = document.createElement('li');
@@ -355,10 +355,11 @@ export function displayTimingsAsText(timings, timingsCategoryNodeViewRoot) {
         let timingItemBeginningStr = timingItem.from.join(".")
         span.setAttribute("data-timing-day", timingDateStr)
         span.setAttribute("data-timing-start", timingItemBeginningStr)
+        timingItemBeginningStr = timeArray2str(timingItem.from);
         let txt = document.createTextNode([
           timingItemBeginningStr,
           "-",
-          timingItem.to.join("."),
+          timeArray2str(timingItem.to),
           timingItem2symbol(timingItem),
           ['(',timingItem.minutes,' m)'].join(""),
           timingItem.name

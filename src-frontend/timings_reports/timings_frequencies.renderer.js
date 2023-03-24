@@ -2,7 +2,7 @@ const { TimingsCategoryNodeViewState } = require('../js/timings_summary.function
 
 const { turnMultilineTextIntoHtml, addOffsetToLineNumberInErrorMessage, withChildren, withClass } = require('../js/html_utils.js');
 
-const { timingDateArrays2Date, date2timingDateArray } = require('../js/date_utils.js');
+const { timingDateArrays2Date, date2timingDateArray, dateArray2str, timeArray2str } = require('../js/date_utils.js');
 
 let my = {
   timings: null
@@ -59,8 +59,11 @@ function handleServerMessage(msg) {
       console.log('initial handleServerMessage. timings keys:');
       console.dir(Object.keys(timings));
       my.timings = handleTimings(timings, undefined);
+      console.log(`initial handleServerMessage. handleTimings result: ${JSON.stringify(my.timings)}`);
       my.viewBuilder.buildViews(my.timings);
     }).catch(err => {
+      showTimingsFormatError(err);
+      console.log(`initial handleServerMessage. err: ${err}`);
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "initial handleServerMessage. err: " + err);
     });
@@ -1028,14 +1031,20 @@ function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
         node = categoryRootNode;
         let yamlValue = t.value;
         if (yamlValue.constructor !== Array) {
-          throw Error("wrong format: timing's categories should be list-typed");
+          let err = Error("wrong format: timing's categories should be list-typed");
+          err.source_timing = key;
+          err.fromdateStr = `${dateArray2str(dt)} ${timeArray2str(t.from)}`;
+          throw err;
         }
         for (let index = 0; index < yamlValue.length; index++) {
           let item = yamlValue[index];
           if (item.constructor === Object) {
             let keys = Object.keys(item);
             if (keys.length !== 1 || index !== (yamlValue.length - 1)) {
-              throw Error("wrong format: all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}). day: " + eachTimingDay.date);
+              let err = Error("wrong format: all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}). day: " + eachTimingDay.date);
+              err.source_timing = key;
+              err.fromdateStr = `${dateArray2str(dt)} ${timeArray2str(t.from)}`;
+              throw err;
             }
             let propName = keys[0];
             let propValue = item[propName];
@@ -1760,6 +1769,8 @@ ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
       my.timings = handleTimings(timings, my.timings);
       my.viewBuilder.buildViews(my.timings);
     }).catch(err => {
+      showTimingsFormatError(err);
+      console.log("btnPlusHalfYear.onclick err: " + err)
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "btnPlusHalfYear.onclick err: " + err);
     });
@@ -1778,6 +1789,8 @@ ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
       my.timings = handleTimings(timings, my.timings);
       my.viewBuilder.buildViews(my.timings);
     }).catch(err => {
+      showTimingsFormatError(err);
+      console.log("btnPlusMonth.onclick err: " + err)
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "btnPlusMonth.onclick err: " + err);
     });
@@ -1789,27 +1802,22 @@ ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
   );
 };
 
+function showTimingsFormatError(err) {
+  let wrapper = document.getElementById("main-content-wrapper");
+  let errorMessage = err.message;
+  if (err.fromdateStr !== undefined) {
+    errorMessage = `(timing at: ${err.fromdateStr})\n${errorMessage}`;
+  }
+  if (err.source_timing) {
+    errorMessage = `(source timing: ${err.source_timing})\n${errorMessage}`;
+  }
+  wrapper.innerHTML = "";
+  let errorMessageHtml = turnMultilineTextIntoHtml(errorMessage);
+  wrapper.appendChild(errorMessageHtml);
+}
+
 function mergeTimings(timingsA, timingsB) {
   return timingsB;
-}
-
-function timingDateArrays2Date(dateArray, hourMinuteArray) {
-  let d = new Date();
-  d.setDate(1);
-  d.setMonth(dateArray[1] - 1);
-  d.setDate(dateArray[0]);
-  d.setFullYear(dateArray[2]);
-  d.setHours(hourMinuteArray[0]);
-  d.setMinutes(hourMinuteArray[1]);
-  return d;
-}
-
-function date2timingDateArray(dt) {
-  return [
-    dt.getDate(),
-    dt.getMonth() + 1,
-    dt.getFullYear()
-  ];
 }
 
 function date2TimingDateStr(dt) {
