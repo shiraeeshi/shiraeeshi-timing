@@ -1,12 +1,12 @@
+const { extractTagsFromRootForest } = require('../js/notebook/extract_tags.js');
+const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
+const { NotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
 const {
   addTagNodeLinksToForest,
-  highlightNotesInForest,
-  buildTagsAndLinksForest,
-  yamlRootObject2forest,
-  extractTagsFromRootForest,
-  NotesForestViewBuilder,
   appendNotesForestHtml,
-} = require('../js/notebook.functions.js');
+  buildTagsAndLinksForest,
+  highlightNotesInForest
+} = require('../js/notebook/notebook_utils.js');
 
 const { initPeriodButtonsRow } = require('../js/timings/period_buttons.js');
 const { ImageInfo } = require('../js/timings/image_info.js');

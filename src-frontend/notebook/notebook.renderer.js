@@ -1,5 +1,8 @@
 const { turnMultilineTextIntoHtml } = require('../js/html_utils.js');
-const { yamlRootObject2forest, showTagsAndLinks, NotesForestViewBuilder, appendNotesForestHtml } = require('../js/notebook.functions.js');
+const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
+const { showTagsAndLinks } = require('../js/notebook/show_tags.js');
+const { NotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
+const { appendNotesForestHtml } = require('../js/notebook/notebook_utils.js');
 
 let my = {
   notesForest: null
