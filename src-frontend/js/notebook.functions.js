@@ -12,16 +12,16 @@ export function showTagsAndLinks(forest) {
     let taggedNodes = extractTagsFromRootForest(forest);
     let tagsAndLinksForest = buildTagsAndLinksForest(taggedNodes);
 
-    let viewBuilder = new ProcessTagsForestViewBuilder();
+    let viewBuilder = new NotebookTagsForestViewBuilder();
     viewBuilder.buildView(tagsAndLinksForest);
 
-    window.my.processTagsForestViews = viewBuilder.getProcessTagsForestViews();
+    window.my.notebookTagsForestViews = viewBuilder.getNotebookTagsForestViews();
     withChildren(mainWrapper,
       withChildren(document.createElement('div'),
         (function() {
                 let btnShowAll = document.createElement('button');
                 btnShowAll.addEventListener('click', eve => {
-                          showAllProcesses();
+                          showAllNotes();
                         });
                 return withChildren(btnShowAll, document.createTextNode('all'))
               })(),
@@ -30,21 +30,21 @@ export function showTagsAndLinks(forest) {
         )
       )
     );
-    viewBuilder.getProcessTagsForestViews().forEach(v => v.collapse());
+    viewBuilder.getNotebookTagsForestViews().forEach(v => v.collapse());
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js showTagsAndLinks error msg: " + err.message);
     throw err;
   }
 }
 
-function showAllProcesses() {
+function showAllNotes() {
   try {
-    let resultForest = window.my.processesForest.map(tree => {
+    let resultForest = window.my.notesForest.map(tree => {
       return {name: tree.name, children: tree.children.map(ch => { return { name: ch.name, children: [] }; }) };
     });
-    highlightProcessesInForest(window.my.processesForestViews, resultForest);
+    highlightNotesInForest(window.my.notesForestViews, resultForest);
   } catch (err) {
-    window.webkit.messageHandlers.foobar.postMessage("js showAllProcesses error msg: " + err.message);
+    window.webkit.messageHandlers.foobar.postMessage("js showAllNotes error msg: " + err.message);
     throw err;
   }
 }
@@ -56,7 +56,7 @@ function searchByTag(tagNode) {
   }
   let resultForest = [];
   addTagNodeLinksToForest(tagNode, resultForest);
-  highlightProcessesInForest(window.my.processesForestViews, resultForest);
+  highlightNotesInForest(window.my.notesForestViews, resultForest);
 }
 
 export function addTagNodeLinksToForest(tagNode, resultForest) {
@@ -86,12 +86,12 @@ export function addTagNodeLinksToForest(tagNode, resultForest) {
   }
 }
 
-export function highlightProcessesInForest(processesForestViews, forestToHighlight) {
+export function highlightNotesInForest(notesForestViews, forestToHighlight) {
   try {
-    processesForestViews.forEach(treeView => treeView.hide());
+    notesForestViews.forEach(treeView => treeView.hide());
 
     forestToHighlight.forEach(nodeToHighlight => {
-      processesForestViews.forEach(treeView => {
+      notesForestViews.forEach(treeView => {
         if (treeView.name != nodeToHighlight.name) return;
 
         treeView.highlightTree(nodeToHighlight);
@@ -226,24 +226,24 @@ function extractTagsFromNode(node, ancestry) {
   return result;
 }
 
-export function ProcessesForestViewBuilder() {
+export function NotesForestViewBuilder() {
   let that = this;
   that.htmls = [];
   that.views = [];
 }
 
-ProcessesForestViewBuilder.prototype.buildView = function(processesForest) {
+NotesForestViewBuilder.prototype.buildView = function(notesForest) {
   let that = this;
-  processesForest.forEach(processesTree => {
-    that.addTree(processesTree);
+  notesForest.forEach(notesTree => {
+    that.addTree(notesTree);
   });
 }
 
-ProcessesForestViewBuilder.prototype.addTree = function(processesTree) {
+NotesForestViewBuilder.prototype.addTree = function(notesTree) {
   let that = this;
   let htmls = that.htmls;
   let views = that.views;
-  let treeView = new ProcessNodeView(processesTree);
+  let treeView = new NotebookNodeView(notesTree);
   views[views.length] = treeView;
 
   let wrapperDiv = document.createElement('div');
@@ -264,61 +264,61 @@ ProcessesForestViewBuilder.prototype.addTree = function(processesTree) {
   htmls[htmls.length] = treeHtml;
 };
 
-ProcessesForestViewBuilder.prototype.getHtmlElements = function() {
+NotesForestViewBuilder.prototype.getHtmlElements = function() {
   return this.htmls;
 };
 
-ProcessesForestViewBuilder.prototype.getProcessesForestViews = function() {
+NotesForestViewBuilder.prototype.getNotesForestViews = function() {
   return this.views;
 };
 
-function ProcessTagsForestViewBuilder() {
+function NotebookTagsForestViewBuilder() {
   let that = this;
   that.htmls = [];
   that.views = [];
 }
 
-ProcessTagsForestViewBuilder.prototype.buildView = function(processTagsForest) {
+NotebookTagsForestViewBuilder.prototype.buildView = function(notebookTagsForest) {
   let that = this;
-  Object.keys(processTagsForest).forEach(propName => {
-    let processTagsTreeNode = processTagsForest[propName];
-    that.addTree(processTagsTreeNode);
+  Object.keys(notebookTagsForest).forEach(propName => {
+    let notebookTagsTreeNode = notebookTagsForest[propName];
+    that.addTree(notebookTagsTreeNode);
   });
 }
 
-ProcessTagsForestViewBuilder.prototype.addTree = function(processTagsTree) {
+NotebookTagsForestViewBuilder.prototype.addTree = function(notebookTagsTree) {
   let that = this;
 
   let htmls = that.htmls;
   let views = that.views;
 
-  let treeView = new ProcessTagsTreeNodeView(processTagsTree);
+  let treeView = new NotebookTagsTreeNodeView(notebookTagsTree);
   treeView.buildAsHtmlLiElement();
 
   views[views.length] = treeView;
   htmls[htmls.length] = treeView.html;
 };
 
-ProcessTagsForestViewBuilder.prototype.getHtmlElements = function() {
+NotebookTagsForestViewBuilder.prototype.getHtmlElements = function() {
   return this.htmls;
 };
 
-ProcessTagsForestViewBuilder.prototype.getProcessTagsForestViews = function() {
+NotebookTagsForestViewBuilder.prototype.getNotebookTagsForestViews = function() {
   return this.views;
 };
 
-function ProcessNodeView(processNode) {
+function NotebookNodeView(notebookNode) {
   let that = this;
-  that.name = processNode.name;
+  that.name = notebookNode.name;
   that.isCollapsed = false;
-  that.children = processNode.children.map(childNode => new ProcessNodeView(childNode));
+  that.children = notebookNode.children.map(childNode => new NotebookNodeView(childNode));
   that.childrenByName = {};
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
   });
 }
 
-ProcessNodeView.prototype.name2html = function() {
+NotebookNodeView.prototype.name2html = function() {
   let that = this;
   if (that.name.includes("\n")) {
     return withChildren(document.createElement('div'),
@@ -334,7 +334,7 @@ ProcessNodeView.prototype.name2html = function() {
   }
 }
 
-ProcessNodeView.prototype.buildAsHtmlLiElement = function() {
+NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
   let that = this;
   if (that.children.length == 0) {
     let htmlElement = withClass(withChildren(document.createElement('li'), that.name2html()), 'proc-leaf');
@@ -363,11 +363,11 @@ ProcessNodeView.prototype.buildAsHtmlLiElement = function() {
   that.html = htmlElement;
 };
 
-ProcessNodeView.prototype.isLeaf = function() {
+NotebookNodeView.prototype.isLeaf = function() {
   return this.children.length == 0;
 };
 
-ProcessNodeView.prototype.toggleCollapse = function() {
+NotebookNodeView.prototype.toggleCollapse = function() {
   let that = this;
   if (that.isCollapsed) {
     that.uncollapse();
@@ -376,7 +376,7 @@ ProcessNodeView.prototype.toggleCollapse = function() {
   }
 };
 
-ProcessNodeView.prototype.collapse = function() {
+NotebookNodeView.prototype.collapse = function() {
   let that = this;
   that.isCollapsed = true;
   if (that.html.classList.contains("proc-node-open")) {
@@ -385,7 +385,7 @@ ProcessNodeView.prototype.collapse = function() {
   }
 };
 
-ProcessNodeView.prototype.uncollapse = function() {
+NotebookNodeView.prototype.uncollapse = function() {
   let that = this;
   that.isCollapsed = false;
   if (that.html.classList.contains("proc-node-closed")) {
@@ -395,14 +395,14 @@ ProcessNodeView.prototype.uncollapse = function() {
   that.children.forEach(childView => childView.parentUncollapsed());
 };
 
-ProcessNodeView.prototype.parentUncollapsed = function() {
+NotebookNodeView.prototype.parentUncollapsed = function() {
   let that = this;
   if (!that.isCollapsed) {
     that.collapse();
   }
 };
 
-ProcessNodeView.prototype.hide = function() {
+NotebookNodeView.prototype.hide = function() {
   let that = this;
   if (that.html.style.display != 'none') {
     that.oldDisplay = that.html.style.display;
@@ -411,7 +411,7 @@ ProcessNodeView.prototype.hide = function() {
   that.children.forEach(childView => childView.hide());
 };
 
-ProcessNodeView.prototype.unhide = function() {
+NotebookNodeView.prototype.unhide = function() {
   let that = this;
 
   if (that.html.style.display != 'none') {
@@ -422,7 +422,7 @@ ProcessNodeView.prototype.unhide = function() {
   that.children.forEach(childView => childView.unhide());
 };
 
-ProcessNodeView.prototype.highlightTree = function(nodeToHighlight) {
+NotebookNodeView.prototype.highlightTree = function(nodeToHighlight) {
   let that = this;
 
   if (that.html.style.display != 'none') {
@@ -452,7 +452,7 @@ ProcessNodeView.prototype.highlightTree = function(nodeToHighlight) {
   }
 };
 
-ProcessNodeView.prototype.parentIsHighlighted = function() {
+NotebookNodeView.prototype.parentIsHighlighted = function() {
   let that = this;
   that.unhide();
   if (!that.isCollapsed) {
@@ -460,31 +460,31 @@ ProcessNodeView.prototype.parentIsHighlighted = function() {
   }
 };
 
-export function appendProcessesForestHtml(processesForestHtmlElements) {
-  let processesWrapper = document.getElementById("processes-content-wrapper");
-  processesWrapper.innerHTML = "";
-  processesForestHtmlElements.forEach(el => processesWrapper.appendChild(el));
+export function appendNotesForestHtml(notesForestHtmlElements) {
+  let notesWrapper = document.getElementById("notes-content-wrapper");
+  notesWrapper.innerHTML = "";
+  notesForestHtmlElements.forEach(el => notesWrapper.appendChild(el));
 }
 
-let ProcessTagsTreeNodeView = (function() {
+let NotebookTagsTreeNodeView = (function() {
 
-  function ProcessTagsTreeNodeViewConstructorFunction(processTagsTreeNode) {
+  function NotebookTagsTreeNodeViewConstructorFunction(notebookTagsTreeNode) {
     let that = this;
-    that.tagsTreeNode = processTagsTreeNode;
-    that.name = processTagsTreeNode.name;
+    that.tagsTreeNode = notebookTagsTreeNode;
+    that.name = notebookTagsTreeNode.name;
     that.isCollapsed = false;
-    that.children = processTagsTreeNode.children.map(childNode => new ProcessTagsTreeNodeView(childNode));
+    that.children = notebookTagsTreeNode.children.map(childNode => new NotebookTagsTreeNodeView(childNode));
     that.childrenByName = {};
     that.children.forEach(childView => {
       that.childrenByName[childView.name] = childView;
     });
   }
 
-  for (let propName in ProcessNodeView.prototype) {
-    ProcessTagsTreeNodeViewConstructorFunction.prototype[propName] = ProcessNodeView.prototype[propName];
+  for (let propName in NotebookNodeView.prototype) {
+    NotebookTagsTreeNodeViewConstructorFunction.prototype[propName] = NotebookNodeView.prototype[propName];
   }
 
-  ProcessTagsTreeNodeViewConstructorFunction.prototype.name2html = function() {
+  NotebookTagsTreeNodeViewConstructorFunction.prototype.name2html = function() {
     let that = this;
     let a = document.createElement('a');
     a.onclick = function() {
@@ -493,7 +493,7 @@ let ProcessTagsTreeNodeView = (function() {
     return withChildren(a, document.createTextNode(that.name))
   }
 
-  return ProcessTagsTreeNodeViewConstructorFunction;
+  return NotebookTagsTreeNodeViewConstructorFunction;
 
 })();
 

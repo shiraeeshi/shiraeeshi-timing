@@ -194,7 +194,7 @@ async function init(appEnv, win) {
     .then(notebookContentsParsed => {
       func({
         "type": "notebook",
-        "processes": notebookContentsParsed,
+        "notes": notebookContentsParsed,
       });
     })
     .catch(err => {

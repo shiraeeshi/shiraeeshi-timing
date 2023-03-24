@@ -1,11 +1,11 @@
 const {
   addTagNodeLinksToForest,
-  highlightProcessesInForest,
+  highlightNotesInForest,
   buildTagsAndLinksForest,
   yamlRootObject2forest,
   extractTagsFromRootForest,
-  ProcessesForestViewBuilder,
-  appendProcessesForestHtml,
+  NotesForestViewBuilder,
+  appendNotesForestHtml,
 } = require('../js/notebook.functions.js');
 
 const { initPeriodButtonsRow } = require('../js/timings/period_buttons.js');
@@ -26,8 +26,8 @@ const { getRandomInt } = require('../js/utils.js');
 
 let my = {
 
-  // processes state
-  processesForest: null,
+  // notebook state
+  notesForest: null,
 
   // timings state
   timings: null,
@@ -101,7 +101,7 @@ function handleServerMessage(msg) {
         innerContentWrapper.appendChild(errorMessageHtml);
         return;
       } else if (msg.error_source == "notebook") {
-        let notebookContentWrapper = document.getElementById("processes-content-wrapper");
+        let notebookContentWrapper = document.getElementById("notes-content-wrapper");
         notebookContentWrapper.innerHTML = "";
         let errorMessage = msg.message;
         if (msg.notebook_location) {
@@ -120,21 +120,21 @@ function handleServerMessage(msg) {
     }
 
     if (msg.type == "notebook") {
-      let processes_object = msg.processes;
-      let forest = yamlRootObject2forest(msg.processes);
-      my.processesForest = forest;
+      let notes_object = msg.notes;
+      let forest = yamlRootObject2forest(msg.notes);
+      my.notesForest = forest;
 
       // showTagsAndLinks(forest);
       let taggedNodes = extractTagsFromRootForest(forest);
       let tagsAndLinksForest = buildTagsAndLinksForest(taggedNodes);
 
-      let viewBuilder = new ProcessesForestViewBuilder();
+      let viewBuilder = new NotesForestViewBuilder();
       viewBuilder.buildView(forest);
-      my.processesForestViews = viewBuilder.getProcessesForestViews();
-      appendProcessesForestHtml(viewBuilder.getHtmlElements());
+      my.notesForestViews = viewBuilder.getNotesForestViews();
+      appendNotesForestHtml(viewBuilder.getHtmlElements());
 
-      let currentProcessesForest = buildCurrentProcessesForest(tagsAndLinksForest);
-      highlightProcessesInForest(my.processesForestViews, currentProcessesForest);
+      let currentNotesForest = buildCurrentNotesForest(tagsAndLinksForest);
+      highlightNotesInForest(my.notesForestViews, currentNotesForest);
 
       let mainContentWrapper = document.getElementById("main-content-wrapper");
       let keys = Object.keys(msg);
@@ -148,11 +148,11 @@ function handleServerMessage(msg) {
   }
 }
 
-function buildCurrentProcessesForest(tagsAndLinksForest) {
+function buildCurrentNotesForest(tagsAndLinksForest) {
   let resultForest = [];
   let currentTags = findCurrentTags(tagsAndLinksForest);
   for (let tag of currentTags) {
-    window.webkit.messageHandlers.composite_main_window.postMessage("js buildCurrentProcessesForest current tag ancestry: " +
+    window.webkit.messageHandlers.composite_main_window.postMessage("js buildCurrentNotesForest current tag ancestry: " +
       tag.tagAncestry.join(" "));
     addTagNodeLinksToForest(tag, resultForest);
   }

@@ -128,7 +128,7 @@ async function init(appEnv, win) {
   }
 
   func({
-    "processes": notebookContentsParsed,
+    "notes": notebookContentsParsed,
   });
 }
 

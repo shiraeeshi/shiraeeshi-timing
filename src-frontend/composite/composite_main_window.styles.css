@@ -23,7 +23,7 @@ body {
   flex: 1;
 }
 
-#current-processes-tree-nodes-container {
+#current-notes-tree-nodes-container {
   flex: auto;
 }
 
@@ -35,7 +35,7 @@ body {
   padding-bottom: 10px;
 }
 
-#processes-content-wrapper {
+#notes-content-wrapper {
   color: white;
   font-size: xx-small;
 }
