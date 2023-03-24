@@ -1,6 +1,12 @@
 const { TimingsCategoryNodeViewState } = require('../js/timings_summary.functions.js');
 
-const { turnMultilineTextIntoHtml, addOffsetToLineNumberInErrorMessage, withChildren, withClass } = require('../js/html_utils.js');
+const {
+  turnMultilineTextIntoHtml,
+  addOffsetToLineNumberInErrorMessage,
+  showTimingsFormatError,
+  withChildren,
+  withClass
+} = require('../js/html_utils.js');
 
 const { timingDateArrays2Date, date2timingDateArray, dateArray2str, timeArray2str } = require('../js/date_utils.js');
 
@@ -62,7 +68,7 @@ function handleServerMessage(msg) {
       console.log(`initial handleServerMessage. handleTimings result: ${JSON.stringify(my.timings)}`);
       my.viewBuilder.buildViews(my.timings);
     }).catch(err => {
-      showTimingsFormatError(err);
+      showTimingsFormatError("main-content-wrapper", err);
       console.log(`initial handleServerMessage. err: ${err}`);
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "initial handleServerMessage. err: " + err);
@@ -1769,7 +1775,7 @@ ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
       my.timings = handleTimings(timings, my.timings);
       my.viewBuilder.buildViews(my.timings);
     }).catch(err => {
-      showTimingsFormatError(err);
+      showTimingsFormatError("main-content-wrapper", err);
       console.log("btnPlusHalfYear.onclick err: " + err)
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "btnPlusHalfYear.onclick err: " + err);
@@ -1789,7 +1795,7 @@ ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
       my.timings = handleTimings(timings, my.timings);
       my.viewBuilder.buildViews(my.timings);
     }).catch(err => {
-      showTimingsFormatError(err);
+      showTimingsFormatError("main-content-wrapper", err);
       console.log("btnPlusMonth.onclick err: " + err)
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "btnPlusMonth.onclick err: " + err);
@@ -1801,20 +1807,6 @@ ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
     that.htmlSpanPeriodInfo
   );
 };
-
-function showTimingsFormatError(err) {
-  let wrapper = document.getElementById("main-content-wrapper");
-  let errorMessage = err.message;
-  if (err.fromdateStr !== undefined) {
-    errorMessage = `(timing at: ${err.fromdateStr})\n${errorMessage}`;
-  }
-  if (err.source_timing) {
-    errorMessage = `(source timing: ${err.source_timing})\n${errorMessage}`;
-  }
-  wrapper.innerHTML = "";
-  let errorMessageHtml = turnMultilineTextIntoHtml(errorMessage);
-  wrapper.appendChild(errorMessageHtml);
-}
 
 function mergeTimings(timingsA, timingsB) {
   return timingsB;

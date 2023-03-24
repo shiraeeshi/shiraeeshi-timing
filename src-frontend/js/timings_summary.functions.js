@@ -228,15 +228,30 @@ function addListenersToButtons() {
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "btnLast24Hours click handler error msg: " + err.message);
+      if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
+        if (window.my.timingsFormatErrorHandler !== undefined) {
+          window.my.timingsFormatErrorHandler(err);
+        }
+      }
     }
   });
   btnLast12Hours.addEventListener("click", function() {
-    let timings = filterLast12HourTimings();
-    window.my.currentlyDisplayedTimings = timings;
-    window.my.imageInfo.updateAsPeriodType(PeriodType.LAST_12_HOURS);
-    window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-    displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
-    window.my.periodButtonsRowVisibilityToggle.toInitialState();
+    try {
+      let timings = filterLast12HourTimings();
+      window.my.currentlyDisplayedTimings = timings;
+      window.my.imageInfo.updateAsPeriodType(PeriodType.LAST_12_HOURS);
+      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
+      displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
+      window.my.periodButtonsRowVisibilityToggle.toInitialState();
+    } catch (err) {
+      window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+        "btnLast12Hours click handler error msg: " + err.message);
+      if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
+        if (window.my.timingsFormatErrorHandler !== undefined) {
+          window.my.timingsFormatErrorHandler(err);
+        }
+      }
+    }
   });
   btnFromZeroHours.addEventListener("click", function() {
     try {
@@ -249,15 +264,36 @@ function addListenersToButtons() {
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "btnFromZeroHours click handler error msg: " + err.message);
+      if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
+        if (window.my.timingsFormatErrorHandler !== undefined) {
+          window.my.timingsFormatErrorHandler(err);
+        }
+      }
     }
   });
   btnFromZeroTwoAndAHalfHours.addEventListener("click", function() {
-    let timings = filterCurrentTwoAndAHalfDaysTimings();
-    window.my.currentlyDisplayedTimings = timings;
-    window.my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_60_HOUR_PERIOD);
-    window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-    displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
-    window.my.periodButtonsRowVisibilityToggle.toInitialState();
+    try {
+      let timings = filterCurrentTwoAndAHalfDaysTimings();
+      window.my.currentlyDisplayedTimings = timings;
+      window.my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_60_HOUR_PERIOD);
+      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
+      displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
+      window.my.periodButtonsRowVisibilityToggle.toInitialState();
+    } catch (err) {
+      window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+        "btnFromZero2.5Hours click handler error msg: " + err.message);
+      if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
+        if (window.my.timingsFormatErrorHandler !== undefined) {
+          window.my.timingsFormatErrorHandler(err);
+        } else {
+          window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+            "btnFromZero2.5Hours click handler error. window.my.timingsFormatErrorHandler is undefined");
+        }
+      } else {
+        window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+          `btnFromZero2.5Hours click handler error. err.source_timing: ${err.source_timing}, err.fromdateStr: ${err.fromdateStr}`);
+      }
+    }
   });
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("addListenersToButtons end ");
 }
@@ -523,6 +559,12 @@ export function createAndAppendFilterByCategory(timingsByDates) {
     dt.timings.forEach(t => {
       console.log("about to call subcategory function. t.category: " + t.category)
       let currentCategoryNode = categoriesTreeRoot.subcategory(t.category);
+      if (t.value.constructor !== Array) {
+        let err = Error("wrong format: timing's categories should be list-typed");
+        err.source_timing = t.category;
+        err.fromdateStr = `${dateArray2str(dt.date)} ${timeArray2str(t.from)}`;
+        throw err;
+      }
       for (let ind=0; ind<t.value.length; ind++) {
         let timingValueOuterListItem = t.value[ind];
         let type = typeof(timingValueOuterListItem)
@@ -538,7 +580,10 @@ export function createAndAppendFilterByCategory(timingsByDates) {
           currentCategoryNode.appendTiming(t);
           break; // should be last item
         } else {
-          throw Error("createAndAppendFilterByCategory: unexpected type of timingItem.value[index] (expected 'string' or 'object'). index: " + ind + ", type: " + type);
+          let err = new Error("createAndAppendFilterByCategory: unexpected type of timingItem.value[index] (expected 'string' or 'object'). index: " + ind + ", type: " + type);
+          err.source_timing = t.category;
+          err.fromdateStr = `${dateArray2str(dt.date)} ${timeArray2str(t.from)}`;
+          throw err;
         }
       }
     });

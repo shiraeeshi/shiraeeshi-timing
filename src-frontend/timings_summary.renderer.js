@@ -5,7 +5,11 @@ const {
   ImageInfo,
 } = require('./js/timings_summary.functions.js');
 
-const { turnMultilineTextIntoHtml, addOffsetToLineNumberInErrorMessage } = require('./js/html_utils.js');
+const {
+  turnMultilineTextIntoHtml,
+  addOffsetToLineNumberInErrorMessage,
+  showTimingsFormatError,
+} = require('./js/html_utils.js');
 
 const { getRandomInt } = require('./js/utils.js');
 
@@ -18,6 +22,9 @@ let my = {
   wallpapers: {
     lst: null,
     idx: 0
+  },
+  timingsFormatErrorHandler: (err) => {
+    showTimingsFormatError("inner-content-wrapper", err)
   }
 };
 

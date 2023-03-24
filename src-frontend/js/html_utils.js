@@ -30,6 +30,20 @@ export function addOffsetToLineNumberInErrorMessage(text, offset) {
   });
 }
 
+export function showTimingsFormatError(wrapperElementId, err) {
+  let wrapper = document.getElementById(wrapperElementId);
+  let errorMessage = err.message;
+  if (err.fromdateStr !== undefined) {
+    errorMessage = `(timing at: ${err.fromdateStr})\n${errorMessage}`;
+  }
+  if (err.source_timing) {
+    errorMessage = `(source timing: ${err.source_timing})\n${errorMessage}`;
+  }
+  wrapper.innerHTML = "";
+  let errorMessageHtml = turnMultilineTextIntoHtml(errorMessage);
+  wrapper.appendChild(errorMessageHtml);
+}
+
 export function withChildren(elem, ...children) {
   children.forEach(child => elem.appendChild(child));
   return elem;

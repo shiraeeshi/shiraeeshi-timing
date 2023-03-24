@@ -7,7 +7,13 @@ const {
   dateDifferenceInMillis,
 } = require('../js/timings_summary.functions.js');
 
-const { turnMultilineTextIntoHtml, addOffsetToLineNumberInErrorMessage, withChildren, withClass } = require('../js/html_utils.js');
+const {
+  turnMultilineTextIntoHtml,
+  addOffsetToLineNumberInErrorMessage,
+  showTimingsFormatError,
+  withChildren,
+  withClass
+} = require('../js/html_utils.js');
 
 const { timingDateArrays2Date, date2timingDateArray } = require('../js/date_utils.js');
 
@@ -104,25 +110,35 @@ function addListenersToButtons() {
   let btnNextDay = document.getElementById("next-day");
   let radioBtn24Hours = document.getElementById("day-of-24-hours");
   document.getElementById("day-of-60-hours").addEventListener("change", function() {
-    my.dayOffset = 0;
-    my.highlightedCategory = false;
-    my.isHighlightingTimingRowInText = false;
-    my.isHighlightingTimingItemInImage = false;
-    if (radioBtn24Hours.checked) {
-      showTimingsOf24HourDay();
-    } else {
-      showTimingsOf60HourDay();
+    try {
+      my.dayOffset = 0;
+      my.highlightedCategory = false;
+      my.isHighlightingTimingRowInText = false;
+      my.isHighlightingTimingItemInImage = false;
+      if (radioBtn24Hours.checked) {
+        showTimingsOf24HourDay();
+      } else {
+        showTimingsOf60HourDay();
+      }
+    } catch (err) {
+      window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
+        "radioBtn60Hours change handler error msg: " + err.message);
     }
   });
   radioBtn24Hours.addEventListener("change", function() {
-    my.dayOffset = 0;
-    my.highlightedCategory = false;
-    my.isHighlightingTimingRowInText = false;
-    my.isHighlightingTimingItemInImage = false;
-    if (radioBtn24Hours.checked) {
-      showTimingsOf24HourDay();
-    } else {
-      showTimingsOf60HourDay();
+    try {
+      my.dayOffset = 0;
+      my.highlightedCategory = false;
+      my.isHighlightingTimingRowInText = false;
+      my.isHighlightingTimingItemInImage = false;
+      if (radioBtn24Hours.checked) {
+        showTimingsOf24HourDay();
+      } else {
+        showTimingsOf60HourDay();
+      }
+    } catch (err) {
+      window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
+        "radioBtn24Hours change handler error msg: " + err.message);
     }
   });
   btnPreviousDay.addEventListener("click", function() {
@@ -160,7 +176,7 @@ function addListenersToButtons() {
       }
     } catch (err) {
       window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
-        "btnPreviousDay click handler error msg: " + err.message);
+        "btnNextDay click handler error msg: " + err.message);
     }
   });
   window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("addListenersToButtons end ");
@@ -180,6 +196,9 @@ function showTimingsOf24HourDay() {
   }).catch(err => {
     window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
       "showTimingsOf24HourDay err: " + err);
+    if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
+      showTimingsFormatError("inner-content-wrapper", err);
+    }
   });
 }
 
@@ -216,6 +235,9 @@ function showTimingsOf60HourDay() {
   }).catch(err => {
     window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
       "showTimingsOf60HourDay err: " + err);
+    if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
+      showTimingsFormatError("inner-content-wrapper", err);
+    }
   });
 }
 
