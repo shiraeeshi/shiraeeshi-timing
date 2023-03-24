@@ -18,6 +18,10 @@ export function date2timingDateArray(dt) {
   ];
 }
 
+export function date2TimingDateStrUnpadded(dt) {
+  return date2timingDateArray(dt).join(".");
+}
+
 function pad(v) {
   return `0${v}`.slice(-2);
 }
