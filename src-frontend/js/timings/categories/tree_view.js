@@ -26,7 +26,6 @@ export function createAndAppendFilterByCategory(timingsByDates) {
           let subcategoryName = Object.keys(timingValueObject)[0];
           console.log("about to call currentCategoryNode.subcategory. 2. subcategoryName: " + subcategoryName)
           currentCategoryNode = currentCategoryNode.subcategory(subcategoryName);
-          currentCategoryNode.appendTiming(t);
           break; // should be last item
         } else {
           let err = new Error("createAndAppendFilterByCategory: unexpected type of timingItem.value[index] (expected 'string' or 'object'). index: " + ind + ", type: " + type);
@@ -35,6 +34,7 @@ export function createAndAppendFilterByCategory(timingsByDates) {
           throw err;
         }
       }
+      currentCategoryNode.appendTiming(t);
     });
   });
   let btnsContainer = document.getElementById('timing-category-btns-container');
