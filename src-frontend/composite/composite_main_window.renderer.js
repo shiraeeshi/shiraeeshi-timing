@@ -1,4 +1,3 @@
-const notebook_functions = require('../js/notebook.functions.js');
 const {
   addTagNodeLinksToForest,
   highlightProcessesInForest,
@@ -7,14 +6,14 @@ const {
   extractTagsFromRootForest,
   ProcessesForestViewBuilder,
   appendProcessesForestHtml,
-} = notebook_functions;
+} = require('../js/notebook.functions.js');
 
+const { initPeriodButtonsRow } = require('../js/timings/period_buttons.js');
+const { ImageInfo } = require('../js/timings/image_info.js');
 const {
-  initPeriodButtonsRow,
-  ImageInfo,
   clearTimingsTextWrapper,
   makeTimingsTextElementsUnminimized,
-} = require('../js/timings_summary.functions.js');
+} = require('../js/timings/display.js');
 
 const {
   turnMultilineTextIntoHtml,

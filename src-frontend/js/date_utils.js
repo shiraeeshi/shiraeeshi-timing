@@ -34,3 +34,7 @@ export function timeArray2str(timeArray) {
   let minutes = pad(timeArray[1])
   return `${hours}:${minutes}`;
 }
+
+export function dateDifferenceInMillis(d1, d2) {
+  return d1.getTime() - d2.getTime();
+}

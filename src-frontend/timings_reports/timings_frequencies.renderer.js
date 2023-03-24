@@ -1,4 +1,4 @@
-const { TimingsCategoryNodeViewState } = require('../js/timings_summary.functions.js');
+const { TimingsCategoryNodeViewState } = require('../js/timings/categories/node_view_state.js');
 
 const {
   turnMultilineTextIntoHtml,

@@ -1,12 +1,13 @@
+
 const {
   displayTimings,
   clearTimingsTextWrapper,
   makeTimingsTextElementsUnminimized,
-  createAndAppendFilterByCategory,
-  millisOfCurrentAbstractDayOfYear,
-  dateDifferenceInMillis,
-} = require('../js/timings_summary.functions.js');
+} = require('../js/timings/display.js');
 
+const { createAndAppendFilterByCategory } = require('../js/timings/categories/tree_view.js');
+const { millisOfCurrentAbstractDayOfYear } = require('../js/timings/millis_utils.js');
+const { timingDateArrays2Date, date2timingDateArray, dateDifferenceInMillis } = require('../js/date_utils.js');
 const {
   turnMultilineTextIntoHtml,
   addOffsetToLineNumberInErrorMessage,
@@ -15,7 +16,6 @@ const {
   withClass
 } = require('../js/html_utils.js');
 
-const { timingDateArrays2Date, date2timingDateArray } = require('../js/date_utils.js');
 
 let my = {
   timings: null,

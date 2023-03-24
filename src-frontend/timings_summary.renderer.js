@@ -1,9 +1,11 @@
+
 const {
   clearTimingsTextWrapper,
   makeTimingsTextElementsUnminimized,
-  initPeriodButtonsRow,
-  ImageInfo,
-} = require('./js/timings_summary.functions.js');
+} = require('./js/timings/display.js');
+
+const { initPeriodButtonsRow } = require('./js/timings/period_buttons.js');
+const { ImageInfo } = require('./js/timings/image_info.js');
 
 const {
   turnMultilineTextIntoHtml,
