@@ -6,7 +6,7 @@ const {
   withChildren
 } = require('../js/html_utils.js');
 
-const { ProcessesSubcategoriesViewBuilder } = require('../js/frequencies/processes_subcategories_view_builder.js');
+const { FrequenciesViewBuilder } = require('../js/frequencies/frequencies_view_builder.js');
 const { requestTimingsForPeriod } = require('../js/frequencies/request_timings_for_period.js');
 const { handleTimings } = require('../js/frequencies/handle_timings.js');
 const { TimingsHistogramsGraphic } = require('../js/frequencies/timings_histograms_graphic.js');
@@ -84,7 +84,7 @@ function handleServerMessage(msg) {
 function initViewBuilder() {
   let wrapper = document.getElementById("main-content-wrapper");
   wrapper.innerHTML = "";
-  my.viewBuilder = new ProcessesSubcategoriesViewBuilder();
+  my.viewBuilder = new FrequenciesViewBuilder();
   wrapper.appendChild(my.viewBuilder.getResultHtml());
 }
 
@@ -92,7 +92,7 @@ function showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree) {
   let wrapper = document.getElementById("main-content-wrapper");
   wrapper.innerHTML = "";
 
-  let viewBuilder = new ProcessesSubcategoriesViewBuilder();
+  let viewBuilder = new FrequenciesViewBuilder();
   viewBuilder.buildViews(timingsBySubcategoriesTree);
 
   wrapper.appendChild(viewBuilder.getResultHtml());

@@ -4,7 +4,7 @@ const { setMillisUntilNextForProcessNode } = require('./millis_until_next.js');
 
 const { withChildren, withClass } = require('../html_utils.js');
 
-export function ProcessSubcategoryNodeView(processNode, hGraphic, rootNodeView) {
+export function ProcessTreeNodeView(processNode, hGraphic, rootNodeView) {
   let that = this;
   that.processNode = processNode;
   that.hGraphic = hGraphic;
@@ -13,7 +13,7 @@ export function ProcessSubcategoryNodeView(processNode, hGraphic, rootNodeView) 
   that.isCollapsed = false;
   that.isUnhighlighted = false;
   that.viewState = TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD;
-  that.children = processNode.children.map(childNode => new ProcessSubcategoryNodeView(childNode, hGraphic, rootNodeView));
+  that.children = processNode.children.map(childNode => new ProcessTreeNodeView(childNode, hGraphic, rootNodeView));
   that.childrenByName = {};
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
@@ -21,7 +21,7 @@ export function ProcessSubcategoryNodeView(processNode, hGraphic, rootNodeView) 
   that.htmlChildrenContainerUl = document.createElement('ul');
 }
 
-ProcessSubcategoryNodeView.prototype.getRoot = function() {
+ProcessTreeNodeView.prototype.getRoot = function() {
   let that = this;
   if (that.rootNodeView !== undefined) {
     return that.rootNodeView;
@@ -30,7 +30,7 @@ ProcessSubcategoryNodeView.prototype.getRoot = function() {
   }
 };
 
-ProcessSubcategoryNodeView.prototype.findSubtreeByViewState = function(viewState) {
+ProcessTreeNodeView.prototype.findSubtreeByViewState = function(viewState) {
   let that = this;
   if (that.viewState === viewState) {
     return that;
@@ -44,13 +44,13 @@ ProcessSubcategoryNodeView.prototype.findSubtreeByViewState = function(viewState
   return undefined;
 };
 
-ProcessSubcategoryNodeView.prototype.mergeWithNewTimings = function(processNode) {
+ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
   let that = this;
   that.processNode = processNode;
   processNode.children.forEach(childNode => {
     let oldChild = that.childrenByName[childNode.name];
     if (oldChild === undefined) {
-      let newChildView = new ProcessSubcategoryNodeView(childNode, that.hGraphic);
+      let newChildView = new ProcessTreeNodeView(childNode, that.hGraphic);
       newChildView.buildAsHtmlLiElement();
       that.children.push(newChildView);
       that.childrenByName[childNode.name] = newChildView;
@@ -61,7 +61,7 @@ ProcessSubcategoryNodeView.prototype.mergeWithNewTimings = function(processNode)
   });
 };
 
-ProcessSubcategoryNodeView.prototype.highlightTree = function() {
+ProcessTreeNodeView.prototype.highlightTree = function() {
   let that = this;
   that.isUnhighlighted = false;
   that.viewState = TimingsCategoryNodeViewState.HIGHLIGHTED;
@@ -71,7 +71,7 @@ ProcessSubcategoryNodeView.prototype.highlightTree = function() {
   }
 };
 
-ProcessSubcategoryNodeView.prototype.highlightSubtree = function() {
+ProcessTreeNodeView.prototype.highlightSubtree = function() {
   let that = this;
   that.isUnhighlighted = false;
   that.viewState = TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD;
@@ -81,7 +81,7 @@ ProcessSubcategoryNodeView.prototype.highlightSubtree = function() {
   }
 };
 
-ProcessSubcategoryNodeView.prototype.unhighlightTree = function() {
+ProcessTreeNodeView.prototype.unhighlightTree = function() {
   let that = this;
   that.isUnhighlighted = true;
   that.viewState = TimingsCategoryNodeViewState.UNHIGHLIGHTED;
@@ -91,7 +91,7 @@ ProcessSubcategoryNodeView.prototype.unhighlightTree = function() {
   }
 };
 
-ProcessSubcategoryNodeView.prototype.name2html = function() {
+ProcessTreeNodeView.prototype.name2html = function() {
   let that = this;
   let a = document.createElement('a');
   a.onclick = function() {
@@ -347,7 +347,7 @@ ProcessSubcategoryNodeView.prototype.name2html = function() {
   }
 }
 
-ProcessSubcategoryNodeView.prototype.buildAsHtmlLiElement = function() {
+ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
   let that = this;
   if (that.children.length == 0) {
     let htmlElement = withClass(withChildren(document.createElement('li'), that.name2html()), 'proc-leaf');
@@ -387,11 +387,11 @@ ProcessSubcategoryNodeView.prototype.buildAsHtmlLiElement = function() {
   }
 };
 
-ProcessSubcategoryNodeView.prototype.isLeaf = function() {
+ProcessTreeNodeView.prototype.isLeaf = function() {
   return this.children.length == 0;
 };
 
-ProcessSubcategoryNodeView.prototype.toggleCollapse = function() {
+ProcessTreeNodeView.prototype.toggleCollapse = function() {
   let that = this;
   if (that.isCollapsed) {
     that.uncollapse();
@@ -400,7 +400,7 @@ ProcessSubcategoryNodeView.prototype.toggleCollapse = function() {
   }
 };
 
-ProcessSubcategoryNodeView.prototype.collapse = function() {
+ProcessTreeNodeView.prototype.collapse = function() {
   let that = this;
   that.isCollapsed = true;
   if (that.html.classList.contains("proc-node-open")) {
@@ -409,7 +409,7 @@ ProcessSubcategoryNodeView.prototype.collapse = function() {
   }
 };
 
-ProcessSubcategoryNodeView.prototype.uncollapse = function() {
+ProcessTreeNodeView.prototype.uncollapse = function() {
   let that = this;
   that.isCollapsed = false;
   if (that.html.classList.contains("proc-node-closed")) {
@@ -419,14 +419,14 @@ ProcessSubcategoryNodeView.prototype.uncollapse = function() {
   that.children.forEach(childView => childView.parentUncollapsed());
 };
 
-ProcessSubcategoryNodeView.prototype.parentUncollapsed = function() {
+ProcessTreeNodeView.prototype.parentUncollapsed = function() {
   let that = this;
   if (!that.isCollapsed) {
     that.collapse();
   }
 };
 
-ProcessSubcategoryNodeView.prototype.hide = function() {
+ProcessTreeNodeView.prototype.hide = function() {
   let that = this;
   if (that.html.style.display != 'none') {
     that.oldDisplay = that.html.style.display;
@@ -435,7 +435,7 @@ ProcessSubcategoryNodeView.prototype.hide = function() {
   that.children.forEach(childView => childView.hide());
 };
 
-ProcessSubcategoryNodeView.prototype.unhide = function() {
+ProcessTreeNodeView.prototype.unhide = function() {
   let that = this;
 
   if (that.html.style.display != 'none') {
@@ -446,7 +446,7 @@ ProcessSubcategoryNodeView.prototype.unhide = function() {
   that.children.forEach(childView => childView.unhide());
 };
 
-// ProcessSubcategoryNodeView.prototype.highlightTree = function(nodeToHighlight) {
+// ProcessTreeNodeView.prototype.highlightTree = function(nodeToHighlight) {
 //   let that = this;
 // 
 //   if (that.html.style.display != 'none') {
@@ -476,7 +476,7 @@ ProcessSubcategoryNodeView.prototype.unhide = function() {
 //   }
 // };
 
-ProcessSubcategoryNodeView.prototype.parentIsHighlighted = function() {
+ProcessTreeNodeView.prototype.parentIsHighlighted = function() {
   let that = this;
   that.unhide();
   if (!that.isCollapsed) {

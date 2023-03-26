@@ -1,6 +1,6 @@
 const { TimingsCategoryNodeViewState } = require('../timings/categories/node_view_state.js');
 
-const { ProcessSubcategoryNodeView } = require('./process_subcategory_node_view.js');
+const { ProcessTreeNodeView } = require('./process_tree_node_view.js');
 const { TimingsHistogramsGraphic } = require('./timings_histograms_graphic.js');
 const { requestTimingsForPeriod } = require('./request_timings_for_period.js');
 const { handleTimings } = require('./handle_timings.js');
@@ -8,7 +8,7 @@ const { handleTimings } = require('./handle_timings.js');
 const { showTimingsFormatError, withChildren, withClass } = require('../html_utils.js');
 const { date2TimingDateStrUnpadded } = require('../date_utils.js');
 
-export function ProcessCategoryNodeView(processNode) {
+export function FrequenciesView(processNode) {
   let that = this;
   that.processNode = processNode;
   that.name = processNode.name;
@@ -18,7 +18,7 @@ export function ProcessCategoryNodeView(processNode) {
   that.currentPeriod = createCurrentPeriodInitial();
   that.htmlSpanPeriodInfo = createHtmlSpanPeriodInfo(that.currentPeriod);
   that.hGraphic = new TimingsHistogramsGraphic(processNode);
-  that.children = processNode.children.map(childNode => new ProcessSubcategoryNodeView(childNode, that.hGraphic, that));
+  that.children = processNode.children.map(childNode => new ProcessTreeNodeView(childNode, that.hGraphic, that));
   that.childrenByName = {};
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
@@ -26,17 +26,17 @@ export function ProcessCategoryNodeView(processNode) {
   that.htmlChildrenContainerUl = document.createElement('ul');
 }
 
-for (let propName in ProcessSubcategoryNodeView.prototype) {
-  ProcessCategoryNodeView.prototype[propName] = ProcessSubcategoryNodeView.prototype[propName];
+for (let propName in ProcessTreeNodeView.prototype) {
+  FrequenciesView.prototype[propName] = ProcessTreeNodeView.prototype[propName];
 }
 
-ProcessCategoryNodeView.prototype.mergeWithNewTimings = function(processNode) {
+FrequenciesView.prototype.mergeWithNewTimings = function(processNode) {
   let that = this;
   that.processNode = processNode;
   processNode.children.forEach(childNode => {
     let oldChild = that.childrenByName[childNode.name];
     if (oldChild === undefined) {
-      let newChildView = new ProcessSubcategoryNodeView(childNode, that.hGraphic);
+      let newChildView = new ProcessTreeNodeView(childNode, that.hGraphic);
       newChildView.buildAsHtmlLiElement();
       that.children.push(newChildView);
       that.childrenByName[childNode.name] = newChildView;
@@ -75,7 +75,7 @@ function periodInfoText(period) {
   return periodInfoText;
 }
 
-ProcessCategoryNodeView.prototype.buildAsHtmlLiElement = function() {
+FrequenciesView.prototype.buildAsHtmlLiElement = function() {
   let that = this;
   // if (that.children.length == 0) {
   //   let htmlElement = withClass(withChildren(document.createElement('li'), that.name2html()), 'proc-leaf');
@@ -124,7 +124,7 @@ ProcessCategoryNodeView.prototype.buildAsHtmlLiElement = function() {
   }
 };
 
-ProcessCategoryNodeView.prototype.buildPeriodButtonsRow = function() {
+FrequenciesView.prototype.buildPeriodButtonsRow = function() {
   let that = this;
   function buttonWithText(text) {
     let btn = document.createElement('button');

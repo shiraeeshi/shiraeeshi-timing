@@ -1,7 +1,7 @@
-const { ProcessCategoryNodeView } = require('./process_category_node_view.js');
+const { FrequenciesView } = require('./frequencies_view.js');
 const { withChildren } = require('../html_utils.js');
 
-export function ProcessesSubcategoriesViewBuilder() {
+export function FrequenciesViewBuilder() {
   this.subtreesByName = {};
   this.htmls = [];
   this.views = [];
@@ -9,7 +9,7 @@ export function ProcessesSubcategoriesViewBuilder() {
   this.htmlChildrenContainerUl = document.createElement('ul');
 }
 
-ProcessesSubcategoriesViewBuilder.prototype.buildViews = function(timingsBySubcategoriesTree) {
+FrequenciesViewBuilder.prototype.buildViews = function(timingsBySubcategoriesTree) {
   let that = this;
   that.addSubtree(timingsBySubcategoriesTree);
   for (let subtree of timingsBySubcategoriesTree.children) {
@@ -17,20 +17,20 @@ ProcessesSubcategoriesViewBuilder.prototype.buildViews = function(timingsBySubca
   }
 };
 
-ProcessesSubcategoriesViewBuilder.prototype.addSubtree = function(timingsBySubcategoriesSubtree) {
-  console.log("ProcessesSubcategoriesViewBuilder.prototype.addSubtree. name: " + timingsBySubcategoriesSubtree.name);
+FrequenciesViewBuilder.prototype.addSubtree = function(timingsBySubcategoriesSubtree) {
+  console.log("FrequenciesViewBuilder.prototype.addSubtree. name: " + timingsBySubcategoriesSubtree.name);
   let that = this;
   let htmls = that.htmls;
   let views = that.views;
   let oldChild = that.viewsByName[timingsBySubcategoriesSubtree.name];
   if (oldChild !== undefined) {
-    console.log("ProcessesSubcategoriesViewBuilder.prototype.addSubtree. about to invoke oldChild.mergeWithNewTimings()");
+    console.log("FrequenciesViewBuilder.prototype.addSubtree. about to invoke oldChild.mergeWithNewTimings()");
     oldChild.mergeWithNewTimings(timingsBySubcategoriesSubtree);
     oldChild.hGraphic.redraw();
   } else {
-    console.log("ProcessesSubcategoriesViewBuilder.prototype.addSubtree. oldChild is undefined.");
+    console.log("FrequenciesViewBuilder.prototype.addSubtree. oldChild is undefined.");
     that.subtreesByName[timingsBySubcategoriesSubtree.name] = timingsBySubcategoriesSubtree;
-    let treeView = new ProcessCategoryNodeView(timingsBySubcategoriesSubtree);
+    let treeView = new FrequenciesView(timingsBySubcategoriesSubtree);
     views.push(treeView);
     treeView.buildAsHtmlLiElement();
     treeView.hGraphic.redraw();
@@ -41,18 +41,18 @@ ProcessesSubcategoriesViewBuilder.prototype.addSubtree = function(timingsBySubca
   }
 };
 
-ProcessesSubcategoriesViewBuilder.prototype.getResultHtml = function() {
+FrequenciesViewBuilder.prototype.getResultHtml = function() {
   let that = this;
   return withChildren(that.htmlChildrenContainerUl,
     ...that.htmls
   );
 };
 
-ProcessesSubcategoriesViewBuilder.prototype.getHtmlElements = function() {
+FrequenciesViewBuilder.prototype.getHtmlElements = function() {
   return this.htmls;
 };
 
-ProcessesSubcategoriesViewBuilder.prototype.getProcessesForestViews = function() {
+FrequenciesViewBuilder.prototype.getProcessesForestViews = function() {
   return this.views;
 };
 
