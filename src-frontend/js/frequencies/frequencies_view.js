@@ -75,7 +75,7 @@ function periodInfoText(period) {
   return periodInfoText;
 }
 
-FrequenciesView.prototype.buildAsHtmlLiElement = function() {
+FrequenciesView.prototype.buildHtml = function() {
   let that = this;
   // if (that.children.length == 0) {
   //   let htmlElement = withClass(withChildren(document.createElement('li'), that.name2html()), 'proc-leaf');
@@ -98,23 +98,10 @@ FrequenciesView.prototype.buildAsHtmlLiElement = function() {
 
     that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
     let htmlElement =
-      withChildren(
-        withChildren(withClass(document.createElement('li'), 'proc-node', 'proc-node-open'),
-          (function() {
-            let elem = document.createElement('span');
-            elem.classList.add('proc-node-icon');
-            elem.addEventListener('click', eve => {
-              that.toggleCollapse();
-            });
-            return elem;
-          })(),
-          withChildren(document.createElement('div'),
-            that.name2html(),
-            that.buildPeriodButtonsRow(),
-            withChildren(document.createElement('div'),
-              hGraphic.elem
-            )
-          )
+      withChildren(document.createElement('div'),
+        that.buildPeriodButtonsRow(),
+        withChildren(document.createElement('div'),
+          hGraphic.elem
         ),
         withChildren(that.htmlChildrenContainerUl,
           ...that.children.map(childNode => childNode.html)
@@ -145,6 +132,7 @@ FrequenciesView.prototype.buildPeriodButtonsRow = function() {
       console.dir(Object.keys(timings));
       my.timings = handleTimings(timings, my.timings);
       my.viewBuilder.buildViews(my.timings);
+      my.viewBuilder.showView();
     }).catch(err => {
       showTimingsFormatError("main-content-wrapper", err);
       console.log("btnPlusHalfYear.onclick err: " + err)
@@ -165,6 +153,7 @@ FrequenciesView.prototype.buildPeriodButtonsRow = function() {
       console.dir(Object.keys(timings));
       my.timings = handleTimings(timings, my.timings);
       my.viewBuilder.buildViews(my.timings);
+      my.viewBuilder.showView();
     }).catch(err => {
       showTimingsFormatError("main-content-wrapper", err);
       console.log("btnPlusMonth.onclick err: " + err)

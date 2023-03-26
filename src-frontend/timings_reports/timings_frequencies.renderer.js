@@ -55,7 +55,7 @@ function handleServerMessage(msg) {
     // showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree);
 
     // new
-    initViewBuilder();
+    my.viewBuilder = new FrequenciesViewBuilder();
 
     let millisInWeek = 7*24*60*60*1000;
 
@@ -68,6 +68,7 @@ function handleServerMessage(msg) {
       my.timings = handleTimings(timings, undefined);
       console.log(`initial handleServerMessage. handleTimings result: ${JSON.stringify(my.timings)}`);
       my.viewBuilder.buildViews(my.timings);
+      my.viewBuilder.showView();
     }).catch(err => {
       showTimingsFormatError("main-content-wrapper", err);
       console.log(`initial handleServerMessage. err: ${err}`);
@@ -79,13 +80,6 @@ function handleServerMessage(msg) {
   } catch (err) {
     window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage. error: " + err.message);
   }
-}
-
-function initViewBuilder() {
-  let wrapper = document.getElementById("main-content-wrapper");
-  wrapper.innerHTML = "";
-  my.viewBuilder = new FrequenciesViewBuilder();
-  wrapper.appendChild(my.viewBuilder.getResultHtml());
 }
 
 function showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree) {
