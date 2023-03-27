@@ -16,6 +16,12 @@ export function TimingsHistogramsGraphic(processNode) {
   this.highlightedSubprocessOfSelectedProcessNode = null; // invoke highlightSubprocessOfSelectedProcessNode
 }
 
+TimingsHistogramsGraphic.prototype.setProcessNode = function(processNode) {
+  this.processNode = processNode;
+  this.selectedProcessNode = null;
+  this.highlightedSubprocessOfSelectedProcessNode = null;
+}
+
 TimingsHistogramsGraphic.prototype.setRangeXFrom = function(from) {
   if (from < 0) {
     this.rangeX.from = 0;

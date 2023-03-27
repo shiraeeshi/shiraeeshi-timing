@@ -27,6 +27,13 @@ NotebookNodeView.prototype.name2html = function() {
   }
 }
 
+NotebookNodeView.prototype.moveToTop = function() {
+  let that = this;
+  let parent = that.html.parentNode;
+  parent.removeChild(that.html);
+  parent.insertBefore(that.html, parent.children[0]);
+}
+
 NotebookNodeView.prototype.hideSiblingsBelow = function() {
   let that = this;
   let parent = that.html.parentNode;
@@ -44,13 +51,6 @@ NotebookNodeView.prototype.unhideHiddenChildren = function() {
   let that = this;
   let hiddenChildren = that.html.querySelectorAll(':scope > ul > .made-invisible');
   hiddenChildren.forEach(elem => elem.classList.remove('made-invisible'));
-}
-
-NotebookNodeView.prototype.moveToTop = function() {
-  let that = this;
-  let parent = that.html.parentNode;
-  parent.removeChild(that.html);
-  parent.insertBefore(that.html, parent.children[0]);
 }
 
 NotebookNodeView.prototype.buildAsHtmlLiElement = function() {

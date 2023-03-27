@@ -1,23 +1,26 @@
 const { TimingsCategoryNodeViewState } = require('../timings/categories/node_view_state.js');
 
-const { setMillisUntilNextForProcessNode } = require('./millis_until_next.js');
+const { setMillisUntilNextForProcessNode, resetMillisUntilNextForProcessNode } = require('./millis_until_next.js');
 
 const { withChildren, withClass } = require('../html_utils.js');
 
-export function ProcessTreeNodeView(processNode, hGraphic, rootNodeView) {
+export function ProcessTreeNodeView(processNode, hGraphic, parentNodeView, rootNodeView) {
   let that = this;
   that.processNode = processNode;
+  that.parentNodeView = parentNodeView;
   that.hGraphic = hGraphic;
   that.rootNodeView = rootNodeView;
   that.name = processNode.name;
   that.isCollapsed = false;
   that.isUnhighlighted = false;
   that.viewState = TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD;
-  that.children = processNode.children.map(childNode => new ProcessTreeNodeView(childNode, hGraphic, rootNodeView));
+  that.children = processNode.children.map(childNode => new ProcessTreeNodeView(childNode, hGraphic, that, rootNodeView));
   that.childrenByName = {};
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
   });
+  that.hasMergedChildren = false;
+  that.isMergedChild = false;
   that.htmlChildrenContainerUl = document.createElement('ul');
 }
 
@@ -50,7 +53,7 @@ ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
   processNode.children.forEach(childNode => {
     let oldChild = that.childrenByName[childNode.name];
     if (oldChild === undefined) {
-      let newChildView = new ProcessTreeNodeView(childNode, that.hGraphic);
+      let newChildView = new ProcessTreeNodeView(childNode, that.hGraphic, that, that.rootNodeView);
       newChildView.buildAsHtmlLiElement();
       that.children.push(newChildView);
       that.childrenByName[childNode.name] = newChildView;
@@ -347,10 +350,201 @@ ProcessTreeNodeView.prototype.name2html = function() {
   }
 }
 
+ProcessTreeNodeView.prototype.moveToTop = function() {
+  let that = this;
+  let parent = that.html.parentNode;
+  parent.removeChild(that.html);
+  parent.insertBefore(that.html, parent.children[0]);
+}
+
+ProcessTreeNodeView.prototype.hideSiblingsBelow = function() {
+  let that = this;
+  let parent = that.html.parentNode;
+  let siblings = Array.from(parent.children);
+  let idx = siblings.indexOf(that.html);
+  if (idx >= 0) {
+    for (let i = idx + 1; i < siblings.length; i++) {
+      let sibling = siblings[i];
+      sibling.classList.add('made-invisible');
+    }
+  }
+}
+
+ProcessTreeNodeView.prototype.unhideHiddenChildren = function() {
+  let that = this;
+  let hiddenChildren = that.html.querySelectorAll(':scope > ul > .made-invisible');
+  hiddenChildren.forEach(elem => elem.classList.remove('made-invisible'));
+}
+
+ProcessTreeNodeView.prototype.showThisProcessOnly = function() {
+  let that = this;
+  that.moveToTop();
+  that.hideSiblingsBelow();
+  let p = that.parentNodeView;
+  while (p !== undefined) {
+    p.moveToTop();
+    p.hideSiblingsBelow();
+    p = p.parentNodeView;
+  }
+  if (that.hGraphic) {
+    that.hGraphic.setProcessNode(that.processNode);
+    that.hGraphic.redraw();
+  }
+}
+
+ProcessTreeNodeView.prototype.mergeSubprocesses = function() {
+  let that = this;
+  if (that.hGraphic) {
+    resetMillisUntilNextForProcessNode(that.hGraphic.processNode, that.processNode);
+    that.hGraphic.redraw();
+
+    that.hasMergedChildren = true;
+
+    that.html.classList.add('merged-children');
+    that.children.forEach(child => child.markAsMerged());
+  }
+}
+
+ProcessTreeNodeView.prototype.markAsMerged = function() {
+  let that = this;
+  that.isMergedChild = true;
+  that.html.classList.add('merged-child');
+  that.children.forEach(child => child.markAsMerged());
+}
+
+ProcessTreeNodeView.prototype.markAsUnmerged = function() {
+  let that = this;
+  that.isMergedChild = false;
+  that.html.classList.remove('merged-child');
+  that.children.forEach(child => child.markAsUnmerged());
+}
+
+ProcessTreeNodeView.prototype.unmergeSubprocesses = function() {
+  let that = this;
+  if (that.isMergedChild) {
+    if (that.parentNodeView === undefined) {
+      throw new Error(`ProcessTreeNodeView is marked as merged child, but its parent is undefined. name: ${that.name}`);
+    }
+    that.parentNodeView.unmergeSubprocesses();
+  } else if (that.hasMergedChildren) {
+    if (that.hGraphic) {
+      setMillisUntilNextForProcessNode(that.processNode);
+      that.hGraphic.redraw();
+
+      that.hasMergedChildren = false;
+
+      that.html.classList.remove('merged-children');
+      that.children.forEach(child => child.markAsUnmerged());
+    }
+  }
+}
+
 ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
   let that = this;
+
+  function createTitleDiv() {
+    let nameHtml = that.name2html();
+    let iconShowThisOnly =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-show-this-process-only'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('show graph for this process only')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.showThisProcessOnly();
+        });
+        return elem;
+      })();
+    let iconMergeSubprocesses =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-merge-subprocesses'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('merge subprocesses in graph')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.mergeSubprocesses();
+        });
+        return elem;
+      })();
+    let iconUnmergeSubprocesses =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-unmerge-subprocesses'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('unmerge subprocesses in graph')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.unmergeSubprocesses();
+        });
+        return elem;
+      })();
+    let iconMoveToTop =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-move-to-top'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('move to the top of the list')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.moveToTop();
+        });
+        return elem;
+      })();
+    let iconHideSiblingsBelow =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-hide-siblings-below'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('hide siblings that are below this item')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.hideSiblingsBelow();
+        });
+        return elem;
+      })();
+    let iconUnhideHiddenChildren =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-unhide-hidden-children'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('show hidden children')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.unhideHiddenChildren();
+        });
+        return elem;
+      })();
+    let iconsDiv = withChildren(withClass(document.createElement('div'), 'process-node-icons'),
+      iconShowThisOnly,
+      iconMergeSubprocesses,
+      iconUnmergeSubprocesses,
+      iconMoveToTop,
+      iconHideSiblingsBelow,
+      iconUnhideHiddenChildren
+    );
+    let titleDiv = withChildren(withClass(document.createElement('div'), 'process-node-title-container'),
+      nameHtml,
+      iconsDiv
+    );
+    return titleDiv;
+  }
+
   if (that.children.length == 0) {
-    let htmlElement = withClass(withChildren(document.createElement('li'), that.name2html()), 'proc-leaf');
+    let htmlElement = withClass(withChildren(document.createElement('li'), createTitleDiv()), 'proc-node', 'proc-leaf');
     that.html = htmlElement;
     return;
   }
@@ -377,7 +571,7 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
             });
             return elem;
           })(),
-          that.name2html()
+          createTitleDiv()
         ),
         withChildren(that.htmlChildrenContainerUl,
           ...that.children.map(childNode => childNode.html)

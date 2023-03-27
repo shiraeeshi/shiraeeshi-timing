@@ -18,7 +18,8 @@ export function FrequenciesView(processNode) {
   that.currentPeriod = createCurrentPeriodInitial();
   that.htmlSpanPeriodInfo = createHtmlSpanPeriodInfo(that.currentPeriod);
   that.hGraphic = new TimingsHistogramsGraphic(processNode);
-  that.children = processNode.children.map(childNode => new ProcessTreeNodeView(childNode, that.hGraphic, that));
+  // that.children = processNode.children.map(childNode => new ProcessTreeNodeView(childNode, that.hGraphic, undefined, that));
+  that.children = [new ProcessTreeNodeView(processNode, that.hGraphic, undefined, that)];
   that.childrenByName = {};
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
@@ -33,18 +34,28 @@ for (let propName in ProcessTreeNodeView.prototype) {
 FrequenciesView.prototype.mergeWithNewTimings = function(processNode) {
   let that = this;
   that.processNode = processNode;
-  processNode.children.forEach(childNode => {
-    let oldChild = that.childrenByName[childNode.name];
-    if (oldChild === undefined) {
-      let newChildView = new ProcessTreeNodeView(childNode, that.hGraphic);
-      newChildView.buildAsHtmlLiElement();
-      that.children.push(newChildView);
-      that.childrenByName[childNode.name] = newChildView;
-      that.htmlChildrenContainerUl.appendChild(newChildView.html);
-    } else {
-      oldChild.mergeWithNewTimings(childNode);
-    }
-  });
+  // processNode.children.forEach(childNode => {
+  //   let oldChild = that.childrenByName[childNode.name];
+  //   if (oldChild === undefined) {
+  //     let newChildView = new ProcessTreeNodeView(childNode, that.hGraphic, undefined, that);
+  //     newChildView.buildAsHtmlLiElement();
+  //     that.children.push(newChildView);
+  //     that.childrenByName[childNode.name] = newChildView;
+  //     that.htmlChildrenContainerUl.appendChild(newChildView.html);
+  //   } else {
+  //     oldChild.mergeWithNewTimings(childNode);
+  //   }
+  // });
+  let oldChild = that.childrenByName[processNode.name];
+  if (oldChild === undefined) {
+    let newChildView = new ProcessTreeNodeView(processNode, that.hGraphic, undefined, that);
+    newChildView.buildAsHtmlLiElement();
+    that.children.push(newChildView);
+    that.childrenByName[childNode.name] = newChildView;
+    that.htmlChildrenContainerUl.appendChild(newChildView.html);
+  } else {
+    oldChild.mergeWithNewTimings(processNode);
+  }
 };
 
 function createCurrentPeriodInitial() {
