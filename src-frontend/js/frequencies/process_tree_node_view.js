@@ -21,6 +21,8 @@ export function ProcessTreeNodeView(processNode, hGraphic, parentNodeView, rootN
   });
   that.hasMergedChildren = false;
   that.isMergedChild = false;
+  that.htmlParentToReturnTo = undefined;
+  that.indexToReturnTo = undefined;
   that.htmlChildrenContainerUl = document.createElement('ul');
 }
 
@@ -378,18 +380,19 @@ ProcessTreeNodeView.prototype.unhideHiddenChildren = function() {
 
 ProcessTreeNodeView.prototype.showThisProcessOnly = function() {
   let that = this;
-  that.moveToTop();
-  that.hideSiblingsBelow();
-  let p = that.parentNodeView;
-  while (p !== undefined) {
-    p.moveToTop();
-    p.hideSiblingsBelow();
-    p = p.parentNodeView;
-  }
-  if (that.hGraphic) {
-    that.hGraphic.setProcessNode(that.processNode);
-    that.hGraphic.redraw();
-  }
+  that.rootNodeView.showThisProcessOnly(that);
+  // that.moveToTop();
+  // that.hideSiblingsBelow();
+  // let p = that.parentNodeView;
+  // while (p !== undefined) {
+  //   p.moveToTop();
+  //   p.hideSiblingsBelow();
+  //   p = p.parentNodeView;
+  // }
+  // if (that.hGraphic) {
+  //   that.hGraphic.setProcessNode(that.processNode);
+  //   that.hGraphic.redraw();
+  // }
 }
 
 ProcessTreeNodeView.prototype.mergeSubprocesses = function() {

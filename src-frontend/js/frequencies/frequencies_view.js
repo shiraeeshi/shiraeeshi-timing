@@ -18,13 +18,15 @@ export function FrequenciesView(processNode) {
   that.currentPeriod = createCurrentPeriodInitial();
   that.htmlSpanPeriodInfo = createHtmlSpanPeriodInfo(that.currentPeriod);
   that.hGraphic = new TimingsHistogramsGraphic(processNode);
-  // that.children = processNode.children.map(childNode => new ProcessTreeNodeView(childNode, that.hGraphic, undefined, that));
-  that.children = [new ProcessTreeNodeView(processNode, that.hGraphic, undefined, that)];
+  that.children = processNode.children.map(childNode => new ProcessTreeNodeView(childNode, that.hGraphic, undefined, that));
   that.childrenByName = {};
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
   });
   that.htmlChildrenContainerUl = document.createElement('ul');
+  that.htmlSecondaryContainerDiv = document.createElement('div');
+  that.htmlSecondaryUl = document.createElement('ul');
+  that.solelyDisplayedProcessViewNode = null;
 }
 
 for (let propName in ProcessTreeNodeView.prototype) {
@@ -34,28 +36,18 @@ for (let propName in ProcessTreeNodeView.prototype) {
 FrequenciesView.prototype.mergeWithNewTimings = function(processNode) {
   let that = this;
   that.processNode = processNode;
-  // processNode.children.forEach(childNode => {
-  //   let oldChild = that.childrenByName[childNode.name];
-  //   if (oldChild === undefined) {
-  //     let newChildView = new ProcessTreeNodeView(childNode, that.hGraphic, undefined, that);
-  //     newChildView.buildAsHtmlLiElement();
-  //     that.children.push(newChildView);
-  //     that.childrenByName[childNode.name] = newChildView;
-  //     that.htmlChildrenContainerUl.appendChild(newChildView.html);
-  //   } else {
-  //     oldChild.mergeWithNewTimings(childNode);
-  //   }
-  // });
-  let oldChild = that.childrenByName[processNode.name];
-  if (oldChild === undefined) {
-    let newChildView = new ProcessTreeNodeView(processNode, that.hGraphic, undefined, that);
-    newChildView.buildAsHtmlLiElement();
-    that.children.push(newChildView);
-    that.childrenByName[childNode.name] = newChildView;
-    that.htmlChildrenContainerUl.appendChild(newChildView.html);
-  } else {
-    oldChild.mergeWithNewTimings(processNode);
-  }
+  processNode.children.forEach(childNode => {
+    let oldChild = that.childrenByName[childNode.name];
+    if (oldChild === undefined) {
+      let newChildView = new ProcessTreeNodeView(childNode, that.hGraphic, undefined, that);
+      newChildView.buildAsHtmlLiElement();
+      that.children.push(newChildView);
+      that.childrenByName[childNode.name] = newChildView;
+      that.htmlChildrenContainerUl.appendChild(newChildView.html);
+    } else {
+      oldChild.mergeWithNewTimings(childNode);
+    }
+  });
 };
 
 function createCurrentPeriodInitial() {
@@ -114,8 +106,20 @@ FrequenciesView.prototype.buildHtml = function() {
         withChildren(document.createElement('div'),
           hGraphic.elem
         ),
-        withChildren(that.htmlChildrenContainerUl,
+        withChildren(withClass(that.htmlChildrenContainerUl, 'processes-tree-container-ul'),
           ...that.children.map(childNode => childNode.html)
+        ),
+        withChildren(withClass(that.htmlSecondaryContainerDiv, 'processes-tree-secondary-container-div', 'inactive'),
+          (function() {
+            let elemAll = withChildren(withClass(document.createElement('button'), 'secondary-show-all-btn'),
+              document.createTextNode('show all')
+            );
+            elemAll.addEventListener('click', eve => {
+              that.goBackToAllProcesses();
+            });
+            return elemAll;
+          })(),
+          withClass(that.htmlSecondaryUl, 'processes-tree-secondary-ul')
         )
       );
     that.html = htmlElement;
@@ -177,5 +181,49 @@ FrequenciesView.prototype.buildPeriodButtonsRow = function() {
     btnPlusMonth,
     that.htmlSpanPeriodInfo
   );
+};
+
+FrequenciesView.prototype.showThisProcessOnly = function(processViewNode) {
+  let that = this;
+  if (that.solelyDisplayedProcessViewNode !== null) {
+    that._goBackToAllProcessesNoRedraw();
+  }
+  let processHtml = processViewNode.html;
+  processViewNode.indexToReturnTo = Array.prototype.indexOf.call(processHtml.parentNode.children, processHtml);
+  processViewNode.htmlParentToReturnTo = processHtml.parentNode;
+  processHtml.parentNode.removeChild(processHtml);
+  that.htmlChildrenContainerUl.classList.add('inactive');
+  that.htmlSecondaryUl.innerHTML = '';
+  that.htmlSecondaryUl.appendChild(processHtml);
+  that.htmlSecondaryContainerDiv.classList.remove('inactive');
+  that.solelyDisplayedProcessViewNode = processViewNode;
+  if (that.hGraphic) {
+    that.hGraphic.setProcessNode(processViewNode.processNode);
+    that.hGraphic.redraw();
+  }
+};
+
+FrequenciesView.prototype.goBackToAllProcesses = function() {
+  let that = this;
+  that._goBackToAllProcessesNoRedraw();
+  if (that.hGraphic) {
+    that.hGraphic.redraw();
+  }
+};
+
+FrequenciesView.prototype._goBackToAllProcessesNoRedraw = function() {
+  let that = this;
+  let processViewNode = that.solelyDisplayedProcessViewNode;
+  let processHtml = processViewNode.html;
+  processHtml.parentNode.removeChild(processHtml);
+  let parent = processViewNode.htmlParentToReturnTo;
+  parent.insertBefore(processHtml, parent.children[processViewNode.indexToReturnTo]);
+  that.htmlChildrenContainerUl.classList.remove('inactive');
+  that.htmlSecondaryUl.innerHTML = '';
+  that.htmlSecondaryContainerDiv.classList.add('inactive');
+  that.solelyDisplayedProcessViewNode = null;
+  if (that.hGraphic) {
+    that.hGraphic.setProcessNode(that.processNode);
+  }
 };
 

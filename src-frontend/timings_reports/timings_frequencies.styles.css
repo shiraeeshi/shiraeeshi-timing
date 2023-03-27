@@ -167,4 +167,18 @@ li:not(.made-invisible):not(:has(+ li:not(.made-invisible))) > .process-node-tit
   visibility: visible;
 }
 
+.processes-tree-container-ul.inactive {
+  display: none;
+}
 
+.processes-tree-secondary-container-div.inactive {
+  display: none;
+}
+
+.secondary-show-all-btn {
+  margin-top: 16px;
+}
+
+.processes-tree-secondary-ul {
+  margin-top: unset;
+}
