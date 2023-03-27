@@ -27,10 +27,93 @@ NotebookNodeView.prototype.name2html = function() {
   }
 }
 
+NotebookNodeView.prototype.hideSiblingsBelow = function() {
+  let that = this;
+  let parent = that.html.parentNode;
+  let siblings = Array.from(parent.children);
+  let idx = siblings.indexOf(that.html);
+  if (idx >= 0) {
+    for (let i = idx + 1; i < siblings.length; i++) {
+      let sibling = siblings[i];
+      sibling.classList.add('made-invisible');
+    }
+  }
+}
+
+NotebookNodeView.prototype.unhideHiddenChildren = function() {
+  let that = this;
+  let hiddenChildren = that.html.querySelectorAll(':scope > ul > .made-invisible');
+  hiddenChildren.forEach(elem => elem.classList.remove('made-invisible'));
+}
+
+NotebookNodeView.prototype.moveToTop = function() {
+  let that = this;
+  let parent = that.html.parentNode;
+  parent.removeChild(that.html);
+  parent.insertBefore(that.html, parent.children[0]);
+}
+
 NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
   let that = this;
+
+  function createTitleDiv() {
+    let nameHtml = that.name2html();
+    let iconMoveToTop =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-move-to-top'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('move to the top of the list')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.moveToTop();
+        });
+        return elem;
+      })();
+    let iconHideSiblingsBelow =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-hide-siblings-below'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('hide siblings that are below this item')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.hideSiblingsBelow();
+        });
+        return elem;
+      })();
+    let iconUnhideHiddenChildren =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-unhide-hidden-children'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('show hidden children')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.unhideHiddenChildren();
+        });
+        return elem;
+      })();
+    let iconsDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-icons'),
+      iconMoveToTop,
+      iconHideSiblingsBelow,
+      iconUnhideHiddenChildren
+    );
+    let titleDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-title-container'),
+      nameHtml,
+      iconsDiv
+    );
+    return titleDiv;
+  }
+
   if (that.children.length == 0) {
-    let htmlElement = withClass(withChildren(document.createElement('li'), that.name2html()), 'proc-leaf');
+    let htmlElement = withClass(withChildren(document.createElement('li'), createTitleDiv()), 'proc-node', 'proc-leaf');
     that.html = htmlElement;
     return;
   }
@@ -38,7 +121,7 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
   that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
   let htmlElement =
     withChildren(
-      withChildren(withClass(document.createElement('li'), 'proc-node-open'),
+      withChildren(withClass(document.createElement('li'), 'proc-node', 'proc-node-open'),
         (function() {
           let elem = document.createElement('span');
           elem.classList.add('proc-node-icon');
@@ -47,7 +130,7 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
           });
           return elem;
         })(),
-        that.name2html()
+        createTitleDiv()
       ),
       withChildren(document.createElement('ul'),
         ...that.children.map(childNode => childNode.html)
@@ -97,32 +180,38 @@ NotebookNodeView.prototype.parentUncollapsed = function() {
 
 NotebookNodeView.prototype.hide = function() {
   let that = this;
-  if (that.html.style.display != 'none') {
-    that.oldDisplay = that.html.style.display;
-  }
-  that.html.style.display = 'none';
+  // if (that.html.style.display != 'none') {
+  //   that.oldDisplay = that.html.style.display;
+  // }
+  // that.html.style.display = 'none';
+  that.html.classList.add('made-invisible');
   that.children.forEach(childView => childView.hide());
 };
 
 NotebookNodeView.prototype.unhide = function() {
   let that = this;
 
-  if (that.html.style.display != 'none') {
-    that.oldDisplay = that.html.style.display;
-  } else {
-    that.html.style.display = that.oldDisplay;
-  }
+  // if (that.html.style.display != 'none') {
+  //   that.oldDisplay = that.html.style.display;
+  // } else {
+  //   that.html.style.display = that.oldDisplay;
+  // }
+
+  that.html.classList.remove('made-invisible');
+
   that.children.forEach(childView => childView.unhide());
 };
 
 NotebookNodeView.prototype.highlightTree = function(nodeToHighlight) {
   let that = this;
 
-  if (that.html.style.display != 'none') {
-    that.oldDisplay = that.html.style.display;
-  } else {
-    that.html.style.display = that.oldDisplay;
-  }
+  // if (that.html.style.display != 'none') {
+  //   that.oldDisplay = that.html.style.display;
+  // } else {
+  //   that.html.style.display = that.oldDisplay;
+  // }
+
+  that.html.classList.remove('made-invisible');
 
   if (nodeToHighlight.children.length == 0) {
     if (!that.isLeaf()) {
