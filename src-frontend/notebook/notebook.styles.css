@@ -103,6 +103,10 @@ li.proc-leaf {
   visibility: visible;
 }
 
+.notebook-node-title-container {
+  display: inline-block;
+}
+
 li:first-child > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top {
   display: none;
 }

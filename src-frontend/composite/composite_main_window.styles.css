@@ -103,3 +103,100 @@ li.proc-leaf {
 .proc-node-closed > ul {
   display: none;
 }
+
+.proc-node.made-invisible {
+  display: none;
+}
+
+.notebook-node-icon {
+  position: relative;
+  cursor: pointer;
+  background-size: contain;
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.notebook-node-icon .tooltip {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  top: 150%;
+  left: 50%;
+  margin-left: -60px;
+}
+
+.notebook-node-icon .tooltip::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent black transparent;
+}
+
+.notebook-node-icon:hover .tooltip {
+  visibility: visible;
+}
+
+.notebook-node-title-container {
+  display: inline-block;
+}
+
+li:first-child > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top {
+  display: none;
+}
+
+.icon-move-to-top {
+  background-image: url('../img/up-arrow-icon-22-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 8px;
+  height: 10px;
+}
+
+li:not(.made-invisible):not(:has(+ li:not(.made-invisible))) > .notebook-node-title-container > .notebook-node-icons > .icon-hide-siblings-below {
+  display: none;
+}
+
+.icon-hide-siblings-below {
+  background-image: url('../img/down-icon-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.proc-node .icon-unhide-hidden-children {
+  display: none;
+}
+
+.proc-node:has(> ul > li.made-invisible) > .notebook-node-title-container > .notebook-node-icons > .icon-unhide-hidden-children {
+  display: inline-block;
+}
+
+.icon-unhide-hidden-children {
+  background-image: url('../img/eye-icon-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.notebook-node-title-container > div {
+  display: inline-block;
+}
+
+.notebook-node-title-container .notebook-node-icons {
+  visibility: hidden;
+  padding-left: 4px;
+}
+
+.notebook-node-title-container:hover .notebook-node-icons {
+  visibility: visible;
+}
