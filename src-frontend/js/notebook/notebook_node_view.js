@@ -1,10 +1,11 @@
 const { withChildren, withClass } = require('../html_utils.js');
 
-export function NotebookNodeView(notebookNode) {
+export function NotebookNodeView(notebookNode, parentNodeView) {
   let that = this;
   that.name = notebookNode.name;
   that.isCollapsed = false;
-  that.children = notebookNode.children.map(childNode => new NotebookNodeView(childNode));
+  that.parentNodeView = parentNodeView;
+  that.children = notebookNode.children.map(childNode => new NotebookNodeView(childNode, that));
   that.childrenByName = {};
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
@@ -32,7 +33,64 @@ NotebookNodeView.prototype.moveToTop = function() {
   let parent = that.html.parentNode;
   parent.removeChild(that.html);
   parent.insertBefore(that.html, parent.children[0]);
+  if (that.parentNodeView) {
+    that.parentNodeView.handleFirstAndLastVisible();
+  }
 }
+
+NotebookNodeView.prototype.moveToBottom = function() {
+  let that = this;
+  let parent = that.html.parentNode;
+  parent.removeChild(that.html);
+  parent.appendChild(that.html);
+  if (that.parentNodeView) {
+    that.parentNodeView.handleFirstAndLastVisible();
+  }
+}
+
+NotebookNodeView.prototype.hideThisItem = function() {
+  let that = this;
+  that.html.classList.add('made-invisible');
+  if (that.html.classList.contains('first-visible')) {
+    that.html.classList.remove('first-visible');
+  }
+  if (that.html.classList.contains('last-visible')) {
+    that.html.classList.remove('last-visible');
+  }
+  if (that.parentNodeView) {
+    that.parentNodeView.handleFirstAndLastVisible();
+  }
+};
+
+NotebookNodeView.prototype.handleFirstAndLastVisible = function() {
+  let that = this;
+  let oldFirstVisible = that.html.querySelector(':scope > ul > .first-visible');
+  if (oldFirstVisible) {
+    oldFirstVisible.classList.remove('first-visible');
+  }
+  let oldLastVisible = that.html.querySelector(':scope > ul > .last-visible');
+  if (oldLastVisible) {
+    oldLastVisible.classList.remove('last-visible');
+  }
+  let firstVisible = undefined;
+  let lastVisible = undefined;
+  // for (let child of that.children) {
+  for (let child of that.html.querySelectorAll(':scope > ul > li')) {
+    let isVisible = !child.classList.contains('made-invisible');
+    if (isVisible) {
+      if (!firstVisible) {
+        firstVisible = child;
+      }
+      lastVisible = child;
+    }
+  }
+  if (firstVisible) {
+    firstVisible.classList.add('first-visible');
+  }
+  if (lastVisible) {
+    lastVisible.classList.add('last-visible');
+  }
+};
 
 NotebookNodeView.prototype.hideSiblingsBelow = function() {
   let that = this;
@@ -43,6 +101,12 @@ NotebookNodeView.prototype.hideSiblingsBelow = function() {
     for (let i = idx + 1; i < siblings.length; i++) {
       let sibling = siblings[i];
       sibling.classList.add('made-invisible');
+      if (sibling.classList.contains('last-visible')) {
+        sibling.classList.remove('last-visible');
+      }
+    }
+    if (that.parentNodeView) {
+      that.parentNodeView.handleFirstAndLastVisible();
     }
   }
 }
@@ -51,6 +115,7 @@ NotebookNodeView.prototype.unhideHiddenChildren = function() {
   let that = this;
   let hiddenChildren = that.html.querySelectorAll(':scope > ul > .made-invisible');
   hiddenChildren.forEach(elem => elem.classList.remove('made-invisible'));
+  that.handleFirstAndLastVisible();
 }
 
 NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
@@ -69,6 +134,34 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
         );
         elem.addEventListener('click', eve => {
           that.moveToTop();
+        });
+        return elem;
+      })();
+    let iconMoveToBottom =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-move-to-bottom'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('move to the bottom of the list')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.moveToBottom();
+        });
+        return elem;
+      })();
+    let iconHide =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-hide'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('hide this item')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.hideThisItem();
         });
         return elem;
       })();
@@ -102,6 +195,8 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
       })();
     let iconsDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-icons'),
       iconMoveToTop,
+      iconMoveToBottom,
+      iconHide,
       iconHideSiblingsBelow,
       iconUnhideHiddenChildren
     );
@@ -169,6 +264,7 @@ NotebookNodeView.prototype.uncollapse = function() {
     that.html.classList.add("proc-node-open");
   }
   that.children.forEach(childView => childView.parentUncollapsed());
+  that.handleFirstAndLastVisible();
 };
 
 NotebookNodeView.prototype.parentUncollapsed = function() {
@@ -204,6 +300,14 @@ NotebookNodeView.prototype.unhide = function() {
 
 NotebookNodeView.prototype.highlightTree = function(nodeToHighlight) {
   let that = this;
+  that._doHighlightTree(nodeToHighlight);
+  if (that.parentNodeView) {
+    that.parentNodeView.handleFirstAndLastVisible();
+  }
+};
+
+NotebookNodeView.prototype._doHighlightTree = function(nodeToHighlight) {
+  let that = this;
 
   // if (that.html.style.display != 'none') {
   //   that.oldDisplay = that.html.style.display;
@@ -219,6 +323,7 @@ NotebookNodeView.prototype.highlightTree = function(nodeToHighlight) {
         that.collapse();
       }
       that.children.forEach(childView => childView.parentIsHighlighted());
+      that.handleFirstAndLastVisible();
     }
   } else {
     if (!that.isLeaf()) {
@@ -227,9 +332,10 @@ NotebookNodeView.prototype.highlightTree = function(nodeToHighlight) {
       }
       nodeToHighlight.children.forEach(childNodeToHighlight => {
         if (that.childrenByName.hasOwnProperty(childNodeToHighlight.name)) {
-          that.childrenByName[childNodeToHighlight.name].highlightTree(childNodeToHighlight);
+          that.childrenByName[childNodeToHighlight.name]._doHighlightTree(childNodeToHighlight);
         }
       });
+      that.handleFirstAndLastVisible();
     }
   }
 };

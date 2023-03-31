@@ -107,7 +107,7 @@ li.proc-leaf {
   display: inline-block;
 }
 
-li:first-child > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top {
+li.first-visible > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top {
   display: none;
 }
 
@@ -119,12 +119,30 @@ li:first-child > .notebook-node-title-container > .notebook-node-icons > .icon-m
   height: 10px;
 }
 
-li:not(.made-invisible):not(:has(+ li:not(.made-invisible))) > .notebook-node-title-container > .notebook-node-icons > .icon-hide-siblings-below {
+li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-bottom {
+  display: none;
+}
+
+.icon-move-to-bottom {
+  background-image: url('../img/down-arrow-icon-22-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 8px;
+  height: 10px;
+}
+
+li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-hide-siblings-below {
   display: none;
 }
 
 .icon-hide-siblings-below {
   background-image: url('../img/down-icon-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.icon-hide {
+  background-image: url('../img/eye-slash-32.png');
   background-repeat: no-repeat;
   background-position: top left;
 }

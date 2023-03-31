@@ -21,26 +21,31 @@ NotesForestViewBuilder.prototype.addTree = function(notesTree) {
   let treeView = new NotebookNodeView(notesTree);
   views[views.length] = treeView;
 
-  let wrapperDiv = document.createElement('div');
-  let headerElem = document.createElement('h3');
-  let headerTxt = document.createTextNode(treeView.name);
+  // let wrapperDiv = document.createElement('div');
+  // let headerElem = document.createElement('h3');
+  // let headerTxt = document.createTextNode(treeView.name);
 
-  treeView.children.forEach(childNode => childNode.buildAsHtmlLiElement());
-  let treeHtml =
-    withChildren(wrapperDiv,
-      withChildren(headerElem,
-        headerTxt),
-      withChildren(document.createElement('ul'),
-        ...treeView.children.map(childNode => childNode.html)
-      )
-    );
-  treeView.html = treeHtml;
+  // treeView.children.forEach(childNode => childNode.buildAsHtmlLiElement());
+  // let treeHtml =
+  //   withChildren(wrapperDiv,
+  //     withChildren(headerElem,
+  //       headerTxt),
+  //     withChildren(document.createElement('ul'),
+  //       ...treeView.children.map(childNode => childNode.html)
+  //     )
+  //   );
+  // treeView.html = treeHtml;
 
-  htmls[htmls.length] = treeHtml;
+  treeView.buildAsHtmlLiElement();
+  htmls[htmls.length] = treeView.html;
 };
 
 NotesForestViewBuilder.prototype.getHtmlElements = function() {
-  return this.htmls;
+  let that = this;
+  let elem = withChildren(document.createElement('ul'),
+    ...that.htmls
+  );
+  return [elem];
 };
 
 NotesForestViewBuilder.prototype.getNotesForestViews = function() {
