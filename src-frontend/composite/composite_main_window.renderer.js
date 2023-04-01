@@ -130,11 +130,11 @@ function handleServerMessage(msg) {
 
       let viewBuilder = new NotesForestViewBuilder();
       viewBuilder.buildView(forest);
-      my.notesForestViews = viewBuilder.getNotesForestViews();
-      appendNotesForestHtml(viewBuilder.getHtmlElements());
+      my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
+      appendNotesForestHtml(viewBuilder.getHtml());
 
       let currentNotesForest = buildCurrentNotesForest(tagsAndLinksForest);
-      highlightNotesInForest(my.notesForestViews, currentNotesForest);
+      highlightNotesInForest(my.rootNodeViewOfNotes, currentNotesForest);
 
       let mainContentWrapper = document.getElementById("main-content-wrapper");
       let keys = Object.keys(msg);

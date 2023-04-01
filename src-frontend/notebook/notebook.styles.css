@@ -59,10 +59,6 @@ li.proc-leaf {
   display: none;
 }
 
-.proc-node.made-invisible {
-  display: none;
-}
-
 .notebook-node-icon {
   position: relative;
   cursor: pointer;
@@ -107,7 +103,7 @@ li.proc-leaf {
   display: inline-block;
 }
 
-li.first-visible > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top {
+li:first-child > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top {
   display: none;
 }
 
@@ -119,7 +115,7 @@ li.first-visible > .notebook-node-title-container > .notebook-node-icons > .icon
   height: 10px;
 }
 
-li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-bottom {
+li:last-child > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-bottom {
   display: none;
 }
 
@@ -131,7 +127,7 @@ li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-
   height: 10px;
 }
 
-li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-hide-siblings-below {
+li:last-child > .notebook-node-title-container > .notebook-node-icons > .icon-hide-siblings-below {
   display: none;
 }
 
@@ -151,7 +147,7 @@ li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-
   display: none;
 }
 
-.proc-node:has(> ul > li.made-invisible) > .notebook-node-title-container > .notebook-node-icons > .icon-unhide-hidden-children {
+.proc-node.has-hidden-children > .notebook-node-title-container > .notebook-node-icons > .icon-unhide-hidden-children {
   display: inline-block;
 }
 

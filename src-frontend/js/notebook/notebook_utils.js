@@ -26,12 +26,12 @@ export function addTagNodeLinksToForest(tagNode, resultForest) {
   }
 }
 
-export function highlightNotesInForest(notesForestViews, forestToHighlight) {
+export function highlightNotesInForest(rootNodeViewOfNotes, forestToHighlight) {
   try {
-    notesForestViews.forEach(treeView => treeView.hide());
+    rootNodeViewOfNotes.children.forEach(treeView => treeView.hide());
 
     forestToHighlight.forEach(nodeToHighlight => {
-      notesForestViews.forEach(treeView => {
+      rootNodeViewOfNotes.children.forEach(treeView => {
         if (treeView.name != nodeToHighlight.name) return;
 
         treeView.highlightTree(nodeToHighlight);
@@ -73,9 +73,9 @@ export function buildTagsAndLinksForest(taggedNodes) {
 }
 
 
-export function appendNotesForestHtml(notesForestHtmlElements) {
+export function appendNotesForestHtml(notesForestHtml) {
   let notesWrapper = document.getElementById("notes-content-wrapper");
   notesWrapper.innerHTML = "";
-  notesForestHtmlElements.forEach(el => notesWrapper.appendChild(el));
+  notesWrapper.appendChild(notesForestHtml);
 }
 

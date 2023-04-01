@@ -104,10 +104,6 @@ li.proc-leaf {
   display: none;
 }
 
-.proc-node.made-invisible {
-  display: none;
-}
-
 .notebook-node-icon {
   position: relative;
   cursor: pointer;
@@ -196,7 +192,7 @@ li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-
   display: none;
 }
 
-.proc-node:has(> ul > li.made-invisible) > .notebook-node-title-container > .notebook-node-icons > .icon-unhide-hidden-children {
+.proc-node.has-hidden-children > .notebook-node-title-container > .notebook-node-icons > .icon-unhide-hidden-children {
   display: inline-block;
 }
 

@@ -13,6 +13,7 @@ export function NotebookTagsTreeNodeView(notebookTagsTreeNode) {
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
   });
+  that.htmlContainerUl = document.createElement('ul');
 }
 
 for (let propName in NotebookNodeView.prototype) {
@@ -35,5 +36,5 @@ function searchByTag(tagNode) {
   }
   let resultForest = [];
   addTagNodeLinksToForest(tagNode, resultForest);
-  highlightNotesInForest(window.my.notesForestViews, resultForest);
+  highlightNotesInForest(window.my.rootNodeViewOfNotes, resultForest);
 }

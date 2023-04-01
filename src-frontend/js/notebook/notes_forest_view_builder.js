@@ -3,23 +3,18 @@ const { withChildren } = require('../html_utils.js');
 
 export function NotesForestViewBuilder() {
   let that = this;
-  that.htmls = [];
-  that.views = [];
+  that.html = null;
+  that.view = null;
 }
 
 NotesForestViewBuilder.prototype.buildView = function(notesForest) {
   let that = this;
-  notesForest.forEach(notesTree => {
-    that.addTree(notesTree);
-  });
-}
-
-NotesForestViewBuilder.prototype.addTree = function(notesTree) {
-  let that = this;
-  let htmls = that.htmls;
-  let views = that.views;
-  let treeView = new NotebookNodeView(notesTree);
-  views[views.length] = treeView;
+  let rootNode = {
+    name: 'all',
+    children: notesForest
+  };
+  let treeView = new NotebookNodeView(rootNode);
+  that.view = treeView;
 
   // let wrapperDiv = document.createElement('div');
   // let headerElem = document.createElement('h3');
@@ -37,18 +32,15 @@ NotesForestViewBuilder.prototype.addTree = function(notesTree) {
   // treeView.html = treeHtml;
 
   treeView.buildAsHtmlLiElement();
-  htmls[htmls.length] = treeView.html;
+  that.html = treeView.html;
 };
 
-NotesForestViewBuilder.prototype.getHtmlElements = function() {
+NotesForestViewBuilder.prototype.getHtml = function() {
   let that = this;
-  let elem = withChildren(document.createElement('ul'),
-    ...that.htmls
-  );
-  return [elem];
+  return that.html;
 };
 
-NotesForestViewBuilder.prototype.getNotesForestViews = function() {
-  return this.views;
+NotesForestViewBuilder.prototype.getRootNodeViewOfNotes = function() {
+  return this.view;
 };
 

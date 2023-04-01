@@ -39,7 +39,7 @@ function showAllNotes() {
     let resultForest = window.my.notesForest.map(tree => {
       return {name: tree.name, children: tree.children.map(ch => { return { name: ch.name, children: [] }; }) };
     });
-    highlightNotesInForest(window.my.notesForestViews, resultForest);
+    highlightNotesInForest(window.my.rootNodeViewOfNotes, resultForest);
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js showAllNotes error msg: " + err.message);
     throw err;

@@ -31,8 +31,8 @@ function handleServerMessage(msg) {
     showTagsAndLinks(forest);
     let viewBuilder = new NotesForestViewBuilder();
     viewBuilder.buildView(forest);
-    my.notesForestViews = viewBuilder.getNotesForestViews();
-    appendNotesForestHtml(viewBuilder.getHtmlElements());
+    my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
+    appendNotesForestHtml(viewBuilder.getHtml());
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
   }
