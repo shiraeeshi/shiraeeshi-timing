@@ -3,13 +3,14 @@ const { withChildren, withClass } = require('../html_utils.js');
 export function NotebookNodeView(notebookNode, parentNodeView) {
   let that = this;
   that.name = notebookNode.name;
-  that.isCollapsed = false;
+  that.isCollapsed = true;
   that.parentNodeView = parentNodeView;
   that.children = notebookNode.children.map(childNode => new NotebookNodeView(childNode, that));
   that.childrenByName = {};
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
   });
+  that.hasInitializedHtmlChildren = false;
   that.htmlContainerUl = document.createElement('ul');
 }
 
@@ -68,9 +69,7 @@ NotebookNodeView.prototype.hideSiblingsBelow = function() {
 
 NotebookNodeView.prototype.unhideHiddenChildren = function() {
   let that = this;
-  withChildren(that.htmlContainerUl,
-    ...that.children.map(childNode => childNode.html)
-  )
+  that.children.forEach(childNode => childNode.unhide());
   let parent = that.html.parentNode;
   that.html.classList.remove('has-hidden-children');
 }
@@ -170,10 +169,9 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
     return;
   }
 
-  that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
   let htmlElement =
     withChildren(
-      withChildren(withClass(document.createElement('li'), 'proc-node', 'proc-node-open'),
+      withChildren(withClass(document.createElement('li'), 'proc-node', 'proc-node-closed', 'has-hidden-children'),
         (function() {
           let elem = document.createElement('span');
           elem.classList.add('proc-node-icon');
@@ -184,9 +182,7 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
         })(),
         createTitleDiv()
       ),
-      withChildren(that.htmlContainerUl,
-        ...that.children.map(childNode => childNode.html)
-      )
+      that.htmlContainerUl
     );
   that.html = htmlElement;
 };
@@ -198,6 +194,9 @@ NotebookNodeView.prototype.isLeaf = function() {
 NotebookNodeView.prototype.toggleCollapse = function() {
   let that = this;
   if (that.isCollapsed) {
+    if (!that.hasInitializedHtmlChildren) {
+      that._initHtmlChildren();
+    }
     that.uncollapse();
   } else {
     that.collapse();
@@ -207,6 +206,9 @@ NotebookNodeView.prototype.toggleCollapse = function() {
 NotebookNodeView.prototype.collapse = function() {
   let that = this;
   that.isCollapsed = true;
+  if (!that.html) {
+    return;
+  }
   if (that.html.classList.contains("proc-node-open")) {
     that.html.classList.remove("proc-node-open");
     that.html.classList.add("proc-node-closed");
@@ -216,11 +218,27 @@ NotebookNodeView.prototype.collapse = function() {
 NotebookNodeView.prototype.uncollapse = function() {
   let that = this;
   that.isCollapsed = false;
+  if (!that.html) {
+    return;
+  }
   if (that.html.classList.contains("proc-node-closed")) {
     that.html.classList.remove("proc-node-closed");
     that.html.classList.add("proc-node-open");
   }
   that.children.forEach(childView => childView.parentUncollapsed());
+};
+
+NotebookNodeView.prototype._initHtmlChildren = function() {
+  let that = this;
+  if (that.hasInitializedHtmlChildren) {
+    return;
+  }
+  that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
+  withChildren(that.htmlContainerUl,
+    ...that.children.map(childNode => childNode.html)
+  )
+  that.hasInitializedHtmlChildren = true;
+  that.html.classList.remove('has-hidden-children');
 };
 
 NotebookNodeView.prototype.parentUncollapsed = function() {
@@ -232,10 +250,17 @@ NotebookNodeView.prototype.parentUncollapsed = function() {
 
 NotebookNodeView.prototype.hide = function() {
   let that = this;
+  that.collapse();
+  if (!that.html) {
+    return;
+  }
   let htmlParent = that.html.parentNode;
   if (htmlParent !== null) {
     htmlParent.removeChild(that.html);
     that.parentNodeView && that.parentNodeView.html.classList.add('has-hidden-children');
+  }
+  if (!that.hasInitializedHtmlChildren) {
+    return;
   }
   for (let child of that.children) {
     child.hide();
@@ -245,6 +270,13 @@ NotebookNodeView.prototype.hide = function() {
 NotebookNodeView.prototype.unhide = function() {
   let that = this;
 
+  function maintainParentState() {
+    checkChildrenCount();
+    if (!that.parentNodeView.hasInitializedHtmlChildren) {
+      that.parentNodeView.hasInitializedHtmlChildren = true;
+    }
+  }
+
   function checkChildrenCount() {
     let htmlChildrenLen = that.parentNodeView.htmlContainerUl.children.length;
     let childrenLen = that.parentNodeView.children.length;
@@ -253,11 +285,14 @@ NotebookNodeView.prototype.unhide = function() {
     }
   }
 
+  if (!that.html) {
+    that.buildAsHtmlLiElement();
+  }
   let htmlParent = that.html.parentNode;
   if (htmlParent === null) {
     if (that.parentNodeView !== undefined) {
       that.parentNodeView.htmlContainerUl.appendChild(that.html);
-      checkChildrenCount();
+      maintainParentState();
     }
     return;
   }
@@ -265,7 +300,7 @@ NotebookNodeView.prototype.unhide = function() {
   if (!htmlContains) {
     htmlParent.appendChild(that.html);
     if (that.parentNodeView !== undefined) {
-      checkChildrenCount();
+      maintainParentState();
     }
   }
 };
@@ -273,6 +308,9 @@ NotebookNodeView.prototype.unhide = function() {
 NotebookNodeView.prototype.highlightTree = function(nodeToHighlight) {
   let that = this;
 
+  if (!that.html) {
+    that.buildAsHtmlLiElement();
+  }
   that.unhide();
 
   if (nodeToHighlight.children.length == 0) {
@@ -289,6 +327,10 @@ NotebookNodeView.prototype.highlightTree = function(nodeToHighlight) {
       }
       nodeToHighlight.children.forEach(childNodeToHighlight => {
         if (that.childrenByName.hasOwnProperty(childNodeToHighlight.name)) {
+          // if (!that.hasInitializedHtmlChildren) {
+          //   that._initHtmlChildren();
+          //   that.children.forEach(childView => childView.hide());
+          // }
           that.childrenByName[childNodeToHighlight.name].highlightTree(childNodeToHighlight);
         }
       });
@@ -298,7 +340,10 @@ NotebookNodeView.prototype.highlightTree = function(nodeToHighlight) {
 
 NotebookNodeView.prototype.parentIsHighlighted = function() {
   let that = this;
-  that.unhide();
+  if (!that.parentNodeView.hasInitializedHtmlChildren) {
+    return;
+  }
+  // that.unhide();
   if (!that.isCollapsed) {
     that.collapse();
   }

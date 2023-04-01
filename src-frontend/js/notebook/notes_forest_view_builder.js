@@ -32,6 +32,7 @@ NotesForestViewBuilder.prototype.buildView = function(notesForest) {
   // treeView.html = treeHtml;
 
   treeView.buildAsHtmlLiElement();
+  treeView.toggleCollapse();
   that.html = treeView.html;
 };
 
