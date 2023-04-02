@@ -24,7 +24,7 @@ NotebookTagsForestViewBuilder.prototype.addTree = function(notebookTagsTree) {
   treeView.buildAsHtmlLiElement();
 
   views[views.length] = treeView;
-  htmls[htmls.length] = treeView.html;
+  htmls[htmls.length] = treeView.html();
 };
 
 NotebookTagsForestViewBuilder.prototype.getHtmlElements = function() {
