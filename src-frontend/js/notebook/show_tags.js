@@ -7,27 +7,27 @@ export function showTagsAndLinks(forest) {
   try {
     let mainWrapper = document.getElementById("tags-and-links-content-wrapper");
     let taggedNodes = extractTagsFromRootForest(forest);
-    let tagsAndLinksForest = buildTagsAndLinksForest(taggedNodes);
+    let tagsAndLinksObj = buildTagsAndLinksForest(taggedNodes);
 
     let viewBuilder = new NotebookTagsForestViewBuilder();
-    viewBuilder.buildView(tagsAndLinksForest);
+    viewBuilder.buildView(tagsAndLinksObj);
 
     window.my.notebookTagsForestViews = viewBuilder.getNotebookTagsForestViews();
     withChildren(mainWrapper,
       withChildren(document.createElement('div'),
-        (function() {
-                let btnShowAll = document.createElement('button');
-                btnShowAll.addEventListener('click', eve => {
-                          showAllNotes();
-                        });
-                return withChildren(btnShowAll, document.createTextNode('all'))
-              })(),
+        // (function() {
+        //         let btnShowAll = document.createElement('button');
+        //         btnShowAll.addEventListener('click', eve => {
+        //                   showAllNotes();
+        //                 });
+        //         return withChildren(btnShowAll, document.createTextNode('all'))
+        //       })(),
         withChildren(document.createElement('ul'),
-          ...viewBuilder.getHtmlElements()
+          viewBuilder.getHtml()
         )
       )
     );
-    viewBuilder.getNotebookTagsForestViews().forEach(v => v.collapse());
+    viewBuilder.getNotebookTagsForestViews().forEach(v => v.children.forEach(c => c.collapse()));
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js showTagsAndLinks error msg: " + err.message);
     throw err;

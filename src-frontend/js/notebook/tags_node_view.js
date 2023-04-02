@@ -3,16 +3,18 @@ const { addTagNodeLinksToForest, highlightNotesInForest } = require('./notebook_
 const { withChildren } = require('../html_utils.js');
 
 
-export function NotebookTagsTreeNodeView(notebookTagsTreeNode) {
+export function NotebookTagsTreeNodeView(notebookTagsTreeNode, parentNodeView) {
   let that = this;
   that.tagsTreeNode = notebookTagsTreeNode;
   that.name = notebookTagsTreeNode.name;
-  that.isCollapsed = false;
-  that.children = notebookTagsTreeNode.children.map(childNode => new NotebookTagsTreeNodeView(childNode));
+  that.isCollapsed = true;
+  that.parentNodeView = parentNodeView;
+  that.children = notebookTagsTreeNode.children.map(childNode => new NotebookTagsTreeNodeView(childNode, that));
   that.childrenByName = {};
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
   });
+  that.hasManuallyHiddenChildren = false;
   that.htmlContainerUl = document.createElement('ul');
 }
 

@@ -230,9 +230,6 @@ NotebookNodeView.prototype.collapse = function() {
 NotebookNodeView.prototype.uncollapse = function() {
   let that = this;
   that.isCollapsed = false;
-  if (!that.htmlElement) {
-    return;
-  }
   if (that.html().classList.contains("proc-node-closed")) {
     that.html().classList.remove("proc-node-closed");
     that.html().classList.add("proc-node-open");
@@ -252,7 +249,7 @@ NotebookNodeView.prototype.parentUncollapsed = function() {
   if (!that.isCollapsed) {
     that.collapse();
   }
-  if (!that.parentNodeView.hasManuallyHiddenChildren) {
+  if (that.parentNodeView && !that.parentNodeView.hasManuallyHiddenChildren) {
     that.hasManuallyHiddenChildren = false;
     that.html().classList.remove('has-hidden-children');
   }

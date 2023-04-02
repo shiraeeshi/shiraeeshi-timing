@@ -44,13 +44,14 @@ export function highlightNotesInForest(rootNodeViewOfNotes, forestToHighlight) {
 }
 
 export function buildTagsAndLinksForest(taggedNodes) {
-  let preResult = {
+  let result = {
+    name: 'all tags',
     children: [],
     subTags: {}
   };
   taggedNodes.forEach(taggedNode => {
     let tagPath = taggedNode.tag.split(".");
-    let obj = preResult;
+    let obj = result;
     let tagAncestry = [];
     tagPath.forEach(tagPathSegment => {
       if (!obj.subTags.hasOwnProperty(tagPathSegment)) {
@@ -69,9 +70,23 @@ export function buildTagsAndLinksForest(taggedNodes) {
     });
     obj.links[obj.links.length] = taggedNode;
   });
-  return preResult.subTags;
+  return result;
 }
 
+export function buildInitialNotesForest() {
+  let resultForest = window.my.notesForest.map(tree => {
+    return {
+      name: tree.name,
+      children: tree.children.map(ch => {
+        return {
+          name: ch.name,
+          children: []
+        };
+      })
+    };
+  });
+  return resultForest;
+}
 
 export function appendNotesForestHtml(notesForestHtml) {
   let notesWrapper = document.getElementById("notes-content-wrapper");

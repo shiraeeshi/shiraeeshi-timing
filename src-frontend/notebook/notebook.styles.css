@@ -59,6 +59,19 @@ li.proc-leaf {
   display: none;
 }
 
+.root-node > .proc-node-icon {
+  display: none;
+}
+
+.root-node > .notebook-node-title-container > span {
+  cursor: pointer;
+}
+
+.root-node > ul {
+  margin-block-start: 4px;
+  padding-inline-start: 0;
+}
+
 .notebook-node-icon {
   position: relative;
   cursor: pointer;
@@ -135,6 +148,10 @@ li:last-child > .notebook-node-title-container > .notebook-node-icons > .icon-hi
   background-image: url('../img/down-icon-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.root-node > .notebook-node-title-container > .notebook-node-icons > .icon-hide {
+  display: none;
 }
 
 .icon-hide {

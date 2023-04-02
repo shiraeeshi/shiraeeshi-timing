@@ -2,36 +2,28 @@ const { NotebookTagsTreeNodeView } = require('./tags_node_view.js');
 
 export function NotebookTagsForestViewBuilder() {
   let that = this;
-  that.htmls = [];
-  that.views = [];
+  that.html = null;
+  that.view = null;
 }
 
-NotebookTagsForestViewBuilder.prototype.buildView = function(notebookTagsForest) {
-  let that = this;
-  Object.keys(notebookTagsForest).forEach(propName => {
-    let notebookTagsTreeNode = notebookTagsForest[propName];
-    that.addTree(notebookTagsTreeNode);
-  });
-}
-
-NotebookTagsForestViewBuilder.prototype.addTree = function(notebookTagsTree) {
+NotebookTagsForestViewBuilder.prototype.buildView = function(notebookTagsObj) {
   let that = this;
 
-  let htmls = that.htmls;
-  let views = that.views;
+  let treeView = new NotebookTagsTreeNodeView(notebookTagsObj);
 
-  let treeView = new NotebookTagsTreeNodeView(notebookTagsTree);
   treeView.buildAsHtmlLiElement();
+  treeView.html().classList.add('root-node');
+  treeView.toggleCollapse();
 
-  views[views.length] = treeView;
-  htmls[htmls.length] = treeView.html();
+  that.view = treeView;
+  that.html = treeView.html();
 };
 
-NotebookTagsForestViewBuilder.prototype.getHtmlElements = function() {
-  return this.htmls;
+NotebookTagsForestViewBuilder.prototype.getHtml = function() {
+  return this.html;
 };
 
 NotebookTagsForestViewBuilder.prototype.getNotebookTagsForestViews = function() {
-  return this.views;
+  return [this.view];
 };
 

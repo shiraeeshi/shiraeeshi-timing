@@ -2,7 +2,7 @@ const { turnMultilineTextIntoHtml } = require('../js/html_utils.js');
 const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
 const { showTagsAndLinks } = require('../js/notebook/show_tags.js');
 const { NotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
-const { appendNotesForestHtml } = require('../js/notebook/notebook_utils.js');
+const { appendNotesForestHtml, buildInitialNotesForest, highlightNotesInForest } = require('../js/notebook/notebook_utils.js');
 
 let my = {
   notesForest: null
@@ -33,6 +33,8 @@ function handleServerMessage(msg) {
     viewBuilder.buildView(forest);
     my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
     appendNotesForestHtml(viewBuilder.getHtml());
+    let initialNotesForest = buildInitialNotesForest();
+    highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest);
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
   }

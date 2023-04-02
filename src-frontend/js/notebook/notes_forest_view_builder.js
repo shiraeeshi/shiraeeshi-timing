@@ -1,4 +1,5 @@
 const { NotebookNodeView } = require('./notebook_node_view.js');
+const { buildInitialNotesForest, highlightNotesInForest } = require('./notebook_utils.js');
 const { withChildren } = require('../html_utils.js');
 
 export function NotesForestViewBuilder() {
@@ -10,7 +11,7 @@ export function NotesForestViewBuilder() {
 NotesForestViewBuilder.prototype.buildView = function(notesForest) {
   let that = this;
   let rootNode = {
-    name: 'all',
+    name: 'all notes',
     children: notesForest
   };
   let treeView = new NotebookNodeView(rootNode);
@@ -32,6 +33,11 @@ NotesForestViewBuilder.prototype.buildView = function(notesForest) {
   // treeView.html = treeHtml;
 
   treeView.buildAsHtmlLiElement();
+  treeView.html().classList.add('root-node');
+  treeView.html().querySelector(':scope > .notebook-node-title-container > span').addEventListener('click', eve => {
+    let initialNotesForest = buildInitialNotesForest();
+    highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest);
+  });
   treeView.toggleCollapse();
   that.html = treeView.html();
 };
