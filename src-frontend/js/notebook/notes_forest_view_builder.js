@@ -6,38 +6,24 @@ export function NotesForestViewBuilder() {
   let that = this;
   that.html = null;
   that.view = null;
+  that.rootNodeClickHandler = function(eve) {
+    let initialNotesForest = buildInitialNotesForest();
+    highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest);
+  };
 }
 
 NotesForestViewBuilder.prototype.buildView = function(notesForest) {
   let that = this;
   let rootNode = {
-    name: 'all notes',
+    name: 'all',
     children: notesForest
   };
   let treeView = new NotebookNodeView(rootNode);
   that.view = treeView;
 
-  // let wrapperDiv = document.createElement('div');
-  // let headerElem = document.createElement('h3');
-  // let headerTxt = document.createTextNode(treeView.name);
-
-  // treeView.children.forEach(childNode => childNode.buildAsHtmlLiElement());
-  // let treeHtml =
-  //   withChildren(wrapperDiv,
-  //     withChildren(headerElem,
-  //       headerTxt),
-  //     withChildren(document.createElement('ul'),
-  //       ...treeView.children.map(childNode => childNode.html)
-  //     )
-  //   );
-  // treeView.html = treeHtml;
-
   treeView.buildAsHtmlLiElement();
   treeView.html().classList.add('root-node');
-  treeView.html().querySelector(':scope > .notebook-node-title-container > span').addEventListener('click', eve => {
-    let initialNotesForest = buildInitialNotesForest();
-    highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest);
-  });
+  treeView.html().querySelector(':scope > .notebook-node-title-container > span').addEventListener('click', that.rootNodeClickHandler);
   treeView.toggleCollapse();
   that.html = treeView.html();
 };
@@ -51,3 +37,16 @@ NotesForestViewBuilder.prototype.getRootNodeViewOfNotes = function() {
   return this.view;
 };
 
+
+export function CurrentNotesForestViewBuilder() {
+  let that = this;
+  that.html = null;
+  that.view = null;
+  that.rootNodeClickHandler = function(eve) {
+    highlightNotesInForest(window.my.rootNodeViewOfNotes, window.my.currentNotesForest);
+  };
+}
+
+for (let propName in NotesForestViewBuilder.prototype) {
+  CurrentNotesForestViewBuilder.prototype[propName] = NotesForestViewBuilder.prototype[propName];
+}

@@ -88,6 +88,42 @@ export function buildInitialNotesForest() {
   return resultForest;
 }
 
+export function buildCurrentNotesForest(tagsAndLinksForestObj) {
+  let resultForest = [];
+  let currentTags = findCurrentTags(tagsAndLinksForestObj);
+  for (let tag of currentTags) {
+    window.webkit.messageHandlers.composite_main_window.postMessage("js buildCurrentNotesForest current tag ancestry: " +
+      tag.tagAncestry.join(" "));
+    addTagNodeLinksToForest(tag, resultForest);
+  }
+  return resultForest;
+}
+
+function findCurrentTags(tagsAndLinksForestObj) {
+  try {
+    let currentTags = [];
+    function addTag(tag) {
+      currentTags[currentTags.length] = tag;
+      for (let subTag of tag.children) {
+        addTag(subTag);
+      }
+    }
+    function inner(tag) {
+      if (tag.name === "current") {
+        addTag(tag);
+      } else {
+        for (let subTag of tag.children) {
+          inner(subTag);
+        }
+      }
+    }
+    inner(tagsAndLinksForestObj);
+    return currentTags;
+  } catch (err) {
+    window.webkit.messageHandlers.composite_main_window.postMessage("js findCurrentTags error msg: " + err.message);
+  }
+}
+
 export function appendNotesForestHtml(notesForestHtml) {
   let notesWrapper = document.getElementById("notes-content-wrapper");
   notesWrapper.innerHTML = "";

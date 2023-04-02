@@ -1,10 +1,11 @@
 const { extractTagsFromRootForest } = require('../js/notebook/extract_tags.js');
 const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
-const { NotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
+const { CurrentNotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
 const {
   addTagNodeLinksToForest,
   appendNotesForestHtml,
   buildTagsAndLinksForest,
+  buildCurrentNotesForest,
   highlightNotesInForest
 } = require('../js/notebook/notebook_utils.js');
 
@@ -28,6 +29,8 @@ let my = {
 
   // notebook state
   notesForest: null,
+
+  currentNotesForest: null,
 
   // timings state
   timings: null,
@@ -126,14 +129,15 @@ function handleServerMessage(msg) {
 
       // showTagsAndLinks(forest);
       let taggedNodes = extractTagsFromRootForest(forest);
-      let tagsAndLinksForest = buildTagsAndLinksForest(taggedNodes);
+      let tagsAndLinksForestObj = buildTagsAndLinksForest(taggedNodes);
 
-      let viewBuilder = new NotesForestViewBuilder();
+      let viewBuilder = new CurrentNotesForestViewBuilder();
       viewBuilder.buildView(forest);
       my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
       appendNotesForestHtml(viewBuilder.getHtml());
 
-      let currentNotesForest = buildCurrentNotesForest(tagsAndLinksForest);
+      let currentNotesForest = buildCurrentNotesForest(tagsAndLinksForestObj);
+      my.currentNotesForest = currentNotesForest;
       highlightNotesInForest(my.rootNodeViewOfNotes, currentNotesForest);
 
       let mainContentWrapper = document.getElementById("main-content-wrapper");
@@ -145,44 +149,5 @@ function handleServerMessage(msg) {
 
   } catch (err) {
     window.webkit.messageHandlers.composite_main_window.postMessage("js handleServerMessage error msg: " + err.message);
-  }
-}
-
-function buildCurrentNotesForest(tagsAndLinksForest) {
-  let resultForest = [];
-  let currentTags = findCurrentTags(tagsAndLinksForest);
-  for (let tag of currentTags) {
-    window.webkit.messageHandlers.composite_main_window.postMessage("js buildCurrentNotesForest current tag ancestry: " +
-      tag.tagAncestry.join(" "));
-    addTagNodeLinksToForest(tag, resultForest);
-  }
-  return resultForest;
-}
-
-function findCurrentTags(tagsAndLinksForest) {
-  try {
-    let currentTags = [];
-    function addTag(tag) {
-      currentTags[currentTags.length] = tag;
-      for (let subTag of tag.children) {
-        addTag(subTag);
-      }
-    }
-    function inner(tag) {
-      if (tag.name === "current") {
-        addTag(tag);
-      } else {
-        for (let subTag of tag.children) {
-          inner(subTag);
-        }
-      }
-    }
-    for (let rootTagName in tagsAndLinksForest) {
-      let rootTag = tagsAndLinksForest[rootTagName];
-      inner(rootTag);
-    }
-    return currentTags;
-  } catch (err) {
-    window.webkit.messageHandlers.composite_main_window.postMessage("js findCurrentTags error msg: " + err.message);
   }
 }
