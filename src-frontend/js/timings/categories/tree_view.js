@@ -14,25 +14,31 @@ export function createAndAppendFilterByCategory(timingsByDates) {
         err.fromdateStr = `${dateArray2str(dt.date)} ${timeArray2str(t.from)}`;
         throw err;
       }
-      for (let ind=0; ind<t.value.length; ind++) {
+      for (let ind=0; ind<t.value.length - 1; ind++) {
         let timingValueOuterListItem = t.value[ind];
         let type = typeof(timingValueOuterListItem)
-        if (type == "string") {
-          let subcategoryName = timingValueOuterListItem;
-          console.log("about to call currentCategoryNode.subcategory. 1. subcategoryName: " + subcategoryName)
-          currentCategoryNode = currentCategoryNode.subcategory(subcategoryName);
-        } else if (type == "object") {
-          let timingValueObject = timingValueOuterListItem;
-          let subcategoryName = Object.keys(timingValueObject)[0];
-          console.log("about to call currentCategoryNode.subcategory. 2. subcategoryName: " + subcategoryName)
-          currentCategoryNode = currentCategoryNode.subcategory(subcategoryName);
-          break; // should be last item
-        } else {
-          let err = new Error("createAndAppendFilterByCategory: unexpected type of timingItem.value[index] (expected 'string' or 'object'). index: " + ind + ", type: " + type);
+        if (type !== "string") {
+          let err = Error("wrong format: encountered a non-string category that is not last item in the categories list. all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}).");
           err.source_timing = t.category;
           err.fromdateStr = `${dateArray2str(dt.date)} ${timeArray2str(t.from)}`;
           throw err;
         }
+        let subcategoryName = timingValueOuterListItem;
+        console.log("about to call currentCategoryNode.subcategory. 1. subcategoryName: " + subcategoryName)
+        currentCategoryNode = currentCategoryNode.subcategory(subcategoryName);
+      }
+      let lastItem = t.value[t.value.length - 1];
+      if (lastItem.constructor === String) {
+        // do nothing
+      } else if (lastItem.constructor === Object) {
+        let subcategoryName = Object.keys(lastItem)[0];
+        console.log("about to call currentCategoryNode.subcategory. 2. subcategoryName: " + subcategoryName)
+        currentCategoryNode = currentCategoryNode.subcategory(subcategoryName);
+      } else {
+        let err = Error("wrong format: the last item in the categories is neither string nor an object. all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}). day: " + eachTimingDay.date);
+        err.source_timing = t.category;
+        err.fromdateStr = `${dateArray2str(dt.date)} ${timeArray2str(t.from)}`;
+        throw err;
       }
       currentCategoryNode.appendTiming(t);
     });

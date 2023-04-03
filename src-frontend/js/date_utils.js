@@ -22,6 +22,10 @@ export function date2TimingDateStrUnpadded(dt) {
   return date2timingDateArray(dt).join(".");
 }
 
+export function date2TimingDateStr(dt) {
+  return dateArray2str(date2timingDateArray(dt));
+}
+
 function pad(v) {
   return `0${v}`.slice(-2);
 }

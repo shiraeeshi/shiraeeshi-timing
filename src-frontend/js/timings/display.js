@@ -1,6 +1,6 @@
 const { getRandomInt } = require('../utils.js');
 const { withChildren, withClass } = require('../html_utils.js');
-const { timingDateArrays2Date, date2timingDateArray, dateArray2str, timeArray2str } = require('../date_utils.js');
+const { timingDateArrays2Date, date2timingDateArray, date2TimingDateStr, dateArray2str, timeArray2str } = require('../date_utils.js');
 
 export function displayTimings(timings, timingsCategoryNodeViewRoot) {
   window.my.currentFilteredTimings = timings;
@@ -298,21 +298,32 @@ export function displayTimingsAsText(timings, timingsCategoryNodeViewRoot) {
 
 function addTimingItemViewToCategory(timingItem, timingItemView, timingsCategoryNodeViewRoot) {
   let currentCategoryNode = timingsCategoryNodeViewRoot.subcategoryView(timingItem.category);
-  for (let ind=0; ind < timingItem.value.length; ind++) {
+  for (let ind=0; ind < timingItem.value.length - 1; ind++) {
     let timingValueOuterListItem = timingItem.value[ind];
     let type = typeof(timingValueOuterListItem)
-    if (type == "string") {
-      let subcategoryName = timingValueOuterListItem;
-      console.log("addTimingItemViewToCategory. currentCategoryNode: " + currentCategoryNode + ", subcategoryName: " + subcategoryName);
-      currentCategoryNode = currentCategoryNode.subcategoryView(subcategoryName);
-    } else if (type == "object") {
-      let timingValueObject = timingValueOuterListItem;
-      let subcategoryName = Object.keys(timingValueObject)[0];
-      console.log("addTimingItemViewToCategory. currentCategoryNode: " + currentCategoryNode + ", subcategoryName: " + subcategoryName);
-      currentCategoryNode = currentCategoryNode.subcategoryView(subcategoryName);
-      currentCategoryNode.appendTimingTextView(timingItemView);
-      break; // should be last item
+    if (type !== "string") {
+      let err = Error("wrong format: encountered a non-string category that is not last item in the categories list. all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}).");
+      err.source_timing = timingItem.category;
+      err.fromdateStr = `${date2TimingDateStr(timingItem.fromdate)} ${timeArray2str(timingItem.from)}`;
+      throw err;
     }
+    let subcategoryName = timingValueOuterListItem;
+    console.log("addTimingItemViewToCategory. currentCategoryNode: " + currentCategoryNode + ", subcategoryName: " + subcategoryName);
+    currentCategoryNode = currentCategoryNode.subcategoryView(subcategoryName);
+  }
+  let lastItem = timingItem.value[timingItem.value.length - 1];
+  if (lastItem.constructor === String) {
+    currentCategoryNode.appendTimingTextView(timingItemView);
+  } else if (lastItem.constructor === Object) {
+    let subcategoryName = Object.keys(lastItem)[0];
+    console.log("addTimingItemViewToCategory. currentCategoryNode: " + currentCategoryNode + ", subcategoryName: " + subcategoryName);
+    currentCategoryNode = currentCategoryNode.subcategoryView(subcategoryName);
+    currentCategoryNode.appendTimingTextView(timingItemView);
+  } else {
+    let err = Error("wrong format: the last item in the categories is neither string nor an object. all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}).");
+    err.source_timing = timingItem.category;
+    err.fromdateStr = `${date2TimingDateStr(timingItem.fromdate)} ${timeArray2str(timingItem.from)}`;
+    throw err;
   }
 }
 
