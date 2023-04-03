@@ -620,7 +620,7 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
       }
     }
     processNode.timings.forEach(t => drawTiming(t));
-    if (lastTimingColorRGBA) {
+    if (lastTimingColorRGBA && !processNode.isMergedChild && !processNode.hasMergedChildren) {
       ctx.fillStyle = lastTimingColorRGBA;
       if (processNode.timings.length > 0) {
         drawTiming(processNode.timings[processNode.timings.length - 1]);
@@ -631,6 +631,10 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
       .forEach((childProcessNode) => {
         drawTimingsOfProcessNode(childProcessNode, colorRGBA, lastTimingColorRGBA);
       });
+    if (lastTimingColorRGBA && processNode.hasMergedChildren && processNode.lastTimingOfMergedProcess !== undefined) {
+      ctx.fillStyle = lastTimingColorRGBA;
+      drawTiming(processNode.lastTimingOfMergedProcess);
+    }
   }
 
   // if (that.highlightedProcessName) {

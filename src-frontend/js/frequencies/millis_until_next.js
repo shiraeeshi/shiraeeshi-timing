@@ -2,12 +2,12 @@
 export function resetMillisUntilNextForProcessNode(processNode, selectedProcessNode) {
   //console.log("[start] resetMillisUntilNextForProcessNode");
   setMillisUntilNextForProcessNode(processNode, selectedProcessNode);
-  setMillisUntilNextForEachTimingInSelectedProcess(selectedProcessNode);
+  setMillisUntilNextForEachTimingInMergedProcess(selectedProcessNode);
   //console.log("[end] resetMillisUntilNextForProcessNode");
 }
 
-function setMillisUntilNextForEachTimingInSelectedProcess(processNode) {
-  //console.log("[start] setMillisUntilNextForEachTimingInSelectedProcess");
+export function setMillisUntilNextForEachTimingInMergedProcess(processNode) {
+  //console.log("[start] setMillisUntilNextForEachTimingInMergedProcess");
   function collectTimings(processNode) {
     let timingsOfChildren = [];
     if (processNode.children.length > 0) {
@@ -21,7 +21,10 @@ function setMillisUntilNextForEachTimingInSelectedProcess(processNode) {
   let timings = collectTimings(processNode);
   timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
   setMillisUntilNextForEachTiming(timings);
-  //console.log("[end] setMillisUntilNextForEachTimingInSelectedProcess");
+  if (timings.length > 0) {
+    processNode.lastTimingOfMergedProcess = timings[timings.length - 1];
+  }
+  //console.log("[end] setMillisUntilNextForEachTimingInMergedProcess");
 }
 
 function setMillisUntilNextForEachTiming(timings) {

@@ -60,43 +60,86 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
           err.fromdateStr = `${dateArray2str(dt)} ${timeArray2str(t.from)}`;
           throw err;
         }
-        for (let index = 0; index < yamlValue.length; index++) {
+        for (let index = 0; index < yamlValue.length - 1; index++) {
           let item = yamlValue[index];
-          if (item.constructor === Object) {
-            let keys = Object.keys(item);
-            if (keys.length !== 1 || index !== (yamlValue.length - 1)) {
-              let err = Error("wrong format: all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}). day: " + eachTimingDay.date);
-              err.source_timing = key;
-              err.fromdateStr = `${dateArray2str(dt)} ${timeArray2str(t.from)}`;
-              throw err;
-            }
-            let propName = keys[0];
-            let propValue = item[propName];
-            if (!node.childrenByName[propName]) {
-              let newNode = {
-                name: propName,
-                children: [],
-                childrenByName: {},
-                timings: []
-              };
-              node.childrenByName[propName] = newNode;
-              node.children.push(newNode);
-            }
-            node = node.childrenByName[propName];
-            t.info = propValue;
-          } else {
-            if (!node.childrenByName[item]) {
-              let newNode = {
-                name: item,
-                children: [],
-                childrenByName: {},
-                timings: []
-              };
-              node.childrenByName[item] = newNode;
-              node.children.push(newNode);
-            }
-            node = node.childrenByName[item];
+          if (item.constructor !== String) {
+            let err = Error("wrong format: encountered a non-string category that is not last item in the categories list. all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}). day: " + eachTimingDay.date);
+            err.source_timing = key;
+            err.fromdateStr = `${dateArray2str(dt)} ${timeArray2str(t.from)}`;
+            throw err;
           }
+          if (!node.childrenByName[item]) {
+            let newNode = {
+              name: item,
+              children: [],
+              childrenByName: {},
+              timings: []
+            };
+            node.childrenByName[item] = newNode;
+            node.children.push(newNode);
+          }
+          node = node.childrenByName[item];
+        }
+        let lastItem = yamlValue[yamlValue.length - 1];
+        if (lastItem.constructor === String) {
+          t.info = [lastItem];
+        } else if (lastItem.constructor === Object) {
+          let keys = Object.keys(lastItem);
+          if (keys.length !== 1) {
+            let err = Error("wrong format: the last item in the categories list is an object, count of properties not equals 1. all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}). day: " + eachTimingDay.date);
+            err.source_timing = key;
+            err.fromdateStr = `${dateArray2str(dt)} ${timeArray2str(t.from)}`;
+            throw err;
+          }
+          let propName = keys[0];
+          let propValue = lastItem[propName];
+          if (!node.childrenByName[propName]) {
+            let newNode = {
+              name: propName,
+              isInnermostCategory: true,
+              children: [],
+              childrenByName: {},
+              timings: []
+            };
+            node.childrenByName[propName] = newNode;
+            node.children.push(newNode);
+          }
+          node = node.childrenByName[propName];
+          if (propValue.constructor === Array && propValue.length === 1) {
+            while (true) {
+              let soleItem = propValue[0];
+              if (soleItem.constructor !== Object) {
+                break;
+              }
+              let keys = Object.keys(soleItem);
+              if (keys.length !== 1) {
+                break;
+              }
+              propName = keys[0];
+              let testPropValue = soleItem[propName];
+              if (testPropValue.constructor !== Array || testPropValue.length !== 1) {
+                break;
+              }
+              if (!node.childrenByName[propName]) {
+                let newNode = {
+                  name: propName,
+                  children: [],
+                  childrenByName: {},
+                  timings: []
+                };
+                node.childrenByName[propName] = newNode;
+                node.children.push(newNode);
+              }
+              propValue = testPropValue;
+              node = node.childrenByName[propName];
+            }
+          }
+          t.info = propValue;
+        } else {
+          let err = Error("wrong format: the last item in the categories is neither string nor an object. all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}). day: " + eachTimingDay.date);
+          err.source_timing = key;
+          err.fromdateStr = `${dateArray2str(dt)} ${timeArray2str(t.from)}`;
+          throw err;
         }
         node.timings.push(t);
       });

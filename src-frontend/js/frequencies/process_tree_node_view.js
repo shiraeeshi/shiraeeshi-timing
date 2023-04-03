@@ -1,6 +1,6 @@
 const { TimingsCategoryNodeViewState } = require('../timings/categories/node_view_state.js');
 
-const { setMillisUntilNextForProcessNode, resetMillisUntilNextForProcessNode } = require('./millis_until_next.js');
+const { setMillisUntilNextForProcessNode, setMillisUntilNextForEachTimingInMergedProcess } = require('./millis_until_next.js');
 
 const { withChildren, withClass } = require('../html_utils.js');
 
@@ -52,6 +52,7 @@ ProcessTreeNodeView.prototype.findSubtreeByViewState = function(viewState) {
 ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
   let that = this;
   that.processNode = processNode;
+  let lengthBefore = that.children.length;
   processNode.children.forEach(childNode => {
     let oldChild = that.childrenByName[childNode.name];
     if (oldChild === undefined) {
@@ -59,11 +60,40 @@ ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
       newChildView.buildAsHtmlLiElement();
       that.children.push(newChildView);
       that.childrenByName[childNode.name] = newChildView;
-      that.htmlChildrenContainerUl.appendChild(newChildView.html);
+      if (lengthBefore > 0) {
+        that.htmlChildrenContainerUl.appendChild(newChildView.html);
+      }
     } else {
       oldChild.mergeWithNewTimings(childNode);
     }
   });
+  let currentLength = that.children.length;
+  if (lengthBefore === 0 && currentLength > 0) {
+    if (that.html === undefined) {
+      return;
+    }
+    let parent = that.html.parentNode;
+    if (parent === undefined) {
+      that.buildAsHtmlLiElement();
+      return;
+    }
+    let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.html);
+    if (htmlChildIndex < 0) {
+      return;
+    }
+    parent.removeChild(that.html);
+    delete that.html;
+    that.buildAsHtmlLiElement();
+    if (htmlChildIndex === parent.children.length) {
+      parent.appendChild(that.html);
+    } else {
+      parent.insertBefore(that.html, parent.children[htmlChildIndex]);
+    }
+  } else {
+    if (that.processNode.isInnermostCategory && that.children.length > 0) {
+      that.mergeSubprocesses();
+    }
+  }
 };
 
 ProcessTreeNodeView.prototype.highlightTree = function() {
@@ -417,20 +447,20 @@ ProcessTreeNodeView.prototype.showThisProcessOnly = function() {
 
 ProcessTreeNodeView.prototype.mergeSubprocesses = function() {
   let that = this;
+  setMillisUntilNextForEachTimingInMergedProcess(that.processNode);
+  that.hasMergedChildren = true;
+  that.processNode.hasMergedChildren = true;
+  that.html.classList.add('merged-children');
+  that.children.forEach(child => child.markAsMerged());
   if (that.hGraphic) {
-    resetMillisUntilNextForProcessNode(that.hGraphic.processNode, that.processNode);
     that.hGraphic.redraw();
-
-    that.hasMergedChildren = true;
-
-    that.html.classList.add('merged-children');
-    that.children.forEach(child => child.markAsMerged());
   }
 }
 
 ProcessTreeNodeView.prototype.markAsMerged = function() {
   let that = this;
   that.isMergedChild = true;
+  that.processNode.isMergedChild = true;
   that.html.classList.add('merged-child');
   that.children.forEach(child => child.markAsMerged());
 }
@@ -438,6 +468,7 @@ ProcessTreeNodeView.prototype.markAsMerged = function() {
 ProcessTreeNodeView.prototype.markAsUnmerged = function() {
   let that = this;
   that.isMergedChild = false;
+  that.processNode.isMergedChild = false;
   that.html.classList.remove('merged-child');
   that.children.forEach(child => child.markAsUnmerged());
 }
@@ -450,14 +481,16 @@ ProcessTreeNodeView.prototype.unmergeSubprocesses = function() {
     }
     that.parentNodeView.unmergeSubprocesses();
   } else if (that.hasMergedChildren) {
+
+    setMillisUntilNextForProcessNode(that.processNode);
+
+    that.hasMergedChildren = false;
+
+    that.html.classList.remove('merged-children');
+    that.children.forEach(child => child.markAsUnmerged());
+
     if (that.hGraphic) {
-      setMillisUntilNextForProcessNode(that.processNode);
       that.hGraphic.redraw();
-
-      that.hasMergedChildren = false;
-
-      that.html.classList.remove('merged-children');
-      that.children.forEach(child => child.markAsUnmerged());
     }
   }
 }
@@ -631,6 +664,10 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
         )
       );
     that.html = htmlElement;
+    if (that.processNode.isInnermostCategory && that.children.length > 0) {
+      that.mergeSubprocesses();
+      that.collapse();
+    }
   }
 };
 
