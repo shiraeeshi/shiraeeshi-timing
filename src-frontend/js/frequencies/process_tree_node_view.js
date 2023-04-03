@@ -143,9 +143,9 @@ ProcessTreeNodeView.prototype.name2html = function() {
 
     } else if (viewState === TimingsCategoryNodeViewState.HIGHLIGHTED) {
 
-      that.viewState = TimingsCategoryNodeViewState.EXTRA_HIGHLIGHTED;
+      that.getRoot().highlightTree();
       if (that.hGraphic) {
-        that.hGraphic.selectProcess(that.processNode);
+        that.hGraphic.highlightProcess(that.processNode);
       }
       // let trs = document.getElementsByClassName("timing-row-parent-li");
       // for (let i=0; i < trs.length; i++) {
@@ -198,45 +198,6 @@ ProcessTreeNodeView.prototype.name2html = function() {
       //   a.removeEventListener('mouseleave', unhighlight);
       // }
       // a.addEventListener('mouseleave', unhighlight)
-    } else if (viewState === TimingsCategoryNodeViewState.EXTRA_HIGHLIGHTED) {
-      that.getRoot().highlightTree();
-      if (that.hGraphic) {
-        setMillisUntilNextForProcessNode(that.processNode);
-        that.hGraphic.highlightProcess(that.processNode);
-      }
-      // my.highlightedCategory = [];
-      // let categoryFullName = that.timingsCategoryNode.fullName();
-      // displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
-
-      // let allTimingTextViews = that.getRoot().getTimingTextViewsRecursively();
-      // for (let i=0; i < allTimingTextViews.length; i++) {
-      //   allTimingTextViews[i].classList.add('greyed-out');
-      //   allTimingTextViews[i].classList.remove('extra-unhighlighted');
-      // }
-      // let timingTextViews = that.getTimingTextViewsRecursively();
-      // for (let i=0; i < timingTextViews.length; i++) {
-      //   timingTextViews[i].classList.remove('greyed-out');
-      // }
-      function unhighlight() {
-        // console.log("TimingsCategoryNodeView.onclick unhighlight (set when viewState was EXTRA_HIGHLIGHTED)");
-        // if (my.highlightedCategory !== undefined
-        //   && my.highlightedCategory.length > 0
-        //   && !that.isHighlighted()) {
-        //   a.removeEventListener('mouseleave', unhighlight);
-        //   return;
-        // }
-        // // my.highlightedCategory = [];
-        // displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
-        // for (let i=0; i < allTimingTextViews.length; i++) {
-        //   allTimingTextViews[i].classList.remove('greyed-out')
-        // }
-        if (that.hGraphic) {
-          delete that.hGraphic.highlightedProcessNode;
-          that.hGraphic.redraw();
-        }
-        a.removeEventListener('mouseleave', unhighlight);
-      }
-      a.addEventListener('mouseleave', unhighlight)
     } else {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "TimingsCategoryNodeView.onclick. unexpected viewState (expected a member of TimingsCategoryNodeViewState enum): " + viewState);
@@ -288,8 +249,7 @@ ProcessTreeNodeView.prototype.name2html = function() {
         // for (let i=0; i < timingTextViews.length; i++) {
         //   timingTextViews[i].classList.add('greyed-out');
         // }
-      } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED ||
-                 that.viewState === TimingsCategoryNodeViewState.EXTRA_HIGHLIGHTED) {
+      } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED) {
         // do nothing
       } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD) {
         if (that.hGraphic) {

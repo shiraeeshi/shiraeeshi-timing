@@ -1,9 +1,9 @@
-.proc-node > a, .proc-leaf > a {
+.proc-node > .process-node-title-container > a, .proc-leaf > .process-node-title-container > a {
   cursor: pointer;
 }
 
-.proc-node.unhighlighted-node > a,
-.proc-leaf.unhighlighted-node > a {
+.proc-node.unhighlighted-node > .process-node-title-container > a,
+.proc-leaf.unhighlighted-node > .process-node-title-container > a {
   opacity: 0.3;
 }
 
