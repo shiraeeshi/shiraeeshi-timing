@@ -119,6 +119,20 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
               propName = keys[0];
               let testPropValue = soleItem[propName];
               if (testPropValue.constructor !== Array || testPropValue.length !== 1) {
+                if (testPropValue.constructor === Array && testPropValue.length > 1) {
+                  if (!node.childrenByName[propName]) {
+                    let newNode = {
+                      name: propName,
+                      children: [],
+                      childrenByName: {},
+                      timings: []
+                    };
+                    node.childrenByName[propName] = newNode;
+                    node.children.push(newNode);
+                  }
+                  let aNode = node.childrenByName[propName];
+                  addNodesWithReferencedTimings(aNode, testPropValue, t);
+                }
                 break;
               }
               if (!node.childrenByName[propName]) {
@@ -149,6 +163,57 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
   sortTimings(timingsBySubcategoriesTree);
   setMillisUntilNextForProcessNode(timingsBySubcategoriesTree);
   return timingsBySubcategoriesTree;
+}
+
+function addNodesWithReferencedTimings(node, sublist, timing) {
+
+  for (let item of sublist) {
+    if (item.constructor === String) {
+      if (!node.childrenByName[item]) {
+        let newNode = {
+          name: item,
+          children: [],
+          childrenByName: {},
+          timings: [],
+          referencedTimings: [],
+        };
+        node.childrenByName[item] = newNode;
+        node.children.push(newNode);
+      }
+      let childNode = node.childrenByName[item];
+      if (childNode.referencedTimings === undefined) {
+        childNode.referencedTimings = [];
+      }
+      childNode.referencedTimings.push(timing);
+    } else if (item.constructor === Object) {
+      let keys = Object.keys(item);
+      if (keys.length !== 1) {
+        return;
+      }
+      let key = keys[0];
+      let value = item[key];
+      if (value.constructor !== Array) {
+        return;
+      }
+      if (!node.childrenByName[key]) {
+        let newNode = {
+          name: key,
+          children: [],
+          childrenByName: {},
+          timings: [],
+          referencedTimings: [],
+        };
+        node.childrenByName[key] = newNode;
+        node.children.push(newNode);
+      }
+      let childNode = node.childrenByName[key];
+      if (childNode.referencedTimings === undefined) {
+        childNode.referencedTimings = [];
+      }
+      childNode.referencedTimings.push(timing);
+      addNodesWithReferencedTimings(childNode, value, timing);
+    }
+  }
 }
 
 
