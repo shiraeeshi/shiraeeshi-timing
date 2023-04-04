@@ -49,6 +49,47 @@ ProcessTreeNodeView.prototype.findSubtreeByViewState = function(viewState) {
   return undefined;
 };
 
+ProcessTreeNodeView.prototype.getFirstTiming = function() {
+  let that = this;
+  let processNode = that.processNode;
+  if (processNode.hasMergedChildren && processNode.firstTimingOfMergedProcess !== undefined) {
+    return processNode.firstTimingOfMergedProcess;
+  }
+  function minTiming(a, b) {
+    if (a === undefined) {
+      return b;
+    } else if (b === undefined) {
+      return a;
+    } else {
+      if (a.fromdate.getTime() < b.fromdate.getTime()) {
+        return a;
+      } else {
+        return b;
+      }
+    }
+  }
+  let firstFromChildren = that.children.map(ch => ch.getFirstTiming()).reduce(minTiming, undefined);
+  if (processNode.timings.length > 0) {
+    return minTiming(firstFromChildren, processNode.timings[0]);
+  } else if (processNode.referencedTimings && processNode.referencedTimings.length > 0) {
+    return minTiming(firstFromChildren, processNode.referencedTimings[0]);
+  } else {
+    return firstFromChildren;
+  }
+}
+
+ProcessTreeNodeView.prototype.sortChildrenByFirstTiming = function(processNode) {
+  let that = this;
+  that.children.sort((a, b) => {
+    let ta = a.getFirstTiming();
+    let tb = b.getFirstTiming();
+    if (ta === undefined || tb === undefined) {
+      return 0;
+    }
+    return ta.fromdate.getTime() - tb.fromdate.getTime();
+  });
+};
+
 ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
   let that = this;
   that.processNode = processNode;
@@ -60,13 +101,18 @@ ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
       newChildView.buildAsHtmlLiElement();
       that.children.push(newChildView);
       that.childrenByName[childNode.name] = newChildView;
-      if (lengthBefore > 0) {
-        that.htmlChildrenContainerUl.appendChild(newChildView.html);
-      }
+      // if (lengthBefore > 0) {
+      //   that.htmlChildrenContainerUl.appendChild(newChildView.html);
+      // }
     } else {
       oldChild.mergeWithNewTimings(childNode);
     }
   });
+  if (lengthBefore > 0) {
+    that.sortChildrenByFirstTiming();
+    that.htmlChildrenContainerUl.innerHTML = "";
+    withChildren(that.htmlChildrenContainerUl, ...that.children.map(ch => ch.html));
+  }
   let currentLength = that.children.length;
   if (lengthBefore === 0 && currentLength > 0) {
     if (that.html === undefined) {
@@ -100,7 +146,7 @@ ProcessTreeNodeView.prototype.highlightTree = function() {
   let that = this;
   that.isUnhighlighted = false;
   that.viewState = TimingsCategoryNodeViewState.HIGHLIGHTED;
-  that.html.classList.remove('unhighlighted-node');
+  that.html && that.html.classList.remove('unhighlighted-node');
   for (let subcategory of that.children) {
     subcategory.highlightSubtree();
   }
@@ -110,7 +156,7 @@ ProcessTreeNodeView.prototype.highlightSubtree = function() {
   let that = this;
   that.isUnhighlighted = false;
   that.viewState = TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD;
-  that.html.classList.remove('unhighlighted-node');
+  that.html && that.html.classList.remove('unhighlighted-node');
   for (let subcategory of that.children) {
     subcategory.highlightSubtree();
   }
@@ -120,7 +166,7 @@ ProcessTreeNodeView.prototype.unhighlightTree = function() {
   let that = this;
   that.isUnhighlighted = true;
   that.viewState = TimingsCategoryNodeViewState.UNHIGHLIGHTED;
-  that.html.classList.add('unhighlighted-node');
+  that.html && that.html.classList.add('unhighlighted-node');
   for (let subcategory of that.children) {
     subcategory.unhighlightTree();
   }
@@ -364,8 +410,8 @@ ProcessTreeNodeView.prototype.moveToBottom = function() {
 
 ProcessTreeNodeView.prototype.hideThisItem = function() {
   let that = this;
-  that.html.classList.add('made-invisible');
-  if (that.html.classList.contains('last-visible')) {
+  that.html && that.html.classList.add('made-invisible');
+  if (that.html && that.html.classList.contains('last-visible')) {
     that.html.classList.remove('last-visible');
   }
   if (that.parentNodeView) {
@@ -450,7 +496,7 @@ ProcessTreeNodeView.prototype.mergeSubprocesses = function() {
   setMillisUntilNextForEachTimingInMergedProcess(that.processNode);
   that.hasMergedChildren = true;
   that.processNode.hasMergedChildren = true;
-  that.html.classList.add('merged-children');
+  that.html && that.html.classList.add('merged-children');
   that.children.forEach(child => child.markAsMerged());
   if (that.hGraphic) {
     that.hGraphic.redraw();
@@ -461,7 +507,7 @@ ProcessTreeNodeView.prototype.markAsMerged = function() {
   let that = this;
   that.isMergedChild = true;
   that.processNode.isMergedChild = true;
-  that.html.classList.add('merged-child');
+  that.html && that.html.classList.add('merged-child');
   that.children.forEach(child => child.markAsMerged());
 }
 
@@ -469,7 +515,7 @@ ProcessTreeNodeView.prototype.markAsUnmerged = function() {
   let that = this;
   that.isMergedChild = false;
   that.processNode.isMergedChild = false;
-  that.html.classList.remove('merged-child');
+  that.html && that.html.classList.remove('merged-child');
   that.children.forEach(child => child.markAsUnmerged());
 }
 
@@ -486,7 +532,7 @@ ProcessTreeNodeView.prototype.unmergeSubprocesses = function() {
 
     that.hasMergedChildren = false;
 
-    that.html.classList.remove('merged-children');
+    that.html && that.html.classList.remove('merged-children');
     that.children.forEach(child => child.markAsUnmerged());
 
     if (that.hGraphic) {
@@ -641,11 +687,14 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
         continue;
       } else {
         childNode.buildAsHtmlLiElement();
-        that.htmlChildrenContainerUl.appendChild(childNode.html);
       }
     }
+    that.sortChildrenByFirstTiming();
+    that.htmlChildrenContainerUl.innerHTML = "";
+    withChildren(that.htmlChildrenContainerUl, ...that.children.map(ch => ch.html));
   } else {
     that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
+    that.sortChildrenByFirstTiming();
     let htmlElement =
       withChildren(
         withChildren(withClass(document.createElement('li'), 'proc-node', 'proc-node-open'),
@@ -664,10 +713,10 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
         )
       );
     that.html = htmlElement;
-    if (that.processNode.isInnermostCategory && that.children.length > 0) {
-      that.mergeSubprocesses();
-      that.collapse();
-    }
+  }
+  if (that.processNode.isInnermostCategory && that.children.length > 0) {
+    that.mergeSubprocesses();
+    that.collapse();
   }
 };
 
@@ -687,7 +736,7 @@ ProcessTreeNodeView.prototype.toggleCollapse = function() {
 ProcessTreeNodeView.prototype.collapse = function() {
   let that = this;
   that.isCollapsed = true;
-  if (that.html.classList.contains("proc-node-open")) {
+  if (that.html && that.html.classList.contains("proc-node-open")) {
     that.html.classList.remove("proc-node-open");
     that.html.classList.add("proc-node-closed");
   }
@@ -696,7 +745,7 @@ ProcessTreeNodeView.prototype.collapse = function() {
 ProcessTreeNodeView.prototype.uncollapse = function() {
   let that = this;
   that.isCollapsed = false;
-  if (that.html.classList.contains("proc-node-closed")) {
+  if (that.html && that.html.classList.contains("proc-node-closed")) {
     that.html.classList.remove("proc-node-closed");
     that.html.classList.add("proc-node-open");
   }
@@ -716,7 +765,7 @@ ProcessTreeNodeView.prototype.hide = function() {
   //   that.oldDisplay = that.html.style.display;
   // }
   // that.html.style.display = 'none';
-  that.html.classList.add('made-invisible');
+  that.html && that.html.classList.add('made-invisible');
   that.children.forEach(childView => childView.hide());
 };
 
@@ -728,7 +777,7 @@ ProcessTreeNodeView.prototype.unhide = function() {
   // } else {
   //   that.html.style.display = that.oldDisplay;
   // }
-  that.html.classList.remove('made-invisible');
+  that.html && that.html.classList.remove('made-invisible');
   that.children.forEach(childView => childView.unhide());
 };
 

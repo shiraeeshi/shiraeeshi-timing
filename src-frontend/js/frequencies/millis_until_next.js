@@ -22,6 +22,7 @@ export function setMillisUntilNextForEachTimingInMergedProcess(processNode) {
   timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
   setMillisUntilNextForEachTiming(timings);
   if (timings.length > 0) {
+    processNode.firstTimingOfMergedProcess = timings[0];
     processNode.lastTimingOfMergedProcess = timings[timings.length - 1];
   }
   //console.log("[end] setMillisUntilNextForEachTimingInMergedProcess");

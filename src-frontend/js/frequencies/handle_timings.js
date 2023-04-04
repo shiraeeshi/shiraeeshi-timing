@@ -68,16 +68,7 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
             err.fromdateStr = `${dateArray2str(dt)} ${timeArray2str(t.from)}`;
             throw err;
           }
-          if (!node.childrenByName[item]) {
-            let newNode = {
-              name: item,
-              children: [],
-              childrenByName: {},
-              timings: []
-            };
-            node.childrenByName[item] = newNode;
-            node.children.push(newNode);
-          }
+          ensureChildWithName(node, item);
           node = node.childrenByName[item];
         }
         let lastItem = yamlValue[yamlValue.length - 1];
@@ -94,59 +85,44 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
           }
           let propName = keys[0];
           let propValue = lastItem[propName];
-          if (!node.childrenByName[propName]) {
-            let newNode = {
-              name: propName,
-              isInnermostCategory: true,
-              children: [],
-              childrenByName: {},
-              timings: []
-            };
-            node.childrenByName[propName] = newNode;
-            node.children.push(newNode);
-          }
+          ensureChildWithName(node, propName);
           node = node.childrenByName[propName];
-          if (propValue.constructor === Array && propValue.length === 1) {
-            while (true) {
-              let soleItem = propValue[0];
-              if (soleItem.constructor !== Object) {
-                break;
-              }
-              let keys = Object.keys(soleItem);
-              if (keys.length !== 1) {
-                break;
-              }
-              propName = keys[0];
-              let testPropValue = soleItem[propName];
-              if (testPropValue.constructor !== Array || testPropValue.length !== 1) {
-                if (testPropValue.constructor === Array && testPropValue.length > 1) {
-                  if (!node.childrenByName[propName]) {
-                    let newNode = {
-                      name: propName,
-                      children: [],
-                      childrenByName: {},
-                      timings: []
-                    };
-                    node.childrenByName[propName] = newNode;
-                    node.children.push(newNode);
+          node.isInnermostCategory = true;
+          if (propValue.constructor === Array) {
+            if (propValue.length === 1) {
+              while (true) {
+                let soleItem = propValue[0];
+                if (soleItem.constructor !== Object) {
+                  if (soleItem.constructor === String) {
+                    ensureChildWithName(node, soleItem);
+                    let childNode = node.childrenByName[soleItem];
+                    if (childNode.referencedTimings === undefined) {
+                      childNode.referencedTimings = [];
+                    }
+                    childNode.referencedTimings.push(t);
                   }
-                  let aNode = node.childrenByName[propName];
-                  addNodesWithReferencedTimings(aNode, testPropValue, t);
+                  break;
                 }
-                break;
+                let keys = Object.keys(soleItem);
+                if (keys.length !== 1) {
+                  break;
+                }
+                propName = keys[0];
+                let testPropValue = soleItem[propName];
+                if (testPropValue.constructor !== Array || testPropValue.length !== 1) {
+                  if (testPropValue.constructor === Array && testPropValue.length > 1) {
+                    ensureChildWithName(node, propName);
+                    let aNode = node.childrenByName[propName];
+                    addNodesWithReferencedTimings(aNode, testPropValue, t);
+                  }
+                  break;
+                }
+                ensureChildWithName(node, propName);
+                propValue = testPropValue;
+                node = node.childrenByName[propName];
               }
-              if (!node.childrenByName[propName]) {
-                let newNode = {
-                  name: propName,
-                  children: [],
-                  childrenByName: {},
-                  timings: []
-                };
-                node.childrenByName[propName] = newNode;
-                node.children.push(newNode);
-              }
-              propValue = testPropValue;
-              node = node.childrenByName[propName];
+            } else if (propValue.length > 1) {
+              addNodesWithReferencedTimings(node, propValue, t);
             }
           }
           t.info = propValue;
@@ -165,21 +141,25 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
   return timingsBySubcategoriesTree;
 }
 
+function ensureChildWithName(node, name) {
+  if (!node.childrenByName[name]) {
+    let newNode = {
+      name: name,
+      children: [],
+      childrenByName: {},
+      timings: [],
+      referencedTimings: [],
+    };
+    node.childrenByName[name] = newNode;
+    node.children.push(newNode);
+  }
+}
+
 function addNodesWithReferencedTimings(node, sublist, timing) {
 
   for (let item of sublist) {
     if (item.constructor === String) {
-      if (!node.childrenByName[item]) {
-        let newNode = {
-          name: item,
-          children: [],
-          childrenByName: {},
-          timings: [],
-          referencedTimings: [],
-        };
-        node.childrenByName[item] = newNode;
-        node.children.push(newNode);
-      }
+      ensureChildWithName(node, item);
       let childNode = node.childrenByName[item];
       if (childNode.referencedTimings === undefined) {
         childNode.referencedTimings = [];
@@ -195,17 +175,7 @@ function addNodesWithReferencedTimings(node, sublist, timing) {
       if (value.constructor !== Array) {
         return;
       }
-      if (!node.childrenByName[key]) {
-        let newNode = {
-          name: key,
-          children: [],
-          childrenByName: {},
-          timings: [],
-          referencedTimings: [],
-        };
-        node.childrenByName[key] = newNode;
-        node.children.push(newNode);
-      }
+      ensureChildWithName(node, key);
       let childNode = node.childrenByName[key];
       if (childNode.referencedTimings === undefined) {
         childNode.referencedTimings = [];
