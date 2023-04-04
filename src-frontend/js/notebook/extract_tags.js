@@ -29,6 +29,7 @@ function extractTagsFromNode(node, ancestry) {
 
 function extractTag(str) {
   if (str.startsWith(">>")) {
-    return str.slice(2, str.indexOf(" "));
+    let indexOfWhitespace = str.indexOf(" ")
+    return str.slice(2, indexOfWhitespace >= 0 ? indexOfWhitespace : str.length);
   }
 }
