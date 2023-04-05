@@ -404,8 +404,10 @@ ProcessTreeNodeView.prototype.hideThisItem = function() {
   let that = this;
   let parent = that.html().parentNode;
   parent.removeChild(that.html());
-  that.parentNodeView && that.parentNodeView.html().classList.add('has-hidden-children');
-  that.hasManuallyHiddenChildren = true;
+  if (that.parentNodeView !== undefined) {
+    that.parentNodeView.html().classList.add('has-hidden-children');
+    that.parentNodeView.hasManuallyHiddenChildren = true;
+  }
 };
 
 ProcessTreeNodeView.prototype.hideSiblingsBelow = function() {
@@ -419,8 +421,10 @@ ProcessTreeNodeView.prototype.hideSiblingsBelow = function() {
       parent.removeChild(sibling);
     }
     if (siblings.length > idx + 1) {
-      that.parentNodeView && that.parentNodeView.html().classList.add('has-hidden-children');
-      that.hasManuallyHiddenChildren = true;
+      if (that.parentNodeView !== undefined) {
+        that.parentNodeView.html().classList.add('has-hidden-children');
+        that.parentNodeView.hasManuallyHiddenChildren = true;
+      }
     }
   }
 }
@@ -777,7 +781,7 @@ ProcessTreeNodeView.prototype.unhide = function() {
     let childrenLen = that.parentNodeView.children.length;
     if (childrenLen === htmlChildrenLen) {
       that.parentNodeView.html().classList.remove('has-hidden-children');
-      that.hasManuallyHiddenChildren = false;
+      that.parentNodeView.hasManuallyHiddenChildren = false;
     } else {
       that.parentNodeView.html().classList.add('has-hidden-children');
     }
