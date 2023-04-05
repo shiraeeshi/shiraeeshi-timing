@@ -2,6 +2,10 @@
   cursor: pointer;
 }
 
+.process-info > .process-node-title-container > a {
+  font-style: italic;
+}
+
 .proc-node.unhighlighted-node > .process-node-title-container > a,
 .proc-leaf.unhighlighted-node > .process-node-title-container > a {
   opacity: 0.3;
@@ -104,6 +108,7 @@ li.proc-leaf {
 
 .proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-merge-subprocesses,
 .proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-merge-subprocesses,
+.proc-node.process-info    > .process-node-title-container > .process-node-icons > .icon-merge-subprocesses,
 .proc-node.proc-leaf       > .process-node-title-container > .process-node-icons > .icon-merge-subprocesses {
   display: none;
 }
@@ -125,6 +130,10 @@ li.proc-leaf {
   background-image: url('../img/grid-off-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.proc-node.process-info    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
+  display: none;
 }
 
 li:first-child > .process-node-title-container > .process-node-icons > .icon-move-to-top {

@@ -98,6 +98,7 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
                   if (soleItem.constructor === String) {
                     ensureChildWithName(node, soleItem);
                     let childNode = node.childrenByName[soleItem];
+                    childNode.isProcessInfo = true;
                     if (childNode.referencedTimings === undefined) {
                       childNode.referencedTimings = [];
                     }
@@ -154,6 +155,10 @@ function ensureChildWithName(node, name) {
     };
     node.childrenByName[name] = newNode;
     node.children.push(newNode);
+
+    if (node.isInnermostCategory || node.isProcessInfo) {
+      newNode.isProcessInfo = true;
+    }
   }
 }
 
@@ -163,6 +168,7 @@ function addNodesWithReferencedTimings(node, sublist, timing) {
     if (item.constructor === String) {
       ensureChildWithName(node, item);
       let childNode = node.childrenByName[item];
+      childNode.isProcessInfo = true;
       if (childNode.referencedTimings === undefined) {
         childNode.referencedTimings = [];
       }
@@ -179,6 +185,7 @@ function addNodesWithReferencedTimings(node, sublist, timing) {
       }
       ensureChildWithName(node, key);
       let childNode = node.childrenByName[key];
+      childNode.isProcessInfo = true;
       if (childNode.referencedTimings === undefined) {
         childNode.referencedTimings = [];
       }

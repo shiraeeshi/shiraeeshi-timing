@@ -493,8 +493,14 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
 
   function findMaxRecursive(processNode, defaultValue, innerMaxFunc) {
     let localMax = defaultValue;
+    let timings = [];
     if (processNode.timings.length > 0) {
-      localMax = innerMaxFunc(processNode.timings);
+      timings = processNode.timings;
+    } else if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
+      timings = processNode.referencedTimings;
+    }
+    if (timings.length > 0) {
+      localMax = innerMaxFunc(timings);
     }
     return findMax(defaultValue,
       [localMax].concat(processNode.children.map((childProcessNode) => {
@@ -622,7 +628,7 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     let timings = [];
     if (processNode.timings.length > 0) {
       timings = processNode.timings;
-    } else if (processNode.referencedTimings && processNode.referencedTimings.length > 0) {
+    } else if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
       timings = processNode.referencedTimings;
     }
     timings.forEach(t => drawTiming(t));
