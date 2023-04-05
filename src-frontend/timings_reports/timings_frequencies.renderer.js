@@ -74,11 +74,13 @@ function handleServerMessage(msg) {
       console.log(`initial handleServerMessage. err: ${err}`);
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "initial handleServerMessage. err: " + err);
+      throw err;
     });
 
     window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage end ");
   } catch (err) {
     window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage. error: " + err.message);
+    throw err;
   }
 }
 

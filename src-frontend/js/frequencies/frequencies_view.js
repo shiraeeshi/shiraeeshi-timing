@@ -41,9 +41,10 @@ FrequenciesView.prototype.mergeWithNewTimings = function(processNode) {
     if (oldChild === undefined) {
       let newChildView = new ProcessTreeNodeView(childNode, that.hGraphic, undefined, that);
       newChildView.buildAsHtmlLiElement();
+      newChildView.toggleCollapse();
       that.children.push(newChildView);
       that.childrenByName[childNode.name] = newChildView;
-      that.htmlChildrenContainerUl.appendChild(newChildView.html);
+      that.htmlChildrenContainerUl.appendChild(newChildView.htmlElement);
     } else {
       oldChild.mergeWithNewTimings(childNode);
     }
@@ -82,17 +83,17 @@ FrequenciesView.prototype.buildHtml = function() {
   let that = this;
   // if (that.children.length == 0) {
   //   let htmlElement = withClass(withChildren(document.createElement('li'), that.name2html()), 'proc-leaf');
-  //   that.html = htmlElement;
+  //   that.htmlElement = htmlElement;
   //   return;
   // }
 
-  if (that.html !== undefined) {
+  if (that.htmlElement !== undefined) {
     for (let childNode of that.children) {
-      if (childNode.html !== undefined) {
+      if (childNode.htmlElement !== undefined) {
         continue;
       }
       childNode.buildAsHtmlLiElement();
-      that.htmlChildrenContainerUl.appendChild(childNode.html);
+      that.htmlChildrenContainerUl.appendChild(childNode.htmlElement);
     }
   } else {
     let hGraphic = that.hGraphic;
@@ -107,7 +108,7 @@ FrequenciesView.prototype.buildHtml = function() {
           hGraphic.elem
         ),
         withChildren(withClass(that.htmlChildrenContainerUl, 'processes-tree-container-ul'),
-          ...that.children.map(childNode => childNode.html)
+          ...that.children.map(childNode => childNode.htmlElement)
         ),
         withChildren(withClass(that.htmlSecondaryContainerDiv, 'processes-tree-secondary-container-div', 'inactive'),
           (function() {
@@ -122,7 +123,7 @@ FrequenciesView.prototype.buildHtml = function() {
           withClass(that.htmlSecondaryUl, 'processes-tree-secondary-ul')
         )
       );
-    that.html = htmlElement;
+    that.htmlElement = htmlElement;
   }
 };
 
@@ -188,7 +189,7 @@ FrequenciesView.prototype.showThisProcessOnly = function(processViewNode) {
   if (that.solelyDisplayedProcessViewNode !== null) {
     that._goBackToAllProcessesNoRedraw();
   }
-  let processHtml = processViewNode.html;
+  let processHtml = processViewNode.htmlElement;
   processViewNode.indexToReturnTo = Array.prototype.indexOf.call(processHtml.parentNode.children, processHtml);
   processViewNode.htmlParentToReturnTo = processHtml.parentNode;
   processHtml.parentNode.removeChild(processHtml);
@@ -214,7 +215,7 @@ FrequenciesView.prototype.goBackToAllProcesses = function() {
 FrequenciesView.prototype._goBackToAllProcessesNoRedraw = function() {
   let that = this;
   let processViewNode = that.solelyDisplayedProcessViewNode;
-  let processHtml = processViewNode.html;
+  let processHtml = processViewNode.htmlElement;
   processHtml.parentNode.removeChild(processHtml);
   let parent = processViewNode.htmlParentToReturnTo;
   parent.insertBefore(processHtml, parent.children[processViewNode.indexToReturnTo]);

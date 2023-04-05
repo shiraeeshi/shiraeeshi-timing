@@ -24,7 +24,7 @@ FrequenciesViewBuilder.prototype.buildViews = function(timingsBySubcategoriesTre
     views.push(treeView);
     treeView.buildHtml();
     treeView.hGraphic.redraw();
-    that.html = treeView.html;
+    that.html = treeView.htmlElement;
     that.viewsByName[timingsBySubcategoriesTree.name] = treeView;
   }
 };
