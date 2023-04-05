@@ -313,6 +313,8 @@ function addTimingItemViewToCategory(timingItem, timingItemView, timingsCategory
   }
   let lastItem = timingItem.value[timingItem.value.length - 1];
   if (lastItem.constructor === String) {
+    let subcategoryName = lastItem;
+    currentCategoryNode = currentCategoryNode.subcategoryView(subcategoryName);
     currentCategoryNode.appendTimingTextView(timingItemView);
   } else if (lastItem.constructor === Object) {
     let subcategoryName = Object.keys(lastItem)[0];

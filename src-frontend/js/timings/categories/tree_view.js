@@ -29,7 +29,8 @@ export function createAndAppendFilterByCategory(timingsByDates) {
       }
       let lastItem = t.value[t.value.length - 1];
       if (lastItem.constructor === String) {
-        // do nothing
+        let subcategoryName = lastItem;
+        currentCategoryNode = currentCategoryNode.subcategory(subcategoryName);
       } else if (lastItem.constructor === Object) {
         let subcategoryName = Object.keys(lastItem)[0];
         console.log("about to call currentCategoryNode.subcategory. 2. subcategoryName: " + subcategoryName)

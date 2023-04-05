@@ -73,6 +73,8 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
         }
         let lastItem = yamlValue[yamlValue.length - 1];
         if (lastItem.constructor === String) {
+          ensureChildWithName(node, lastItem);
+          node = node.childrenByName[lastItem];
           node.isInnermostCategory = true;
           t.info = [lastItem];
         } else if (lastItem.constructor === Object) {
