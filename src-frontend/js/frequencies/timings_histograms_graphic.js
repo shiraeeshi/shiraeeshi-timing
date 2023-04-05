@@ -496,8 +496,9 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     let timings = [];
     if (processNode.timings.length > 0) {
       timings = processNode.timings;
-    } else if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
-      timings = processNode.referencedTimings;
+    }
+    if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
+      timings = timings.concat(processNode.referencedTimings);
     }
     if (timings.length > 0) {
       localMax = innerMaxFunc(timings);
@@ -628,8 +629,9 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     let timings = [];
     if (processNode.timings.length > 0) {
       timings = processNode.timings;
-    } else if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
-      timings = processNode.referencedTimings;
+    }
+    if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
+      timings = timings.concat(processNode.referencedTimings);
     }
     timings.forEach(t => drawTiming(t));
     if (lastTimingColorRGBA && !processNode.isMergedChild && !processNode.hasMergedChildren) {
