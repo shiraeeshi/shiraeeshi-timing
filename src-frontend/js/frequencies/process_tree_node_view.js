@@ -277,6 +277,46 @@ ProcessTreeNodeView.prototype.name2html = function() {
         "TimingsCategoryNodeView.onclick. unexpected viewState (expected a member of TimingsCategoryNodeViewState enum): " + viewState);
     }
   };
+  if (that.name.includes("\n")) {
+    // let elem = withChildren(document.createElement('div'),
+    //              ...that.name.split("\n")
+    //                          .map(line => document.createTextNode(line))
+    //                          .flatMap(el => [el,document.createElement("br")])
+    //                          .slice(0, -1)
+    //            );
+    // elem.onclick = clickHandler;
+    // elem.onmouseover = hoverHandler;
+    // return elem;
+
+    // let timingsCount = that.timingsCategoryNode.timingsCountRecursive;
+    return
+      withChildren(a,
+        withChildren(document.createElement('div'),
+          ...that.name.split("\n")
+                      .map(line => document.createTextNode(line))
+                      .flatMap(el => [el,document.createElement("br")])
+                      .slice(0, -1)
+                      //.concat(document.createTextNode(" (" + timingsCount + ")"))
+        )
+      );
+  } else {
+    // let elem = withChildren(document.createElement('span'),
+    //              document.createTextNode(that.name)
+    //            );
+    // elem.onclick = clickHandler;
+    // elem.onmouseover = hoverHandler;
+    // return elem;
+
+    //let timingsCount = that.timingsCategoryNode.timingsCountRecursive;
+    return withChildren(a,
+            // document.createTextNode(that.name + " (" + timingsCount + ")")
+            document.createTextNode(that.name)
+          );
+  }
+}
+
+ProcessTreeNodeView.prototype._initMouseEnterListener = function(a) {
+  let that = this;
   a.onmouseenter = function(eve) {
     if (that.hGraphic) {
       if (that.hGraphic.highlightedProcessNode !== undefined
@@ -348,43 +388,7 @@ ProcessTreeNodeView.prototype.name2html = function() {
     }
     a.addEventListener('mouseleave', unhighlight)
   };
-  if (that.name.includes("\n")) {
-    // let elem = withChildren(document.createElement('div'),
-    //              ...that.name.split("\n")
-    //                          .map(line => document.createTextNode(line))
-    //                          .flatMap(el => [el,document.createElement("br")])
-    //                          .slice(0, -1)
-    //            );
-    // elem.onclick = clickHandler;
-    // elem.onmouseover = hoverHandler;
-    // return elem;
-
-    // let timingsCount = that.timingsCategoryNode.timingsCountRecursive;
-    return
-      withChildren(a,
-        withChildren(document.createElement('div'),
-          ...that.name.split("\n")
-                      .map(line => document.createTextNode(line))
-                      .flatMap(el => [el,document.createElement("br")])
-                      .slice(0, -1)
-                      //.concat(document.createTextNode(" (" + timingsCount + ")"))
-        )
-      );
-  } else {
-    // let elem = withChildren(document.createElement('span'),
-    //              document.createTextNode(that.name)
-    //            );
-    // elem.onclick = clickHandler;
-    // elem.onmouseover = hoverHandler;
-    // return elem;
-
-    //let timingsCount = that.timingsCategoryNode.timingsCountRecursive;
-    return withChildren(a,
-            // document.createTextNode(that.name + " (" + timingsCount + ")")
-            document.createTextNode(that.name)
-          );
-  }
-}
+};
 
 ProcessTreeNodeView.prototype.moveToTop = function() {
   let that = this;
@@ -644,6 +648,7 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
       nameHtml,
       iconsDiv
     );
+    that._initMouseEnterListener(titleDiv);
     return titleDiv;
   }
 
