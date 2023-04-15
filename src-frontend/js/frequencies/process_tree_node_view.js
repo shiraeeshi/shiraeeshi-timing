@@ -325,44 +325,11 @@ ProcessTreeNodeView.prototype._initMouseEnterListener = function(a) {
       }
       that.hGraphic.highlightProcess(that.processNode);
     }
-    // if (my.highlightedCategory !== undefined
-    //    && my.highlightedCategory.length > 0
-    //    && !that.isHighlighted()) {
-    //   return;
-    // }
-    // let categoryFullName = that.timingsCategoryNode.fullName();
-    // // my.highlightedCategory = categoryFullName;
-    // displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
-
-    // console.log("a.onmouseenter. categoryFullName: " + categoryFullName);
-
-    // let trs = document.getElementsByClassName("timing-row-parent-li");
-    // let trsHighlighted = document.querySelectorAll(".timing-row-parent-li:not(.greyed-out)");
-    // for (let i=0; i < trs.length; i++) {
-    //   trs[i].classList.add('greyed-out');
-    // }
-    // let timingTextViews = that.getTimingTextViewsRecursively();
-    // for (let i=0; i < timingTextViews.length; i++) {
-    //   timingTextViews[i].classList.remove('greyed-out');
-    // }
     function unhighlight() {
       console.log("TimingsCategoryNodeView.onmouseenter unhighlight");
 
-      // let noCategoryIsHighlighted =
-      //   my.highlightedCategory === undefined ||
-      //   my.highlightedCategory.length === 0;
-
-      // if (noCategoryIsHighlighted) {
-      //   displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
-      //   for (let i=0; i < trs.length; i++) {
-      //     trs[i].classList.remove('greyed-out');
-      //     trs[i].classList.remove('extra-unhighlighted');
-      //   }
-      // } else
       if (that.viewState === TimingsCategoryNodeViewState.UNHIGHLIGHTED) {
-        // for (let i=0; i < timingTextViews.length; i++) {
-        //   timingTextViews[i].classList.add('greyed-out');
-        // }
+        // do nothing
       } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED) {
         // do nothing
       } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD) {
@@ -374,12 +341,7 @@ ProcessTreeNodeView.prototype._initMouseEnterListener = function(a) {
           } else {
             that.hGraphic.highlightProcess(highlightedViewNode.processNode);
           }
-          // that.hGraphic.redraw();
         }
-        // displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
-        // for (let i=0; i < trsHighlighted.length; i++) {
-        //   trsHighlighted[i].classList.remove('greyed-out');
-        // }
       } else {
         window.webkit.messageHandlers.timings_summary_msgs.postMessage(
           "TimingsCategoryNodeView.onmousemove. unexpected viewState (expected a member of TimingsCategoryNodeViewState enum): " + that.viewState);
