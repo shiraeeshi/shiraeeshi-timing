@@ -1,4 +1,5 @@
 const { resetMillisUntilNextForProcessNode } = require('./millis_until_next.js');
+const { TimingsCategoryNodeViewState } = require('../timings/categories/node_view_state.js');
 const { withChildren } = require('../html_utils.js');
 
 export function TimingsHistogramsGraphic(processNode) {
@@ -12,6 +13,8 @@ export function TimingsHistogramsGraphic(processNode) {
   this.scrollbarBreadth = 20;
   this.canvas = null; // invoke initCanvas()
   //this.highlightedProcessName = null; // invoke highlightProcess
+  this.highlightedProcessNode = null;
+  this.highlightedProcessNodeViewState = null;
   this.selectedProcessNode = null; // invoke selectProcess
   this.highlightedSubprocessOfSelectedProcessNode = null; // invoke highlightSubprocessOfSelectedProcessNode
 }
@@ -90,8 +93,9 @@ TimingsHistogramsGraphic.prototype.selectProcess = function(selectedProcessNode)
   that.redraw();
 };
 
-TimingsHistogramsGraphic.prototype.highlightProcess = function(processNode) {
+TimingsHistogramsGraphic.prototype.highlightProcess = function(processNode, processNodeViewState) {
   this.highlightedProcessNode = processNode;
+  this.highlightedProcessNodeViewState = processNodeViewState;
   this.redraw();
 };
 
@@ -671,19 +675,27 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   // }
 
   if (that.highlightedProcessNode) {
-    let timingsColor = 'rgba(0, 85, 255, 1)';
-    let lastTimingColor = 'rgba(0, 50, 150, 1)';
+    let timingsColor = 'rgba(100, 120, 120, 1)';
+    let lastTimingColor = 'rgba(70, 80, 80, 1)';
     // that.processes
     //   .filter(p => p.prefix != that.highlightedProcessName)
     //   .forEach(p => drawTimingsOfProcess(p, timingsColor, lastTimingColor));
     drawTimingsOfProcessNode(that.processNode, timingsColor, lastTimingColor, that.highlightedProcessNode);
 
-    timingsColor = 'rgba(190, 0, 20, 1)';
-    lastTimingColor = 'rgba(140, 0, 15, 1)';
+    if (that.highlightedProcessNodeViewState !== TimingsCategoryNodeViewState.HIGHLIGHTED &&
+        that.highlightedProcessNode.referencedTimings !== undefined &&
+        that.highlightedProcessNode.referencedTimings.length > 0) {
+      // TODO fix the logic of highlighting
+      timingsColor = 'rgba(0, 85, 255, 1)';
+      lastTimingColor = 'rgba(0, 50, 150, 1)';
+    } else {
+      timingsColor = 'rgba(190, 0, 20, 1)';
+      lastTimingColor = 'rgba(140, 0, 15, 1)';
+    }
     drawTimingsOfProcessNode(that.highlightedProcessNode, timingsColor, lastTimingColor);
   } else {
-    let timingsColor = 'rgba(0, 85, 255, 1)';
-    let lastTimingColor = 'rgba(0, 50, 150, 1)';
+    let timingsColor = 'rgba(100, 120, 120, 1)';
+    let lastTimingColor = 'rgba(70, 80, 80, 1)';
     //that.processes.forEach(p => drawTimingsOfProcess(p, timingsColor, lastTimingColor));
     drawTimingsOfProcessNode(that.processNode, timingsColor, lastTimingColor);
   }

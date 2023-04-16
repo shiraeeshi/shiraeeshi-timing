@@ -182,7 +182,7 @@ ProcessTreeNodeView.prototype.name2html = function() {
       // my.highlightedCategory = categoryFullName;
       // displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
       if (that.hGraphic) {
-        that.hGraphic.highlightProcess(that.processNode);
+        that.hGraphic.highlightProcess(that.processNode, that.viewState);
       }
 
       console.log("a.onclick. categoryFullName: " + categoryFullName);
@@ -219,7 +219,7 @@ ProcessTreeNodeView.prototype.name2html = function() {
 
       that.getRoot().highlightTree();
       if (that.hGraphic) {
-        that.hGraphic.highlightProcess(that.processNode);
+        that.hGraphic.highlightProcess(that.processNode, that.viewState);
       }
       // let trs = document.getElementsByClassName("timing-row-parent-li");
       // for (let i=0; i < trs.length; i++) {
@@ -236,7 +236,7 @@ ProcessTreeNodeView.prototype.name2html = function() {
       that.getRoot().unhighlightTree();
       that.highlightTree();
       if (that.hGraphic) {
-        that.hGraphic.highlightProcess(that.processNode);
+        that.hGraphic.highlightProcess(that.processNode, that.viewState);
       }
       // let categoryFullName = that.timingsCategoryNode.fullName();
       // my.highlightedCategory = categoryFullName;
@@ -323,7 +323,7 @@ ProcessTreeNodeView.prototype._initMouseEnterListener = function(a) {
          && that.viewState === TimingsCategoryNodeViewState.UNHIGHLIGHTED) {
         return;
       }
-      that.hGraphic.highlightProcess(that.processNode);
+      that.hGraphic.highlightProcess(that.processNode, that.viewState);
     }
     function unhighlight() {
       console.log("TimingsCategoryNodeView.onmouseenter unhighlight");
@@ -339,7 +339,7 @@ ProcessTreeNodeView.prototype._initMouseEnterListener = function(a) {
             delete that.hGraphic.highlightedProcessNode;
             that.hGraphic.redraw();
           } else {
-            that.hGraphic.highlightProcess(highlightedViewNode.processNode);
+            that.hGraphic.highlightProcess(highlightedViewNode.processNode, TimingsCategoryNodeViewState.HIGHLIGHTED);
           }
         }
       } else {
@@ -667,6 +667,9 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
       );
     if (that.processNode.isProcessInfo) {
       htmlElement = withClass(htmlElement, 'process-info');
+    }
+    if (that.hasMergedChildren) {
+      htmlElement = withClass(htmlElement, 'merged-children');
     }
     that.htmlElement = htmlElement;
     if (!that.processNode.isInnermostCategory && that.children.length > 0) {
