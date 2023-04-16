@@ -616,9 +616,9 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
 
   if (that.children.length == 0) {
     let htmlElement = withClass(withChildren(document.createElement('li'), createTitleDiv()), 'proc-node', 'proc-leaf');
-    if (that.processNode.isProcessInfo) {
-      htmlElement = withClass(htmlElement, 'process-info');
-    }
+    // if (that.processNode.isProcessInfo) {
+    //   htmlElement = withClass(htmlElement, 'process-info');
+    // }
     that.htmlElement = htmlElement;
     return;
   }
@@ -665,9 +665,9 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
           }
         })()
       );
-    if (that.processNode.isProcessInfo) {
-      htmlElement = withClass(htmlElement, 'process-info');
-    }
+    // if (that.processNode.isProcessInfo) {
+    //   htmlElement = withClass(htmlElement, 'process-info');
+    // }
     if (that.hasMergedChildren) {
       htmlElement = withClass(htmlElement, 'merged-children');
     }
