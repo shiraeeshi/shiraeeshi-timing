@@ -51,10 +51,13 @@ ProcessNode.prototype.borrowReferences = function() {
   if (that.referencedTimings !== undefined && that.referencedTimings.length > 0) {
     timings = timings.concat(that.referencedTimings);
   }
+  if (that.referencedByDescendantsTimings !== undefined && that.referencedByDescendantsTimings.length > 0) {
+    timings = timings.concat(that.referencedByDescendantsTimings);
+  }
   timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
   setMillisUntilNextForEachTiming(timings);
   that.timingsWithBorrowedReferences = timings;
-  that.children.forEach(child => child.borrowReferences());
+  // that.children.forEach(child => child.borrowReferences());
 };
 
 ProcessNode.prototype.unborrowReferences = function() {
@@ -65,7 +68,12 @@ ProcessNode.prototype.unborrowReferences = function() {
       delete ref.millisUntilNext;
     }
   }
-  that.children.forEach(child => child.unborrowReferences());
+  if (that.referencedByDescendantsTimings !== undefined) {
+    for (let ref of that.referencedByDescendantsTimings) {
+      delete ref.millisUntilNext;
+    }
+  }
+  // that.children.forEach(child => child.unborrowReferences());
 };
 
 ProcessNode.prototype.getTimingsToDraw = function() {

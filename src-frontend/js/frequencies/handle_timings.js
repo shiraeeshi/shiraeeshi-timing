@@ -164,7 +164,7 @@ function addNodesWithReferencedTimings(node, sublist, timing) {
       if (childNode.referencedByDescendantsTimings === undefined) {
         childNode.referencedByDescendantsTimings = [];
       }
-      childNode.referencedByDescendantsTimings.push(timing);
+      childNode.referencedByDescendantsTimings.push(makeReferencedTiming(timing));
       addNodesWithReferencedTimings(childNode, value, timing);
     }
   }
