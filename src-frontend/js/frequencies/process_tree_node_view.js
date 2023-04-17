@@ -241,6 +241,9 @@ ProcessTreeNodeView.prototype.name2html = function() {
     } else if (viewState === TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD) {
       that.getRoot().unhighlightTree();
       that.highlightTree();
+      if (that.processNode.hasReferencesToOutsideTimings) {
+        that.processNode.borrowReferences();
+      }
       if (that.hGraphic) {
         that.hGraphic.highlightProcess(that.processNode, that.viewState);
       }

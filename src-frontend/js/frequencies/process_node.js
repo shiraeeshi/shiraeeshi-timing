@@ -54,14 +54,18 @@ ProcessNode.prototype.borrowReferences = function() {
   timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
   setMillisUntilNextForEachTiming(timings);
   that.timingsWithBorrowedReferences = timings;
+  that.children.forEach(child => child.borrowReferences());
 };
 
 ProcessNode.prototype.unborrowReferences = function() {
   let that = this;
   delete that.timingsWithBorrowedReferences;
-  for (let ref of that.referencedTimings) {
-    delete ref.millisUntilNext;
+  if (that.referencedTimings !== undefined) {
+    for (let ref of that.referencedTimings) {
+      delete ref.millisUntilNext;
+    }
   }
+  that.children.forEach(child => child.unborrowReferences());
 };
 
 ProcessNode.prototype.getTimingsToDraw = function() {
