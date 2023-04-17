@@ -1,3 +1,4 @@
+const { ProcessNode } = require('./process_node.js');
 const { setMillisUntilNextForProcessNode } = require('./millis_until_next.js');
 const { timingDateArrays2Date, dateArray2str, timeArray2str } = require('../date_utils.js');
 
@@ -11,12 +12,7 @@ function sortTimings(processNode) {
 
 export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
   if (timingsBySubcategoriesTree === undefined) {
-    timingsBySubcategoriesTree = {}; // obj.childrenByName[subCategoryName].childrenByName[subCategoryName] = {timings: []}
-
-    timingsBySubcategoriesTree.name = "all";
-    timingsBySubcategoriesTree.childrenByName = {};
-    timingsBySubcategoriesTree.children = [];
-    timingsBySubcategoriesTree.timings = [];
+    timingsBySubcategoriesTree = new ProcessNode("all");
   }
 
   // populate each timing's fromdate field
@@ -33,17 +29,7 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
   });
 
   Object.keys(timingsByCategories).forEach(key => {
-    let categoryRootNode = timingsBySubcategoriesTree.childrenByName[key];
-    if (categoryRootNode === undefined) {
-      categoryRootNode = {
-        name: key,
-        children: [],
-        childrenByName: {},
-        timings: []
-      };
-      timingsBySubcategoriesTree.childrenByName[key] = categoryRootNode;
-      timingsBySubcategoriesTree.children.push(categoryRootNode);
-    }
+    let categoryRootNode = timingsBySubcategoriesTree.ensureChildWithName(key);
     let node = categoryRootNode;
 
     let thisTimingsByDays = timingsByCategories[key];
@@ -68,13 +54,11 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
             err.fromdateStr = `${dateArray2str(dt)} ${timeArray2str(t.from)}`;
             throw err;
           }
-          ensureChildWithName(node, item);
-          node = node.childrenByName[item];
+          node = node.ensureChildWithName(item);
         }
         let lastItem = yamlValue[yamlValue.length - 1];
         if (lastItem.constructor === String) {
-          ensureChildWithName(node, lastItem);
-          node = node.childrenByName[lastItem];
+          node = node.ensureChildWithName(lastItem);
           node.isInnermostCategory = true;
           t.info = [lastItem];
         } else if (lastItem.constructor === Object) {
@@ -87,8 +71,7 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
           }
           let propName = keys[0];
           let propValue = lastItem[propName];
-          ensureChildWithName(node, propName);
-          node = node.childrenByName[propName];
+          node = node.ensureChildWithName(propName);
           node.isInnermostCategory = true;
           if (propValue.constructor === Array) {
             if (propValue.length === 1) {
@@ -96,8 +79,7 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
                 let soleItem = propValue[0];
                 if (soleItem.constructor !== Object) {
                   if (soleItem.constructor === String) {
-                    ensureChildWithName(node, soleItem);
-                    let childNode = node.childrenByName[soleItem];
+                    let childNode = node.ensureChildWithName(soleItem);
                     // childNode.isProcessInfo = true;
                     node = childNode;
                     // // childNode.timings.push(t);
@@ -116,16 +98,14 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
                 let testPropValue = soleItem[propName];
                 if (testPropValue.constructor !== Array || testPropValue.length !== 1) {
                   if (testPropValue.constructor === Array && testPropValue.length > 1) {
-                    ensureChildWithName(node, propName);
-                    let aNode = node.childrenByName[propName];
+                    let aNode = node.ensureChildWithName(propName);
                     addNodesWithReferencedTimings(aNode, testPropValue, t);
                     node = aNode;
                   }
                   break;
                 }
-                ensureChildWithName(node, propName);
+                node = node.ensureChildWithName(propName);
                 propValue = testPropValue;
-                node = node.childrenByName[propName];
               }
             } else if (propValue.length > 1) {
               addNodesWithReferencedTimings(node, propValue, t);
@@ -147,35 +127,23 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
   return timingsBySubcategoriesTree;
 }
 
-function ensureChildWithName(node, name) {
-  if (!node.childrenByName[name]) {
-    let newNode = {
-      name: name,
-      children: [],
-      childrenByName: {},
-      timings: [],
-      referencedTimings: [],
-    };
-    node.childrenByName[name] = newNode;
-    node.children.push(newNode);
-
-    // if (node.isInnermostCategory || node.isProcessInfo) {
-    //   newNode.isProcessInfo = true;
-    // }
-  }
+function makeReferencedTiming(t) {
+  let ref = Object.create(t);
+  ref.isReference = true;
+  return ref;
 }
 
 function addNodesWithReferencedTimings(node, sublist, timing) {
 
   for (let item of sublist) {
     if (item.constructor === String) {
-      ensureChildWithName(node, item);
-      let childNode = node.childrenByName[item];
+      let childNode = node.ensureChildWithName(item);
+      childNode.hasReferencesToOutsideTimings = true;
       // childNode.isProcessInfo = true;
       if (childNode.referencedTimings === undefined) {
         childNode.referencedTimings = [];
       }
-      childNode.referencedTimings.push(timing);
+      childNode.referencedTimings.push(makeReferencedTiming(timing));
     } else if (item.constructor === Object) {
       let keys = Object.keys(item);
       if (keys.length !== 1) {
@@ -186,13 +154,17 @@ function addNodesWithReferencedTimings(node, sublist, timing) {
       if (value.constructor !== Array) {
         return;
       }
-      ensureChildWithName(node, key);
-      let childNode = node.childrenByName[key];
+      let childNode = node.ensureChildWithName(key);
+      childNode.hasReferencesToOutsideTimings = true;
       // childNode.isProcessInfo = true;
-      if (childNode.referencedTimings === undefined) {
-        childNode.referencedTimings = [];
+      // if (childNode.referencedTimings === undefined) {
+      //   childNode.referencedTimings = [];
+      // }
+      // childNode.referencedTimings.push(timing);
+      if (childNode.referencedByDescendantsTimings === undefined) {
+        childNode.referencedByDescendantsTimings = [];
       }
-      childNode.referencedTimings.push(timing);
+      childNode.referencedByDescendantsTimings.push(timing);
       addNodesWithReferencedTimings(childNode, value, timing);
     }
   }

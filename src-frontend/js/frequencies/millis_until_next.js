@@ -28,7 +28,7 @@ export function setMillisUntilNextForEachTimingInMergedProcess(processNode) {
   //console.log("[end] setMillisUntilNextForEachTimingInMergedProcess");
 }
 
-function setMillisUntilNextForEachTiming(timings) {
+export function setMillisUntilNextForEachTiming(timings) {
   let previousTiming = timings[0];
   let i = 1;
   while (i < timings.length) {

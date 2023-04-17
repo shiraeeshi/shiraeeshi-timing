@@ -630,13 +630,7 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
         });
       }
     }
-    let timings = [];
-    if (processNode.timings.length > 0) {
-      timings = processNode.timings;
-    }
-    if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
-      timings = timings.concat(processNode.referencedTimings);
-    }
+    let timings = processNode.getTimingsToDraw();
     timings.forEach(t => drawTiming(t));
     if (lastTimingColorRGBA && !processNode.isMergedChild && !processNode.hasMergedChildren) {
       ctx.fillStyle = lastTimingColorRGBA;
@@ -682,9 +676,11 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     //   .forEach(p => drawTimingsOfProcess(p, timingsColor, lastTimingColor));
     drawTimingsOfProcessNode(that.processNode, timingsColor, lastTimingColor, that.highlightedProcessNode);
 
+    // if (that.highlightedProcessNodeViewState !== TimingsCategoryNodeViewState.HIGHLIGHTED &&
+    //     that.highlightedProcessNode.referencedTimings !== undefined &&
+    //     that.highlightedProcessNode.referencedTimings.length > 0) {
     if (that.highlightedProcessNodeViewState !== TimingsCategoryNodeViewState.HIGHLIGHTED &&
-        that.highlightedProcessNode.referencedTimings !== undefined &&
-        that.highlightedProcessNode.referencedTimings.length > 0) {
+        that.highlightedProcessNode.hasReferencesToOutsideTimings) {
       // TODO fix the logic of highlighting
       timingsColor = 'rgba(0, 85, 255, 1)';
       lastTimingColor = 'rgba(0, 50, 150, 1)';

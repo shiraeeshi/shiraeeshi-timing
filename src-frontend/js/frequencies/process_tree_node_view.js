@@ -178,6 +178,9 @@ ProcessTreeNodeView.prototype.name2html = function() {
     if (viewState === TimingsCategoryNodeViewState.UNHIGHLIGHTED) {
       that.getRoot().unhighlightTree();
       that.highlightTree();
+      if (that.processNode.hasReferencesToOutsideTimings) {
+        that.processNode.borrowReferences();
+      }
       // let categoryFullName = that.timingsCategoryNode.fullName();
       // my.highlightedCategory = categoryFullName;
       // displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
@@ -218,6 +221,9 @@ ProcessTreeNodeView.prototype.name2html = function() {
     } else if (viewState === TimingsCategoryNodeViewState.HIGHLIGHTED) {
 
       that.getRoot().highlightTree();
+      if (that.processNode.hasReferencesToOutsideTimings) {
+        that.processNode.unborrowReferences();
+      }
       if (that.hGraphic) {
         that.hGraphic.highlightProcess(that.processNode, that.viewState);
       }
