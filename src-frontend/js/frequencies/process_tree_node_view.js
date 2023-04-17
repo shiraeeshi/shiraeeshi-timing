@@ -1,7 +1,5 @@
 const { TimingsCategoryNodeViewState } = require('../timings/categories/node_view_state.js');
 
-const { setMillisUntilNextForProcessNode, setMillisUntilNextForEachTimingInMergedProcess } = require('./millis_until_next.js');
-
 const { withChildren, withClass } = require('../html_utils.js');
 
 export function ProcessTreeNodeView(processNode, hGraphic, parentNodeView, rootNodeView) {
@@ -50,40 +48,40 @@ ProcessTreeNodeView.prototype.findSubtreeByViewState = function(viewState) {
   return undefined;
 };
 
-ProcessTreeNodeView.prototype.getFirstTiming = function() {
-  let that = this;
-  let processNode = that.processNode;
-  if (processNode.hasMergedChildren && processNode.firstTimingOfMergedProcess !== undefined) {
-    return processNode.firstTimingOfMergedProcess;
-  }
-  function minTiming(a, b) {
-    if (a === undefined) {
-      return b;
-    } else if (b === undefined) {
-      return a;
-    } else {
-      if (a.fromdate.getTime() < b.fromdate.getTime()) {
-        return a;
-      } else {
-        return b;
-      }
-    }
-  }
-  let firstFromChildren = that.children.map(ch => ch.getFirstTiming()).reduce(minTiming, undefined);
-  if (processNode.timings.length > 0) {
-    return minTiming(firstFromChildren, processNode.timings[0]);
-  } else if (processNode.referencedTimings && processNode.referencedTimings.length > 0) {
-    return minTiming(firstFromChildren, processNode.referencedTimings[0]);
-  } else {
-    return firstFromChildren;
-  }
-}
+// ProcessTreeNodeView.prototype.getFirstTiming = function() {
+//   let that = this;
+//   let processNode = that.processNode;
+//   if (processNode.hasMergedChildren && processNode.firstTimingOfMergedProcess !== undefined) {
+//     return processNode.firstTimingOfMergedProcess;
+//   }
+//   function minTiming(a, b) {
+//     if (a === undefined) {
+//       return b;
+//     } else if (b === undefined) {
+//       return a;
+//     } else {
+//       if (a.fromdate.getTime() < b.fromdate.getTime()) {
+//         return a;
+//       } else {
+//         return b;
+//       }
+//     }
+//   }
+//   let firstFromChildren = that.children.map(ch => ch.getFirstTiming()).reduce(minTiming, undefined);
+//   if (processNode.timings.length > 0) {
+//     return minTiming(firstFromChildren, processNode.timings[0]);
+//   } else if (processNode.referencedTimings && processNode.referencedTimings.length > 0) {
+//     return minTiming(firstFromChildren, processNode.referencedTimings[0]);
+//   } else {
+//     return firstFromChildren;
+//   }
+// }
 
 ProcessTreeNodeView.prototype.sortChildrenByFirstTiming = function(processNode) {
   let that = this;
   that.children.sort((a, b) => {
-    let ta = a.getFirstTiming();
-    let tb = b.getFirstTiming();
+    let ta = a.processNode.getFirstTiming();
+    let tb = b.processNode.getFirstTiming();
     if (ta === undefined || tb === undefined) {
       return 0;
     }
@@ -440,9 +438,8 @@ ProcessTreeNodeView.prototype.html = function() {
 
 ProcessTreeNodeView.prototype.mergeSubprocesses = function() {
   let that = this;
-  setMillisUntilNextForEachTimingInMergedProcess(that.processNode);
+  that.processNode.mergeSubprocesses();
   that.hasMergedChildren = true;
-  that.processNode.hasMergedChildren = true;
   that.htmlElement && that.htmlElement.classList.add('merged-children');
   that.children.forEach(child => child.markAsMerged());
   if (that.hGraphic) {
@@ -453,7 +450,6 @@ ProcessTreeNodeView.prototype.mergeSubprocesses = function() {
 ProcessTreeNodeView.prototype.markAsMerged = function() {
   let that = this;
   that.isMergedChild = true;
-  that.processNode.isMergedChild = true;
   that.htmlElement && that.htmlElement.classList.add('merged-child');
   that.children.forEach(child => child.markAsMerged());
 }
@@ -461,7 +457,6 @@ ProcessTreeNodeView.prototype.markAsMerged = function() {
 ProcessTreeNodeView.prototype.markAsUnmerged = function() {
   let that = this;
   that.isMergedChild = false;
-  that.processNode.isMergedChild = false;
   that.htmlElement && that.htmlElement.classList.remove('merged-child');
   that.children.forEach(child => child.markAsUnmerged());
 }
@@ -475,7 +470,7 @@ ProcessTreeNodeView.prototype.unmergeSubprocesses = function() {
     that.parentNodeView.unmergeSubprocesses();
   } else if (that.hasMergedChildren) {
 
-    setMillisUntilNextForProcessNode(that.processNode);
+    that.processNode.unmergeSubprocesses();
 
     that.hasMergedChildren = false;
 

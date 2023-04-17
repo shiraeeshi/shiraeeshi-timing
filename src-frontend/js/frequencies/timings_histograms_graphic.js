@@ -1,4 +1,3 @@
-const { resetMillisUntilNextForProcessNode } = require('./millis_until_next.js');
 const { TimingsCategoryNodeViewState } = require('../timings/categories/node_view_state.js');
 const { withChildren } = require('../html_utils.js');
 
@@ -15,13 +14,11 @@ export function TimingsHistogramsGraphic(processNode) {
   //this.highlightedProcessName = null; // invoke highlightProcess
   this.highlightedProcessNode = null;
   this.highlightedProcessNodeViewState = null;
-  this.selectedProcessNode = null; // invoke selectProcess
   this.highlightedSubprocessOfSelectedProcessNode = null; // invoke highlightSubprocessOfSelectedProcessNode
 }
 
 TimingsHistogramsGraphic.prototype.setProcessNode = function(processNode) {
   this.processNode = processNode;
-  this.selectedProcessNode = null;
   this.highlightedSubprocessOfSelectedProcessNode = null;
 }
 
@@ -83,14 +80,6 @@ TimingsHistogramsGraphic.prototype.shiftRangeY = function(newFrom, newTo) {
   }
   this.rangeY.from = newFrom;
   this.rangeY.to = newTo;
-};
-
-TimingsHistogramsGraphic.prototype.selectProcess = function(selectedProcessNode) {
-  let that = this;
-  resetMillisUntilNextForProcessNode(that.processNode, selectedProcessNode);
-  that.selectedProcessNode = selectedProcessNode;
-  that.highlightedProcessNode = selectedProcessNode;
-  that.redraw();
 };
 
 TimingsHistogramsGraphic.prototype.highlightProcess = function(processNode, processNodeViewState) {
@@ -498,11 +487,12 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   function findMaxRecursive(processNode, defaultValue, innerMaxFunc) {
     let localMax = defaultValue;
     let timings = [];
-    if (processNode.timings.length > 0) {
-      timings = processNode.timings;
+    let processNodeTimings = processNode.ownTimingsAsReferences;
+    if (processNodeTimings.length > 0) {
+      timings = processNodeTimings;
     }
-    if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
-      timings = timings.concat(processNode.referencedTimings);
+    if (processNode.referencedByDescendantsTimings !== undefined && processNode.referencedByDescendantsTimings.length > 0) {
+      timings = timings.concat(processNode.referencedByDescendantsTimings);
     }
     if (timings.length > 0) {
       localMax = innerMaxFunc(timings);
@@ -592,10 +582,7 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   //   }
   // }
 
-  function drawTimingsOfProcessNode(processNode, colorRGBA, lastTimingColorRGBA, exceptChildNode) {
-    if (colorRGBA) {
-      ctx.fillStyle = colorRGBA;
-    }
+  function drawTimingsOfProcessNode(processNode, colorRGBA, lastTimingColorRGBA, exceptChildNode, isHighlighted) {
     //function distort(timeDiff, y) {
     function distort(y) {
       // let xa = that.distortionX.a;
@@ -630,23 +617,36 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
         });
       }
     }
-    let timings = processNode.getTimingsToDraw();
+
+    if (processNode === exceptChildNode) {
+      return;
+    }
+
+    if (colorRGBA) {
+      ctx.fillStyle = colorRGBA;
+    }
+
+    let timings;
+    if (isHighlighted) {
+      timings = processNode.getTimingsToHighlight();
+    } else {
+      timings = processNode.getTimingsToDraw();
+    }
     timings.forEach(t => drawTiming(t));
-    if (lastTimingColorRGBA && !processNode.isMergedChild && !processNode.hasMergedChildren) {
-      ctx.fillStyle = lastTimingColorRGBA;
-      if (timings.length > 0) {
-        drawTiming(timings[timings.length - 1]);
+
+    processNode.children
+      .forEach((childProcessNode) => {
+        drawTimingsOfProcessNode(childProcessNode, colorRGBA, lastTimingColorRGBA, exceptChildNode);
+      });
+
+    if (lastTimingColorRGBA !== undefined && !processNode.isMergedChild) {
+      let lastTiming = processNode.getLastTimingToDraw();
+      if (lastTiming !== undefined) {
+        ctx.fillStyle = lastTimingColorRGBA;
+        drawTiming(lastTiming);
       }
     }
-    processNode.children
-      .filter((childNode) => childNode !== exceptChildNode)
-      .forEach((childProcessNode) => {
-        drawTimingsOfProcessNode(childProcessNode, colorRGBA, lastTimingColorRGBA);
-      });
-    if (lastTimingColorRGBA && processNode.hasMergedChildren && processNode.lastTimingOfMergedProcess !== undefined) {
-      ctx.fillStyle = lastTimingColorRGBA;
-      drawTiming(processNode.lastTimingOfMergedProcess);
-    }
+
   }
 
   // if (that.highlightedProcessName) {
@@ -688,7 +688,7 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
       timingsColor = 'rgba(190, 0, 20, 1)';
       lastTimingColor = 'rgba(140, 0, 15, 1)';
     }
-    drawTimingsOfProcessNode(that.highlightedProcessNode, timingsColor, lastTimingColor);
+    drawTimingsOfProcessNode(that.highlightedProcessNode, timingsColor, lastTimingColor, undefined, true);
   } else {
     let timingsColor = 'rgba(100, 120, 120, 1)';
     let lastTimingColor = 'rgba(70, 80, 80, 1)';

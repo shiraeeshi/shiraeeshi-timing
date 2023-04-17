@@ -1,5 +1,4 @@
 const { ProcessNode } = require('./process_node.js');
-const { setMillisUntilNextForProcessNode } = require('./millis_until_next.js');
 const { timingDateArrays2Date, dateArray2str, timeArray2str } = require('../date_utils.js');
 
 function sortTimings(processNode) {
@@ -46,6 +45,7 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
           err.fromdateStr = `${dateArray2str(dt)} ${timeArray2str(t.from)}`;
           throw err;
         }
+        let firstReference = makeReferencedTiming(t);
         for (let index = 0; index < yamlValue.length - 1; index++) {
           let item = yamlValue[index];
           if (item.constructor !== String) {
@@ -99,7 +99,7 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
                 if (testPropValue.constructor !== Array || testPropValue.length !== 1) {
                   if (testPropValue.constructor === Array && testPropValue.length > 1) {
                     let aNode = node.ensureChildWithName(propName);
-                    addNodesWithReferencedTimings(aNode, testPropValue, t);
+                    addNodesWithReferencedTimings(aNode, testPropValue, firstReference);
                     node = aNode;
                   }
                   break;
@@ -108,7 +108,7 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
                 propValue = testPropValue;
               }
             } else if (propValue.length > 1) {
-              addNodesWithReferencedTimings(node, propValue, t);
+              addNodesWithReferencedTimings(node, propValue, firstReference);
             }
           }
           t.info = propValue;
@@ -119,11 +119,12 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
           throw err;
         }
         node.timings.push(t);
+        node.ownTimingsAsReferences.push(firstReference);
       });
     }
   });
   sortTimings(timingsBySubcategoriesTree);
-  setMillisUntilNextForProcessNode(timingsBySubcategoriesTree);
+  timingsBySubcategoriesTree.initMillisUntilNext();
   return timingsBySubcategoriesTree;
 }
 
