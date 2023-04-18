@@ -125,6 +125,9 @@ module.exports = [
       filename: 'timings_frequencies.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/timings_reports'),
     },
+    optimization: {
+      minimize: false,
+    },
   },
   {
     entry: './src-frontend/timings_history/latest.renderer.js',
