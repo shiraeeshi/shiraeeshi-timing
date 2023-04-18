@@ -131,10 +131,9 @@ ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
     } else {
       parent.insertBefore(that.htmlElement, parent.children[htmlChildIndex]);
     }
-  } else {
-    if (that.processNode.isInnermostCategory && that.children.length > 0) {
-      that.mergeSubprocesses();
-    }
+  }
+  if (that.processNode.isInnermostCategory && that.children.length > 0) {
+    that.mergeSubprocessesOrRecalculate();
   }
 };
 
@@ -434,6 +433,17 @@ ProcessTreeNodeView.prototype.html = function() {
   }
   that.buildAsHtmlLiElement();
   return that.htmlElement;
+};
+
+ProcessTreeNodeView.prototype.mergeSubprocessesOrRecalculate = function() {
+  let that = this;
+  that.processNode.mergeSubprocessesOrRecalculate();
+  that.hasMergedChildren = true;
+  that.htmlElement && that.htmlElement.classList.add('merged-children');
+  that.children.forEach(child => child.markAsMerged());
+  if (that.hGraphic) {
+    that.hGraphic.redraw();
+  }
 };
 
 ProcessTreeNodeView.prototype.mergeSubprocesses = function() {

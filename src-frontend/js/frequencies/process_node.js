@@ -108,6 +108,14 @@ ProcessNode.prototype._getOwnTimingsAsReferences = function() {
   return that.ownTimingsAsReferences;
 };
 
+ProcessNode.prototype.mergeSubprocessesOrRecalculate = function() {
+  let that = this;
+  if (that.mergedSubprocessesTimings !== undefined) {
+    delete that.mergedSubprocessesTimings;
+  }
+  that.mergeSubprocesses();
+};
+
 ProcessNode.prototype.mergeSubprocesses = function() {
   let that = this;
   function collectTimings(processNode) {
