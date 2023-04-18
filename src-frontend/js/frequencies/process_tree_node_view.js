@@ -132,8 +132,9 @@ ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
       parent.insertBefore(that.htmlElement, parent.children[htmlChildIndex]);
     }
   }
+  that.processNode.deleteStashedValues();
   if (that.processNode.isInnermostCategory && that.children.length > 0) {
-    that.mergeSubprocessesOrRecalculate();
+    that.mergeSubprocesses();
   }
 };
 

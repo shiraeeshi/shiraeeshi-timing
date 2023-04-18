@@ -66,7 +66,7 @@ function handleServerMessage(msg) {
       console.log('initial handleServerMessage. timings keys:');
       console.dir(Object.keys(timings));
       my.timings = handleTimings(timings, undefined);
-      console.log(`initial handleServerMessage. handleTimings result: ${JSON.stringify(my.timings)}`);
+      // console.log(`initial handleServerMessage. handleTimings result: ${JSON.stringify(my.timings)}`);
       my.viewBuilder.buildViews(my.timings);
       my.viewBuilder.showView();
     }).catch(err => {

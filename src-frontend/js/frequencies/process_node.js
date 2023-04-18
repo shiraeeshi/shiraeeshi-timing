@@ -1,26 +1,30 @@
 const { TimingsCategoryNodeViewState } = require('../timings/categories/node_view_state.js');
 
-export function ProcessNode(name) {
+export function ProcessNode(name, parentNode) {
   this.name = name;
+  this.parent = parentNode !== undefined ? parentNode : null;
   this.childrenByName = {};
   this.children = [];
   this.timings = [];
   this.ownTimingsAsReferences = [];
+  this.stashed = {};
   // this.referencedTimings = undefined;
   // this.referencedByDescendantsTimings = undefined;
   // this.timingsWithBorrowedReferences = undefined;
   // this.mergedSubprocessesTimings = undefined;
+  // this.mergedSubprocessesTimingsWithBorrowedReferences = undefined;
   // this.isInnermostCategory = undefined;
   // this.hasReferencesToOutsideTimings = undefined;
   // this.isMergedChild = undefined;
   // this.hasMergedChildren = undefined;
+  // this.hasBorrowedReferences = undefined;
   // this.firstTimingOfMergedProcess = undefined;
   // this.lastTimingOfMergedProcess = undefined;
 }
 
 ProcessNode.prototype.newChildWithName = function(name) {
   let that = this;
-  let child = new ProcessNode(name);
+  let child = new ProcessNode(name, that);
   that.childrenByName[name] = child;
   that.children.push(child);
   return child;
@@ -30,7 +34,7 @@ ProcessNode.prototype.ensureChildWithName = function(name) {
   let that = this;
   let child = that.childrenByName[name];
   if (child === undefined) {
-    child = that.newChildWithName(name);
+    child = that.newChildWithName(name, that);
   }
 
   // if (that.isInnermostCategory || that.isProcessInfo) {
@@ -66,11 +70,21 @@ ProcessNode.prototype.initMillisUntilNext = function() {
 
 ProcessNode.prototype.borrowReferences = function() {
   let that = this;
+  that.hasBorrowedReferences = true;
+  if (that.hasMergedChildren &&
+      that.stashed.mergedSubprocessesTimingsWithBorrowedReferences !== undefined) {
+    that._restoreMergedBorrowed();
+    return;
+  }
+  if (that.stashed.timingsWithBorrowedReferences !== undefined) {
+    that._restoreBorrowed();
+    return;
+  }
   let timings;
   if (that.hasMergedChildren) {
-    timings = that.mergedSubprocessesTimings.map(makeReferencedTiming);
+    timings = that.mergedSubprocessesTimings;
   } else {
-    timings = that.timings.map(t => makeReferencedTiming(t));
+    timings = that.ownTimingsAsReferences;
   }
   if (that.referencedTimings !== undefined && that.referencedTimings.length > 0) {
     timings = timings.concat(that.referencedTimings);
@@ -80,13 +94,23 @@ ProcessNode.prototype.borrowReferences = function() {
   }
   timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
   setMillisUntilNextForEachTiming(timings);
-  that.timingsWithBorrowedReferences = timings;
+  if (that.hasMergedChildren) {
+    that.mergedSubprocessesTimingsWithBorrowedReferences = timings;
+    that.stashed.mergedSubprocessesTimingsWithBorrowedReferences = timings.map(makeStashedReferencedTiming);
+  } else {
+    that.timingsWithBorrowedReferences = timings;
+    that.stashed.timingsWithBorrowedReferences = timings.map(makeStashedReferencedTiming);
+  }
   // that.children.forEach(child => child.borrowReferences());
 };
 
 ProcessNode.prototype.unborrowReferences = function() {
   let that = this;
-  delete that.timingsWithBorrowedReferences;
+  that.hasBorrowedReferences = false;
+  // delete that.timingsWithBorrowedReferences;
+  for (let ref of that.ownTimingsAsReferences) {
+    delete ref.millisUntilNext;
+  }
   if (that.referencedTimings !== undefined) {
     for (let ref of that.referencedTimings) {
       delete ref.millisUntilNext;
@@ -97,7 +121,27 @@ ProcessNode.prototype.unborrowReferences = function() {
       delete ref.millisUntilNext;
     }
   }
+  if (that.hasMergedChildren) {
+    // that.mergeSubprocessesOrRecalculate();
+    that._restoreMerged();
+  } else if (that.isMergedChild) {
+    let merger = that.findAncestorThatMerged();
+    if (merger !== undefined) {
+      merger._restoreStashedValues();
+    }
+  }
   // that.children.forEach(child => child.unborrowReferences());
+};
+
+ProcessNode.prototype.findAncestorThatMerged = function() {
+  let that = this;
+  let parent = that.parent;
+  while (parent !== null) {
+    if (parent.hasMergedChildren) {
+      return parent;
+    }
+    parent = parent.parent;
+  }
 };
 
 ProcessNode.prototype._getOwnTimingsAsReferences = function() {
@@ -108,12 +152,66 @@ ProcessNode.prototype._getOwnTimingsAsReferences = function() {
   return that.ownTimingsAsReferences;
 };
 
-ProcessNode.prototype.mergeSubprocessesOrRecalculate = function() {
+ProcessNode.prototype._restoreStashedValues = function() {
+  let that = this;
+  if (that.hasMergedChildren) {
+    if (that.hasBorrowedReferences) {
+      that._restoreMergedBorrowed();
+    } else {
+      that._restoreMerged();
+    }
+  } else if (that.hasBorrowedReferences) {
+    that._restoreBorrowed();
+  }
+};
+
+ProcessNode.prototype._restoreMerged = function() {
+  let that = this;
+  that.stashed.mergedSubprocessesTimings.forEach(t => {
+    Object.getPrototypeOf(t).millisUntilNext = t.millisUntilNext
+  });
+  that.mergedSubprocessesTimings = 
+    that.stashed.mergedSubprocessesTimings.map(t => Object.getPrototypeOf(t));
+};
+
+ProcessNode.prototype._restoreBorrowed = function() {
+  let that = this;
+  that.stashed.timingsWithBorrowedReferences.forEach(t => {
+    Object.getPrototypeOf(t).millisUntilNext = t.millisUntilNext
+  });
+  that.timingsWithBorrowedReferences = 
+    that.stashed.timingsWithBorrowedReferences.map(t => Object.getPrototypeOf(t));
+};
+
+ProcessNode.prototype._restoreMergedBorrowed = function() {
+  let that = this;
+  that.stashed.mergedSubprocessesTimingsWithBorrowedReferences.forEach(t => {
+    Object.getPrototypeOf(t).millisUntilNext = t.millisUntilNext
+  });
+  that.mergedSubprocessesTimingsWithBorrowedReferences = 
+    that.stashed.mergedSubprocessesTimingsWithBorrowedReferences.map(t => Object.getPrototypeOf(t));
+};
+
+ProcessNode.prototype.deleteStashedValues = function() {
   let that = this;
   if (that.mergedSubprocessesTimings !== undefined) {
     delete that.mergedSubprocessesTimings;
   }
-  that.mergeSubprocesses();
+  if (that.stashed.mergedSubprocessesTimings !== undefined) {
+    delete that.stashed.mergedSubprocessesTimings;
+  }
+  if (that.mergedSubprocessesTimingsWithBorrowedReferences !== undefined) {
+    delete that.mergedSubprocessesTimingsWithBorrowedReferences;
+  }
+  if (that.stashed.mergedSubprocessesTimingsWithBorrowedReferences !== undefined) {
+    delete that.stashed.mergedSubprocessesTimingsWithBorrowedReferences;
+  }
+  if (that.timingsWithBorrowedReferences !== undefined) {
+    delete that.timingsWithBorrowedReferences;
+  }
+  if (that.stashed.timingsWithBorrowedReferences !== undefined) {
+    delete that.stashed.timingsWithBorrowedReferences;
+  }
 };
 
 ProcessNode.prototype.mergeSubprocesses = function() {
@@ -128,21 +226,34 @@ ProcessNode.prototype.mergeSubprocesses = function() {
     }
     return processNode.ownTimingsAsReferences.concat(timingsOfChildren);
   }
-  let timings;
-  if (that.mergedSubprocessesTimings !== undefined) {
-    timings = that.mergedSubprocessesTimings;
-    timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
-    setMillisUntilNextForEachTiming(timings);
-  } else {
-    timings = collectTimings(that);
-    timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
-    setMillisUntilNextForEachTiming(timings);
-    // if (timings.length > 0) {
-    //   that.lastTimingOfMergedProcess = timings[timings.length - 1];
-    // }
-    that.mergedSubprocessesTimings = timings;
-  }
+
   that.hasMergedChildren = true;
+
+  if (that.hasBorrowedReferences &&
+      that.stashed.mergedSubprocessesTimingsWithBorrowedReferences !== undefined) {
+    that._restoreMergedBorrowed();
+  } else if (that.stashed.mergedSubprocessesTimings !== undefined) {
+    that._restoreMerged();
+  } else {
+    let timings;
+    if (that.mergedSubprocessesTimings !== undefined) {
+      timings = that.mergedSubprocessesTimings;
+    } else {
+      timings = collectTimings(that);
+      // if (timings.length > 0) {
+      //   that.lastTimingOfMergedProcess = timings[timings.length - 1];
+      // }
+      that.mergedSubprocessesTimings = timings;
+    }
+
+    timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
+    setMillisUntilNextForEachTiming(timings);
+    that.stashed.mergedSubprocessesTimings = timings.map(makeStashedReferencedTiming);
+
+    if (that.hasBorrowedReferences) {
+      that.borrowReferences();
+    }
+  }
   that.children.forEach(child => child._markAsMerged());
 };
 
@@ -153,6 +264,14 @@ ProcessNode.prototype.unmergeSubprocesses = function() {
     delete ref.millisUntilNext;
   }
   that.children.forEach(child => child._markAsUnmerged());
+
+  if (that.hasBorrowedReferences) {
+    if (that.timingsWithBorrowedReferences === undefined) {
+      that.borrowReferences();
+    } else {
+      that._restoreBorrowed();
+    }
+  }
 };
 
 ProcessNode.prototype._markAsMerged = function() {
@@ -282,5 +401,12 @@ function setMillisUntilNextForEachTiming(timings) {
 function makeReferencedTiming(t) {
   let ref = Object.create(t);
   ref.isReference = true;
+  return ref;
+}
+
+function makeStashedReferencedTiming(t) {
+  let ref = Object.create(t);
+  ref.isReference = true;
+  ref.millisUntilNext = t.millisUntilNext;
   return ref;
 }
