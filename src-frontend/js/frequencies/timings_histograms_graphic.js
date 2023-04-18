@@ -491,8 +491,8 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     if (processNodeTimings.length > 0) {
       timings = processNodeTimings;
     }
-    if (processNode.referencedByDescendantsTimings !== undefined && processNode.referencedByDescendantsTimings.length > 0) {
-      timings = timings.concat(processNode.referencedByDescendantsTimings);
+    if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
+      timings = timings.concat(processNode.referencedTimings);
     }
     if (timings.length > 0) {
       localMax = innerMaxFunc(timings);
