@@ -317,7 +317,9 @@ ProcessNode.prototype.getLastTimingToDraw = function() {
 
 ProcessNode.prototype.getTimingsToDraw = function() {
   let that = this;
-  if (that.timingsWithBorrowedReferences !== undefined) {
+  if (that.hasBorrowedReferences &&
+      !that.hasMergedChildren &&
+      that.timingsWithBorrowedReferences !== undefined) {
     return that.timingsWithBorrowedReferences;
   }
   let timings;
@@ -331,7 +333,9 @@ ProcessNode.prototype.getTimingsToDraw = function() {
 
 ProcessNode.prototype.getTimingsToHighlight = function() {
   let that = this;
-  if (that.timingsWithBorrowedReferences !== undefined) {
+  if (that.hasBorrowedReferences &&
+      !that.hasMergedChildren &&
+      that.timingsWithBorrowedReferences !== undefined) {
     return that.timingsWithBorrowedReferences;
   }
   let timings;
