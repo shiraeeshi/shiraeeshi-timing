@@ -292,18 +292,6 @@ ProcessTreeNodeView.prototype.unhideHiddenChildren = function() {
 ProcessTreeNodeView.prototype.showThisProcessOnly = function() {
   let that = this;
   that.rootNodeView.showThisProcessOnly(that);
-  // that.moveToTop();
-  // that.hideSiblingsBelow();
-  // let p = that.parentNodeView;
-  // while (p !== undefined) {
-  //   p.moveToTop();
-  //   p.hideSiblingsBelow();
-  //   p = p.parentNodeView;
-  // }
-  // if (that.hGraphic) {
-  //   that.hGraphic.setProcessNode(that.processNode);
-  //   that.hGraphic.redraw();
-  // }
 }
 
 ProcessTreeNodeView.prototype.html = function() {
