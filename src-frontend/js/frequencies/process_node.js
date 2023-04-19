@@ -228,6 +228,7 @@ ProcessNode.prototype.mergeSubprocesses = function() {
   }
 
   that.hasMergedChildren = true;
+  that.children.forEach(child => child._markAsMerged());
 
   if (that.hasBorrowedReferences &&
       that.stashed.mergedSubprocessesTimingsWithBorrowedReferences !== undefined) {
@@ -254,7 +255,6 @@ ProcessNode.prototype.mergeSubprocesses = function() {
       that.borrowReferences();
     }
   }
-  that.children.forEach(child => child._markAsMerged());
 };
 
 ProcessNode.prototype.unmergeSubprocesses = function() {
@@ -276,6 +276,9 @@ ProcessNode.prototype.unmergeSubprocesses = function() {
 
 ProcessNode.prototype._markAsMerged = function() {
   let that = this;
+  if (that.hasMergedChildren) {
+    that.unmergeSubprocesses();
+  }
   that.isMergedChild = true;
   that.children.forEach(child => child._markAsMerged());
 };
