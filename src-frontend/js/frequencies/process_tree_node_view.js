@@ -20,6 +20,7 @@ export function ProcessTreeNodeView(processNode, hGraphic, parentNodeView, rootN
   that.hasMergedChildren = false;
   that.isMergedChild = false;
   that.hasManuallyHiddenChildren = false;
+  that.isTemporaryRoot = false;
   that.htmlParentToReturnTo = undefined;
   that.indexToReturnTo = undefined;
   that.htmlChildrenContainerUl = document.createElement('ul');
@@ -147,7 +148,8 @@ ProcessTreeNodeView.prototype.name2html = function() {
     if (viewState === TimingsCategoryNodeViewState.UNHIGHLIGHTED) {
       that.getRoot().unhighlightTree();
       that.highlightTree();
-      if (that.processNode.hasReferencesToOutsideTimings) {
+      if (that.processNode.hasReferencesToOutsideTimings &&
+          !that.isTemporaryRoot) {
         that.processNode.borrowReferences();
       }
       if (that.hGraphic) {
@@ -159,7 +161,8 @@ ProcessTreeNodeView.prototype.name2html = function() {
     } else if (viewState === TimingsCategoryNodeViewState.HIGHLIGHTED) {
 
       that.getRoot().highlightTree();
-      if (that.processNode.hasReferencesToOutsideTimings) {
+      if (that.processNode.hasReferencesToOutsideTimings &&
+          !that.isTemporaryRoot) {
         that.processNode.unborrowReferences();
       }
       if (that.hGraphic) {
@@ -169,7 +172,8 @@ ProcessTreeNodeView.prototype.name2html = function() {
     } else if (viewState === TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD) {
       that.getRoot().unhighlightTree();
       that.highlightTree();
-      if (that.processNode.hasReferencesToOutsideTimings) {
+      if (that.processNode.hasReferencesToOutsideTimings &&
+          !that.isTemporaryRoot) {
         that.processNode.borrowReferences();
       }
       if (that.hGraphic) {
