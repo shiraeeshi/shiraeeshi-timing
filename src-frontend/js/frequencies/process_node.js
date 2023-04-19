@@ -77,7 +77,8 @@ ProcessNode.prototype.borrowReferences = function() {
     that._restoreMergedBorrowed();
     return;
   }
-  if (that.stashed.timingsWithBorrowedReferences !== undefined) {
+  if (that.stashed.timingsWithBorrowedReferences !== undefined &&
+      !that.hasMergedChildren) {
     that._restoreBorrowed();
     return;
   }
