@@ -71,6 +71,7 @@ ProcessNode.prototype.initMillisUntilNext = function() {
 ProcessNode.prototype.borrowReferences = function() {
   let that = this;
   that.hasBorrowedReferences = true;
+  that.children.forEach(child => child.handleAncestorBorrowedReferences());
   if (that.hasMergedChildren &&
       that.stashed.mergedSubprocessesTimingsWithBorrowedReferences !== undefined) {
     that._restoreMergedBorrowed();
@@ -102,6 +103,22 @@ ProcessNode.prototype.borrowReferences = function() {
     that.stashed.timingsWithBorrowedReferences = timings.map(makeStashedReferencedTiming);
   }
   // that.children.forEach(child => child.borrowReferences());
+};
+
+ProcessNode.prototype.handleAncestorBorrowedReferences = function() {
+  let that = this;
+  that.hasBorrowedReferences = false;
+  if (that.referencedTimings !== undefined) {
+    for (let ref of that.referencedTimings) {
+      delete ref.millisUntilNext;
+    }
+  }
+  if (that.referencedByDescendantsTimings !== undefined) {
+    for (let ref of that.referencedByDescendantsTimings) {
+      delete ref.millisUntilNext;
+    }
+  }
+  that.children.forEach(child => child.handleAncestorBorrowedReferences());
 };
 
 ProcessNode.prototype.unborrowReferences = function() {
@@ -308,7 +325,8 @@ ProcessNode.prototype._markAsUnmerged = function() {
 ProcessNode.prototype.getLastTimingToDraw = function() {
   let that = this;
   if (that.hasBorrowedReferences) {
-    if (that.hasMergedChildren) {
+    if (that.hasMergedChildren &&
+        that.mergedSubprocessesTimingsWithBorrowedReferences !== undefined) {
       let len = that.mergedSubprocessesTimingsWithBorrowedReferences.length;
       return that.mergedSubprocessesTimingsWithBorrowedReferences[len - 1];
     } else if (that.timingsWithBorrowedReferences !== undefined) {
@@ -339,7 +357,8 @@ ProcessNode.prototype.getLastTimingToDraw = function() {
 ProcessNode.prototype.getLastTimingToHighlight = function() {
   let that = this;
   if (that.hasBorrowedReferences) {
-    if (that.hasMergedChildren) {
+    if (that.hasMergedChildren &&
+        that.mergedSubprocessesTimingsWithBorrowedReferences !== undefined) {
       let len = that.mergedSubprocessesTimingsWithBorrowedReferences.length;
       return that.mergedSubprocessesTimingsWithBorrowedReferences[len - 1];
     } else if (that.timingsWithBorrowedReferences !== undefined) {

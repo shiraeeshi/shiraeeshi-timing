@@ -162,11 +162,12 @@ function addNodesWithReferencedTimings(node, sublist, timing) {
       //   childNode.referencedTimings = [];
       // }
       // childNode.referencedTimings.push(timing);
+      let ref = makeReferencedTiming(timing);
       if (childNode.referencedByDescendantsTimings === undefined) {
         childNode.referencedByDescendantsTimings = [];
       }
-      childNode.referencedByDescendantsTimings.push(makeReferencedTiming(timing));
-      addNodesWithReferencedTimings(childNode, value, timing);
+      childNode.referencedByDescendantsTimings.push(ref);
+      addNodesWithReferencedTimings(childNode, value, ref);
     }
   }
 }
