@@ -214,6 +214,21 @@ ProcessNode.prototype.deleteStashedValues = function() {
   }
 };
 
+ProcessNode.prototype.ensureAllDescendantsUnmerged = function() {
+  let that = this;
+  that.children.forEach(child => {
+    child.ensureUnmerged();
+    child.ensureAllDescendantsUnmerged();
+  });
+};
+
+ProcessNode.prototype.ensureUnmerged = function() {
+  let that = this;
+  if (that.hasMergedChildren) {
+    that.unmergeSubprocesses();
+  }
+};
+
 ProcessNode.prototype.mergeSubprocesses = function() {
   let that = this;
   function collectTimings(processNode) {
@@ -228,7 +243,7 @@ ProcessNode.prototype.mergeSubprocesses = function() {
   }
 
   that.hasMergedChildren = true;
-  that.children.forEach(child => child._markAsMerged());
+  that.ensureAllDescendantsUnmerged();
 
   if (that.hasBorrowedReferences &&
       that.stashed.mergedSubprocessesTimingsWithBorrowedReferences !== undefined) {
@@ -255,6 +270,7 @@ ProcessNode.prototype.mergeSubprocesses = function() {
       that.borrowReferences();
     }
   }
+  that.children.forEach(child => child._markAsMerged());
 };
 
 ProcessNode.prototype.unmergeSubprocesses = function() {
@@ -276,9 +292,6 @@ ProcessNode.prototype.unmergeSubprocesses = function() {
 
 ProcessNode.prototype._markAsMerged = function() {
   let that = this;
-  if (that.hasMergedChildren) {
-    that.unmergeSubprocesses();
-  }
   that.isMergedChild = true;
   that.children.forEach(child => child._markAsMerged());
 };
@@ -294,9 +307,14 @@ ProcessNode.prototype._markAsUnmerged = function() {
 
 ProcessNode.prototype.getLastTimingToDraw = function() {
   let that = this;
-  if (that.timingsWithBorrowedReferences !== undefined) {
-    let len = that.timingsWithBorrowedReferences.length;
-    return that.timingsWithBorrowedReferences[len - 1];
+  if (that.hasBorrowedReferences) {
+    if (that.hasMergedChildren) {
+      let len = that.mergedSubprocessesTimingsWithBorrowedReferences.length;
+      return that.mergedSubprocessesTimingsWithBorrowedReferences[len - 1];
+    } else if (that.timingsWithBorrowedReferences !== undefined) {
+      let len = that.timingsWithBorrowedReferences.length;
+      return that.timingsWithBorrowedReferences[len - 1];
+    }
   }
   let lastTimingSoFar;
   if (that.hasMergedChildren) {
