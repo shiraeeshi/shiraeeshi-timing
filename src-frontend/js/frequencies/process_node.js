@@ -336,6 +336,40 @@ ProcessNode.prototype.getLastTimingToDraw = function() {
   return lastTiming;
 };
 
+ProcessNode.prototype.getLastTimingToHighlight = function() {
+  let that = this;
+  if (that.hasBorrowedReferences) {
+    if (that.hasMergedChildren) {
+      let len = that.mergedSubprocessesTimingsWithBorrowedReferences.length;
+      return that.mergedSubprocessesTimingsWithBorrowedReferences[len - 1];
+    } else if (that.timingsWithBorrowedReferences !== undefined) {
+      let len = that.timingsWithBorrowedReferences.length;
+      return that.timingsWithBorrowedReferences[len - 1];
+    }
+  }
+  let lastTimingSoFar;
+  if (that.hasMergedChildren) {
+    let timings = that.mergedSubprocessesTimings;
+    let len = timings.length;
+    lastTimingSoFar = timings[len - 1];
+  } else if (that.isMergedChild) {
+    let ownTimings = that.ownTimingsAsReferences;
+    let len = ownTimings.length;
+    lastTimingSoFar = ownTimings[len - 1];
+  } else {
+    let len = that.timings.length;
+    lastTimingSoFar = that.timings[len - 1];
+  }
+  let lastTiming = lastTimingSoFar;
+  if (that.referencedTimings !== undefined && that.referencedTimings.length > 0) {
+    lastTiming = that.referencedTimings.concat([lastTiming]).reduce(maxTiming, lastTiming);
+  }
+  if (that.referencedByDescendantsTimings !== undefined && that.referencedByDescendantsTimings.length > 0) {
+    lastTiming = that.referencedByDescendantsTimings.concat([lastTiming]).reduce(maxTiming, lastTiming);
+  }
+  return lastTiming;
+};
+
 ProcessNode.prototype.getTimingsToDraw = function() {
   let that = this;
   if (that.hasBorrowedReferences &&

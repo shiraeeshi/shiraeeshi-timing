@@ -640,7 +640,12 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
       });
 
     if (lastTimingColorRGBA !== undefined && !processNode.isMergedChild) {
-      let lastTiming = processNode.getLastTimingToDraw();
+      let lastTiming;
+      if (isHighlighted) {
+        lastTiming = processNode.getLastTimingToHighlight();
+      } else {
+        lastTiming = processNode.getLastTimingToDraw();
+      }
       if (lastTiming !== undefined) {
         ctx.fillStyle = lastTimingColorRGBA;
         drawTiming(lastTiming);
