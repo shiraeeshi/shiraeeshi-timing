@@ -190,6 +190,7 @@ FrequenciesView.prototype.showThisProcessOnly = function(processViewNode) {
     that._goBackToAllProcessesNoRedraw();
   }
   let processHtml = processViewNode.htmlElement;
+  processViewNode.processNode.borrowReferences();
   processViewNode.indexToReturnTo = Array.prototype.indexOf.call(processHtml.parentNode.children, processHtml);
   processViewNode.htmlParentToReturnTo = processHtml.parentNode;
   processHtml.parentNode.removeChild(processHtml);
@@ -215,6 +216,7 @@ FrequenciesView.prototype.goBackToAllProcesses = function() {
 FrequenciesView.prototype._goBackToAllProcessesNoRedraw = function() {
   let that = this;
   let processViewNode = that.solelyDisplayedProcessViewNode;
+  processViewNode.processNode.unborrowReferences();
   let processHtml = processViewNode.htmlElement;
   processHtml.parentNode.removeChild(processHtml);
   let parent = processViewNode.htmlParentToReturnTo;
