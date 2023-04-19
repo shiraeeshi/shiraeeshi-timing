@@ -48,35 +48,6 @@ ProcessTreeNodeView.prototype.findSubtreeByViewState = function(viewState) {
   return undefined;
 };
 
-// ProcessTreeNodeView.prototype.getFirstTiming = function() {
-//   let that = this;
-//   let processNode = that.processNode;
-//   if (processNode.hasMergedChildren && processNode.firstTimingOfMergedProcess !== undefined) {
-//     return processNode.firstTimingOfMergedProcess;
-//   }
-//   function minTiming(a, b) {
-//     if (a === undefined) {
-//       return b;
-//     } else if (b === undefined) {
-//       return a;
-//     } else {
-//       if (a.fromdate.getTime() < b.fromdate.getTime()) {
-//         return a;
-//       } else {
-//         return b;
-//       }
-//     }
-//   }
-//   let firstFromChildren = that.children.map(ch => ch.getFirstTiming()).reduce(minTiming, undefined);
-//   if (processNode.timings.length > 0) {
-//     return minTiming(firstFromChildren, processNode.timings[0]);
-//   } else if (processNode.referencedTimings && processNode.referencedTimings.length > 0) {
-//     return minTiming(firstFromChildren, processNode.referencedTimings[0]);
-//   } else {
-//     return firstFromChildren;
-//   }
-// }
-
 ProcessTreeNodeView.prototype.sortChildrenByFirstTiming = function(processNode) {
   let that = this;
   that.children.sort((a, b) => {
@@ -179,42 +150,11 @@ ProcessTreeNodeView.prototype.name2html = function() {
       if (that.processNode.hasReferencesToOutsideTimings) {
         that.processNode.borrowReferences();
       }
-      // let categoryFullName = that.timingsCategoryNode.fullName();
-      // my.highlightedCategory = categoryFullName;
-      // displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
       if (that.hGraphic) {
         that.hGraphic.highlightProcess(that.processNode, that.viewState);
       }
 
       console.log("a.onclick. categoryFullName: " + categoryFullName);
-
-      // let trs = document.getElementsByClassName("timing-row-parent-li");
-      // for (let i=0; i < trs.length; i++) {
-      //   trs[i].classList.add('greyed-out');
-      //   trs[i].classList.remove('extra-unhighlighted');
-      // }
-      // let timingTextViews = that.getTimingTextViewsRecursively();
-      // for (let i=0; i < timingTextViews.length; i++) {
-      //   timingTextViews[i].classList.remove('greyed-out');
-      //   timingTextViews[i].classList.remove('extra-unhighlighted');
-      // }
-
-      // function unhighlight() {
-      //   // console.log("TimingsCategoryNodeView.onclick unhighlight (set when viewState was UNHIGHLIGHTED)");
-      //   if (my.highlightedCategory !== undefined
-      //     && my.highlightedCategory.length > 0
-      //     && !that.isHighlighted()) {
-      //     a.removeEventListener('mouseleave', unhighlight);
-      //     return;
-      //   }
-      //   // displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
-      //   
-      //   if (that.hGraphic) {
-      //     that.hGraphic.redraw();
-      //   }
-      //   a.removeEventListener('mouseleave', unhighlight);
-      // }
-      // a.addEventListener('mouseleave', unhighlight)
 
     } else if (viewState === TimingsCategoryNodeViewState.HIGHLIGHTED) {
 
@@ -225,16 +165,6 @@ ProcessTreeNodeView.prototype.name2html = function() {
       if (that.hGraphic) {
         that.hGraphic.highlightProcess(that.processNode, that.viewState);
       }
-      // let trs = document.getElementsByClassName("timing-row-parent-li");
-      // for (let i=0; i < trs.length; i++) {
-      //   trs[i].classList.add('extra-unhighlighted');
-      // }
-      // let timingTextViews = that.getTimingTextViewsRecursively();
-      // console.log("a.onlick. timingTextViews.length: " + timingTextViews.length);
-      // for (let i=0; i < timingTextViews.length; i++) {
-      //   timingTextViews[i].classList.remove('greyed-out');
-      //   timingTextViews[i].classList.remove('extra-unhighlighted');
-      // }
 
     } else if (viewState === TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD) {
       that.getRoot().unhighlightTree();
@@ -245,56 +175,12 @@ ProcessTreeNodeView.prototype.name2html = function() {
       if (that.hGraphic) {
         that.hGraphic.highlightProcess(that.processNode, that.viewState);
       }
-      // let categoryFullName = that.timingsCategoryNode.fullName();
-      // my.highlightedCategory = categoryFullName;
-      // displayTimingsAsImage(my.currentFilteredTimings, categoryFullName);
-
-      // console.log("a.onclick. categoryFullName: " + categoryFullName);
-
-      // let trs = document.querySelectorAll(".timing-row-parent-li:not(.greyed-out)");
-      // for (let i=0; i < trs.length; i++) {
-      //   trs[i].classList.add('greyed-out');
-      // }
-      // let timingTextViews = that.getTimingTextViewsRecursively();
-      // for (let i=0; i < timingTextViews.length; i++) {
-      //   timingTextViews[i].classList.remove('greyed-out');
-      // }
-
-      // function unhighlight() {
-      //   // console.log("TimingsCategoryNodeView.onclick unhighlight (set when viewState was HIGHLIGHTED_AS_CHILD)");
-      //   if (my.highlightedCategory !== undefined
-      //     && my.highlightedCategory.length > 0
-      //     && !that.isHighlighted()) {
-      //     a.removeEventListener('mouseleave', unhighlight);
-      //     return;
-      //   }
-      //   // // my.highlightedCategory = [];
-      //   // displayTimingsAsImage(my.currentFilteredTimings, my.highlightedCategory);
-      //   if (that.hGraphic) {
-      //     that.hGraphic.redraw();
-      //   }
-      //   // for (let i=0; i < trs.length; i++) {
-      //   //   trs[i].classList.remove('greyed-out');
-      //   // }
-      //   a.removeEventListener('mouseleave', unhighlight);
-      // }
-      // a.addEventListener('mouseleave', unhighlight)
     } else {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "TimingsCategoryNodeView.onclick. unexpected viewState (expected a member of TimingsCategoryNodeViewState enum): " + viewState);
     }
   };
   if (that.name.includes("\n")) {
-    // let elem = withChildren(document.createElement('div'),
-    //              ...that.name.split("\n")
-    //                          .map(line => document.createTextNode(line))
-    //                          .flatMap(el => [el,document.createElement("br")])
-    //                          .slice(0, -1)
-    //            );
-    // elem.onclick = clickHandler;
-    // elem.onmouseover = hoverHandler;
-    // return elem;
-
     // let timingsCount = that.timingsCategoryNode.timingsCountRecursive;
     return
       withChildren(a,
@@ -307,13 +193,6 @@ ProcessTreeNodeView.prototype.name2html = function() {
         )
       );
   } else {
-    // let elem = withChildren(document.createElement('span'),
-    //              document.createTextNode(that.name)
-    //            );
-    // elem.onclick = clickHandler;
-    // elem.onmouseover = hoverHandler;
-    // return elem;
-
     //let timingsCount = that.timingsCategoryNode.timingsCountRecursive;
     return withChildren(a,
             // document.createTextNode(that.name + " (" + timingsCount + ")")
