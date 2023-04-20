@@ -13,18 +13,23 @@ export function showTagsAndLinks(forest) {
     viewBuilder.buildView(tagsAndLinksObj);
 
     window.my.notebookTagsForestViews = viewBuilder.getNotebookTagsForestViews();
+    // withChildren(mainWrapper,
+    //   withChildren(document.createElement('div'),
+    //     // (function() {
+    //     //         let btnShowAll = document.createElement('button');
+    //     //         btnShowAll.addEventListener('click', eve => {
+    //     //                   showAllNotes();
+    //     //                 });
+    //     //         return withChildren(btnShowAll, document.createTextNode('all'))
+    //     //       })(),
+    //     withChildren(document.createElement('ul'),
+    //       viewBuilder.getHtml()
+    //     )
+    //   )
+    // );
     withChildren(mainWrapper,
-      withChildren(document.createElement('div'),
-        // (function() {
-        //         let btnShowAll = document.createElement('button');
-        //         btnShowAll.addEventListener('click', eve => {
-        //                   showAllNotes();
-        //                 });
-        //         return withChildren(btnShowAll, document.createTextNode('all'))
-        //       })(),
-        withChildren(document.createElement('ul'),
-          viewBuilder.getHtml()
-        )
+      withChildren(document.createElement('ul'),
+        viewBuilder.getHtml()
       )
     );
     viewBuilder.getNotebookTagsForestViews().forEach(v => v.children.forEach(c => c.collapse()));

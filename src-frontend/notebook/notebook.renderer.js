@@ -35,7 +35,59 @@ function handleServerMessage(msg) {
     appendNotesForestHtml(viewBuilder.getHtml());
     let initialNotesForest = buildInitialNotesForest();
     highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest);
+    initResizer();
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
+  }
+}
+
+function initResizer() {
+  let leftHalf = document.getElementById('tags-and-links-content-wrapper');
+  let resizer = document.getElementById('resizer');
+  let rightHalf = document.getElementById('notes-content-wrapper');
+
+  let resizerX = 0;
+  let resizerY = 0;
+
+  let leftHalfWidth = 0;
+
+  resizer.addEventListener('mousedown', (eve) => {
+    resizerX = eve.clientX;
+    resizerY = eve.clientY;
+
+    leftHalfWidth = leftHalf.getBoundingClientRect().width;
+
+    document.documentElement.style.cursor = 'ns-resize';
+
+    leftHalf.style.userSelect = 'none';
+    leftHalf.style.pointerEvents = 'none';
+
+    rightHalf.style.userSelect = 'none';
+    rightHalf.style.pointerEvents = 'none';
+
+    document.documentElement.addEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.addEventListener('mouseup', resizerMouseUpListener);
+  });
+
+  function resizerMouseMoveListener(eve) {
+    const dx = eve.clientX - resizerX;
+    const dy = eve.clientY - resizerY;
+
+    const newLeftHalfWidth = ((leftHalfWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+
+    leftHalf.style.width = `${newLeftHalfWidth}%`;
+  }
+
+  function resizerMouseUpListener(eve) {
+    document.documentElement.style.removeProperty('cursor');
+
+    leftHalf.style.removeProperty('user-select');
+    leftHalf.style.removeProperty('pointer-events');
+
+    rightHalf.style.removeProperty('user-select');
+    rightHalf.style.removeProperty('pointer-events');
+
+    document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
   }
 }
