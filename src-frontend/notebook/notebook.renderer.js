@@ -57,7 +57,7 @@ function initResizer() {
 
     leftHalfWidth = leftHalf.getBoundingClientRect().width;
 
-    document.documentElement.style.cursor = 'ns-resize';
+    document.documentElement.style.cursor = 'ew-resize';
 
     leftHalf.style.userSelect = 'none';
     leftHalf.style.pointerEvents = 'none';
