@@ -1,3 +1,15 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 98%;
+}
+
+#main-content-wrapper {
+  height: 100%;
+}
+
 .proc-node > .process-node-title-container > a, .proc-leaf > .process-node-title-container > a {
   cursor: pointer;
 }
@@ -194,6 +206,52 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
   background-position: top left;
 }
 
+#frequencies-view-two-halves-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* height: 600px; */
+}
+
+#frequencies-view-top-half {
+  /* flex: 1 1 400px; */
+  border-bottom: 1px solid grey;
+  display: flex;
+  flex-direction: column;
+  height: 50%;
+}
+
+#frequencies-view-two-halves-container > #resizer {
+  height: 2px;
+}
+
+#frequencies-view-two-halves-container > #resizer:hover {
+  cursor: ns-resize;
+}
+
+#frequencies-view-bottom-half {
+  flex: 1 1 0%;
+  overflow: auto;
+}
+
+#frequencies-view-top-half > #period-buttons-row {
+  flex: 0 0 auto;
+}
+
+#frequencies-view-top-half > #canvas-container {
+  /* flex: 1 1 0%; */
+  flex-grow: 1;
+  position: relative;
+}
+
+#frequencies-view-top-half > #canvas-container > #canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
 .process-node-title-container > div {
   display: inline-block;
 }
@@ -207,18 +265,26 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
   visibility: visible;
 }
 
-.processes-tree-container-ul.inactive {
+/* #processes-tree-container-ul {             */
+/*   width: 100%;                             */
+/* }                                          */
+/*                                            */
+/* #processes-tree-secondary-container-div {  */
+/*   width: 100%;                             */
+/* }                                          */
+
+#processes-tree-container-ul.inactive {
   display: none;
 }
 
-.processes-tree-secondary-container-div.inactive {
+#processes-tree-secondary-container-div.inactive {
   display: none;
 }
 
-.secondary-show-all-btn {
+#secondary-show-all-btn {
   margin-top: 16px;
 }
 
-.processes-tree-secondary-ul {
+#processes-tree-secondary-ul {
   margin-top: unset;
 }

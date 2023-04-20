@@ -55,3 +55,8 @@ export function withClass(elem, ...classes) {
   }
   return elem;
 }
+
+export function withId(elem, id) {
+  elem.id = id;
+  return elem;
+}

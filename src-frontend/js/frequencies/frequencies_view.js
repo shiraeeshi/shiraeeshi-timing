@@ -5,7 +5,7 @@ const { TimingsHistogramsGraphic } = require('./timings_histograms_graphic.js');
 const { requestTimingsForPeriod } = require('./request_timings_for_period.js');
 const { handleTimings } = require('./handle_timings.js');
 
-const { showTimingsFormatError, withChildren, withClass } = require('../html_utils.js');
+const { showTimingsFormatError, withChildren, withClass, withId } = require('../html_utils.js');
 const { date2TimingDateStrUnpadded } = require('../date_utils.js');
 
 export function FrequenciesView(processNode) {
@@ -96,23 +96,17 @@ FrequenciesView.prototype.buildHtml = function() {
       that.htmlChildrenContainerUl.appendChild(childNode.htmlElement);
     }
   } else {
-    let hGraphic = that.hGraphic;
-    hGraphic.initCanvas();
-    hGraphic.redraw();
 
     that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
-    let htmlElement =
-      withChildren(document.createElement('div'),
-        that.buildPeriodButtonsRow(),
-        withChildren(document.createElement('div'),
-          hGraphic.elem
-        ),
-        withChildren(withClass(that.htmlChildrenContainerUl, 'processes-tree-container-ul'),
+
+    let bottomHalf =
+      withChildren(withId(document.createElement('div'), 'frequencies-view-bottom-half'),
+        withChildren(withId(that.htmlChildrenContainerUl, 'processes-tree-container-ul'),
           ...that.children.map(childNode => childNode.htmlElement)
         ),
-        withChildren(withClass(that.htmlSecondaryContainerDiv, 'processes-tree-secondary-container-div', 'inactive'),
+        withChildren(withClass(withId(that.htmlSecondaryContainerDiv, 'processes-tree-secondary-container-div'), 'inactive'),
           (function() {
-            let elemAll = withChildren(withClass(document.createElement('button'), 'secondary-show-all-btn'),
+            let elemAll = withChildren(withId(document.createElement('button'), 'secondary-show-all-btn'),
               document.createTextNode('show all')
             );
             elemAll.addEventListener('click', eve => {
@@ -120,12 +114,95 @@ FrequenciesView.prototype.buildHtml = function() {
             });
             return elemAll;
           })(),
-          withClass(that.htmlSecondaryUl, 'processes-tree-secondary-ul')
+          withId(that.htmlSecondaryUl, 'processes-tree-secondary-ul')
         )
+      );
+
+    let hGraphic = that.hGraphic;
+    hGraphic.initCanvas(bottomHalf);
+    hGraphic.redraw();
+
+    let canvasContainer = 
+      withChildren(withId(document.createElement('div'), 'canvas-container'),
+        hGraphic.elem
+      );
+
+    let topHalf = 
+      withChildren(withId(document.createElement('div'), 'frequencies-view-top-half'),
+        that.buildPeriodButtonsRow(),
+        canvasContainer
+      );
+    let resizer = withId(document.createElement('div'), 'resizer');
+
+    initResizer(resizer, topHalf, bottomHalf);
+
+    function handleCanvasContainerResize(eve) {
+      hGraphic.handleCanvasContainerResize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+    }
+
+    new ResizeObserver(handleCanvasContainerResize).observe(canvasContainer);
+
+
+    let htmlElement =
+      withChildren(withId(document.createElement('div'), 'frequencies-view-two-halves-container'),
+        topHalf,
+        resizer,
+        bottomHalf
       );
     that.htmlElement = htmlElement;
   }
 };
+
+function initResizer(resizer, topHalf, bottomHalf) {
+  let resizerX = 0;
+  let resizerY = 0;
+
+  let topHalfHeight = 0;
+
+  resizer.addEventListener('mousedown', (eve) => {
+    resizerX = eve.clientX;
+    resizerY = eve.clientY;
+
+    topHalfHeight = topHalf.getBoundingClientRect().height;
+
+    console.log(`[frequencies_view resizer mousedown] topHalfHeight: ${topHalfHeight}, x: ${resizerX}, y: ${resizerY}`);
+
+    document.documentElement.style.cursor = 'ns-resize';
+
+    topHalf.style.userSelect = 'none';
+    topHalf.style.pointerEvents = 'none';
+
+    bottomHalf.style.userSelect = 'none';
+    bottomHalf.style.pointerEvents = 'none';
+
+    document.documentElement.addEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.addEventListener('mouseup', resizerMouseUpListener);
+  });
+
+  function resizerMouseMoveListener(eve) {
+    const dx = eve.clientX - resizerX;
+    const dy = eve.clientY - resizerY;
+
+    const newTopHalfHeight = ((topHalfHeight + dy) * 100) / resizer.parentNode.getBoundingClientRect().height;
+
+    console.log(`[frequencies_view resizer mousemove] dx: ${dx}, dy: ${dy}, new height: ${newTopHalfHeight}`);
+
+    topHalf.style.height = `${newTopHalfHeight}%`;
+  }
+
+  function resizerMouseUpListener(eve) {
+    document.documentElement.style.removeProperty('cursor');
+
+    topHalf.style.removeProperty('user-select');
+    topHalf.style.removeProperty('pointer-events');
+
+    bottomHalf.style.removeProperty('user-select');
+    bottomHalf.style.removeProperty('pointer-events');
+
+    document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
+  }
+}
 
 FrequenciesView.prototype.buildPeriodButtonsRow = function() {
   let that = this;
@@ -177,7 +254,7 @@ FrequenciesView.prototype.buildPeriodButtonsRow = function() {
         "btnPlusMonth.onclick err: " + err);
     });
   };
-  return withChildren(document.createElement('div'),
+  return withChildren(withId(document.createElement('div'), 'period-buttons-row'),
     btnPlusHalfYear,
     btnPlusMonth,
     that.htmlSpanPeriodInfo

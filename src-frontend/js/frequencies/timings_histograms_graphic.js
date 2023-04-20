@@ -105,13 +105,25 @@ TimingsHistogramsGraphic.prototype.getCanvasPosition = function() {
   }
 };
 
-TimingsHistogramsGraphic.prototype.initCanvas = function() {
+TimingsHistogramsGraphic.prototype.handleCanvasContainerResize = function(newWidth, newHeight) {
+  let that = this;
+  that.canvas.width = newWidth;
+  that.canvas.height = newHeight;
+  // that.canvas.style.width = `${newWidth}px`;
+  // that.canvas.style.height = `${newHeight}px`;
+  that.canvasWidth = newWidth;
+  that.canvasHeight = newHeight;
+  that.redraw();
+};
+
+TimingsHistogramsGraphic.prototype.initCanvas = function(bottomHalfOfPage) {
   let that = this;
   let canvas = document.createElement("canvas");
+  canvas.setAttribute('id', 'canvas');
   let canvasWidth = 800;
   let canvasHeight = 400;
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
+  // canvas.width = canvasWidth;
+  // canvas.height = canvasHeight;
   this.canvas = canvas;
   this.canvasWidth = canvasWidth;
   this.canvasHeight = canvasHeight;
@@ -181,6 +193,9 @@ TimingsHistogramsGraphic.prototype.initCanvas = function() {
         canvasMouseState.enterDragModeVResizeBottom();
         document.documentElement.addEventListener('mouseup', canvasMouseUp);
         document.documentElement.addEventListener('mousemove', canvasMouseMove);
+
+        bottomHalfOfPage.style.userSelect = 'none';
+        bottomHalfOfPage.style.pointerEvents = 'none';
       } else if (canvasMouseState.isOnVScrollbarThumb) {
         let canvasRect = that.getCanvasPosition();
         let offsetY = eve.clientY - canvasRect.top;
@@ -217,6 +232,9 @@ TimingsHistogramsGraphic.prototype.initCanvas = function() {
       document.documentElement.removeEventListener('mouseup', canvasMouseUp);
       document.documentElement.removeEventListener('mousemove', canvasMouseMove);
       document.documentElement.style.cursor = 'initial';
+
+      bottomHalfOfPage.style.removeProperty('user-select');
+      bottomHalfOfPage.style.removeProperty('pointer-events');
     } catch (err) {
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("canvas mouseup. error: " + err.message);
     }
@@ -228,6 +246,9 @@ TimingsHistogramsGraphic.prototype.initCanvas = function() {
         document.documentElement.removeEventListener('mouseup', canvasMouseUp);
         document.documentElement.removeEventListener('mousemove', canvasMouseMove);
         document.documentElement.style.cursor = 'initial';
+
+        bottomHalfOfPage.style.removeProperty('user-select');
+        bottomHalfOfPage.style.removeProperty('pointer-events');
       }
     } catch (err) {
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("canvas mouseleave. error: " + err.message);
@@ -382,92 +403,97 @@ TimingsHistogramsGraphic.prototype.initCanvas = function() {
   //   inputYTo,
   // );
 
-  this.elem = withChildren(document.createElement('div')
-    , canvas
-    , that.buildDistortionButtonsPanel()
-    // , buttonsPanel
-  );
+  this.elem = canvas;
+  // this.elem = withChildren(document.createElement('div')
+  //   , canvas
+  //   , that.buildDistortionButtonsPanel()
+  //   // , buttonsPanel
+  // );
 };
 
-TimingsHistogramsGraphic.prototype.setDistortionXa = function(newValue) {
-  this.distortionX.a = newValue;
-};
-TimingsHistogramsGraphic.prototype.setDistortionXb = function(newValue) {
-  this.distortionX.b = newValue;
-};
-TimingsHistogramsGraphic.prototype.setDistortionXc = function(newValue) {
-  this.distortionX.c = newValue;
-};
-
-TimingsHistogramsGraphic.prototype.setDistortionY = function(newValue) {
-  this.distortionY.a = newValue;
-};
-
-TimingsHistogramsGraphic.prototype.buildDistortionButtonsPanel = function() {
-  let that = this;
-
-  let inputDistortionXa = document.createElement('input');
-  inputDistortionXa.type = 'text';
-  inputDistortionXa.value = that.distortionX.a;
-
-  let inputDistortionXb = document.createElement('input');
-  inputDistortionXb.type = 'text';
-  inputDistortionXb.value = that.distortionX.b;
-
-  let inputDistortionXc = document.createElement('input');
-  inputDistortionXc.type = 'text';
-  inputDistortionXc.value = that.distortionX.c;
-
-  let inputDistortionY = document.createElement('input');
-  inputDistortionY.type = 'text';
-  inputDistortionY.value = that.distortionY.a;
-
-  function addEnterListener(input, handler) {
-    input.addEventListener('keyup', (eve) => {
-      if (eve.key == 'Enter') {
-        handler(input.value);
-      }
-    });
-  }
-
-  function setDistorionXAndRedraw() {
-    that.setDistortionXa(parseFloat(inputDistortionXa.value));
-    that.setDistortionXb(parseFloat(inputDistortionXb.value));
-    that.setDistortionXc(parseFloat(inputDistortionXc.value));
-    that.redraw();
-  }
-
-  addEnterListener(inputDistortionXa, setDistorionXAndRedraw);
-  addEnterListener(inputDistortionXb, setDistorionXAndRedraw);
-  addEnterListener(inputDistortionXc, setDistorionXAndRedraw);
-
-  function setDistorionYAndRedraw() {
-    that.setDistortionY(parseFloat(inputDistortionY.value));
-    that.redraw();
-  }
-
-  addEnterListener(inputDistortionY, setDistorionYAndRedraw);
-
-  let buttonsPanel =
-    withChildren(document.createElement('div'),
-      withChildren(document.createElement('div'),
-        withChildren(document.createElement('span'), document.createTextNode('distortion x: a:')),
-        inputDistortionXa,
-        withChildren(document.createElement('span'), document.createTextNode('b:')),
-        inputDistortionXb,
-        withChildren(document.createElement('span'), document.createTextNode('c:')),
-        inputDistortionXc
-      ),
-      withChildren(document.createElement('div'),
-        withChildren(document.createElement('span'), document.createTextNode('distortion y:')),
-        inputDistortionY
-      )
-    );
-  return buttonsPanel;
-};
+// TimingsHistogramsGraphic.prototype.setDistortionXa = function(newValue) {
+//   this.distortionX.a = newValue;
+// };
+// TimingsHistogramsGraphic.prototype.setDistortionXb = function(newValue) {
+//   this.distortionX.b = newValue;
+// };
+// TimingsHistogramsGraphic.prototype.setDistortionXc = function(newValue) {
+//   this.distortionX.c = newValue;
+// };
+// 
+// TimingsHistogramsGraphic.prototype.setDistortionY = function(newValue) {
+//   this.distortionY.a = newValue;
+// };
+// 
+// TimingsHistogramsGraphic.prototype.buildDistortionButtonsPanel = function() {
+//   let that = this;
+// 
+//   let inputDistortionXa = document.createElement('input');
+//   inputDistortionXa.type = 'text';
+//   inputDistortionXa.value = that.distortionX.a;
+// 
+//   let inputDistortionXb = document.createElement('input');
+//   inputDistortionXb.type = 'text';
+//   inputDistortionXb.value = that.distortionX.b;
+// 
+//   let inputDistortionXc = document.createElement('input');
+//   inputDistortionXc.type = 'text';
+//   inputDistortionXc.value = that.distortionX.c;
+// 
+//   let inputDistortionY = document.createElement('input');
+//   inputDistortionY.type = 'text';
+//   inputDistortionY.value = that.distortionY.a;
+// 
+//   function addEnterListener(input, handler) {
+//     input.addEventListener('keyup', (eve) => {
+//       if (eve.key == 'Enter') {
+//         handler(input.value);
+//       }
+//     });
+//   }
+// 
+//   function setDistorionXAndRedraw() {
+//     that.setDistortionXa(parseFloat(inputDistortionXa.value));
+//     that.setDistortionXb(parseFloat(inputDistortionXb.value));
+//     that.setDistortionXc(parseFloat(inputDistortionXc.value));
+//     that.redraw();
+//   }
+// 
+//   addEnterListener(inputDistortionXa, setDistorionXAndRedraw);
+//   addEnterListener(inputDistortionXb, setDistorionXAndRedraw);
+//   addEnterListener(inputDistortionXc, setDistorionXAndRedraw);
+// 
+//   function setDistorionYAndRedraw() {
+//     that.setDistortionY(parseFloat(inputDistortionY.value));
+//     that.redraw();
+//   }
+// 
+//   addEnterListener(inputDistortionY, setDistorionYAndRedraw);
+// 
+//   let buttonsPanel =
+//     withChildren(document.createElement('div'),
+//       withChildren(document.createElement('div'),
+//         withChildren(document.createElement('span'), document.createTextNode('distortion x: a:')),
+//         inputDistortionXa,
+//         withChildren(document.createElement('span'), document.createTextNode('b:')),
+//         inputDistortionXb,
+//         withChildren(document.createElement('span'), document.createTextNode('c:')),
+//         inputDistortionXc
+//       ),
+//       withChildren(document.createElement('div'),
+//         withChildren(document.createElement('span'), document.createTextNode('distortion y:')),
+//         inputDistortionY
+//       )
+//     );
+//   return buttonsPanel;
+// };
 
 TimingsHistogramsGraphic.prototype.redraw = function() {
   let that = this;
+
+  if (that.canvas === null) {
+    return;
+  }
 
   let ctx = that.canvas.getContext('2d');
 
@@ -583,24 +609,24 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   // }
 
   function drawTimingsOfProcessNode(processNode, colorRGBA, lastTimingColorRGBA, exceptChildNode, isHighlighted) {
-    //function distort(timeDiff, y) {
-    function distort(y) {
-      // let xa = that.distortionX.a;
-      // let xb = that.distortionX.b;
-      // let xc = that.distortionX.c;
+    // //function distort(timeDiff, y) {
+    // function distort(y) {
+    //   // let xa = that.distortionX.a;
+    //   // let xb = that.distortionX.b;
+    //   // let xc = that.distortionX.c;
 
-      let ya = that.distortionY.a;
+    //   let ya = that.distortionY.a;
 
-      // let coeff = (ya*Math.sqrt(timeDiff / timeRange) + yb*(timeDiff / timeRange) + yc);
-      // let coeff = Math.exp(Math.log(timeDiff/timeRange) / ya) / (timeDiff/timeRange);
-      // return coeff * y;
-      let wr = wavelengthRange;
-      //let normal = (wr - y)/wr;
-      let normal = y/wr;
-      let root = Math.exp(Math.log(normal) / ya);
-      let coeff = (root - normal) / normal;
-      return y + y*coeff;
-    }
+    //   // let coeff = (ya*Math.sqrt(timeDiff / timeRange) + yb*(timeDiff / timeRange) + yc);
+    //   // let coeff = Math.exp(Math.log(timeDiff/timeRange) / ya) / (timeDiff/timeRange);
+    //   // return coeff * y;
+    //   let wr = wavelengthRange;
+    //   //let normal = (wr - y)/wr;
+    //   let normal = y/wr;
+    //   let root = Math.exp(Math.log(normal) / ya);
+    //   let coeff = (root - normal) / normal;
+    //   return y + y*coeff;
+    // }
     function drawTiming(t) {
       let timeDiff = now.getTime() - t.fromdate.getTime();
       if (withinTimeRange(timeDiff, millisFrom, millisTo)) {
@@ -613,7 +639,8 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
           yFrom: 0,
           //yTo: t.millisUntilNext / yRatio
           //yTo: distort(millisFrom - timeDiff, t.millisUntilNext) / yRatio
-          yTo: distort(t.millisUntilNext) / yRatio
+          //yTo: distort(t.millisUntilNext) / yRatio
+          yTo: t.millisUntilNext / yRatio
         });
       }
     }
