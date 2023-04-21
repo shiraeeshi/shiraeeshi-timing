@@ -323,6 +323,18 @@ ProcessNode.prototype._markAsUnmerged = function() {
   that.children.forEach(child => child._markAsUnmerged());
 };
 
+ProcessNode.prototype._findLastTimingAsIfMergedSubprocesses = function() {
+  let that = this;
+  let lastTiming = that.ownTimingsAsReferences.reduce(maxTiming, undefined);
+  if (that.children.length > 0) {
+    lastTiming = that.children
+      .map(child => child._findLastTimingAsIfMergedSubprocesses())
+      .filter(t => t !== undefined)
+      .reduce(maxTiming, lastTiming);
+  }
+  return lastTiming;
+};
+
 ProcessNode.prototype.getLastTimingToDraw = function() {
   let that = this;
   if (that.hasBorrowedReferences) {
@@ -335,22 +347,15 @@ ProcessNode.prototype.getLastTimingToDraw = function() {
       return that.timingsWithBorrowedReferences[len - 1];
     }
   }
-  let lastTimingSoFar;
+  let lastTiming;
   if (that.hasMergedChildren) {
     let timings = that.mergedSubprocessesTimings;
     let len = timings.length;
-    lastTimingSoFar = timings[len - 1];
-  } else if (that.isMergedChild) {
-    let ownTimings = that.ownTimingsAsReferences;
-    let len = ownTimings.length;
-    lastTimingSoFar = ownTimings[len - 1];
+    lastTiming = timings[len - 1];
+  // } else if (that.isMergedChild) { // unreachable branch (this method never gets called for merged children)
+  //   lastTiming = that.ownTimingsAsReferences.reduce(maxTiming, undefined);
   } else {
-    let len = that.timings.length;
-    lastTimingSoFar = that.timings[len - 1];
-  }
-  let lastTiming = lastTimingSoFar;
-  if (that.referencedTimings !== undefined && that.referencedTimings.length > 0) {
-    lastTiming = that.referencedTimings.concat([lastTiming]).reduce(maxTiming, lastTiming);
+    lastTiming = that._findLastTimingAsIfMergedSubprocesses();
   }
   return lastTiming;
 };
@@ -373,12 +378,9 @@ ProcessNode.prototype.getLastTimingToHighlight = function() {
     let len = timings.length;
     lastTimingSoFar = timings[len - 1];
   } else if (that.isMergedChild) {
-    let ownTimings = that.ownTimingsAsReferences;
-    let len = ownTimings.length;
-    lastTimingSoFar = ownTimings[len - 1];
+    lastTimingSoFar = that._findLastTimingAsIfMergedSubprocesses();
   } else {
-    let len = that.timings.length;
-    lastTimingSoFar = that.timings[len - 1];
+    lastTimingSoFar = that._findLastTimingAsIfMergedSubprocesses();
   }
   let lastTiming = lastTimingSoFar;
   if (that.referencedTimings !== undefined && that.referencedTimings.length > 0) {

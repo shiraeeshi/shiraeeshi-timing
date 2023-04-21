@@ -666,7 +666,7 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
         drawTimingsOfProcessNode(childProcessNode, colorRGBA, lastTimingColorRGBA, exceptChildNode);
       });
 
-    if (lastTimingColorRGBA !== undefined && !processNode.isMergedChild) {
+    if (lastTimingColorRGBA !== undefined && (!processNode.isMergedChild || isHighlighted)) {
       let lastTiming;
       if (isHighlighted) {
         lastTiming = processNode.getLastTimingToHighlight();
