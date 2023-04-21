@@ -33,7 +33,7 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
 
     let thisTimingsByDays = timingsByCategories[key];
 
-    for (let i = thisTimingsByDays.length - 1; i >= 0 ; i--) {
+    for (let i = 0; i < thisTimingsByDays.length ; i++) {
       let eachTimingDay = thisTimingsByDays[i];
       let dt = eachTimingDay.date;
       eachTimingDay.timings.forEach(t => {
