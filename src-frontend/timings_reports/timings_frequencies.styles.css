@@ -132,16 +132,30 @@ li.proc-leaf {
   background-position: top left;
 }
 
-.icon-unmerge-subprocesses {
+.icon-unmerge-subprocesses,
+.proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
   display: none;
 }
 
-.proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses,
-.proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
+.icon-unmerge-subprocesses-as-subprocess,
+.proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses-as-subprocess {
+  display: none;
+}
+
+.proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
   display: inline-block;
   background-image: url('../img/grid-off-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses-as-subprocess {
+  display: inline-block;
+  background-image: url('../img/asset-lock-icon-21-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 8px;
+  height: 10px;
 }
 
 /* .proc-node.process-info    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses { */

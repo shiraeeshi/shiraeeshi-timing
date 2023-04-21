@@ -137,7 +137,7 @@ li.proc-leaf {
 }
 
 .icon-open-tag-in-tags-tree {
-  background-image: url('../img/grid-on-32.png');
+  background-image: url('../img/tag-round-icon-32.png');
   background-repeat: no-repeat;
   background-position: top left;
   width: 8px;
@@ -145,10 +145,10 @@ li.proc-leaf {
 }
 
 .icon-open-tags-of-children-in-tags-tree {
-  background-image: url('../img/grid-off-32.png');
+  background-image: url('../img/tags-icon-grey-35-32.png');
   background-repeat: no-repeat;
   background-position: top left;
-  width: 8px;
+  width: 11px;
   height: 10px;
 }
 

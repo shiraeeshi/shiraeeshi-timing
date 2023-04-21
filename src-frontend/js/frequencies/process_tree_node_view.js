@@ -307,21 +307,11 @@ ProcessTreeNodeView.prototype.html = function() {
   return that.htmlElement;
 };
 
-ProcessTreeNodeView.prototype.mergeSubprocessesOrRecalculate = function() {
-  let that = this;
-  that.processNode.mergeSubprocessesOrRecalculate();
-  that.hasMergedChildren = true;
-  that.htmlElement && that.htmlElement.classList.add('merged-children');
-  that.children.forEach(child => child.markAsMerged());
-  if (that.hGraphic) {
-    that.hGraphic.redraw();
-  }
-};
-
 ProcessTreeNodeView.prototype.mergeSubprocesses = function() {
   let that = this;
   that.processNode.mergeSubprocesses();
   that.hasMergedChildren = true;
+  that.children.forEach(child => child.unmarkMergedChildOrMergedChildren());
   that.htmlElement && that.htmlElement.classList.add('merged-children');
   that.children.forEach(child => child.markAsMerged());
   if (that.hGraphic) {
@@ -341,6 +331,16 @@ ProcessTreeNodeView.prototype.markAsUnmerged = function() {
   that.isMergedChild = false;
   that.htmlElement && that.htmlElement.classList.remove('merged-child');
   that.children.forEach(child => child.markAsUnmerged());
+}
+
+ProcessTreeNodeView.prototype.unmarkMergedChildOrMergedChildren = function() {
+  let that = this;
+  that.isMergedChild = false;
+  if (that.htmlElement !== undefined) {
+    that.htmlElement.classList.remove('merged-children');
+    that.htmlElement.classList.remove('merged-child');
+  }
+  that.children.forEach(child => child.unmarkMergedChildOrMergedChildren());
 }
 
 ProcessTreeNodeView.prototype.unmergeSubprocesses = function() {
@@ -398,9 +398,23 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
         });
         return elem;
       })();
-    let iconUnmergeSubprocesses =
+    let iconUnmergeSubprocessesAsParent =
       (function() {
         let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-unmerge-subprocesses'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('unmerge subprocesses in graph')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.unmergeSubprocesses();
+        });
+        return elem;
+      })();
+    let iconUnmergeSubprocessesAsSubprocess =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-unmerge-subprocesses-as-subprocess'),
           withClass(
             withChildren(document.createElement('span'),
               document.createTextNode('unmerge subprocesses in graph')
@@ -485,7 +499,8 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
     let iconsDiv = withChildren(withClass(document.createElement('div'), 'process-node-icons'),
       iconShowThisOnly,
       iconMergeSubprocesses,
-      iconUnmergeSubprocesses,
+      iconUnmergeSubprocessesAsParent,
+      iconUnmergeSubprocessesAsSubprocess,
       iconMoveToTop,
       iconMoveToBottom,
       iconHide,
