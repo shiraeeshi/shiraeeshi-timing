@@ -1,13 +1,11 @@
-const { extractTagsFromRootForest } = require('./extract_tags.js');
 const { NotebookTagsForestViewBuilder } = require('./tags_forest_view_builder.js');
 const { highlightNotesInForest, buildTagsAndLinksForest } = require('./notebook_utils.js');
 const { withChildren } = require('../html_utils.js');
 
-export function showTagsAndLinks(forest) {
+export function showTagsAndLinks(tags) {
   try {
     let mainWrapper = document.getElementById("tags-and-links-content-wrapper");
-    let taggedNodes = extractTagsFromRootForest(forest);
-    let tagsAndLinksObj = buildTagsAndLinksForest(taggedNodes);
+    let tagsAndLinksObj = buildTagsAndLinksForest(tags);
 
     let viewBuilder = new NotebookTagsForestViewBuilder();
     viewBuilder.buildView(tagsAndLinksObj);

@@ -1,13 +1,13 @@
 
-export function extractTagsFromRootForest(forest) {
+export function parseTagsFromRootForest(forest) {
   let result = [];
   forest.forEach(tree => {
-    result = result.concat(extractTagsFromNode(tree, []));
+    result = result.concat(parseTagsFromNode(tree, []));
   });
   return result;
 }
 
-function extractTagsFromNode(node, ancestry) {
+function parseTagsFromNode(node, ancestry) {
   let result = [];
   let tag = extractTag(node.name);
   if (tag) {
@@ -22,7 +22,7 @@ function extractTagsFromNode(node, ancestry) {
   }
   let newAncestry = ancestry.concat([node.name]);
   node.children.forEach(subTree => {
-    result = result.concat(extractTagsFromNode(subTree, newAncestry));
+    result = result.concat(parseTagsFromNode(subTree, newAncestry));
   });
   return result;
 }

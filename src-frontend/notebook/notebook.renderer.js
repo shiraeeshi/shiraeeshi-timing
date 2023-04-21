@@ -1,5 +1,6 @@
 const { turnMultilineTextIntoHtml } = require('../js/html_utils.js');
 const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
+const { parseTagsFromRootForest } = require('./extract_tags.js');
 const { showTagsAndLinks } = require('../js/notebook/show_tags.js');
 const { NotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
 const { appendNotesForestHtml, buildInitialNotesForest, highlightNotesInForest } = require('../js/notebook/notebook_utils.js');
@@ -28,7 +29,8 @@ function handleServerMessage(msg) {
     let notes_object = msg.notes;
     let forest = yamlRootObject2forest(msg.notes);
     my.notesForest = forest;
-    showTagsAndLinks(forest);
+    let tags = parseTagsFromRootForest(forest);
+    showTagsAndLinks(tags);
     let viewBuilder = new NotesForestViewBuilder();
     viewBuilder.buildView(forest);
     my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
