@@ -10,7 +10,7 @@ export function showTagsAndLinks(tags) {
     let viewBuilder = new NotebookTagsForestViewBuilder();
     viewBuilder.buildView(tagsAndLinksObj);
 
-    window.my.notebookTagsForestViews = viewBuilder.getNotebookTagsForestViews();
+    window.my.rootNodeViewOfTags = viewBuilder.getRootNodeViewOfTags();
     // withChildren(mainWrapper,
     //   withChildren(document.createElement('div'),
     //     // (function() {
@@ -30,7 +30,7 @@ export function showTagsAndLinks(tags) {
         viewBuilder.getHtml()
       )
     );
-    viewBuilder.getNotebookTagsForestViews().forEach(v => v.children.forEach(c => c.collapse()));
+    viewBuilder.getRootNodeViewOfTags().children.forEach(c => c.collapse());
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js showTagsAndLinks error msg: " + err.message);
     throw err;

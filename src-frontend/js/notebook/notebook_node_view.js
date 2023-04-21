@@ -1,7 +1,9 @@
+const { buildTagsAndLinksForest, highlightTagsInForest } = require('./notebook_utils.js');
 const { withChildren, withClass } = require('../html_utils.js');
 
 export function NotebookNodeView(notebookNode, parentNodeView) {
   let that = this;
+  that.notebookNode = notebookNode;
   that.name = notebookNode.name;
   that.isCollapsed = true;
   that.parentNodeView = parentNodeView;
@@ -28,6 +30,36 @@ NotebookNodeView.prototype.name2html = function() {
             document.createTextNode(that.name)
           );
   }
+}
+
+NotebookNodeView.prototype._isTaggedNode = function() {
+  let that = this;
+  if (that.notebookNode === undefined) {
+    return false;
+  }
+  return that.notebookNode.tag !== undefined;
+}
+
+NotebookNodeView.prototype._hasTaggedChildren = function() {
+  let that = this;
+  if (that.notebookNode === undefined) {
+    return false;
+  }
+  return that.notebookNode.hasChildrenWithTags;
+}
+
+NotebookNodeView.prototype.openTagInTagsTree = function() {
+  let that = this;
+  let tag = that.notebookNode.tag;
+  let tagsAndLinksForestObj = buildTagsAndLinksForest([tag]);
+  highlightTagsInForest(window.my.rootNodeViewOfTags, tagsAndLinksForestObj.children);
+}
+
+NotebookNodeView.prototype.openTagsOfChildrenInTagsTree = function() {
+  let that = this;
+  let tagsOfChildren = that.notebookNode.tagsOfChildren;
+  let tagsAndLinksForestObj = buildTagsAndLinksForest(tagsOfChildren);
+  highlightTagsInForest(window.my.rootNodeViewOfTags, tagsAndLinksForestObj.children);
 }
 
 NotebookNodeView.prototype.moveToTop = function() {
@@ -95,6 +127,34 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
 
   function createTitleDiv() {
     let nameHtml = that.name2html();
+    let iconOpenTagInTagsTree =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-open-tag-in-tags-tree'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('open the tag in tags tree')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.openTagInTagsTree();
+        });
+        return elem;
+      })();
+    let iconOpenTagsOfChildrenInTagsTree =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-open-tags-of-children-in-tags-tree'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('open tags of children in tags tree')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.openTagsOfChildrenInTagsTree();
+        });
+        return elem;
+      })();
     let iconMoveToTop =
       (function() {
         let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-move-to-top'),
@@ -165,12 +225,22 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
         });
         return elem;
       })();
-    let iconsDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-icons'),
+    let icons = [];
+    if (that._isTaggedNode()) {
+      icons.push(iconOpenTagInTagsTree);
+    }
+    if (that._hasTaggedChildren()) {
+      icons.push(iconOpenTagsOfChildrenInTagsTree);
+    }
+    icons = icons.concat([
       iconMoveToTop,
       iconMoveToBottom,
       iconHide,
       iconHideSiblingsBelow,
       iconUnhideHiddenChildren
+    ]);
+    let iconsDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-icons'),
+      ...icons
     );
     let titleDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-title-container'),
       nameHtml,

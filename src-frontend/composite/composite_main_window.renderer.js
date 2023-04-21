@@ -1,4 +1,4 @@
-const { extractTagsFromRootForest } = require('../js/notebook/extract_tags.js');
+const { parseTagsFromRootForest } = require('../js/notebook/parse_tags.js');
 const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
 const { CurrentNotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
 const {
@@ -128,7 +128,7 @@ function handleServerMessage(msg) {
       my.notesForest = forest;
 
       // showTagsAndLinks(forest);
-      let taggedNodes = extractTagsFromRootForest(forest);
+      let taggedNodes = parseTagsFromRootForest(forest);
       let tagsAndLinksForestObj = buildTagsAndLinksForest(taggedNodes);
 
       let viewBuilder = new CurrentNotesForestViewBuilder();

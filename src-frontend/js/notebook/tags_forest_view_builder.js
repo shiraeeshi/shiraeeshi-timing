@@ -23,7 +23,7 @@ NotebookTagsForestViewBuilder.prototype.getHtml = function() {
   return this.html;
 };
 
-NotebookTagsForestViewBuilder.prototype.getNotebookTagsForestViews = function() {
-  return [this.view];
+NotebookTagsForestViewBuilder.prototype.getRootNodeViewOfTags = function() {
+  return this.view;
 };
 

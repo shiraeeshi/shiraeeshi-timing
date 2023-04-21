@@ -136,6 +136,22 @@ li.proc-leaf {
   display: inline-block;
 }
 
+.icon-open-tag-in-tags-tree {
+  background-image: url('../img/grid-on-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 8px;
+  height: 10px;
+}
+
+.icon-open-tags-of-children-in-tags-tree {
+  background-image: url('../img/grid-off-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 8px;
+  height: 10px;
+}
+
 li:first-child > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top {
   display: none;
 }
