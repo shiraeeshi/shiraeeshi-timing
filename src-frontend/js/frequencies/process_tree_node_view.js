@@ -574,7 +574,7 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
     }
     that.htmlElement = htmlElement;
     if (!that.processNode.isInnermostCategory && that.children.length > 0) {
-      that.toggleCollapse();
+      that.uncollapseWithoutNotifyingChildren();
     }
   }
 };
@@ -609,12 +609,17 @@ ProcessTreeNodeView.prototype.collapse = function() {
 
 ProcessTreeNodeView.prototype.uncollapse = function() {
   let that = this;
+  that.uncollapseWithoutNotifyingChildren();
+  that.children.forEach(childView => childView.parentUncollapsed());
+};
+
+ProcessTreeNodeView.prototype.uncollapseWithoutNotifyingChildren = function() {
+  let that = this;
   that.isCollapsed = false;
   if (that.htmlElement && that.htmlElement.classList.contains("proc-node-closed")) {
     that.htmlElement.classList.remove("proc-node-closed");
     that.htmlElement.classList.add("proc-node-open");
   }
-  that.children.forEach(childView => childView.parentUncollapsed());
 };
 
 ProcessTreeNodeView.prototype._appendHtmlChildren = function() {
