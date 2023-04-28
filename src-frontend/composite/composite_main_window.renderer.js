@@ -73,8 +73,8 @@ function handleServerMessage(msg) {
         if (my.wallpapers.idx >= my.wallpapers.lst.length) {
           my.wallpapers.idx = 0;
         }
-        window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage current wallpaper: " +
-          my.wallpapers.lst[my.wallpapers.idx]);
+        // window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage current wallpaper: " +
+        //   my.wallpapers.lst[my.wallpapers.idx]);
         document.body.style.backgroundImage = "url(" + my.wallpapers.lst[my.wallpapers.idx] + ")";
       } else if (msg.keyval == "m") {
         my.minimalTextForTimings = !my.minimalTextForTimings;
@@ -144,7 +144,7 @@ function handleServerMessage(msg) {
       let keys = Object.keys(msg);
       return;
     }
-    window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage end ");
+    // window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage end ");
 
 
   } catch (err) {
