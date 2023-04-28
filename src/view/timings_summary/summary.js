@@ -17,8 +17,8 @@ export async function showTimingsSummary(appEnv) {
 
 const createWindow = async (appEnv) => {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1000,
+    height: 800,
     // frame: false,
 		webPreferences: {
       preload: path.join(__dirname, 'view/timings_summary/preload.js')
