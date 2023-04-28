@@ -57,7 +57,7 @@ window.webkit.messageHandlers.composite_main_window.onMessage(handleServerMessag
 
 function handleServerMessage(msg) {
   try {
-    window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage start ");
+    // window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage start ");
 
 
 
