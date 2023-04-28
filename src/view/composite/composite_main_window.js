@@ -100,6 +100,34 @@ function setMenuAndKeyboardShortcuts(win) {
   Menu.setApplicationMenu(menu);
 }
 
+function MessageSender(win) {
+  let that = this;
+  that.win = win;
+  that.hasWindowLoaded = false;
+  that.messagesToSend = [];
+  win.webContents.once('dom-ready', () => {
+    that.hasWindowLoaded = true;
+    that._sendMessages();
+  })
+}
+
+MessageSender.prototype.send = function(msg) {
+  let that = this;
+  that.messagesToSend.push(msg);
+  if (that.hasWindowLoaded) {
+    that._sendMessages();
+  }
+}
+
+MessageSender.prototype._sendMessages = function(msg) {
+  let that = this;
+  let win = that.win;
+  for (let msg of that.messagesToSend) {
+    win.webContents.send('message-from-backend', msg);
+  }
+  that.messagesToSend = [];
+}
+
 async function init(appEnv, win) {
 
   ipcMain.on('msg_from_timing_summary', (_event, msg) => {
@@ -114,23 +142,10 @@ async function init(appEnv, win) {
     console.log(`[main.js] message from composite_main_window: ${msg}`);
   });
 
+  let messageSender = new MessageSender(win);
+
   function func(msg) {
-    console.log('[main.js] createWindow -> func');
-    let hasWindowLoaded = false;
-    let hasDataBeenSent = false;
-
-    win.webContents.once('dom-ready', () => {
-      hasWindowLoaded = true;
-      if (!hasDataBeenSent) {
-        win.webContents.send('message-from-backend', msg);
-        hasDataBeenSent = true;
-      }
-    });
-
-    if (!hasDataBeenSent && hasWindowLoaded) {
-      win.webContents.send('message-from-backend', msg);
-      hasDataBeenSent = true;
-    }
+    messageSender.send(msg);
   }
 
   console.log(`process.argv: ${JSON.stringify(process.argv)}`);

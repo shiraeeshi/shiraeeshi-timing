@@ -62,6 +62,7 @@ function handleServerMessage(msg) {
 
 
     if (msg.type == "wallpapers") {
+      console.log('[handleServerMessage] msg.type = wallpapers.');
       my.wallpapers.lst = msg.wallpapers;
       let randomIndex = getRandomInt(my.wallpapers.lst.length);
       document.body.style.backgroundImage = "url(" + my.wallpapers.lst[randomIndex] + ")";
@@ -116,6 +117,7 @@ function handleServerMessage(msg) {
       }
     }
     if (msg.type == "timings") {
+      console.log('[handleServerMessage] msg.type = timings.');
       initPeriodButtonsRow();
       my.imageInfo = new ImageInfo();
       my.timings = msg.timings;
@@ -123,6 +125,7 @@ function handleServerMessage(msg) {
     }
 
     if (msg.type == "notebook") {
+      console.log('[handleServerMessage] msg.type = notebook.');
       let notes_object = msg.notes;
       let forest = yamlRootObject2forest(msg.notes);
       my.notesForest = forest;
