@@ -556,15 +556,15 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   let wavelengthRange = wavelengthTo - wavelengthFrom;
   let yRatio = (wavelengthTo - wavelengthFrom) / graphicHeight;
 
-  window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
-    "canvas redraw. " +
-    ", millisFrom: " + millisFrom +
-    ", millisTo: " + millisTo +
-    ", xRatio: " + xRatio +
-    ", wavelengthFrom: " + wavelengthFrom +
-    ", wavelengthTo: " + wavelengthTo +
-    ", yRatio: " + yRatio
-  );
+  // window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
+  //   "canvas redraw. " +
+  //   ", millisFrom: " + millisFrom +
+  //   ", millisTo: " + millisTo +
+  //   ", xRatio: " + xRatio +
+  //   ", wavelengthFrom: " + wavelengthFrom +
+  //   ", wavelengthTo: " + wavelengthTo +
+  //   ", yRatio: " + yRatio
+  // );
 
   function withinTimeRange(millis, millisFrom, millisTo) {
     return millisFrom >= millis && millis >= millisTo;
