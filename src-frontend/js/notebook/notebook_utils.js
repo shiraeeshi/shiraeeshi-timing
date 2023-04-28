@@ -1,9 +1,9 @@
 
 export function addTagNodeLinksToForest(tagNode, resultForest) {
-  window.webkit.messageHandlers.foobar.postMessage("js addTagNodeLinksToForest tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
-  for (let link of tagNode.links) {
-    window.webkit.messageHandlers.foobar.postMessage("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
-  }
+  // window.webkit.messageHandlers.foobar.postMessage("js addTagNodeLinksToForest tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
+  // for (let link of tagNode.links) {
+  //   window.webkit.messageHandlers.foobar.postMessage("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
+  // }
   for (let link of tagNode.links) {
     let lst = resultForest;
     link.ancestry.forEach(linkParent => {
@@ -109,8 +109,8 @@ export function buildCurrentNotesForest(tagsAndLinksForestObj) {
   let resultForest = [];
   let currentTags = findCurrentTags(tagsAndLinksForestObj);
   for (let tag of currentTags) {
-    window.webkit.messageHandlers.composite_main_window.postMessage("js buildCurrentNotesForest current tag ancestry: " +
-      tag.tagAncestry.join(" "));
+    // window.webkit.messageHandlers.composite_main_window.postMessage("js buildCurrentNotesForest current tag ancestry: " +
+    //   tag.tagAncestry.join(" "));
     addTagNodeLinksToForest(tag, resultForest);
   }
   return resultForest;
