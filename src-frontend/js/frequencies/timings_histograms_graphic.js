@@ -752,7 +752,6 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     //     that.highlightedProcessNode.referencedTimings.length > 0) {
     if (that.highlightedProcessNodeViewState !== TimingsCategoryNodeViewState.HIGHLIGHTED &&
         that.highlightedProcessNode.hasReferencesToOutsideTimings) {
-      // TODO fix the logic of highlighting
       timingsColor = 'rgba(0, 85, 255, 1)';
       lastTimingColor = 'rgba(0, 50, 150, 1)';
     } else {
