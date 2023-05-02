@@ -7,6 +7,8 @@ export function TimingsHistogramsGraphic(processNode) {
   this.processNode = processNode;
   this.rangeX = {from: 0, to: 100};
   this.rangeY = {from: 0, to: 100};
+  this.rangeXpercentage = {from: 0, to: 100};
+  this.rangeYpercentage = {from: 0, to: 20};
   this.distortionX = {a: 0, b: 1, c: 0};
   this.distortionY = {a: 1};
   this.scrollbarBreadth = 20;
@@ -25,16 +27,23 @@ TimingsHistogramsGraphic.prototype.setProcessNode = function(processNode) {
 TimingsHistogramsGraphic.prototype.setRangeXFrom = function(from) {
   if (from < 0) {
     this.rangeX.from = 0;
+    this.rangeXpercentage.from = 0;
   } else {
     this.rangeX.from = from;
+    let maxX = this.canvas.width - this.scrollbarBreadth;
+    let fromPercentage = from * 100.0 / maxX;
+    this.rangeXpercentage.from = fromPercentage;
   }
 };
 TimingsHistogramsGraphic.prototype.setRangeXTo = function(to) {
   let maxX = this.canvas.width - this.scrollbarBreadth;
   if (to > maxX) {
     this.rangeX.to = maxX;
+    this.rangeXpercentage.to = 100.0;
   } else {
     this.rangeX.to = to;
+    let toPercentage = to * 100.0 / maxX;
+    this.rangeXpercentage.to = toPercentage;
   }
 };
 TimingsHistogramsGraphic.prototype.shiftRangeX = function(newFrom, newTo) {
@@ -50,21 +59,35 @@ TimingsHistogramsGraphic.prototype.shiftRangeX = function(newFrom, newTo) {
   }
   this.rangeX.from = newFrom;
   this.rangeX.to = newTo;
+
+  let fromPercentage = newFrom * 100.0 / maxX;
+  let toPercentage = newTo * 100.0 / maxX;
+
+  this.rangeXpercentage.from = fromPercentage;
+  this.rangeXpercentage.to = toPercentage;
 };
 
 TimingsHistogramsGraphic.prototype.setRangeYFrom = function(from) {
   if (from < 0) {
     this.rangeY.from = 0;
+    this.rangeYpercentage.from = 0;
   } else {
     this.rangeY.from = from;
+    let maxY = this.canvas.height - this.scrollbarBreadth;
+    let fromPercentage = from * 100.0 / maxY;
+    this.rangeYpercentage.from = fromPercentage;
   }
 };
 TimingsHistogramsGraphic.prototype.setRangeYTo = function(to) {
   let maxY = this.canvas.height - this.scrollbarBreadth;
   if (to > maxY) {
     this.rangeY.to = maxY;
+    this.rangeYpercentage.to = 100.0;
   } else {
     this.rangeY.to = to;
+    let maxY = this.canvas.height - this.scrollbarBreadth;
+    let toPercentage = to * 100.0 / maxY;
+    this.rangeYpercentage.to = toPercentage;
   }
 };
 TimingsHistogramsGraphic.prototype.shiftRangeY = function(newFrom, newTo) {
@@ -80,6 +103,12 @@ TimingsHistogramsGraphic.prototype.shiftRangeY = function(newFrom, newTo) {
   }
   this.rangeY.from = newFrom;
   this.rangeY.to = newTo;
+
+  let fromPercentage = newFrom * 100.0 / maxY;
+  let toPercentage = newTo * 100.0 / maxY;
+
+  this.rangeYpercentage.from = fromPercentage;
+  this.rangeYpercentage.to = toPercentage;
 };
 
 TimingsHistogramsGraphic.prototype.highlightProcess = function(processNode, processNodeViewState) {
@@ -113,6 +142,16 @@ TimingsHistogramsGraphic.prototype.handleCanvasContainerResize = function(newWid
   // that.canvas.style.height = `${newHeight}px`;
   that.canvasWidth = newWidth;
   that.canvasHeight = newHeight;
+
+  let workAreaWidth = newWidth - that.scrollbarBreadth;
+  let workAreaHeight = newHeight - that.scrollbarBreadth;
+
+  that.rangeX.from = workAreaWidth * that.rangeXpercentage.from / 100.0;
+  that.rangeX.to = workAreaWidth * that.rangeXpercentage.to / 100.0;
+
+  that.rangeY.from = workAreaHeight * that.rangeYpercentage.from / 100.0;
+  that.rangeY.to = workAreaHeight * that.rangeYpercentage.to / 100.0;
+
   that.redraw();
 };
 
