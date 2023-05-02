@@ -16,6 +16,7 @@ FrequenciesViewBuilder.prototype.buildViews = function(timingsBySubcategoriesTre
   if (oldChild !== undefined) {
     console.log("FrequenciesViewBuilder.prototype.buildViews. about to invoke oldChild.mergeWithNewTimings()");
     oldChild.mergeWithNewTimings(timingsBySubcategoriesTree);
+    oldChild.hGraphic.refreshRanges();
     oldChild.hGraphic.redraw();
   } else {
     console.log("FrequenciesViewBuilder.prototype.buildViews. oldChild is undefined.");
@@ -23,6 +24,7 @@ FrequenciesViewBuilder.prototype.buildViews = function(timingsBySubcategoriesTre
     let treeView = new FrequenciesView(timingsBySubcategoriesTree);
     views.push(treeView);
     treeView.buildHtml();
+    treeView.hGraphic.refreshRanges();
     treeView.hGraphic.redraw();
     that.html = treeView.htmlElement;
     that.viewsByName[timingsBySubcategoriesTree.name] = treeView;

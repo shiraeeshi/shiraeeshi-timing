@@ -4,11 +4,11 @@ const { withChildren } = require('../html_utils.js');
 export function TimingsHistogramsGraphic(processNode) {
   // old comment: processes[n] = {prefix:"...",timings:[], lastTiming:{...}}
   // processNode = {name: "", children: [], childrenByName: {}, timings: []}
-  this.processNode = processNode;
+  this.setProcessNode(processNode);
   this.rangeX = {from: 0, to: 100};
   this.rangeY = {from: 0, to: 100};
   this.rangeXpercentage = {from: 0, to: 100};
-  this.rangeYpercentage = {from: 0, to: 20};
+  this.rangeYpercentage = {from: 0, to: 100};
   this.distortionX = {a: 0, b: 1, c: 0};
   this.distortionY = {a: 1};
   this.scrollbarBreadth = 20;
@@ -20,8 +20,27 @@ export function TimingsHistogramsGraphic(processNode) {
 }
 
 TimingsHistogramsGraphic.prototype.setProcessNode = function(processNode) {
-  this.processNode = processNode;
-  this.highlightedSubprocessOfSelectedProcessNode = null;
+  let that = this;
+  that.processNode = processNode;
+  that.highlightedSubprocessOfSelectedProcessNode = null;
+
+  let now = new Date();
+
+  let oldestRecordMillis = findMaxRecursive(that.processNode, 0, (timings) => {
+    if (timings.length == 0) {
+      return 0;
+    } else {
+      return now.getTime() - timings[0].fromdate.getTime();
+    }
+  });
+
+  that.oldestRecordMillis = oldestRecordMillis;
+
+  let maxWavelength = findMaxRecursive(that.processNode, 0, (timings) => {
+    return findMax(0, timings.map(t => t.millisUntilNext));
+  });
+
+  that.maxWavelength = maxWavelength;
 }
 
 TimingsHistogramsGraphic.prototype.setRangeXFrom = function(from) {
@@ -78,12 +97,21 @@ TimingsHistogramsGraphic.prototype.setRangeYFrom = function(from) {
     this.rangeYpercentage.from = fromPercentage;
   }
 };
+// TimingsHistogramsGraphic.prototype.translateAndSetRangeYTo = function(to) {
+//   let that = this;
+//   let diff = that.translateVerticalScrollbarRangeToPixels() - to;
+//   console.log(`[translateAndSetRangeYTo] rangeY.to: ${that.rangeY.to}, diff: ${diff}`);
+//   that.setRangeYTo(that.rangeY.to - diff);
+// };
 TimingsHistogramsGraphic.prototype.setRangeYTo = function(to) {
   let maxY = this.canvas.height - this.scrollbarBreadth;
   if (to > maxY) {
     this.rangeY.to = maxY;
     this.rangeYpercentage.to = 100.0;
   } else {
+    if (to < 0) {
+      return;
+    }
     this.rangeY.to = to;
     let maxY = this.canvas.height - this.scrollbarBreadth;
     let toPercentage = to * 100.0 / maxY;
@@ -157,6 +185,7 @@ TimingsHistogramsGraphic.prototype.handleCanvasContainerResize = function(newWid
 
 TimingsHistogramsGraphic.prototype.initCanvas = function(bottomHalfOfPage) {
   let that = this;
+  that.refreshRanges();
   let canvas = document.createElement("canvas");
   canvas.setAttribute('id', 'canvas');
   let canvasWidth = 800;
@@ -202,9 +231,11 @@ TimingsHistogramsGraphic.prototype.initCanvas = function(bottomHalfOfPage) {
       this.resetDragModes();
       this.isInDragModeVResizeTop = true;
     },
-    enterDragModeVResizeBottom: function() {
+    enterDragModeVResizeBottom: function(position) {
       this.resetDragModes();
       this.isInDragModeVResizeBottom = true;
+      this.dragModeStartedAt = position;
+      this.dragModeStartedAtRange = Object.assign({}, that.rangeY);
     },
     enterDragModeHMove: function(position) {
       this.resetDragModes();
@@ -229,7 +260,10 @@ TimingsHistogramsGraphic.prototype.initCanvas = function(bottomHalfOfPage) {
         document.documentElement.addEventListener('mouseup', canvasMouseUp);
         document.documentElement.addEventListener('mousemove', canvasMouseMove);
       } else if (canvasMouseState.isOnVScrollbarThumbBottomEdge) {
-        canvasMouseState.enterDragModeVResizeBottom();
+        let canvasRect = that.getCanvasPosition();
+        let offsetY = eve.clientY - canvasRect.top;
+
+        canvasMouseState.enterDragModeVResizeBottom(offsetY);
         document.documentElement.addEventListener('mouseup', canvasMouseUp);
         document.documentElement.addEventListener('mousemove', canvasMouseMove);
 
@@ -314,7 +348,11 @@ TimingsHistogramsGraphic.prototype.initCanvas = function(bottomHalfOfPage) {
         that.setRangeYFrom(offsetY);
         that.redraw();
       } else if (canvasMouseState.isInDragModeVResizeBottom) {
-        that.setRangeYTo(offsetY);
+        let diff = offsetY - canvasMouseState.dragModeStartedAt;
+        let startRange = canvasMouseState.dragModeStartedAtRange
+        let to = startRange.to + diff;
+        // that.translateAndSetRangeYTo(offsetY);
+        that.setRangeYTo(to);
         that.redraw();
       } else if (canvasMouseState.isInDragModeHMove) {
         let diff = offsetX - canvasMouseState.dragModeStartedAt;
@@ -348,7 +386,9 @@ TimingsHistogramsGraphic.prototype.initCanvas = function(bottomHalfOfPage) {
             withinRangeOf(offsetY, that.rangeY.from, 5);
 
         let isOnVScrollbarThumbBottomEdge = isOnVScrollbar &&
-            withinRangeOf(offsetY, that.rangeY.to, 5);
+            // withinRangeOf(offsetY, that.translateVerticalScrollbarRangeToPixels(), 5);
+            // withinRangeOf(offsetY, that.rangeY.to, 5);
+            withinRangeOf(offsetY, that.canvasHeight - that.scrollbarBreadth, 5);
 
         canvasMouseState.isOnVScrollbarThumb = isOnVScrollbarThumb;
         canvasMouseState.isOnVScrollbarThumbTopEdge = isOnVScrollbarThumbTopEdge;
@@ -526,7 +566,10 @@ TimingsHistogramsGraphic.prototype.initCanvas = function(bottomHalfOfPage) {
 //     );
 //   return buttonsPanel;
 // };
-
+TimingsHistogramsGraphic.prototype.refreshRanges = function() {
+  let that = this;
+  that.setProcessNode(that.processNode);
+};
 TimingsHistogramsGraphic.prototype.redraw = function() {
   let that = this;
 
@@ -549,38 +592,11 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   //ctx.fillRect(xFrom, yFrom, timingItem.minutes*canvasWidth*1.0/minutesRange, 50);
   //ctx.fillRect(xFrom, yFrom, xTo, yTo);
 
-  function findMaxRecursive(processNode, defaultValue, innerMaxFunc) {
-    let localMax = defaultValue;
-    let timings = [];
-    let processNodeTimings = processNode.ownTimingsAsReferences;
-    if (processNodeTimings.length > 0) {
-      timings = processNodeTimings;
-    }
-    if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
-      timings = timings.concat(processNode.referencedTimings);
-    }
-    if (timings.length > 0) {
-      localMax = innerMaxFunc(timings);
-    }
-    return findMax(defaultValue,
-      [localMax].concat(processNode.children.map((childProcessNode) => {
-        return findMaxRecursive(childProcessNode, defaultValue, innerMaxFunc)
-      })));
-  }
-  // let oldestRecordMillis = findMax(0, that.processes.map(p => now.getTime() - p.timings[0].fromdate.getTime()));
-  let oldestRecordMillis = findMaxRecursive(that.processNode, 0, (timings) => {
-    if (timings.length == 0) {
-      return 0;
-    } else {
-      return now.getTime() - timings[0].fromdate.getTime();
-    }
-  });
-  // let maxWavelength = findMax(0, that.processes.map(p => {
-  //   return findMax(0, p.timings.map(t => t.millisUntilNext));
-  // }));
-  let maxWavelength = findMaxRecursive(that.processNode, 0, (timings) => {
-    return findMax(0, timings.map(t => t.millisUntilNext));
-  });
+  let oldestRecordMillis = that.oldestRecordMillis;
+  let maxWavelength = that.maxWavelength;
+  // let maxWavelength = findMaxRecursive(that.processNode, 0, (timings) => {
+  //   return findMax(0, timings.map(t => t.millisUntilNext));
+  // });
 
   let graphicWidth = that.canvasWidth - that.scrollbarBreadth;
   let graphicHeight = that.canvasHeight - that.scrollbarBreadth;
@@ -802,11 +818,30 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     xFrom: that.canvasWidth - scrollbarBreadth,
     yFrom: that.rangeY.from,
     xTo: that.canvasWidth,
-    yTo: that.rangeY.to
+    // yTo: that.translateVerticalScrollbarRangeToPixels()
+    // yTo: that.rangeY.to
+    yTo: that.canvasHeight - scrollbarBreadth
   };
   ctx.fillStyle = 'rgba(0, 0, 0, 1)';
   that.fillRect(ctx, vScrollbarThumbsCoords);
 };
+
+// TimingsHistogramsGraphic.prototype.translateVerticalScrollbarRangeToPixels = function() {
+//   let that = this;
+//   let yTo;
+//   let oneMinute = 60 * 1000;
+//   let rangeYInMillis = that.maxWavelength * that.rangeYpercentage.to / 100.0;
+//   if (rangeYInMillis < oneMinute * 30) {
+//     console.log(`[translateVerticalScrollbarRangeToPixels] rangeYInMillis: ${rangeYInMillis} is less than one * 30 (${rangeYInMillis} < ${oneMinute * 30})`);
+//     let rangeYInMillisRatio = rangeYInMillis / (oneMinute * 30);
+//     let graphicHeight = that.canvasHeight - that.scrollbarBreadth;
+//     yTo = graphicHeight * rangeYInMillisRatio;
+//   } else {
+//     console.log(`[translateVerticalScrollbarRangeToPixels] rangeYInMillis: ${rangeYInMillis}`);
+//     yTo = that.canvasHeight - that.scrollbarBreadth;
+//   }
+//   return yTo;
+// };
 
 TimingsHistogramsGraphic.prototype.fillRect = function(ctx, coords) {
   ctx.fillRect(coords.xFrom, coords.yFrom, coords.xTo - coords.xFrom, coords.yTo - coords.yFrom);
@@ -818,6 +853,25 @@ function withinRangeOf(a, b, range) {
   } else {
     return (b - a) <= range;
   }
+}
+
+function findMaxRecursive(processNode, defaultValue, innerMaxFunc) {
+  let localMax = defaultValue;
+  let timings = [];
+  let processNodeTimings = processNode.ownTimingsAsReferences;
+  if (processNodeTimings.length > 0) {
+    timings = processNodeTimings;
+  }
+  if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
+    timings = timings.concat(processNode.referencedTimings);
+  }
+  if (timings.length > 0) {
+    localMax = innerMaxFunc(timings);
+  }
+  return findMax(defaultValue,
+    [localMax].concat(processNode.children.map((childProcessNode) => {
+      return findMaxRecursive(childProcessNode, defaultValue, innerMaxFunc)
+    })));
 }
 
 function findMax(defaultValue, arr) {
