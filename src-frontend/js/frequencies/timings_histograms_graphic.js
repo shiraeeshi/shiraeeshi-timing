@@ -350,8 +350,18 @@ TimingsHistogramsGraphic.prototype.initCanvas = function(bottomHalfOfPage) {
       } else if (canvasMouseState.isInDragModeVResizeBottom) {
         let diff = offsetY - canvasMouseState.dragModeStartedAt;
         let startRange = canvasMouseState.dragModeStartedAtRange
-        let to = startRange.to + diff;
-        // that.translateAndSetRangeYTo(offsetY);
+        let graphicHeight = that.canvasHeight - that.scrollbarBreadth;
+        let to;
+        if (diff < 0 && startRange.to < graphicHeight) {
+          to = startRange.to + diff * startRange.to / graphicHeight;
+        } else {
+          to = startRange.to + diff;
+        }
+        // let yRatio = graphicHeight * 1.0 / that.maxWavelength
+        // let to = startRange.to + diff * (yRatio < 1 && yRatio > 0 ? yRatio : 1);
+        // let to = startRange.to + diff;
+        // // that.translateAndSetRangeYTo(offsetY);
+        // console.log(`setRangeYTo: to: ${to}`);
         that.setRangeYTo(to);
         that.redraw();
       } else if (canvasMouseState.isInDragModeHMove) {
