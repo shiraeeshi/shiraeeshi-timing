@@ -26,7 +26,7 @@ export function addTagNodeLinksToForest(tagNode, resultForest) {
   }
 }
 
-export function highlightNotesInForest(rootNodeViewOfNotes, forestToHighlight) {
+export function highlightNotesInForest(rootNodeViewOfNotes, forestToHighlight, isTopPanel) {
   try {
     rootNodeViewOfNotes.children.forEach(treeView => treeView.hide());
 
@@ -37,6 +37,11 @@ export function highlightNotesInForest(rootNodeViewOfNotes, forestToHighlight) {
         treeView.highlightTree(nodeToHighlight);
       });
     });
+
+    if (!isTopPanel) {
+      let notesOuterWrapper = document.getElementById('notes-content-outer-wrapper');
+      notesOuterWrapper.classList.add('as-two-panels');
+    }
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js highlightNotesInForest error msg: " + err.message);
     throw err;
@@ -54,6 +59,9 @@ export function highlightTagsInForest(rootNodeViewOfTags, forestToHighlight) {
         treeView.highlightTree(nodeToHighlight);
       });
     });
+
+    let tagsOuterWrapper = document.getElementById('tags-and-links-content-outer-wrapper');
+    tagsOuterWrapper.classList.add('as-two-panels');
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js highlightTagsInForest error msg: " + err.message);
     throw err;
@@ -142,7 +150,13 @@ function findCurrentTags(tagsAndLinksForestObj) {
 }
 
 export function appendNotesForestHtml(notesForestHtml) {
-  let notesWrapper = document.getElementById("notes-content-wrapper");
+  let notesWrapper = document.getElementById("notes-content-top-wrapper");
+  notesWrapper.innerHTML = "";
+  notesWrapper.appendChild(notesForestHtml);
+}
+
+export function appendNotesForestHtmlToBottomPanel(notesForestHtml) {
+  let notesWrapper = document.getElementById("notes-content-bottom-wrapper");
   notesWrapper.innerHTML = "";
   notesWrapper.appendChild(notesForestHtml);
 }

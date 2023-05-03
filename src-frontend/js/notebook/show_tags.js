@@ -4,7 +4,7 @@ const { withChildren } = require('../html_utils.js');
 
 export function showTagsAndLinks(tags) {
   try {
-    let mainWrapper = document.getElementById("tags-and-links-content-wrapper");
+    let mainWrapper = document.getElementById("tags-and-links-content-top-wrapper");
     let tagsAndLinksObj = buildTagsAndLinksForest(tags);
 
     let viewBuilder = new NotebookTagsForestViewBuilder();
@@ -25,6 +25,27 @@ export function showTagsAndLinks(tags) {
     //     )
     //   )
     // );
+    withChildren(mainWrapper,
+      withChildren(document.createElement('ul'),
+        viewBuilder.getHtml()
+      )
+    );
+    viewBuilder.getRootNodeViewOfTags().children.forEach(c => c.collapse());
+  } catch (err) {
+    window.webkit.messageHandlers.foobar.postMessage("js showTagsAndLinks error msg: " + err.message);
+    throw err;
+  }
+}
+
+export function showTagsAndLinksOfBottomPanel(tags) {
+  try {
+    let mainWrapper = document.getElementById("tags-and-links-content-bottom-wrapper");
+    let tagsAndLinksObj = buildTagsAndLinksForest(tags);
+
+    let viewBuilder = new NotebookTagsForestViewBuilder();
+    viewBuilder.buildView(tagsAndLinksObj);
+
+    window.my.rootNodeViewOfTagsOfBottomPanel = viewBuilder.getRootNodeViewOfTags();
     withChildren(mainWrapper,
       withChildren(document.createElement('ul'),
         viewBuilder.getHtml()

@@ -38,5 +38,5 @@ function searchByTag(tagNode) {
   }
   let resultForest = [];
   addTagNodeLinksToForest(tagNode, resultForest);
-  highlightNotesInForest(window.my.rootNodeViewOfNotes, resultForest);
+  highlightNotesInForest(window.my.rootNodeViewOfNotesOfBottomPanel, resultForest);
 }
