@@ -30,6 +30,15 @@ export function highlightNotesInForest(rootNodeViewOfNotes, forestToHighlight, i
   try {
     rootNodeViewOfNotes.children.forEach(treeView => treeView.hide());
 
+    openNotesInForest(rootNodeViewOfNotes, forestToHighlight, isTopPanel);
+  } catch (err) {
+    window.webkit.messageHandlers.foobar.postMessage("js highlightNotesInForest error msg: " + err.message);
+    throw err;
+  }
+}
+
+export function openNotesInForest(rootNodeViewOfNotes, forestToHighlight, isTopPanel) {
+  try {
     forestToHighlight.forEach(nodeToHighlight => {
       rootNodeViewOfNotes.children.forEach(treeView => {
         if (treeView.name != nodeToHighlight.name) return;
@@ -43,7 +52,7 @@ export function highlightNotesInForest(rootNodeViewOfNotes, forestToHighlight, i
       notesOuterWrapper.classList.add('as-two-panels');
     }
   } catch (err) {
-    window.webkit.messageHandlers.foobar.postMessage("js highlightNotesInForest error msg: " + err.message);
+    window.webkit.messageHandlers.foobar.postMessage("js openNotesInForest error msg: " + err.message);
     throw err;
   }
 }
@@ -52,18 +61,32 @@ export function highlightTagsInForest(rootNodeViewOfTags, forestToHighlight) {
   try {
     rootNodeViewOfTags.children.forEach(treeView => treeView.hide());
 
-    forestToHighlight.forEach(nodeToHighlight => {
-      rootNodeViewOfTags.children.forEach(treeView => {
-        if (treeView.name != nodeToHighlight.name) return;
+    openTagsInForest(rootNodeViewOfTags, forestToHighlight);
+  } catch (err) {
+    window.webkit.messageHandlers.foobar.postMessage("js highlightTagsInForest error msg: " + err.message);
+    throw err;
+  }
+}
 
-        treeView.highlightTree(nodeToHighlight);
-      });
-    });
+export function openTagsInForest(rootNodeViewOfTags, forestToHighlight) {
+  try {
+
+    if (forestToHighlight.name === rootNodeViewOfTags.name) {
+      rootNodeViewOfTags.highlightTree(forestToHighlight);
+    }
+    // forestToHighlight.forEach(nodeToHighlight => {
+    //   rootNodeViewOfTags.children.forEach(treeView => {
+    //     if (treeView.name != nodeToHighlight.name) return;
+
+    //     treeView.highlightTree(nodeToHighlight);
+    //   });
+    // });
 
     let tagsOuterWrapper = document.getElementById('tags-and-links-content-outer-wrapper');
     tagsOuterWrapper.classList.add('as-two-panels');
+
   } catch (err) {
-    window.webkit.messageHandlers.foobar.postMessage("js highlightTagsInForest error msg: " + err.message);
+    window.webkit.messageHandlers.foobar.postMessage("js openTagsInForest error msg: " + err.message);
     throw err;
   }
 }

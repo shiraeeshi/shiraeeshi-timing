@@ -117,6 +117,9 @@ module.exports = [
       filename: 'notebook.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/notebook'),
     },
+    optimization: {
+      minimize: false,
+    },
   },
   {
     entry: './src-frontend/timings_reports/timings_frequencies.renderer.js',

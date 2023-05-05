@@ -52,14 +52,16 @@ NotebookNodeView.prototype.openTagInTagsTree = function() {
   let that = this;
   let tag = that.notebookNode.tag;
   let tagsAndLinksForestObj = buildTagsAndLinksForest([tag]);
-  highlightTagsInForest(window.my.rootNodeViewOfTagsOfBottomPanel, tagsAndLinksForestObj.children);
+  window.my.lastOpenedTags = tagsAndLinksForestObj;
+  highlightTagsInForest(window.my.rootNodeViewOfTagsOfBottomPanel, tagsAndLinksForestObj);
 }
 
 NotebookNodeView.prototype.openTagsOfChildrenInTagsTree = function() {
   let that = this;
   let tagsOfChildren = that.notebookNode.tagsOfChildren;
   let tagsAndLinksForestObj = buildTagsAndLinksForest(tagsOfChildren);
-  highlightTagsInForest(window.my.rootNodeViewOfTagsOfBottomPanel, tagsAndLinksForestObj.children);
+  window.my.lastOpenedTags = tagsAndLinksForestObj;
+  highlightTagsInForest(window.my.rootNodeViewOfTagsOfBottomPanel, tagsAndLinksForestObj);
 }
 
 NotebookNodeView.prototype.moveToTop = function() {

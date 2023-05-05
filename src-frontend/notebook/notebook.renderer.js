@@ -3,7 +3,7 @@ const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
 const { parseTagsFromRootForest } = require('../js/notebook/parse_tags.js');
 const { showTagsAndLinks, showTagsAndLinksOfBottomPanel } = require('../js/notebook/show_tags.js');
 const { NotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
-const { appendNotesForestHtml, appendNotesForestHtmlToBottomPanel, buildInitialNotesForest, highlightNotesInForest } = require('../js/notebook/notebook_utils.js');
+const { appendNotesForestHtml, appendNotesForestHtmlToBottomPanel, buildInitialNotesForest, openNotesInForest, highlightNotesInForest, openTagsInForest, highlightTagsInForest } = require('../js/notebook/notebook_utils.js');
 
 let my = {
   notesForest: null
@@ -65,6 +65,18 @@ function initBottomPanelButtonsOfTagsAndLinks() {
     let outerWrapper = document.getElementById('tags-and-links-content-outer-wrapper');
     outerWrapper.classList.remove('as-two-panels');
   });
+
+  let btnOpenAbove = document.getElementById('btn-open-tags-in-above-panel');
+  btnOpenAbove.addEventListener('click', (eve) => {
+    let tagsToOpen = window.my.lastOpenedTags;
+    openTagsInForest(window.my.rootNodeViewOfTags, tagsToOpen);
+  });
+
+  let btnOpenAboveExclusively = document.getElementById('btn-open-tags-in-above-panel-exclusively');
+  btnOpenAboveExclusively.addEventListener('click', (eve) => {
+    let tagsToOpen = window.my.lastOpenedTags;
+    highlightTagsInForest(window.my.rootNodeViewOfTags, tagsToOpen);
+  });
 }
 
 function initBottomPanelButtonsOfNotes() {
@@ -74,6 +86,18 @@ function initBottomPanelButtonsOfNotes() {
     topPanel.style.removeProperty('height');
     let outerWrapper = document.getElementById('notes-content-outer-wrapper');
     outerWrapper.classList.remove('as-two-panels');
+  });
+
+  let btnOpenAbove = document.getElementById('btn-open-notes-in-above-panel');
+  btnOpenAbove.addEventListener('click', (eve) => {
+    let nodesToOpen = window.my.lastOpenedNodesOfNotes;
+    openNotesInForest(window.my.rootNodeViewOfNotes, nodesToOpen);
+  });
+
+  let btnOpenAboveExclusively = document.getElementById('btn-open-notes-in-above-panel-exclusively');
+  btnOpenAboveExclusively.addEventListener('click', (eve) => {
+    let nodesToOpen = window.my.lastOpenedNodesOfNotes;
+    highlightNotesInForest(window.my.rootNodeViewOfNotes, nodesToOpen);
   });
 }
 

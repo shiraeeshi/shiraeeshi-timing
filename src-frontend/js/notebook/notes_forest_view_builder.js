@@ -8,7 +8,7 @@ export function NotesForestViewBuilder() {
   that.view = null;
   that.rootNodeClickHandler = function(eve) {
     let initialNotesForest = buildInitialNotesForest();
-    highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest);
+    highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest, true);
   };
 }
 
@@ -43,7 +43,7 @@ export function CurrentNotesForestViewBuilder() {
   that.html = null;
   that.view = null;
   that.rootNodeClickHandler = function(eve) {
-    highlightNotesInForest(window.my.rootNodeViewOfNotes, window.my.currentNotesForest);
+    highlightNotesInForest(window.my.rootNodeViewOfNotes, window.my.currentNotesForest, true);
   };
 }
 

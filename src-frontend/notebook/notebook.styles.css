@@ -30,7 +30,6 @@ body {
 #notes-content-outer-wrapper {
   flex: 1 1 0%;
   overflow: hidden;
-  padding: 5px;
 }
 
 #tags-and-links-content-top-wrapper,
@@ -41,7 +40,7 @@ body {
 
 #tags-and-links-content-bottom-wrapper,
 #notes-content-bottom-wrapper {
-  flex-grow: 1;
+  flex: 1 1 1px;
 }
 
 /* #tags-and-links-content-bottom-wrapper {  */
@@ -52,6 +51,12 @@ body {
 #notes-content-bottom-wrapper {
   overflow-y: auto;
   overflow-x: hidden;
+  padding-left: 5px;
+}
+
+#notes-content-top-wrapper > li,
+#notes-content-bottom-wrapper > li {
+  margin-top: 5px;
 }
 
 /* #notes-content-bottom-wrapper {  */
@@ -142,13 +147,27 @@ body {
 
 #notes-content-outer-wrapper.as-two-panels >
 #notes-content-bottom-outer-wrapper {
-  flex: 1 1 0%;
+  flex: 1 1 1px;
   display: flex;
   flex-direction: column;
   border-top: 1px solid grey;
 }
 
 
+
+
+
+#notes-content-bottom-div-buttons-row {
+  flex: 0 0 auto;
+}
+
+
+
+
+#btn-close-bottom-panel-of-tags-and-links,
+#btn-close-bottom-panel-of-notes {
+  float: right;
+}
 
 
 
