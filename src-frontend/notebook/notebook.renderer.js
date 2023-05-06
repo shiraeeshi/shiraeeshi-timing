@@ -99,6 +99,20 @@ function initBottomPanelButtonsOfNotes() {
     let nodesToOpen = window.my.lastOpenedNodesOfNotes;
     highlightNotesInForest(window.my.rootNodeViewOfNotes, nodesToOpen);
   });
+
+  let btnMaximize = document.getElementById('btn-maximize-bottom-panel-of-notes');
+  btnMaximize.addEventListener('click', (eve) => {
+    let outerWrapper = document.getElementById('notes-content-outer-wrapper');
+    outerWrapper.classList.remove('as-two-panels');
+    outerWrapper.classList.add('maximized-bottom-panel');
+  });
+
+  let btnUnmaximize = document.getElementById('btn-unmaximize-bottom-panel-of-notes');
+  btnUnmaximize.addEventListener('click', (eve) => {
+    let outerWrapper = document.getElementById('notes-content-outer-wrapper');
+    outerWrapper.classList.add('as-two-panels');
+    outerWrapper.classList.remove('maximized-bottom-panel');
+  });
 }
 
 function initResizers() {
