@@ -9,7 +9,15 @@ function sortTimings(processNode) {
 }
 
 
-export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
+export function initProcessesTree(timingsByCategories, processesTree) {
+  processesTree = buildProcessesTree(timingsByCategories, processesTree);
+  sortTimings(processesTree);
+  processesTree.initMillisUntilNext();
+  return processesTree;
+}
+
+
+export function buildProcessesTree(timingsByCategories, timingsBySubcategoriesTree) {
   if (timingsBySubcategoriesTree === undefined) {
     timingsBySubcategoriesTree = new ProcessNode("all");
   }
@@ -123,8 +131,6 @@ export function handleTimings(timingsByCategories, timingsBySubcategoriesTree) {
       });
     }
   });
-  sortTimings(timingsBySubcategoriesTree);
-  timingsBySubcategoriesTree.initMillisUntilNext();
   return timingsBySubcategoriesTree;
 }
 

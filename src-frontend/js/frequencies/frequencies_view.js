@@ -3,7 +3,7 @@ const { TimingsCategoryNodeViewState } = require('../timings/categories/node_vie
 const { ProcessTreeNodeView } = require('./process_tree_node_view.js');
 const { TimingsHistogramsGraphic } = require('./timings_histograms_graphic.js');
 const { requestTimingsForPeriod } = require('./request_timings_for_period.js');
-const { handleTimings } = require('./handle_timings.js');
+const { initProcessesTree } = require('../common/processes_tree_builder.js');
 
 const { showTimingsFormatError, withChildren, withClass, withId } = require('../html_utils.js');
 const { date2TimingDateStrUnpadded } = require('../date_utils.js');
@@ -223,7 +223,7 @@ FrequenciesView.prototype.buildPeriodButtonsRow = function() {
     requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom).then(timings => {
       console.log('btnPlusHalfYear.onclick timings keys:');
       console.dir(Object.keys(timings));
-      my.timings = handleTimings(timings, my.timings);
+      my.timings = initProcessesTree(timings, my.timings);
       my.viewBuilder.buildViews(my.timings);
       my.viewBuilder.showView();
     }).catch(err => {
@@ -244,7 +244,7 @@ FrequenciesView.prototype.buildPeriodButtonsRow = function() {
     requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom).then(timings => {
       console.log('btnPlusMonth.onclick timings keys:');
       console.dir(Object.keys(timings));
-      my.timings = handleTimings(timings, my.timings);
+      my.timings = initProcessesTree(timings, my.timings);
       my.viewBuilder.buildViews(my.timings);
       my.viewBuilder.showView();
     }).catch(err => {

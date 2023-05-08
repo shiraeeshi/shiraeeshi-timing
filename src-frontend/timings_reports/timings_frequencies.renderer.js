@@ -8,7 +8,7 @@ const {
 
 const { FrequenciesViewBuilder } = require('../js/frequencies/frequencies_view_builder.js');
 const { requestTimingsForPeriod } = require('../js/frequencies/request_timings_for_period.js');
-const { handleTimings } = require('../js/frequencies/handle_timings.js');
+const { initProcessesTree } = require('../js/common/processes_tree_builder.js');
 const { TimingsHistogramsGraphic } = require('../js/frequencies/timings_histograms_graphic.js');
 
 let my = {
@@ -51,7 +51,7 @@ function handleServerMessage(msg) {
 
     // old
     // my.timings = msg;
-    // let timingsBySubcategoriesTree = handleTimings(my.timings);
+    // let timingsBySubcategoriesTree = initProcessesTree(my.timings);
     // showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree);
 
     // new
@@ -65,8 +65,8 @@ function handleServerMessage(msg) {
     requestTimingsForPeriod(initialPeriodFrom, initialPeriodTo).then(timings => {
       console.log('initial handleServerMessage. timings keys:');
       console.dir(Object.keys(timings));
-      my.timings = handleTimings(timings, undefined);
-      // console.log(`initial handleServerMessage. handleTimings result: ${JSON.stringify(my.timings)}`);
+      my.timings = initProcessesTree(timings, undefined);
+      // console.log(`initial handleServerMessage. initProcessesTree result: ${JSON.stringify(my.timings)}`);
       my.viewBuilder.buildViews(my.timings);
       my.viewBuilder.showView();
     }).catch(err => {
