@@ -2,13 +2,19 @@ const { NotebookNodeView } = require('./notebook_node_view.js');
 const { buildInitialNotesForest, highlightNotesInForest } = require('./notebook_utils.js');
 const { withChildren } = require('../html_utils.js');
 
-export function NotesForestViewBuilder() {
+export function NotesForestViewBuilder(isTopPanel) {
   let that = this;
   that.html = null;
   that.view = null;
   that.rootNodeClickHandler = function(eve) {
     let initialNotesForest = buildInitialNotesForest();
-    highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest, true);
+    let rootNodeViewOfNotes;
+    if (isTopPanel) {
+      rootNodeViewOfNotes = window.my.rootNodeViewOfNotes;
+    } else {
+      rootNodeViewOfNotes = window.my.rootNodeViewOfNotesOfBottomPanel;
+    }
+    highlightNotesInForest(rootNodeViewOfNotes, initialNotesForest, isTopPanel);
   };
 }
 

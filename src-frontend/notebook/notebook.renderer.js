@@ -33,18 +33,14 @@ function handleServerMessage(msg) {
     showTagsAndLinks(tags);
     showTagsAndLinksOfBottomPanel(tags);
 
-    let viewBuilder = new NotesForestViewBuilder();
-    viewBuilder.buildView(forest);
-    my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
-    appendNotesForestHtml(viewBuilder.getHtml());
-
     viewBuilder = new NotesForestViewBuilder();
     viewBuilder.buildView(forest);
     my.rootNodeViewOfNotesOfBottomPanel = viewBuilder.getRootNodeViewOfNotes();
     appendNotesForestHtmlToBottomPanel(viewBuilder.getHtml());
 
     let initialNotesForest = buildInitialNotesForest();
-    highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest, true);
+    highlightNotesInForest(window.my.rootNodeViewOfNotesOfBottomPanel, initialNotesForest);
+
     initResizers();
     initBottomPanelButtons();
   } catch (err) {
@@ -109,6 +105,17 @@ function initBottomPanelButtonsOfNotes() {
 
   let btnUnmaximize = document.getElementById('btn-unmaximize-bottom-panel-of-notes');
   btnUnmaximize.addEventListener('click', (eve) => {
+
+    if (my.rootNodeViewOfNotes === undefined) {
+      let viewBuilder = new NotesForestViewBuilder(true);
+      viewBuilder.buildView(my.notesForest);
+      my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
+      appendNotesForestHtml(viewBuilder.getHtml());
+
+      let initialNotesForest = buildInitialNotesForest();
+      highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest, true);
+    }
+
     let outerWrapper = document.getElementById('notes-content-outer-wrapper');
     outerWrapper.classList.add('as-two-panels');
     outerWrapper.classList.remove('maximized-bottom-panel');
