@@ -240,9 +240,21 @@ export function makeTimingsTextElementsUnminimized() {
   }
 }
 
+function sortDatesAndTimingsInsideThem(timingsByDates) {
+  timingsByDates.forEach(timingsByDate => {
+    timingsByDate.timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
+  });
+  function threeInts2date(threeInts) {
+    return timingDateArrays2Date(threeInts, [0,0]);
+  }
+  timingsByDates.sort((a, b) => threeInts2date(a.date).getTime() - threeInts2date(b.date).getTime());
+}
+
 export function displayTimingsAsText(timingsByDates) {
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("displayTimings start ");
   try {
+    sortDatesAndTimingsInsideThem(timingsByDates);
+
     let innerContentWrapper = document.getElementById("inner-content-wrapper");
     innerContentWrapper.innerHTML = "";
 
