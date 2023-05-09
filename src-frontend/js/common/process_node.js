@@ -8,6 +8,7 @@ export function ProcessNode(name, parentNode) {
   this.timings = [];
   this.ownTimingsAsReferences = [];
   this.stashed = {};
+  // this.timingsCountRecursive = undefined;
   // this.referencedTimings = undefined;
   // this.referencedByDescendantsTimings = undefined;
   // this.timingsWithBorrowedReferences = undefined;
@@ -42,6 +43,18 @@ ProcessNode.prototype.ensureChildWithName = function(name) {
   // }
 
   return child;
+};
+
+ProcessNode.prototype.getTimingsCountRecursive = function(name) {
+  let that = this;
+  if (that.timingsCountRecursive === undefined) {
+    let result = that.timings.length;
+    that.children.forEach(subproc => {
+      result += subproc.getTimingsCountRecursive();
+    });
+    that.timingsCountRecursive = result;
+  }
+  return that.timingsCountRecursive;
 };
 
 ProcessNode.prototype.getFirstTiming = function() {

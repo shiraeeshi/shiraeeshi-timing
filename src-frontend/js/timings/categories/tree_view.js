@@ -1,8 +1,24 @@
 const { TimingsCategoryNodeView } = require('./node_view.js');
 const { withChildren, withClass } = require('../../html_utils.js');
 const { dateArray2str, timeArray2str } = require('../../date_utils.js');
+const { buildProcessesTree } = require('../../common/processes_tree_builder.js');
 
-export function createAndAppendFilterByCategory(timingsByDates) {
+export function createAndAppendFilterByCategory(processesTree) {
+  let btnsContainer = document.getElementById('timing-category-btns-container');
+  btnsContainer.innerHTML = "";
+
+  let timingsCategoryNodeViewRoot = new TimingsCategoryNodeView(processesTree);
+  timingsCategoryNodeViewRoot.buildAsHtmlLiElement();
+  btnsContainer.appendChild(
+    withChildren(
+      withClass(document.createElement("ul"), "timings-categories-tree"),
+      timingsCategoryNodeViewRoot.html
+    )
+  );
+  return timingsCategoryNodeViewRoot;
+}
+
+export function createAndAppendFilterByCategory1(timingsByDates) {
   let categoriesTreeRoot = TimingsCategoryTreeNode.createRootCategory();
   timingsByDates.forEach(dt => {
     dt.timings.forEach(t => {

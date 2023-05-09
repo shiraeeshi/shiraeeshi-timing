@@ -1,6 +1,8 @@
 const { timingDateArrays2Date, dateDifferenceInMillis } = require('../date_utils.js');
 
 function filterTimingsByDifference(differenceInMillis) {
+  let result = {};
+
   let today = new Date();
   let yesterday = yesterdayAsADate();
 
@@ -42,9 +44,22 @@ function filterTimingsByDifference(differenceInMillis) {
 
   Object.keys(window.my.timings).forEach(key => {
     let thisTimingsByDays = window.my.timings[key];
-    for (let i = thisTimingsByDays.length - 1; i >= 0; i--) {
+
+    let filteredTimingByDays = [];
+    result[key] = filteredTimingByDays;
+
+    let addedTimingsForKey = false;
+
+    for (let i = 0; i < thisTimingsByDays.length; i++) {
       let eachTimingDay = thisTimingsByDays[i];
       let dt = eachTimingDay.date;
+
+      let filteredEachTimingDay = {
+        date: dt,
+        timings: []
+      };
+      filteredTimingByDays.push(filteredEachTimingDay);
+
       if (dateIsWithinPastMillis(dt)) {
         eachTimingDay.timings.forEach(t => {
           let d = timingDateArrays2Date(dt, t.from);
@@ -54,28 +69,27 @@ function filterTimingsByDifference(differenceInMillis) {
             t.category = key;
             let dtstr = dt.join(".");
             t.dtstr = dtstr;
-            if (!timingsByDates.hasOwnProperty(dtstr)) {
-              timingsByDates[dtstr] = {
-                date: dt,
-                timings: []
-              };
-            }
-            timingsByDates[dtstr].timings.push(t);
+
+            filteredEachTimingDay.timings.push(t);
+            addedTimingsForKey = true;
+
+            // if (!timingsByDates.hasOwnProperty(dtstr)) {
+            //   timingsByDates[dtstr] = {
+            //     date: dt,
+            //     timings: []
+            //   };
+            // }
+            // timingsByDates[dtstr].timings.push(t);
           }
         });
       }
     }
+
+    if (!addedTimingsForKey) {
+      delete result[key];
+    }
   });
-  Object.keys(timingsByDates).forEach(dtStr => {
-    let item = timingsByDates[dtStr];
-    item.timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
-  });
-  function threeInts2date(threeInts) {
-    return timingDateArrays2Date(threeInts, [0,0]);
-  }
-  let timingsByDatesArr = Object.values(timingsByDates);
-  timingsByDatesArr.sort((a, b) => threeInts2date(a.date).getTime() - threeInts2date(b.date).getTime());
-  return timingsByDatesArr;
+  return result;
 }
 
 export function filterLast24HourTimings() {

@@ -5,6 +5,8 @@ const {
   makeTimingsTextElementsUnminimized,
 } = require('../js/timings/display.js');
 
+const { fromTimingsByCategoriesToTimingsByDates } = require('../js/timings/converter.js');
+const { buildProcessesTree } = require('../js/common/processes_tree_builder.js');
 const { createAndAppendFilterByCategory } = require('../js/timings/categories/tree_view.js');
 const { millisOfCurrentAbstractDayOfYear } = require('../js/timings/millis_utils.js');
 const { timingDateArrays2Date, date2timingDateArray, dateDifferenceInMillis } = require('../js/date_utils.js');
@@ -44,7 +46,7 @@ function handleServerMessage(msg) {
     if (msg.keyval == "Left") {
       my.dayOffset++;
 
-      my.highlightedCategory = false;
+      delete my.highlightedCategory;
       my.isHighlightingTimingRowInText = false;
       my.isHighlightingTimingItemInImage = false;
 
@@ -55,7 +57,7 @@ function handleServerMessage(msg) {
         my.dayOffset--;
       }
 
-      my.highlightedCategory = false;
+      delete my.highlightedCategory;
       my.isHighlightingTimingRowInText = false;
       my.isHighlightingTimingItemInImage = false;
 
@@ -112,7 +114,7 @@ function addListenersToButtons() {
   document.getElementById("day-of-60-hours").addEventListener("change", function() {
     try {
       my.dayOffset = 0;
-      my.highlightedCategory = false;
+      delete my.highlightedCategory;
       my.isHighlightingTimingRowInText = false;
       my.isHighlightingTimingItemInImage = false;
       if (radioBtn24Hours.checked) {
@@ -128,7 +130,7 @@ function addListenersToButtons() {
   radioBtn24Hours.addEventListener("change", function() {
     try {
       my.dayOffset = 0;
-      my.highlightedCategory = false;
+      delete my.highlightedCategory;
       my.isHighlightingTimingRowInText = false;
       my.isHighlightingTimingItemInImage = false;
       if (radioBtn24Hours.checked) {
@@ -145,7 +147,7 @@ function addListenersToButtons() {
     try {
       my.dayOffset++;
       btnNextDay.disabled = false;
-      my.highlightedCategory = false;
+      delete my.highlightedCategory;
       my.isHighlightingTimingRowInText = false;
       my.isHighlightingTimingItemInImage = false;
       if (radioBtn24Hours.checked) {
@@ -166,7 +168,7 @@ function addListenersToButtons() {
       if (my.dayOffset <= 0) {
         btnNextDay.disabled = true;
       }
-      my.highlightedCategory = false;
+      delete my.highlightedCategory;
       my.isHighlightingTimingRowInText = false;
       my.isHighlightingTimingItemInImage = false;
       if (radioBtn24Hours.checked) {
@@ -186,13 +188,15 @@ function showTimingsOf24HourDay() {
   let date = new Date();
   date.setTime(date.getTime() - my.dayOffset*24*60*60*1000);
   let timingsPromise = timingsOf24HourDay(date);
-  timingsPromise.then(timings => {
+  timingsPromise.then(timingsByCategories => {
+    let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
     //window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
     //  "showTimingsOf24HourDay (promise.then) timings len: " + timings.length);
     my.imageInfo.updateAsPeriodType(PeriodType.PERIOD_OF_24_HOURS);
 
-    my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-    displayTimings(timings, my.timingsCategoryNodeViewRoot);
+    let processesTree = buildProcessesTree(timingsByCategories);
+    my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
+    displayTimings(timingsByDates, processesTree);
   }).catch(err => {
     window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
       "showTimingsOf24HourDay err: " + err);
@@ -213,13 +217,15 @@ function showTimingsOf60HourDay() {
   }
 
   let timingsPromise = filterTimingsByDifference(diffFrom, diffTo);
-  timingsPromise.then(timings => {
+  timingsPromise.then(timingsByCategories => {
+    let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
     window.webkit.messageHandlers.timings_history_latest_msgs.postMessage(
-      "showTimingsOf60HourDay timings len: " + timings.length);
+      "showTimingsOf60HourDay timings len: " + timingsByDates.length);
     my.imageInfo.updateAsPeriodType(PeriodType.PERIOD_OF_60_HOURS);
 
-    my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-    displayTimings(timings, my.timingsCategoryNodeViewRoot);
+    let processesTree = buildProcessesTree(timingsByCategories);
+    my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
+    displayTimings(timingsByDates, processesTree);
 
     // <debug>
     // let currentAbstractDayBeginning = new Date()
@@ -294,32 +300,56 @@ ImageInfo.prototype.updateIfNeeded = function() {
 
 function timingsOf24HourDay(date) {
   return new Promise((resolve, reject) => {
-    let result = {
-      date: date2timingDateArray(date),
-      timings: []
-    };
+    // let result = {
+    //   date: date2timingDateArray(date),
+    //   timings: []
+    // };
     window.webkit.messageHandlers.timings_history_latest__get_timings.postMessage(
       date2stringWithDots(date));
     my.timingsQueryResponseCallback = function(timings) {
+      let result = {};
       // console.log("timingsOf24HourDay callback. timings:");
       // console.dir(timings);
       Object.keys(timings).forEach(key => {
         let thisTimingsByDays = timings[key];
+
+        let filteredTimingByDays = [];
+        result[key] = filteredTimingByDays;
+
+        let addedTimingsForKey = false;
+
         for (let i = thisTimingsByDays.length - 1; i >= 0; i--) {
           let eachTimingDay = thisTimingsByDays[i];
           let dt = eachTimingDay.date;
+
+          let filteredTimings = [];
+          let filteredEachTimingDay = {
+            date: dt,
+            timings: filteredTimings
+          };
+          filteredTimingByDays.push(filteredEachTimingDay);
+
           if (threeIntsEqDate(dt, date)) {
             eachTimingDay.timings.forEach(t => {
               let d = timingDateArrays2Date(dt, t.from);
               t.fromdate = d;
               t.category = key;
             });
-            result.timings = result.timings.concat(eachTimingDay.timings);
+            // result.timings = result.timings.concat(eachTimingDay.timings);
+
+            filteredTimings = filteredTimings.concat(eachTimingDay.timings);
+            filteredEachTimingDay.timings = filteredTimings;
+            addedTimingsForKey = true;
           }
         }
+
+        if (!addedTimingsForKey) {
+          delete result[key];
+        }
       });
-      result.timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
-      resolve([result])
+      // result.timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
+      // resolve([result])
+      resolve(result)
     };
   });
 }
@@ -396,13 +426,27 @@ function filterTimingsByDifference(differenceInMillisFrom, differenceInMillisTo)
       datesToRequest.join(","));
     my.timingsQueryResponseCallback = function(timings) {
 
-      let timingsByDates = {};
+      // let timingsByDates = {};
+      let result = {};
 
       Object.keys(timings).forEach(key => {
         let thisTimingsByDays = timings[key];
+
+        let filteredTimingByDays = [];
+        result[key] = filteredTimingByDays;
+
+        let addedTimingsForKey = false;
+
         for (let i = thisTimingsByDays.length - 1; i >= 0; i--) {
           let eachTimingDay = thisTimingsByDays[i];
           let dt = eachTimingDay.date;
+
+          let filteredEachTimingDay = {
+            date: dt,
+            timings: []
+          };
+          filteredTimingByDays.push(filteredEachTimingDay);
+
           //if (dateIsWithinPastMillis(dt)) {
             eachTimingDay.timings.forEach(t => {
               let d = timingDateArrays2Date(dt, t.from);
@@ -411,28 +455,37 @@ function filterTimingsByDifference(differenceInMillisFrom, differenceInMillisTo)
                 t.fromdate = d;
                 t.category = key;
                 let dtstr = dt.join(".");
-                if (!timingsByDates.hasOwnProperty(dtstr)) {
-                  timingsByDates[dtstr] = {
-                    date: dt,
-                    timings: []
-                  };
-                }
-                timingsByDates[dtstr].timings.push(t);
+
+                filteredEachTimingDay.timings.push(t);
+                addedTimingsForKey = true;
+
+                // if (!timingsByDates.hasOwnProperty(dtstr)) {
+                //   timingsByDates[dtstr] = {
+                //     date: dt,
+                //     timings: []
+                //   };
+                // }
+                // timingsByDates[dtstr].timings.push(t);
               }
             });
           //}
+
+          if (!addedTimingsForKey) {
+            delete result[key];
+          }
         }
       });
-      Object.keys(timingsByDates).forEach(dtStr => {
-        let item = timingsByDates[dtStr];
-        item.timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
-      });
-      function threeInts2date(threeInts) {
-        return timingDateArrays2Date(threeInts, [0,0]);
-      }
-      let timingsByDatesArr = Object.values(timingsByDates);
-      timingsByDatesArr.sort((a, b) => threeInts2date(a.date).getTime() - threeInts2date(b.date).getTime());
-      resolve(timingsByDatesArr);
+      resolve(result);
+      // Object.keys(timingsByDates).forEach(dtStr => {
+      //   let item = timingsByDates[dtStr];
+      //   item.timings.sort((t1, t2) => t1.fromdate.getTime() - t2.fromdate.getTime());
+      // });
+      // function threeInts2date(threeInts) {
+      //   return timingDateArrays2Date(threeInts, [0,0]);
+      // }
+      // let timingsByDatesArr = Object.values(timingsByDates);
+      // timingsByDatesArr.sort((a, b) => threeInts2date(a.date).getTime() - threeInts2date(b.date).getTime());
+      // resolve(timingsByDatesArr);
     };
   });
 }

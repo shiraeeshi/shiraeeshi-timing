@@ -109,6 +109,9 @@ module.exports = [
       filename: 'composite_main_window.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/composite'),
     },
+    optimization: {
+      minimize: false,
+    },
   },
   {
     entry: './src-frontend/notebook/notebook.renderer.js',
@@ -139,6 +142,9 @@ module.exports = [
       filename: 'latest.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/timings_history'),
     },
+    optimization: {
+      minimize: false,
+    },
   },
   {
     entry: './src-frontend/timings_summary.renderer.js',
@@ -146,6 +152,9 @@ module.exports = [
     output: {
       filename: 'timings_summary.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend'),
+    },
+    optimization: {
+      minimize: false,
     },
   },
 ];

@@ -69,11 +69,11 @@ li.proc-leaf {
 }
 
 .proc-node-open .proc-node-icon {
-  background: url('frontend/img/proc-node-minus.png') no-repeat top left;
+  background: url('./img/proc-node-minus.png') no-repeat top left;
 }
 
 .proc-node-closed .proc-node-icon {
-  background: url('frontend/img/proc-node-plus.png') no-repeat top left;
+  background: url('./img/proc-node-plus.png') no-repeat top left;
 }
 
 .proc-node-open .proc-node-icon, .proc-node-closed .proc-node-icon {

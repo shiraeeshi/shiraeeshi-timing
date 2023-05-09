@@ -126,6 +126,7 @@ export function buildProcessesTree(timingsByCategories, timingsBySubcategoriesTr
           err.fromdateStr = `${dateArray2str(dt)} ${timeArray2str(t.from)}`;
           throw err;
         }
+        t.ownerProcess = node;
         node.timings.push(t);
         node.ownTimingsAsReferences.push(firstReference);
       });

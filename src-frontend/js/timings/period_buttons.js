@@ -5,7 +5,9 @@ const {
   filterCurrentTwoAndAHalfDaysTimings
 } = require('./millis_utils.js');
 
+const { fromTimingsByCategoriesToTimingsByDates } = require('./converter.js')
 const { PeriodType } = require('./period_type.js');
+const { buildProcessesTree } = require('../common/processes_tree_builder.js');
 const { createAndAppendFilterByCategory } = require('./categories/tree_view.js');
 const { displayTimings } = require('./display.js');
 
@@ -26,11 +28,13 @@ function addListenersToButtons() {
   let btnFromZeroTwoAndAHalfHours = document.getElementById("from-zero-two-and-a-half-hours");
   btnLast24Hours.addEventListener("click", function() {
     try {
-      let timings = filterLast24HourTimings();
-      window.my.currentlyDisplayedTimings = timings;
+      let timingsByCategories = filterLast24HourTimings();
+      let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
+      window.my.currentlyDisplayedTimings = timingsByDates;
       window.my.imageInfo.updateAsPeriodType(PeriodType.LAST_24_HOURS);
-      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-      displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
+      let processesTree = buildProcessesTree(timingsByCategories);
+      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
+      displayTimings(timingsByDates, processesTree);
       window.my.periodButtonsRowVisibilityToggle.toInitialState();
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
@@ -44,11 +48,13 @@ function addListenersToButtons() {
   });
   btnLast12Hours.addEventListener("click", function() {
     try {
-      let timings = filterLast12HourTimings();
-      window.my.currentlyDisplayedTimings = timings;
+      let timingsByCategories = filterLast12HourTimings();
+      let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
+      window.my.currentlyDisplayedTimings = timingsByDates;
       window.my.imageInfo.updateAsPeriodType(PeriodType.LAST_12_HOURS);
-      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-      displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
+      let processesTree = buildProcessesTree(timingsByCategories);
+      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
+      displayTimings(timingsByDates, processesTree);
       window.my.periodButtonsRowVisibilityToggle.toInitialState();
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
@@ -62,11 +68,13 @@ function addListenersToButtons() {
   });
   btnFromZeroHours.addEventListener("click", function() {
     try {
-      let timings = filterTodaysTimings();
-      window.my.currentlyDisplayedTimings = timings;
+      let timingsByCategories = filterTodaysTimings();
+      let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
+      window.my.currentlyDisplayedTimings = timingsByDates;
       window.my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_24_HOUR_PERIOD);
-      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-      displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
+      let processesTree = buildProcessesTree(timingsByCategories);
+      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
+      displayTimings(timingsByDates, processesTree);
       window.my.periodButtonsRowVisibilityToggle.toInitialState();
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
@@ -80,11 +88,13 @@ function addListenersToButtons() {
   });
   btnFromZeroTwoAndAHalfHours.addEventListener("click", function() {
     try {
-      let timings = filterCurrentTwoAndAHalfDaysTimings();
-      window.my.currentlyDisplayedTimings = timings;
+      let timingsByCategories = filterCurrentTwoAndAHalfDaysTimings();
+      let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
+      window.my.currentlyDisplayedTimings = timingsByDates;
       window.my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_60_HOUR_PERIOD);
-      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(timings);
-      displayTimings(timings, window.my.timingsCategoryNodeViewRoot);
+      let processesTree = buildProcessesTree(timingsByCategories);
+      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
+      displayTimings(timingsByDates, processesTree);
       window.my.periodButtonsRowVisibilityToggle.toInitialState();
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
