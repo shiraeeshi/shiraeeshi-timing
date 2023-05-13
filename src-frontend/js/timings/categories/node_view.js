@@ -27,16 +27,29 @@ TimingsCategoryNodeView.prototype.subcategoryView = function(subCategoryName) {
   return that.childrenByName[subCategoryName];
 }
 
-TimingsCategoryNodeView.prototype.appendTimingTextView = function(timingTextView) {
-  this.timingTextViews[this.timingTextViews.length] = timingTextView;
-}
+TimingsCategoryNodeView.prototype.sortChildrenByFirstTiming = function() {
+  let that = this;
+  that.children.sort((a, b) => {
+    let ta = a.timingsCategoryNode.getFirstTiming();
+    let tb = b.timingsCategoryNode.getFirstTiming();
+    if (ta === undefined || tb === undefined) {
+      return 0;
+    }
+    return ta.fromdate.getTime() - tb.fromdate.getTime();
+  });
+};
 
 TimingsCategoryNodeView.prototype.getTimingTextViewsRecursively = function(timingTextView) {
   let that = this;
-  let result = that.timingTextViews;
-  for (let subcategory of that.children) {
-    result = result.concat(subcategory.getTimingTextViewsRecursively());
+  function getOwnTimingsRecursively(timingsCategoryNode) {
+    let ts = timingsCategoryNode.timings;
+    ts = timingsCategoryNode.children.map(getOwnTimingsRecursively).reduce((a, b) => a.concat(b), ts);
+    return ts;
   }
+  // let result = that.timingTextViews;
+  let result = that.timingsCategoryNode.getTimingsToHighlight();
+  result = that.timingsCategoryNode.children.map(getOwnTimingsRecursively).reduce((a, b) => a.concat(b), result);
+  result = result.map(t => t.htmlElem);
   return result;
 }
 
@@ -277,6 +290,7 @@ TimingsCategoryNodeView.prototype.buildAsHtmlLiElement = function() {
   }
 
   that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
+  that.sortChildrenByFirstTiming();
   let htmlElement =
     withChildren(
       withChildren(withClass(document.createElement('li'), 'proc-node', 'proc-node-closed'),

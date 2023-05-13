@@ -50,6 +50,11 @@ export function displayTimingsAsImage(timingsCategory, categoryToHighlight, timi
     category.children.forEach(subcat => runRecursivelyForTimingsInCategories(subcat, action));
   }
 
+  function runRecursivelyForTimingsInHighlightedCategory(category, action) {
+    category.getTimingsToHighlight().forEach(action);
+    category.children.forEach(subcat => runRecursivelyForTimingsInCategories(subcat, action));
+  }
+
   function runRecursivelyForTimingsInCategoriesExcept(category, exceptCategory, action) {
     if (category === exceptCategory) {
       return;
@@ -77,7 +82,7 @@ export function displayTimingsAsImage(timingsCategory, categoryToHighlight, timi
     runRecursivelyForTimingsInCategoriesExcept(timingsCategory, categoryToHighlight, timingItem => {
       drawTiming(timingItem, 'rgba(0, 0, 200, 0.5)')
     });
-    runRecursivelyForTimingsInCategories(categoryToHighlight, timingItem => {
+    runRecursivelyForTimingsInHighlightedCategory(categoryToHighlight, timingItem => {
       drawTiming(timingItem, 'rgba(5, 168, 82, 0.5)')
     });
   }
@@ -308,8 +313,6 @@ export function displayTimingsAsText(timingsByDates) {
         let timingItemView = withChildren(li, withChildren(span, txt));
         timingItem.htmlElem = timingItemView;
         timingItemView.timingItem = timingItem;
-        // addTimingItemViewToCategory(timingItem, timingItemView, timingsCategoryNodeViewRoot);
-        timingItem.ownerProcess.categoryNodeView.appendTimingTextView(timingItemView);
         return timingItemView;
       });
       return withChildren(oneDayTimingWrapper,
