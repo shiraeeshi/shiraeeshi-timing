@@ -289,3 +289,11 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
 #processes-tree-secondary-ul {
   margin-top: unset;
 }
+
+#btn-plus-month {
+  margin-left: 4px;
+}
+
+#period-info {
+  margin-left: 4px;
+}

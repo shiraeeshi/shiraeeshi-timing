@@ -66,7 +66,7 @@ function createCurrentPeriodInitial() {
 }
 
 function createHtmlSpanPeriodInfo(initialPeriod) {
-  return withChildren(document.createElement('span'),
+  return withChildren(withId(document.createElement('span'), 'period-info'),
     document.createTextNode(periodInfoText(initialPeriod))
   )
 }
@@ -206,12 +206,13 @@ function initResizer(resizer, topHalf, bottomHalf) {
 
 FrequenciesView.prototype.buildPeriodButtonsRow = function() {
   let that = this;
-  function buttonWithText(text) {
+  function buttonWithTextAndId(text, id) {
     let btn = document.createElement('button');
+    btn.id = id;
     return withChildren(btn, document.createTextNode(text));
   }
-  let btnPlusHalfYear = buttonWithText('+6months');
-  let btnPlusMonth = buttonWithText('+month');
+  let btnPlusHalfYear = buttonWithTextAndId('+6months', 'btn-plus-six-months');
+  let btnPlusMonth = buttonWithTextAndId('+month', 'btn-plus-month');
   btnPlusHalfYear.onclick = function() {
     console.log('+6months');
     let oldPeriodFrom = that.currentPeriod.from;
