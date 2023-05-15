@@ -26,6 +26,7 @@ function addListenersToButtons() {
   let btnLast12Hours = document.getElementById("last-12-hours");
   let btnFromZeroHours = document.getElementById("from-zero-hours");
   let btnFromZeroTwoAndAHalfHours = document.getElementById("from-zero-two-and-a-half-hours");
+  let categoriesContainer = document.getElementById('timing-category-btns-container');
   btnLast24Hours.addEventListener("click", function() {
     try {
       let timingsByCategories = filterLast24HourTimings();
@@ -36,6 +37,7 @@ function addListenersToButtons() {
       window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
       displayTimings(timingsByDates, processesTree);
       window.my.periodButtonsRowVisibilityToggle.toInitialState();
+      categoriesContainer.style.removeProperty('height');
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "btnLast24Hours click handler error msg: " + err.message);
@@ -56,6 +58,7 @@ function addListenersToButtons() {
       window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
       displayTimings(timingsByDates, processesTree);
       window.my.periodButtonsRowVisibilityToggle.toInitialState();
+      categoriesContainer.style.removeProperty('height');
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "btnLast12Hours click handler error msg: " + err.message);
@@ -76,6 +79,7 @@ function addListenersToButtons() {
       window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
       displayTimings(timingsByDates, processesTree);
       window.my.periodButtonsRowVisibilityToggle.toInitialState();
+      categoriesContainer.style.removeProperty('height');
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "btnFromZeroHours click handler error msg: " + err.message);
@@ -96,6 +100,7 @@ function addListenersToButtons() {
       window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
       displayTimings(timingsByDates, processesTree);
       window.my.periodButtonsRowVisibilityToggle.toInitialState();
+      categoriesContainer.style.removeProperty('height');
     } catch (err) {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         "btnFromZero2.5Hours click handler error msg: " + err.message);

@@ -1,23 +1,63 @@
 
+html {
+  height: 100%;
+}
+
 body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
   background-color: black;
   background-repeat: no-repeat;
   background-size: cover;
   background-position: right bottom;
   background-attachment: fixed;
 }
-#inner-content-wrapper {
-  color: white;
+
+#timings-main-container {
+  overflow: hidden;
+  margin: 4px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
+
 #canvas-wrapper {
+  flex: none;
   padding-top: 10px;
   padding-bottom: 10px;
 }
-#timing-category-btns-row-container {
+#period-btns-container {
+  flex: none;
+}
+#hide-and-show-btns-container {
+  flex: none;
+}
+#categories-and-timings-container {
+  flex: 1 1 auto;
   display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 #timing-category-btns-container {
-  flex: 1;
+  flex: 0 1 auto;
+  min-height: 25%;
+  overflow-y: auto;
+}
+
+#resizer {
+  height: 4px;
+}
+
+#resizer:hover {
+  cursor: ns-resize;
+}
+#inner-content-wrapper {
+  flex: 1 1 25%;
+  min-height: 25%;
+  overflow-y: auto;
+  color: white;
 }
 
 li.timing-row-parent-li > span.timing-row {
