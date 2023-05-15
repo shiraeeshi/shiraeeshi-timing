@@ -55,6 +55,7 @@ function handleServerMessage(msg) {
     // showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree);
 
     // new
+    my.now = new Date();
     my.viewBuilder = new FrequenciesViewBuilder();
 
     let millisInWeek = 7*24*60*60*1000;

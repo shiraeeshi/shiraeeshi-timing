@@ -24,13 +24,14 @@ TimingsHistogramsGraphic.prototype.setProcessNode = function(processNode) {
   that.processNode = processNode;
   that.highlightedSubprocessOfSelectedProcessNode = null;
 
-  let now = new Date();
+  // let now = new Date();
+  let now = window.my.now;
 
   let oldestRecordMillis = findMaxRecursive(that.processNode, 0, (timings) => {
     if (timings.length == 0) {
       return 0;
     } else {
-      return now.getTime() - timings[0].fromdate.getTime();
+      return findMax(0, timings.map(t => now.getTime() - t.fromdate.getTime()));
     }
   });
 
@@ -596,7 +597,8 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   //someTimingFromProcess.millisFromPrevious
   //someProcess.lastTiming.millisUntilNow
 
-  let now = new Date();
+  // let now = new Date();
+  let now = window.my.now;
 
   //ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
   //ctx.fillRect(xFrom, yFrom, timingItem.minutes*canvasWidth*1.0/minutesRange, 50);
@@ -875,12 +877,31 @@ function findMaxRecursive(processNode, defaultValue, innerMaxFunc) {
   if (processNode.referencedTimings !== undefined && processNode.referencedTimings.length > 0) {
     timings = timings.concat(processNode.referencedTimings);
   }
+  if (processNode.referencedByDescendantsTimings !== undefined && processNode.referencedByDescendantsTimings.length > 0) {
+    timings = timings.concat(processNode.referencedByDescendantsTimings);
+  }
   if (timings.length > 0) {
     localMax = innerMaxFunc(timings);
   }
   return findMax(defaultValue,
     [localMax].concat(processNode.children.map((childProcessNode) => {
-      return findMaxRecursive(childProcessNode, defaultValue, innerMaxFunc)
+      return findOwnMaxRecursive(childProcessNode, defaultValue, innerMaxFunc)
+    })));
+}
+
+function findOwnMaxRecursive(processNode, defaultValue, innerMaxFunc) {
+  let localMax = defaultValue;
+  let timings = [];
+  let processNodeTimings = processNode.ownTimingsAsReferences;
+  if (processNodeTimings.length > 0) {
+    timings = processNodeTimings;
+  }
+  if (timings.length > 0) {
+    localMax = innerMaxFunc(timings);
+  }
+  return findMax(defaultValue,
+    [localMax].concat(processNode.children.map((childProcessNode) => {
+      return findOwnMaxRecursive(childProcessNode, defaultValue, innerMaxFunc)
     })));
 }
 

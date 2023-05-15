@@ -407,10 +407,15 @@ ProcessNode.prototype.getLastTimingToHighlight = function() {
 
 ProcessNode.prototype.getTimingsToDraw = function() {
   let that = this;
-  if (that.hasBorrowedReferences &&
-      !that.hasMergedChildren &&
-      that.timingsWithBorrowedReferences !== undefined) {
-    return that.timingsWithBorrowedReferences;
+  if (that.hasBorrowedReferences) {
+    if (that.hasMergedChildren &&
+        that.mergedSubprocessesTimingsWithBorrowedReferences !== undefined) {
+      return that.mergedSubprocessesTimingsWithBorrowedReferences;
+    }
+    if (!that.hasMergedChildren &&
+        that.timingsWithBorrowedReferences !== undefined) {
+      return that.timingsWithBorrowedReferences;
+    }
   }
   let timings;
   if (that.hasMergedChildren || that.isMergedChild) {
