@@ -56,17 +56,24 @@ body {
 
 #resizer {
   height: 4px;
+  display: flex;
+  justify-content: center;
 }
 
 #resizer:hover {
   cursor: ns-resize;
 }
+
+#resizer-line {
+  width: 40px;
+  border-bottom: 1px solid grey;
+}
+
 #inner-content-wrapper {
   flex: 1 1 25%;
   min-height: 25%;
   overflow-y: auto;
   color: white;
-  border-top: 1px solid grey;
 }
 
 li.timing-row-parent-li > span.timing-row {
