@@ -6,7 +6,7 @@ const { requestTimingsForPeriod } = require('./request_timings_for_period.js');
 const { initProcessesTree } = require('../common/processes_tree_builder.js');
 
 const { showTimingsFormatError, withChildren, withClass, withId } = require('../html_utils.js');
-const { date2TimingDateStrUnpadded } = require('../date_utils.js');
+const { date2TimingDateStr } = require('../date_utils.js');
 
 export function FrequenciesView(processNode) {
   let that = this;
@@ -73,8 +73,8 @@ function createHtmlSpanPeriodInfo(initialPeriod) {
 
 function periodInfoText(period) {
   let that = this;
-  let fromDateStr = date2TimingDateStrUnpadded(period.from)
-  let toDateStr = date2TimingDateStrUnpadded(period.to)
+  let fromDateStr = date2TimingDateStr(period.from)
+  let toDateStr = date2TimingDateStr(period.to)
   let periodInfoText = "period: " + fromDateStr + " - " + toDateStr;
   return periodInfoText;
 }
