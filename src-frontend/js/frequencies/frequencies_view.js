@@ -213,6 +213,7 @@ FrequenciesView.prototype.buildPeriodButtonsRow = function() {
   }
   let btnPlusHalfYear = buttonWithTextAndId('+6months', 'btn-plus-six-months');
   let btnPlusMonth = buttonWithTextAndId('+month', 'btn-plus-month');
+  let btnPlusWeek = buttonWithTextAndId('+week', 'btn-plus-week');
   btnPlusHalfYear.onclick = function() {
     console.log('+6months');
     let oldPeriodFrom = that.currentPeriod.from;
@@ -255,9 +256,31 @@ FrequenciesView.prototype.buildPeriodButtonsRow = function() {
         "btnPlusMonth.onclick err: " + err);
     });
   };
+  btnPlusWeek.onclick = function() {
+    console.log('+week');
+    let oldPeriodFrom = that.currentPeriod.from;
+    let newPeriodFrom = new Date();
+    let millisInWeek = 7*24*60*60*1000;
+    newPeriodFrom.setTime(oldPeriodFrom.getTime() - millisInWeek);
+    that.currentPeriod.from = newPeriodFrom;
+    that.htmlSpanPeriodInfo.innerHTML = periodInfoText(that.currentPeriod);
+    requestTimingsForPeriod(newPeriodFrom, oldPeriodFrom).then(timings => {
+      console.log('btnPlusWeek.onclick timings keys:');
+      console.dir(Object.keys(timings));
+      my.timings = initProcessesTree(timings, my.timings);
+      my.viewBuilder.buildViews(my.timings);
+      my.viewBuilder.showView();
+    }).catch(err => {
+      showTimingsFormatError("main-content-wrapper", err);
+      console.log("btnPlusWeek.onclick err: " + err)
+      window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
+        "btnPlusWeek.onclick err: " + err);
+    });
+  };
   return withChildren(withId(document.createElement('div'), 'period-buttons-row'),
     btnPlusHalfYear,
     btnPlusMonth,
+    btnPlusWeek,
     that.htmlSpanPeriodInfo
   );
 };
