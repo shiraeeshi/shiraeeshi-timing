@@ -291,7 +291,7 @@ export function displayTimingsAsText(timingsByDates) {
           window.webkit.messageHandlers.timings_summary_msgs.postMessage(
             "timing onmouseenter. timing: " + timingItem.name);
           window.my.isHighlightingTimingItemInImage = true;
-          displayTimingsAsImage(window.my.currentFilteredTimings, window.my.highlightedCategory, timingItem);
+          displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory, timingItem);
 
           if (window.my.isHighlightingTimingRowInText) {
             let previouslyHighlightedTimingRow = document.querySelector(".highlighted-from-canvas");
@@ -305,7 +305,7 @@ export function displayTimingsAsText(timingsByDates) {
           function unhighlight() {
             console.log("span.onmouseleave unhighlight");
             window.my.isHighlightingTimingItemInImage = false;
-            displayTimingsAsImage(window.my.currentFilteredTimings, window.my.highlightedCategory);
+            displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory);
             span.removeEventListener('mouseleave', unhighlight);
           }
           span.addEventListener('mouseleave', unhighlight);
