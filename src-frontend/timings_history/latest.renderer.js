@@ -475,10 +475,10 @@ function filterTimingsByDifference(differenceInMillisFrom, differenceInMillisTo)
               }
             });
           //}
+        }
 
-          if (!addedTimingsForKey) {
-            delete result[key];
-          }
+        if (!addedTimingsForKey) {
+          delete result[key];
         }
       });
       resolve(result);

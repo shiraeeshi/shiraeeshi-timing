@@ -88,6 +88,34 @@ function setMenuAndKeyboardShortcuts(win) {
   Menu.setApplicationMenu(menu);
 }
 
+function MessageSender(win) {
+  let that = this;
+  that.win = win;
+  that.hasWindowLoaded = false;
+  that.messagesToSend = [];
+  win.webContents.once('dom-ready', () => {
+    that.hasWindowLoaded = true;
+    that._sendMessages();
+  })
+}
+
+MessageSender.prototype.send = function(msg) {
+  let that = this;
+  that.messagesToSend.push(msg);
+  if (that.hasWindowLoaded) {
+    that._sendMessages();
+  }
+}
+
+MessageSender.prototype._sendMessages = async function(msg) {
+  let that = this;
+  let win = that.win;
+  for (let msg of that.messagesToSend) {
+    await win.webContents.send('message-from-backend', msg);
+  }
+  that.messagesToSend = [];
+}
+
 async function init(appEnv, win) {
 
   function func(msg) {
@@ -117,6 +145,9 @@ async function init(appEnv, win) {
 }
 
 async function initMessageHandlers(appEnv, win) {
+
+  let messageSender = new MessageSender(win);
+
   const homeDirPath = app.getPath('home');
 
   let configFilepath;
@@ -169,7 +200,8 @@ async function initMessageHandlers(appEnv, win) {
         "lineNumOffset": err.lineNumOffset,
         "message": err.message
       };
-      win.webContents.send('message-from-backend', msg);
+      // win.webContents.send('message-from-backend', msg);
+      messageSender.send(msg);
       return;
     }
     // console.log(`[main.js] about to send timings to timing_history_latest: ${JSON.stringify(timings)}`);
@@ -181,7 +213,8 @@ async function initMessageHandlers(appEnv, win) {
       msg_type: "timings_query_response",
       timings: timings,
     };
-    win.webContents.send('message-from-backend', msg);
+    // win.webContents.send('message-from-backend', msg);
+    await messageSender.send(msg);
   });
 }
 
