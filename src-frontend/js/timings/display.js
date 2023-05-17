@@ -87,6 +87,21 @@ export function displayTimingsAsImage(timingsCategory, categoryToHighlight, timi
     });
   }
 
+  function drawCurrentMoment() {
+    let unit = canvasWidth * 1.0 / minutesRange;
+    let currentMoment = maxDiff * unit;
+    let left = (maxDiff - 15) * unit;
+    let right = (maxDiff + 15) * unit;
+    ctx.fillStyle = 'rgba(200, 0, 0, 0.5)';
+    ctx.beginPath();
+    ctx.moveTo(left, 50);
+    ctx.lineTo(currentMoment, 40);
+    ctx.lineTo(right, 50);
+    ctx.fill();
+  }
+
+  drawCurrentMoment();
+
   canvas.addEventListener('mousemove', function(eve) {
     try {
       if (window.my.isHighlightingTimingItemInImage) {

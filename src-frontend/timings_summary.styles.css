@@ -27,12 +27,19 @@ body {
   padding-top: 10px;
   padding-bottom: 10px;
 }
+
+#canvas-wrapper > canvas {
+  border-bottom: 1px solid grey;
+}
+
 #period-btns-container {
   flex: none;
 }
+
 #hide-and-show-btns-container {
   flex: none;
 }
+
 #categories-and-timings-container {
   flex: 1 1 auto;
   display: flex;
@@ -40,6 +47,7 @@ body {
   height: 100%;
   overflow: hidden;
 }
+
 #timing-category-btns-container {
   flex: 0 1 auto;
   min-height: 25%;

@@ -30,9 +30,14 @@ body {
 #inner-content-wrapper {
   color: white;
 }
+
 #canvas-wrapper {
   padding-top: 10px;
   padding-bottom: 10px;
+}
+
+#canvas-wrapper > canvas {
+  border-bottom: 1px solid grey;
 }
 
 #notes-content-wrapper {
