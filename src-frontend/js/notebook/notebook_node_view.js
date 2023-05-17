@@ -368,7 +368,8 @@ NotebookNodeView.prototype.unhide = function() {
     }
     return;
   }
-  let htmlContains = Array.prototype.indexOf.call(htmlParent.children, that.html());
+  let htmlIndex = Array.prototype.indexOf.call(htmlParent.children, that.html());
+  let htmlContains = htmlIndex >= 0;
   if (!htmlContains) {
     htmlParent.appendChild(that.html());
     if (that.parentNodeView !== undefined) {

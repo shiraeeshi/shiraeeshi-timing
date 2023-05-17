@@ -40,11 +40,16 @@ export function highlightNotesInForest(rootNodeViewOfNotes, forestToHighlight, i
 export function openNotesInForest(rootNodeViewOfNotes, forestToHighlight, isTopPanel) {
   try {
     forestToHighlight.forEach(nodeToHighlight => {
-      rootNodeViewOfNotes.children.forEach(treeView => {
-        if (treeView.name != nodeToHighlight.name) return;
+      if (!rootNodeViewOfNotes.childrenByName.hasOwnProperty(nodeToHighlight.name)) {
+        return;
+      }
+      let node = rootNodeViewOfNotes.childrenByName[nodeToHighlight.name];
+      node.highlightTree(nodeToHighlight);
+      // rootNodeViewOfNotes.children.forEach(treeView => {
+      //   if (treeView.name != nodeToHighlight.name) return;
 
-        treeView.highlightTree(nodeToHighlight);
-      });
+      //   treeView.highlightTree(nodeToHighlight);
+      // });
     });
 
     if (!isTopPanel) {
