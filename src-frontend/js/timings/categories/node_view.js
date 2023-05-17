@@ -262,7 +262,7 @@ TimingsCategoryNodeView.prototype.name2html = function() {
     a.addEventListener('mouseleave', unhighlight)
   };
   if (that.name.includes("\n")) {
-    let timingsCount = that.timingsCategoryNode.getTimingsCountRecursive();
+    let timingsCount = that.timingsCategoryNode.getTimingsToHighlightCountRecursive();
     return
       withChildren(a,
         withChildren(document.createElement('div'),
@@ -274,7 +274,7 @@ TimingsCategoryNodeView.prototype.name2html = function() {
         )
       );
   } else {
-    let timingsCount = that.timingsCategoryNode.getTimingsCountRecursive();
+    let timingsCount = that.timingsCategoryNode.getTimingsToHighlightCountRecursive();
     return withChildren(a,
             document.createTextNode(that.name + " (" + timingsCount + ")")
           );

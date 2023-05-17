@@ -45,12 +45,24 @@ ProcessNode.prototype.ensureChildWithName = function(name) {
   return child;
 };
 
-ProcessNode.prototype.getTimingsCountRecursive = function(name) {
+ProcessNode.prototype.getTimingsToHighlightCountRecursive = function(name) {
+  let that = this;
+  let result = that.getOwnTimingsCountRecursive();
+  if (that.referencedTimings !== undefined) {
+    result += that.referencedTimings.length;
+  }
+  if (that.referencedByDescendantsTimings !== undefined) {
+    result += that.referencedByDescendantsTimings.length;
+  }
+  return result;
+};
+
+ProcessNode.prototype.getOwnTimingsCountRecursive = function(name) {
   let that = this;
   if (that.timingsCountRecursive === undefined) {
     let result = that.timings.length;
     that.children.forEach(subproc => {
-      result += subproc.getTimingsCountRecursive();
+      result += subproc.getOwnTimingsCountRecursive();
     });
     that.timingsCountRecursive = result;
   }
