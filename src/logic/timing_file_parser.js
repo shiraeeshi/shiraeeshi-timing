@@ -26,7 +26,7 @@ async function readTimings(config) {
       result[timingName] = timings;
     } else if (frmt === 'yaml') {
       let fileContents = await fs.promises.readFile(filepath, { encoding: 'utf8' });
-      let parsedYaml = YAML.parse(fileContents);
+      let parsedYaml = YAML.parse(fileContents, {schema: 'failsafe'});
       let parsedTimings = parseYamlTimings(parsedYaml);
       result[timingName] = parsedTimings;
     }
@@ -83,7 +83,7 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
         yamlOfDate = yamlOfDate.join('\n');
         let parsedYaml;
         try {
-          parsedYaml = YAML.parse(yamlOfDate);
+          parsedYaml = YAML.parse(yamlOfDate, {schema: 'failsafe'});
         } catch (err) {
           err.source_timing = timingName;
           err.source_timing_location = filepath;
@@ -180,7 +180,7 @@ async function readTimingsOfToday(config, timing2indexFilename, indexDirFilepath
         let f = new LineReader(filepath, { encoding: 'utf8', start: offsetFrom, lineNumOffset: lineNumOffsetFrom });
         let yamlOfDate = await _readLinesUntilPosition(f, offsetTo);
         yamlOfDate = yamlOfDate.join('\n');
-        parsedYaml = YAML.parse(yamlOfDate);
+        parsedYaml = YAML.parse(yamlOfDate, {schema: 'failsafe'});
       }
       let parsedTimings = parseYamlTimings(parsedYaml);
 
