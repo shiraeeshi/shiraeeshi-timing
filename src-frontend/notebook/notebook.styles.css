@@ -270,7 +270,8 @@ li.proc-leaf {
   padding-inline-start: 0;
 }
 
-.notebook-node-icon {
+.notebook-node-icon,
+.notebook-icon {
   position: relative;
   cursor: pointer;
   background-size: contain;
@@ -280,7 +281,8 @@ li.proc-leaf {
   margin-right: 4px;
 }
 
-.notebook-node-icon .tooltip {
+.notebook-node-icon .tooltip,
+.notebook-icon .tooltip {
   visibility: hidden;
   background-color: black;
   color: #fff;
@@ -293,12 +295,49 @@ li.proc-leaf {
   left: 0;
 }
 
-.notebook-node-icon:hover .tooltip {
+.notebook-node-icon:hover .tooltip,
+.notebook-icon:hover .tooltip {
   visibility: visible;
 }
 
 .notebook-node-title-container {
   display: inline-block;
+}
+
+#btn-open-tags-in-above-panel,
+#btn-open-notes-in-above-panel {
+  background-image: url('../img/arrow-single-up-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 12px;
+  height: 12px;
+}
+
+#btn-open-tags-in-above-panel-exclusively,
+#btn-open-notes-in-above-panel-exclusively {
+  background-image: url('../img/arrow-double-up-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 12px;
+  height: 12px;
+}
+
+#btn-maximize-bottom-panel-of-notes,
+#btn-unmaximize-bottom-panel-of-notes {
+  background-image: url('../img/rectangle-grey-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 12px;
+  height: 12px;
+}
+
+#btn-close-bottom-panel-of-tags-and-links,
+#btn-close-bottom-panel-of-notes {
+  background-image: url('../img/close-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 12px;
+  height: 12px;
 }
 
 .icon-open-tag-in-tags-tree {
