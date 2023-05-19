@@ -2,6 +2,7 @@ const electron = require('electron');
 const { app, BrowserWindow, ipcMain, Menu, MenuItem } = electron;
 const path = require('path')
 const fs = require('fs');
+const YAML = require('yaml');
 const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.js');
 const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 const { parseNotebook } = require('../../logic/notebook_parser.js');
@@ -167,7 +168,7 @@ async function init(appEnv, win) {
   console.log('[init] 1');
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   console.log('[init] 2');
-  const config = JSON.parse(configFileContents);
+  const config = YAML.parse(configFileContents);
   const today = new Date();
   const fiveDaysAgo = new Date();
 

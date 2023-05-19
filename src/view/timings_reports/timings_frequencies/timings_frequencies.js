@@ -2,6 +2,7 @@ const electron = require('electron');
 const { app, BrowserWindow, ipcMain, Menu, MenuItem } = electron;
 const path = require('path')
 const fs = require('fs');
+const YAML = require('yaml');
 const { readTimingsForRangeOfDates } = require('../../../logic/timing_file_parser.js');
 const { createOrRefreshIndex } = require('../../../logic/timing_index_manager.js');
 
@@ -123,7 +124,7 @@ async function initMessageHandlers(appEnv, win) {
   console.log('[init] 1');
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   console.log('[init] 2');
-  const config = JSON.parse(configFileContents);
+  const config = YAML.parse(configFileContents);
 
   ipcMain.on('timings_frequencies_msgs', (_event, msg) => {
     console.log(`[main.js] message from timing_frequencies: ${msg}`);

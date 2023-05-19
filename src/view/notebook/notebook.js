@@ -2,6 +2,7 @@ const electron = require('electron');
 const { app, BrowserWindow, ipcMain, Menu, MenuItem } = electron;
 const path = require('path')
 const fs = require('fs');
+const YAML = require('yaml');
 const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.js');
 const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 const { parseNotebook } = require('../../logic/notebook_parser.js');
@@ -78,29 +79,44 @@ function setMenuAndKeyboardShortcuts(win) {
   Menu.setApplicationMenu(menu);
 }
 
+function MessageSender(win) {
+  let that = this;
+  that.win = win;
+  that.hasWindowLoaded = false;
+  that.messagesToSend = [];
+  win.webContents.once('dom-ready', () => {
+    that.hasWindowLoaded = true;
+    that._sendMessages();
+  })
+}
+
+MessageSender.prototype.send = function(msg) {
+  let that = this;
+  that.messagesToSend.push(msg);
+  if (that.hasWindowLoaded) {
+    that._sendMessages();
+  }
+}
+
+MessageSender.prototype._sendMessages = function(msg) {
+  let that = this;
+  let win = that.win;
+  for (let msg of that.messagesToSend) {
+    win.webContents.send('message-from-backend', msg);
+  }
+  that.messagesToSend = [];
+}
+
 async function init(appEnv, win) {
 
   ipcMain.on('msg', (_event, msg) => {
     console.log(`[main.js] message from notebook: ${msg}`);
   });
 
+  let messageSender = new MessageSender(win);
+
   function func(msg) {
-    console.log('[main.js] createWindow -> func');
-    let hasWindowLoaded = false;
-    let hasDataBeenSent = false;
-
-    win.webContents.once('dom-ready', () => {
-      hasWindowLoaded = true;
-      if (!hasDataBeenSent) {
-        win.webContents.send('message-from-backend', msg);
-        hasDataBeenSent = true;
-      }
-    });
-
-    if (!hasDataBeenSent && hasWindowLoaded) {
-      win.webContents.send('message-from-backend', msg);
-      hasDataBeenSent = true;
-    }
+    messageSender.send(msg);
   }
 
   const homeDirPath = app.getPath('home');
@@ -113,7 +129,7 @@ async function init(appEnv, win) {
   }
   console.log(`configFilepath: ${configFilepath}`);
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
-  const config = JSON.parse(configFileContents);
+  const config = YAML.parse(configFileContents);
 
   let notebookContentsParsed;
   try {
@@ -129,6 +145,7 @@ async function init(appEnv, win) {
 
   func({
     "notes": notebookContentsParsed,
+    "config": config
   });
 }
 

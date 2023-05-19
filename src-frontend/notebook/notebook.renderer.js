@@ -26,6 +26,11 @@ function handleServerMessage(msg) {
       notebookContentWrapper.appendChild(msgHtml);
       return;
     }
+    let config = msg.config;
+    let backgroundColor = config['notebook-background-color'];
+    if (backgroundColor !== undefined) {
+      document.body.style.backgroundColor = backgroundColor;
+    }
     let notes_object = msg.notes;
     let forest = yamlRootObject2forest(msg.notes);
     my.notesForest = forest;

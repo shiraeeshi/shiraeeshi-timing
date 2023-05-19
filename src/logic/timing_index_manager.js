@@ -1,4 +1,5 @@
 const fs = require('fs');
+const YAML = require('yaml');
 const path = require('path');
 const crypto = require('crypto');
 const { LineReader } = require('./line_reader.js');
@@ -30,7 +31,7 @@ export async function createOrRefreshIndex(configFilepath, indexDirFilepath) {
     }
   }
   const configFileContents = await fs.promises.readFile(configFilepath, 'utf8');
-  const config = JSON.parse(configFileContents);
+  const config = YAML.parse(configFileContents);
   for (const timing of config.timings) {
     const timingName = timing['name'];
     const indexName = timing2indexFilename[timingName];
