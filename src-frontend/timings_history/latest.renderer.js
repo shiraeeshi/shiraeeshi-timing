@@ -98,13 +98,16 @@ function handleServerMessage(msg) {
     innerContentWrapper.appendChild(errorMessageHtml);
     return;
   }
-  window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage start ");
-  addListenersToButtons();
-  initResizer();
-  my.imageInfo = new ImageInfo();
-  // my.timings = msg;
-  showTimingsOf60HourDay();
-  window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage end ");
+  if (msg.msg_type == "config") {
+    my.config = msg.config;
+    window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage start ");
+    addListenersToButtons();
+    initResizer();
+    my.imageInfo = new ImageInfo();
+    // my.timings = msg;
+    showTimingsOf60HourDay();
+    window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage end ");
+  }
 }
 
 function addListenersToButtons() {
@@ -339,7 +342,7 @@ function timingsOf24HourDay(date) {
             eachTimingDay.timings.forEach(t => {
               let d = timingDateArrays2Date(dt, t.from);
               t.fromdate = d;
-              t.category = key;
+              t.categoryPath = [key];
             });
             // result.timings = result.timings.concat(eachTimingDay.timings);
 
@@ -459,7 +462,7 @@ function filterTimingsByDifference(differenceInMillisFrom, differenceInMillisTo)
               let diff = dateDifferenceInMillis(now, d);
               if (diff < differenceInMillisFrom && diff > differenceInMillisTo) {
                 t.fromdate = d;
-                t.category = key;
+                t.categoryPath = [key];
                 let dtstr = dt.join(".");
 
                 filteredEachTimingDay.timings.push(t);

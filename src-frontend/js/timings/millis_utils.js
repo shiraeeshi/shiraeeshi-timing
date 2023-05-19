@@ -66,7 +66,7 @@ function filterTimingsByDifference(differenceInMillis) {
           let diff = dateDifferenceInMillis(today, d);
           if (diff < differenceInMillis) {
             t.fromdate = d;
-            t.category = key;
+            t.categoryPath = [key];
             let dtstr = dt.join(".");
             t.dtstr = dtstr;
 

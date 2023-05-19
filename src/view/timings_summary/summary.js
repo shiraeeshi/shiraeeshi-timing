@@ -178,7 +178,10 @@ async function init(appEnv, win) {
   console.log(`[main.js] timingsOfFiveLastDays: ${JSON.stringify(timingsOfFiveLastDays)}`);
   console.log('[init] 5');
 
-  func(timingsOfFiveLastDays);
+  func({
+    config: config,
+    timings: timingsOfFiveLastDays
+  });
   console.log('[init] 6');
 
   let wallpapersDirPath;

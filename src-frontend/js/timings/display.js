@@ -284,51 +284,13 @@ export function displayTimingsAsText(timingsByDates) {
       let dateTextNode = document.createTextNode(dateArray2str(oneDayTiming.date));
       let ul = document.createElement('ul');
       let lis = oneDayTiming.timings.map(timingItem => {
-        let li = document.createElement('li');
-        li.setAttribute("class", "timing-row-parent-li");
-        let span = document.createElement('span');
-        // span.setAttribute("class", "timing-row timing-row-of-" + timingItem.category);
-        span.setAttribute("class", "timing-row");
+        let displayFormat = my.config['timings-config']['display-format'];
         let timingDateStr = oneDayTiming.date.join(".")
-        let timingItemBeginningStr = timingItem.from.join(".")
-        span.setAttribute("data-timing-day", timingDateStr)
-        span.setAttribute("data-timing-start", timingItemBeginningStr)
-        timingItemBeginningStr = timeArray2str(timingItem.from);
-        let txt = document.createTextNode([
-          timingItemBeginningStr,
-          "-",
-          timeArray2str(timingItem.to),
-          timingItem2symbol(timingItem),
-          ['(',timingItem.minutes,' m)'].join(""),
-          timingItem.name
-        ].join(" "));
-        span.onmouseenter = function (eve) {
-          window.webkit.messageHandlers.timings_summary_msgs.postMessage(
-            "timing onmouseenter. timing: " + timingItem.name);
-          window.my.isHighlightingTimingItemInImage = true;
-          displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory, timingItem);
-
-          if (window.my.isHighlightingTimingRowInText) {
-            let previouslyHighlightedTimingRow = document.querySelector(".highlighted-from-canvas");
-            if (previouslyHighlightedTimingRow) {
-              previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
-            }
-            // let lastHighlightedTimingRow = document.querySelector("[data-timing-start = '" + window.my.highlightedTimingItemStart + "']");
-            window.my.isHighlightingTimingRowInText = false;
-            // lastHighlightedTimingRow.classList.remove('highlighted-from-canvas');
-          }
-          function unhighlight() {
-            console.log("span.onmouseleave unhighlight");
-            window.my.isHighlightingTimingItemInImage = false;
-            displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory);
-            span.removeEventListener('mouseleave', unhighlight);
-          }
-          span.addEventListener('mouseleave', unhighlight);
-        };
-        let timingItemView = withChildren(li, withChildren(span, txt));
-        timingItem.htmlElem = timingItemView;
-        timingItemView.timingItem = timingItem;
-        return timingItemView;
+        if (displayFormat === 'json') {
+          return createHtmlElemOfTimingInJsonFormat(timingDateStr, timingItem);
+        } else {
+          return createHtmlElemOfTimingInAsTreeFormat(timingDateStr, timingItem);
+        }
       });
       return withChildren(oneDayTimingWrapper,
         withChildren(dateParagraph, dateTextNode),
@@ -340,6 +302,240 @@ export function displayTimingsAsText(timingsByDates) {
     window.webkit.messageHandlers.timings_summary_msgs.postMessage("displayTimings error msg: " + err.message);
   }
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("displayTimings end ");
+}
+
+function createHtmlElemOfTimingInJsonFormat(timingDateStr, timingItem) {
+  let li = document.createElement('li');
+  li.setAttribute("class", "timing-row-parent-li");
+  let span = document.createElement('span');
+  // span.setAttribute("class", "timing-row timing-row-of-" + timingItem.category);
+  span.setAttribute("class", "timing-row");
+  let timingItemBeginningStr = timingItem.from.join(".")
+  span.setAttribute("data-timing-day", timingDateStr)
+  span.setAttribute("data-timing-start", timingItemBeginningStr)
+  timingItemBeginningStr = timeArray2str(timingItem.from);
+  let txt = document.createTextNode([
+    timingItemBeginningStr,
+    "-",
+    timeArray2str(timingItem.to),
+    timingItem2symbol(timingItem),
+    ['(',timingItem.minutes,' m)'].join(""),
+    timingItem.name
+  ].join(" "));
+  span.onmouseenter = function (eve) {
+    window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+      "timing onmouseenter. timing: " + timingItem.name);
+    window.my.isHighlightingTimingItemInImage = true;
+    displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory, timingItem);
+
+    if (window.my.isHighlightingTimingRowInText) {
+      let previouslyHighlightedTimingRow = document.querySelector(".highlighted-from-canvas");
+      if (previouslyHighlightedTimingRow) {
+        previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
+      }
+      // let lastHighlightedTimingRow = document.querySelector("[data-timing-start = '" + window.my.highlightedTimingItemStart + "']");
+      window.my.isHighlightingTimingRowInText = false;
+      // lastHighlightedTimingRow.classList.remove('highlighted-from-canvas');
+    }
+    function unhighlight() {
+      console.log("span.onmouseleave unhighlight");
+      window.my.isHighlightingTimingItemInImage = false;
+      displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory);
+      span.removeEventListener('mouseleave', unhighlight);
+    }
+    span.addEventListener('mouseleave', unhighlight);
+  };
+  let timingItemView = withChildren(li, withChildren(span, txt));
+  timingItem.htmlElem = timingItemView;
+  timingItemView.timingItem = timingItem;
+  return timingItemView;
+}
+
+function createHtmlElemOfTimingInAsTreeFormat(timingDateStr, timingItem) {
+  let li = document.createElement('li');
+  li.setAttribute("class", "timing-row-parent-li");
+  let span = document.createElement('span');
+  span.setAttribute("class", "timing-row");
+  let timingItemBeginningStr = timingItem.from.join(".")
+  span.setAttribute("data-timing-day", timingDateStr)
+  span.setAttribute("data-timing-start", timingItemBeginningStr)
+  timingItemBeginningStr = timeArray2str(timingItem.from);
+  let txt = document.createTextNode([
+    timingItemBeginningStr,
+    "-",
+    timeArray2str(timingItem.to),
+    timingItem2symbol(timingItem),
+    ['(',timingItem.minutes,' m)'].join("")
+  ].join(" "));
+
+  function appendAsTreeToUl(ul, timingInfoTree) {
+    if (timingInfoTree.constructor !== Array) {
+      let err = Error("wrong format: timing's categories should be list-typed");
+      throw err;
+    }
+    for (let index = 0; index < timingInfoTree.length - 1; index++) {
+      let item = timingInfoTree[index];
+      if (item.constructor !== String) {
+        let err = Error("wrong format: encountered a non-string category that is not last item in the categories list. all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}). day: " + timingDateStr);
+        throw err;
+      }
+      let li = withChildren(document.createElement('li'), document.createTextNode(item));
+      ul.appendChild(li);
+      let newUl = document.createElement('ul');
+      li.appendChild(newUl);
+      ul = newUl;
+    }
+    let lastItem = timingInfoTree[timingInfoTree.length - 1];
+    if (lastItem.constructor === String) {
+      let li = withChildren(document.createElement('li'), document.createTextNode(lastItem));
+      ul.appendChild(li);
+    } else if (lastItem.constructor === Object) {
+      let keys = Object.keys(lastItem);
+      if (keys.length !== 1) {
+        let err = Error("wrong format: the last item in the categories list is an object, count of properties not equals 1. all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}). day: " + timingDateStr);
+        throw err;
+      }
+      let propName = keys[0];
+      let propValue = lastItem[propName];
+      /// node = node.ensureChildWithName(propName);
+      /// node.isInnermostCategory = true;
+      let li = withChildren(document.createElement('li'), document.createTextNode(propName));
+      ul.appendChild(li);
+      let newUl = document.createElement('ul');
+      li.appendChild(newUl);
+      ul = newUl;
+      if (propValue.constructor === Array) {
+        if (propValue.length === 1) {
+          while (true) {
+            let soleItem = propValue[0];
+            if (soleItem.constructor !== Object) {
+              if (soleItem.constructor === String) {
+                let li = withChildren(document.createElement('li'), document.createTextNode(soleItem));
+                ul.appendChild(li);
+                // let childNode = node.ensureChildWithName(soleItem);
+                // node = childNode;
+              }
+              break;
+            }
+            let keys = Object.keys(soleItem);
+            if (keys.length !== 1) {
+              break;
+            }
+            propName = keys[0];
+            let testPropValue = soleItem[propName];
+            if (testPropValue.constructor !== Array || testPropValue.length !== 1) {
+              if (testPropValue.constructor === Array && testPropValue.length > 1) {
+                // let aNode = node.ensureChildWithName(propName);
+                // addNodesWithReferencedTimings(aNode, testPropValue, firstReference);
+                // node = aNode;
+                let li = withChildren(document.createElement('li'), document.createTextNode(propName));
+                ul.appendChild(li);
+                let newUl = document.createElement('ul');
+                li.appendChild(newUl);
+                createHtmlTreeElementsFromTimingInfoTreeNodes(newUl, testPropValue);
+              }
+              break;
+            }
+            let li = withChildren(document.createElement('li'), document.createTextNode(propName));
+            ul.appendChild(li);
+            let newUl = document.createElement('ul');
+            li.appendChild(newUl);
+            ul = newUl;
+            // node = node.ensureChildWithName(propName);
+            propValue = testPropValue;
+          }
+        } else if (propValue.length > 1) {
+          // addNodesWithReferencedTimings(node, propValue, firstReference);
+          createHtmlTreeElementsFromTimingInfoTreeNodes(ul, propValue);
+        }
+      }
+      // t.info = propValue;
+    } else {
+      let err = Error("wrong format: the last item in the categories is neither string nor an object. all timing's categories except last should be strings. timing's last category should be either of two: a string (e.g 'a string') or an object with single list-typed property (e.g. {'someProperty': []}). day: " + timingDateStr);
+      throw err;
+    }
+  }
+
+  function createHtmlTreeElementsFromTimingInfoTreeNodes(ul, sublist) {
+
+    for (let item of sublist) {
+      if (item.constructor === String) {
+        let li = withChildren(document.createElement('li'), document.createTextNode(item));
+        ul.appendChild(li);
+        // let childNode = node.ensureChildWithName(item);
+        // childNode.hasReferencesToOutsideTimings = true;
+        // if (childNode.referencedTimings === undefined) {
+        //   childNode.referencedTimings = [];
+        // }
+        // childNode.referencedTimings.push(makeReferencedTiming(timing));
+      } else if (item.constructor === Object) {
+        let keys = Object.keys(item);
+        if (keys.length !== 1) {
+          return;
+        }
+        let key = keys[0];
+        let value = item[key];
+        if (value.constructor !== Array) {
+          return;
+        }
+        // let childNode = node.ensureChildWithName(key);
+        let li = withChildren(document.createElement('li'), document.createTextNode(key));
+        ul.appendChild(li);
+        let newUl = document.createElement('ul');
+        li.appendChild(newUl);
+        // childNode.hasReferencesToOutsideTimings = true;
+        // let ref = makeReferencedTiming(timing);
+        // if (childNode.referencedByDescendantsTimings === undefined) {
+        //   childNode.referencedByDescendantsTimings = [];
+        // }
+        // childNode.referencedByDescendantsTimings.push(ref);
+        // addNodesWithReferencedTimings(childNode, value, ref);
+        createHtmlTreeElementsFromTimingInfoTreeNodes(newUl, value);
+      }
+    }
+  }
+
+  function categoryPathToUl(categoryPath) {
+    let rootUl = document.createElement('ul');
+    let ul = rootUl;
+    for (let cat of categoryPath) {
+      let li = withChildren(document.createElement('li'), document.createTextNode(cat));
+      ul.appendChild(li);
+      let newUl = document.createElement('ul');
+      li.appendChild(newUl);
+      ul = newUl;
+    }
+    return {rootUl: rootUl, innerUl: ul};
+  }
+
+  let {rootUl: rootUl, innerUl: innerUl } = categoryPathToUl(timingItem.categoryPath);
+  appendAsTreeToUl(innerUl, timingItem.value);
+
+  li.onmouseenter = function (eve) {
+    window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+      "timing onmouseenter. timing: " + timingItem.name);
+    window.my.isHighlightingTimingItemInImage = true;
+    displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory, timingItem);
+
+    if (window.my.isHighlightingTimingRowInText) {
+      let previouslyHighlightedTimingRow = document.querySelector(".highlighted-from-canvas");
+      if (previouslyHighlightedTimingRow) {
+        previouslyHighlightedTimingRow.classList.remove('highlighted-from-canvas');
+      }
+      window.my.isHighlightingTimingRowInText = false;
+    }
+    function unhighlight() {
+      console.log("li.onmouseleave unhighlight");
+      window.my.isHighlightingTimingItemInImage = false;
+      displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory);
+      li.removeEventListener('mouseleave', unhighlight);
+    }
+    li.addEventListener('mouseleave', unhighlight);
+  };
+  let timingItemView = withChildren(li, withChildren(span, txt), rootUl);
+  timingItem.htmlElem = timingItemView;
+  timingItemView.timingItem = timingItem;
+  return timingItemView;
 }
 
 // function addTimingItemViewToCategory(timingItem, timingItemView, timingsCategoryNodeViewRoot) {

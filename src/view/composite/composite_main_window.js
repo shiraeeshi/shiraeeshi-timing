@@ -186,14 +186,21 @@ async function init(appEnv, win) {
   // console.log(`[main.js] fiveDaysAgo: ${fiveDaysAgo}, today: ${today}`);
   // console.log(`[main.js] fiveDaysAgo: ${dateAsDayMonthYearWithDots(fiveDaysAgo)}, today: ${dateAsDayMonthYearWithDots(today)}`);
 
+  let sentConfig = false;
+
   console.log('[init] 3');
   readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, fiveDaysAgo, today)
     .then(timingsOfFiveLastDays => {
       console.log(`[main.js] timingsOfFiveLastDays: ${JSON.stringify(timingsOfFiveLastDays)}`);
-      func({
+      let msg = {
         "type": "timings",
         "timings": timingsOfFiveLastDays,
-      });
+      };
+      if (!sentConfig) {
+        msg.config = config;
+        sentConfig = true;
+      }
+      func(msg);
     })
     .catch(err => {
       func({
@@ -206,21 +213,40 @@ async function init(appEnv, win) {
       });
     });
 
-  parseNotebook(config['notebook-filepath'])
-    .then(notebookContentsParsed => {
-      func({
-        "type": "notebook",
-        "notes": notebookContentsParsed,
-      });
-    })
-    .catch(err => {
-      func({
-        "type": "error_message",
-        "error_source": "notebook",
-        "notebook_location": config['notebook-filepath'],
-        "message": err.message
-      });
+  if (config.notebook === undefined) {
+    func({
+      "type": "error_message",
+      "error_source": "notebook",
+      "message": "no notebook section found in config file"
     });
+  } else if (config.notebook['filepath'] === undefined) {
+    func({
+      "type": "error_message",
+      "error_source": "notebook",
+      "message": "no notebook filepath found in config file ('filepath' field under 'notebook' section)"
+    });
+  } else {
+    parseNotebook(config.notebook['filepath'])
+      .then(notebookContentsParsed => {
+        let msg = {
+          "type": "notebook",
+          "notes": notebookContentsParsed,
+        };
+        if (!sentConfig) {
+          msg.config = config;
+          sentConfig = true;
+        }
+        func(msg);
+      })
+      .catch(err => {
+        func({
+          "type": "error_message",
+          "error_source": "notebook",
+          "notebook_location": config.notebook['filepath'],
+          "message": err.message
+        });
+      });
+  }
 
   let wallpapersDirPath;
   if (appEnv.stage === 'production') {
@@ -236,10 +262,15 @@ async function init(appEnv, win) {
       const relativePathToWallpapersDir = path.relative(pathOfComposite, wallpapersDirPath);
       console.log(`relativePathToWallpapersDir: ${relativePathToWallpapersDir}`);
 
-      func({
+      let msg = {
         "type": "wallpapers",
         "wallpapers": wallpapersFilenames.map(n => path.join(relativePathToWallpapersDir, n))
-      });
+      };
+      if (!sentConfig) {
+        msg.config = config;
+        sentConfig = true;
+      }
+      func(msg);
     });
 
 }

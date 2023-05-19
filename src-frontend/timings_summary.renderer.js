@@ -82,7 +82,8 @@ function handleServerMessage(msg) {
   initPeriodButtonsRow();
   initResizer();
   my.imageInfo = new ImageInfo();
-  my.timings = msg;
+  my.timings = msg.timings;
+  my.config = msg.config;
   let mainContentWrapper = document.getElementById("main-content-wrapper");
   let keys = Object.keys(msg);
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage end ");

@@ -100,11 +100,11 @@ function MessageSender(win) {
   })
 }
 
-MessageSender.prototype.send = function(msg) {
+MessageSender.prototype.send = async function(msg) {
   let that = this;
   that.messagesToSend.push(msg);
   if (that.hasWindowLoaded) {
-    that._sendMessages();
+    await that._sendMessages();
   }
 }
 
@@ -118,34 +118,6 @@ MessageSender.prototype._sendMessages = async function(msg) {
 }
 
 async function init(appEnv, win) {
-
-  function func(msg) {
-    console.log('[main.js] createWindow -> func');
-    let hasWindowLoaded = false;
-    let hasDataBeenSent = false;
-
-    win.webContents.once('dom-ready', () => {
-      hasWindowLoaded = true;
-      if (!hasDataBeenSent) {
-        win.webContents.send('message-from-backend', msg);
-        hasDataBeenSent = true;
-      }
-    });
-
-    if (!hasDataBeenSent && hasWindowLoaded) {
-      win.webContents.send('message-from-backend', msg);
-      hasDataBeenSent = true;
-    }
-  }
-
-  func({
-    "msg_type": "dummy_message",
-  });
-
-  await initMessageHandlers(appEnv, win);
-}
-
-async function initMessageHandlers(appEnv, win) {
 
   let messageSender = new MessageSender(win);
 
@@ -167,6 +139,13 @@ async function initMessageHandlers(appEnv, win) {
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   console.log('[init] 2');
   const config = YAML.parse(configFileContents);
+
+  console.log('[init] 3');
+  await messageSender.send({
+    msg_type: 'config',
+    config: config
+  });
+  console.log('[init] 4');
 
   ipcMain.on('msg_from_timing_summary', (_event, msg) => {
     console.log(`[main.js] message from timing_summary: ${msg}`);
@@ -202,7 +181,7 @@ async function initMessageHandlers(appEnv, win) {
         "message": err.message
       };
       // win.webContents.send('message-from-backend', msg);
-      messageSender.send(msg);
+      await messageSender.send(msg);
       return;
     }
     // console.log(`[main.js] about to send timings to timing_history_latest: ${JSON.stringify(timings)}`);

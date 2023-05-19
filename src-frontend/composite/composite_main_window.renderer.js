@@ -62,6 +62,9 @@ function handleServerMessage(msg) {
 
 
     if (msg.type == "wallpapers") {
+      if (msg.config !== undefined) {
+        my.config = msg.config;
+      }
       console.log('[handleServerMessage] msg.type = wallpapers.');
       my.wallpapers.lst = msg.wallpapers;
       let randomIndex = getRandomInt(my.wallpapers.lst.length);
@@ -88,6 +91,7 @@ function handleServerMessage(msg) {
       return;
     }
     if (msg.type == "error_message") {
+      console.log('[handleServerMessage] msg.type = error_message.');
       if (msg.error_source == "timings") {
         let innerContentWrapper = document.getElementById("inner-content-wrapper");
         let errorMessage = msg.message;
@@ -118,6 +122,9 @@ function handleServerMessage(msg) {
     }
     if (msg.type == "timings") {
       console.log('[handleServerMessage] msg.type = timings.');
+      if (msg.config !== undefined) {
+        my.config = msg.config;
+      }
       initPeriodButtonsRow();
       my.imageInfo = new ImageInfo();
       my.timings = msg.timings;
@@ -126,6 +133,9 @@ function handleServerMessage(msg) {
 
     if (msg.type == "notebook") {
       console.log('[handleServerMessage] msg.type = notebook.');
+      if (msg.config !== undefined) {
+        my.config = msg.config;
+      }
       let notes_object = msg.notes;
       let forest = yamlRootObject2forest(msg.notes);
       my.notesForest = forest;
