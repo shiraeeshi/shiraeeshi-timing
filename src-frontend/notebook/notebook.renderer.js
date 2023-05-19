@@ -27,7 +27,10 @@ function handleServerMessage(msg) {
       return;
     }
     let config = msg.config;
-    let backgroundColor = config['notebook-background-color'];
+    if (config.notebook === undefined) {
+      config.notebook = {};
+    }
+    let backgroundColor = config.notebook['background-color'];
     if (backgroundColor !== undefined) {
       document.body.style.backgroundColor = backgroundColor;
     }
@@ -38,16 +41,38 @@ function handleServerMessage(msg) {
     showTagsAndLinks(tags);
     showTagsAndLinksOfBottomPanel(tags);
 
-    viewBuilder = new NotesForestViewBuilder();
-    viewBuilder.buildView(forest);
-    my.rootNodeViewOfNotesOfBottomPanel = viewBuilder.getRootNodeViewOfNotes();
-    appendNotesForestHtmlToBottomPanel(viewBuilder.getHtml());
-
-    let initialNotesForest = buildInitialNotesForest();
-    highlightNotesInForest(window.my.rootNodeViewOfNotesOfBottomPanel, initialNotesForest);
-
     initResizers();
     initBottomPanelButtons();
+
+    let configMaximizeNotesBottomPanel = config.notebook['start-with-bottom-panel-of-notes-maximized'];
+    if (configMaximizeNotesBottomPanel) {
+
+      let viewBuilder = new NotesForestViewBuilder();
+      viewBuilder.buildView(forest);
+      my.rootNodeViewOfNotesOfBottomPanel = viewBuilder.getRootNodeViewOfNotes();
+      appendNotesForestHtmlToBottomPanel(viewBuilder.getHtml());
+
+      let initialNotesForest = buildInitialNotesForest();
+      highlightNotesInForest(window.my.rootNodeViewOfNotesOfBottomPanel, initialNotesForest);
+
+      let outerWrapper = document.getElementById('notes-content-outer-wrapper');
+      outerWrapper.classList.remove('as-two-panels');
+      outerWrapper.classList.add('maximized-bottom-panel');
+
+    } else {
+
+      let viewBuilder = new NotesForestViewBuilder();
+      viewBuilder.buildView(forest);
+      my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
+      appendNotesForestHtml(viewBuilder.getHtml());
+
+      let initialNotesForest = buildInitialNotesForest();
+      highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest, true);
+
+      let outerWrapper = document.getElementById('notes-content-outer-wrapper');
+      outerWrapper.classList.remove('as-two-panels');
+      outerWrapper.classList.remove('maximized-bottom-panel');
+    }
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
   }

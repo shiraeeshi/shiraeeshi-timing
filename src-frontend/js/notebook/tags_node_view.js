@@ -1,5 +1,6 @@
 const { NotebookNodeView } = require('./notebook_node_view.js');
-const { addTagNodeLinksToForest, highlightNotesInForest } = require('./notebook_utils.js');
+const { NotesForestViewBuilder } = require('./notes_forest_view_builder.js');
+const { appendNotesForestHtmlToBottomPanel, addTagNodeLinksToForest, highlightNotesInForest } = require('./notebook_utils.js');
 const { withChildren } = require('../html_utils.js');
 
 
@@ -39,5 +40,15 @@ function searchByTag(tagNode) {
   let resultForest = [];
   addTagNodeLinksToForest(tagNode, resultForest);
   window.my.lastOpenedNodesOfNotes = resultForest;
+
+  if (my.rootNodeViewOfNotesOfBottomPanel === undefined) {
+    let forest = my.notesForest;
+
+    let viewBuilder = new NotesForestViewBuilder();
+    viewBuilder.buildView(forest);
+    my.rootNodeViewOfNotesOfBottomPanel = viewBuilder.getRootNodeViewOfNotes();
+    appendNotesForestHtmlToBottomPanel(viewBuilder.getHtml());
+
+  }
   highlightNotesInForest(window.my.rootNodeViewOfNotesOfBottomPanel, resultForest);
 }

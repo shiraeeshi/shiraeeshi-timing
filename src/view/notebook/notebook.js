@@ -23,6 +23,7 @@ const createWindow = async (appEnv) => {
 		}
   })
 
+  // win.openDevTools();
   win.loadFile('dist-frontend/notebook/notebook.html')
 
   setMenuAndKeyboardShortcuts(win);
@@ -131,9 +132,25 @@ async function init(appEnv, win) {
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   const config = YAML.parse(configFileContents);
 
+  if (config.notebook === undefined) {
+    func({
+      "type": "error_message",
+      "message": "no notebook section found in config file"
+    });
+    return;
+  }
+
+  if (config.notebook['filepath'] === undefined) {
+    func({
+      "type": "error_message",
+      "message": "no notebook filepath found in config file ('filepath' field under 'notebook' section)"
+    });
+    return;
+  }
+
   let notebookContentsParsed;
   try {
-    notebookContentsParsed = await parseNotebook(config['notebook-filepath']);
+    notebookContentsParsed = await parseNotebook(config.notebook['filepath']);
   } catch (err) {
     func({
       "type": "error_message",
