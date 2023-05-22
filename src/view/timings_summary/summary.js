@@ -104,25 +104,40 @@ function setMenuAndKeyboardShortcuts(win) {
   Menu.setApplicationMenu(menu);
 }
 
+function MessageSender(win) {
+  let that = this;
+  that.win = win;
+  that.hasWindowLoaded = false;
+  that.messagesToSend = [];
+  win.webContents.once('dom-ready', () => {
+    that.hasWindowLoaded = true;
+    that._sendMessages();
+  })
+}
+
+MessageSender.prototype.send = async function(msg) {
+  let that = this;
+  that.messagesToSend.push(msg);
+  if (that.hasWindowLoaded) {
+    await that._sendMessages();
+  }
+}
+
+MessageSender.prototype._sendMessages = async function(msg) {
+  let that = this;
+  let win = that.win;
+  for (let msg of that.messagesToSend) {
+    await win.webContents.send('message-from-backend', msg);
+  }
+  that.messagesToSend = [];
+}
+
 async function init(appEnv, win) {
 
-  function func(msg) {
-    console.log('[main.js] createWindow -> func');
-    let hasWindowLoaded = false;
-    let hasDataBeenSent = false;
+  let messageSender = new MessageSender(win);
 
-    win.webContents.once('dom-ready', () => {
-      hasWindowLoaded = true;
-      if (!hasDataBeenSent) {
-        win.webContents.send('message-from-backend', msg);
-        hasDataBeenSent = true;
-      }
-    });
-
-    if (!hasDataBeenSent && hasWindowLoaded) {
-      win.webContents.send('message-from-backend', msg);
-      hasDataBeenSent = true;
-    }
+  async function func(msg) {
+    await messageSender.send(msg);
   }
 
   const homeDirPath = app.getPath('home');
@@ -178,7 +193,7 @@ async function init(appEnv, win) {
   console.log(`[main.js] timingsOfFiveLastDays: ${JSON.stringify(timingsOfFiveLastDays)}`);
   console.log('[init] 5');
 
-  func({
+  await func({
     config: config,
     timings: timingsOfFiveLastDays
   });
@@ -197,7 +212,7 @@ async function init(appEnv, win) {
   console.log(`relativePathToWallpapersDir: ${relativePathToWallpapersDir}`);
 
 
-  func({
+  await func({
     "type": "wallpapers",
     "wallpapers": wallpapersFilenames.map(n => path.join(relativePathToWallpapersDir, n))
   });
