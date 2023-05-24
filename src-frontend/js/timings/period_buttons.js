@@ -26,100 +26,114 @@ function addListenersToButtons() {
   let btnLast12Hours = document.getElementById("last-12-hours");
   let btnFromZeroHours = document.getElementById("from-zero-hours");
   let btnFromZeroTwoAndAHalfHours = document.getElementById("from-zero-two-and-a-half-hours");
-  let categoriesContainer = document.getElementById('timing-category-btns-container');
-  btnLast24Hours.addEventListener("click", function() {
-    try {
-      let timingsByCategories = filterLast24HourTimings();
-      let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
-      window.my.currentlyDisplayedTimings = timingsByDates;
-      window.my.imageInfo.updateAsPeriodType(PeriodType.LAST_24_HOURS);
-      let processesTree = buildProcessesTree(timingsByCategories);
-      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
-      displayTimings(timingsByDates, processesTree);
-      window.my.periodButtonsRowVisibilityToggle.toInitialState();
-      categoriesContainer.style.removeProperty('height');
-    } catch (err) {
-      window.webkit.messageHandlers.timings_summary_msgs.postMessage(
-        "btnLast24Hours click handler error msg: " + err.message);
-      if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
-        if (window.my.timingsFormatErrorHandler !== undefined) {
-          window.my.timingsFormatErrorHandler(err);
-        }
-      }
-    }
-  });
-  btnLast12Hours.addEventListener("click", function() {
-    try {
-      let timingsByCategories = filterLast12HourTimings();
-      let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
-      window.my.currentlyDisplayedTimings = timingsByDates;
-      window.my.imageInfo.updateAsPeriodType(PeriodType.LAST_12_HOURS);
-      let processesTree = buildProcessesTree(timingsByCategories);
-      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
-      displayTimings(timingsByDates, processesTree);
-      window.my.periodButtonsRowVisibilityToggle.toInitialState();
-      categoriesContainer.style.removeProperty('height');
-    } catch (err) {
-      window.webkit.messageHandlers.timings_summary_msgs.postMessage(
-        "btnLast12Hours click handler error msg: " + err.message);
-      if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
-        if (window.my.timingsFormatErrorHandler !== undefined) {
-          window.my.timingsFormatErrorHandler(err);
-        }
-      }
-    }
-  });
-  btnFromZeroHours.addEventListener("click", function() {
-    try {
-      let timingsByCategories = filterTodaysTimings();
-      let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
-      window.my.currentlyDisplayedTimings = timingsByDates;
-      window.my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_24_HOUR_PERIOD);
-      let processesTree = buildProcessesTree(timingsByCategories);
-      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
-      displayTimings(timingsByDates, processesTree);
-      window.my.periodButtonsRowVisibilityToggle.toInitialState();
-      categoriesContainer.style.removeProperty('height');
-    } catch (err) {
-      window.webkit.messageHandlers.timings_summary_msgs.postMessage(
-        "btnFromZeroHours click handler error msg: " + err.message);
-      if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
-        if (window.my.timingsFormatErrorHandler !== undefined) {
-          window.my.timingsFormatErrorHandler(err);
-        }
-      }
-    }
-  });
-  btnFromZeroTwoAndAHalfHours.addEventListener("click", function() {
-    try {
-      let timingsByCategories = filterCurrentTwoAndAHalfDaysTimings();
-      let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
-      window.my.currentlyDisplayedTimings = timingsByDates;
-      window.my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_60_HOUR_PERIOD);
-      let processesTree = buildProcessesTree(timingsByCategories);
-      window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
-      displayTimings(timingsByDates, processesTree);
-      window.my.periodButtonsRowVisibilityToggle.toInitialState();
-      categoriesContainer.style.removeProperty('height');
-    } catch (err) {
-      window.webkit.messageHandlers.timings_summary_msgs.postMessage(
-        "btnFromZero2.5Hours click handler error msg: " + err.message);
-      if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
-        if (window.my.timingsFormatErrorHandler !== undefined) {
-          window.my.timingsFormatErrorHandler(err);
-        } else {
-          window.webkit.messageHandlers.timings_summary_msgs.postMessage(
-            "btnFromZero2.5Hours click handler error. window.my.timingsFormatErrorHandler is undefined");
-        }
-      } else {
-        window.webkit.messageHandlers.timings_summary_msgs.postMessage(
-          `btnFromZero2.5Hours click handler error. err.source_timing: ${err.source_timing}, err.fromdateStr: ${err.fromdateStr}`);
-      }
-    }
-  });
+
+  btnLast24Hours.addEventListener("click", showSummaryOfLast24Hours);
+  btnLast12Hours.addEventListener("click", showSummaryOfLast12Hours);
+  btnFromZeroHours.addEventListener("click", showSummaryFromZeroHours);
+  btnFromZeroTwoAndAHalfHours.addEventListener("click", showSummaryFromZeroTwoAndAHalfHours);
+
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("addListenersToButtons end ");
 }
 
+
+
+export function showSummaryOfLast24Hours() {
+  try {
+    let timingsByCategories = filterLast24HourTimings();
+    let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
+    window.my.currentlyDisplayedTimings = timingsByDates;
+    window.my.imageInfo.updateAsPeriodType(PeriodType.LAST_24_HOURS);
+    let processesTree = buildProcessesTree(timingsByCategories);
+    window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
+    displayTimings(timingsByDates, processesTree);
+    window.my.periodButtonsRowVisibilityToggle.toInitialState();
+    let categoriesContainer = document.getElementById('timing-category-btns-container');
+    categoriesContainer.style.removeProperty('height');
+  } catch (err) {
+    window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+      "btnLast24Hours click handler error msg: " + err.message);
+    if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
+      if (window.my.timingsFormatErrorHandler !== undefined) {
+        window.my.timingsFormatErrorHandler(err);
+      }
+    }
+  }
+}
+
+export function showSummaryOfLast12Hours() {
+  try {
+    let timingsByCategories = filterLast12HourTimings();
+    let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
+    window.my.currentlyDisplayedTimings = timingsByDates;
+    window.my.imageInfo.updateAsPeriodType(PeriodType.LAST_12_HOURS);
+    let processesTree = buildProcessesTree(timingsByCategories);
+    window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
+    displayTimings(timingsByDates, processesTree);
+    window.my.periodButtonsRowVisibilityToggle.toInitialState();
+    let categoriesContainer = document.getElementById('timing-category-btns-container');
+    categoriesContainer.style.removeProperty('height');
+  } catch (err) {
+    window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+      "btnLast12Hours click handler error msg: " + err.message);
+    if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
+      if (window.my.timingsFormatErrorHandler !== undefined) {
+        window.my.timingsFormatErrorHandler(err);
+      }
+    }
+  }
+}
+
+export function showSummaryFromZeroHours() {
+  try {
+    let timingsByCategories = filterTodaysTimings();
+    let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
+    window.my.currentlyDisplayedTimings = timingsByDates;
+    window.my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_24_HOUR_PERIOD);
+    let processesTree = buildProcessesTree(timingsByCategories);
+    window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
+    displayTimings(timingsByDates, processesTree);
+    window.my.periodButtonsRowVisibilityToggle.toInitialState();
+    let categoriesContainer = document.getElementById('timing-category-btns-container');
+    categoriesContainer.style.removeProperty('height');
+  } catch (err) {
+    window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+      "btnFromZeroHours click handler error msg: " + err.message);
+    if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
+      if (window.my.timingsFormatErrorHandler !== undefined) {
+        window.my.timingsFormatErrorHandler(err);
+      }
+    }
+  }
+}
+
+export function showSummaryFromZeroTwoAndAHalfHours() {
+  try {
+    let timingsByCategories = filterCurrentTwoAndAHalfDaysTimings();
+    let timingsByDates = fromTimingsByCategoriesToTimingsByDates(timingsByCategories);
+    window.my.currentlyDisplayedTimings = timingsByDates;
+    window.my.imageInfo.updateAsPeriodType(PeriodType.FROM_ZERO_HOURS_OF_60_HOUR_PERIOD);
+    let processesTree = buildProcessesTree(timingsByCategories);
+    window.my.timingsCategoryNodeViewRoot = createAndAppendFilterByCategory(processesTree);
+    displayTimings(timingsByDates, processesTree);
+    window.my.periodButtonsRowVisibilityToggle.toInitialState();
+    let categoriesContainer = document.getElementById('timing-category-btns-container');
+    categoriesContainer.style.removeProperty('height');
+  } catch (err) {
+    window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+      "btnFromZero2.5Hours click handler error msg: " + err.message);
+    if (err.source_timing !== undefined && err.fromdateStr !== undefined) {
+      if (window.my.timingsFormatErrorHandler !== undefined) {
+        window.my.timingsFormatErrorHandler(err);
+      } else {
+        window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+          "btnFromZero2.5Hours click handler error. window.my.timingsFormatErrorHandler is undefined");
+      }
+    } else {
+      window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+        `btnFromZero2.5Hours click handler error. err.source_timing: ${err.source_timing}, err.fromdateStr: ${err.fromdateStr}`);
+    }
+  }
+}
 
 let PeriodButtonsRow = (function() {
   function PeriodButtonsRowInitFunction() {

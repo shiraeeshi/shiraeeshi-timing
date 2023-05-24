@@ -4,7 +4,13 @@ const {
   makeTimingsTextElementsUnminimized,
 } = require('./js/timings/display.js');
 
-const { initPeriodButtonsRow } = require('./js/timings/period_buttons.js');
+const {
+  initPeriodButtonsRow,
+  showSummaryOfLast24Hours,
+  showSummaryOfLast12Hours,
+  showSummaryFromZeroHours,
+  showSummaryFromZeroTwoAndAHalfHours,
+} = require('./js/timings/period_buttons.js');
 const { ImageInfo } = require('./js/timings/image_info.js');
 
 const {
@@ -96,8 +102,6 @@ function handleServerMessage(msg) {
   my.timings = msg.timings;
   my.config = msg.config;
   handleConfig();
-  let mainContentWrapper = document.getElementById("main-content-wrapper");
-  let keys = Object.keys(msg);
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage end ");
 }
 
@@ -110,6 +114,24 @@ function handleConfig() {
       canvasWrapper.classList.add('underlined');
     }
   }
+  let defaultSummary = config['timings-config']['default-summary'];
+  if (defaultSummary === undefined) {
+    defaultSummary = 'from-zero-2.5-hours';
+  }
+
+  if (defaultSummary === 'last-24-hours') {
+    showSummaryOfLast24Hours();
+  } else if (defaultSummary === 'last-12-hours') {
+    showSummaryOfLast12Hours();
+  } else if (defaultSummary === 'from-zero-hours') {
+    showSummaryFromZeroHours();
+  } else if (defaultSummary === 'from-zero-2.5-hours') {
+    showSummaryFromZeroTwoAndAHalfHours();
+  } else {
+    showSummaryFromZeroTwoAndAHalfHours();
+  }
+  window.my.periodButtonsRowVisibilityToggle.toggle();
+
 }
 
 function initResizer() {
