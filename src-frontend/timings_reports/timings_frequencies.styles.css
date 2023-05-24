@@ -183,7 +183,8 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
   background-position: top left;
 }
 
-.root-node > .process-node-title-container > .process-node-icons > .icon-hide {
+.root-node > .process-node-title-container > .process-node-icons > .icon-hide,
+.root-node > .process-node-title-container > .process-node-icons > .icon-show-this-process-only {
   display: none;
 }
 
