@@ -115,6 +115,24 @@ NotebookNodeView.prototype.unhideHiddenChildren = function() {
   that.hasManuallyHiddenChildren = false;
 }
 
+NotebookNodeView.prototype.increaseFontSize = function() {
+  let that = this;
+  let fontSize = window.my.notesFontSize;
+  fontSize++;
+  window.my.notesFontSize = fontSize;
+  that.html().style.fontSize = `${fontSize}px`;
+}
+
+NotebookNodeView.prototype.decreaseFontSize = function() {
+  let that = this;
+  let fontSize = window.my.notesFontSize;
+  if (fontSize > 1) {
+    fontSize--;
+  }
+  window.my.notesFontSize = fontSize;
+  that.html().style.fontSize = `${fontSize}px`;
+}
+
 NotebookNodeView.prototype.html = function() {
   let that = this;
   if (that.htmlElement !== undefined) {
@@ -234,6 +252,38 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
     if (that._hasTaggedChildren()) {
       icons.push(iconOpenTagsOfChildrenInTagsTree);
     }
+    if (that.parentNodeView === undefined) {
+      let iconIncreaseFontSize =
+        (function() {
+          let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-increase-font-size'),
+            withClass(
+              withChildren(document.createElement('span'),
+                document.createTextNode('increase font size')
+              ),
+              'tooltip')
+          );
+          elem.addEventListener('click', eve => {
+            that.increaseFontSize();
+          });
+          return elem;
+        })();
+      let iconDecreaseFontSize =
+        (function() {
+          let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-decrease-font-size'),
+            withClass(
+              withChildren(document.createElement('span'),
+                document.createTextNode('decrease font size')
+              ),
+              'tooltip')
+          );
+          elem.addEventListener('click', eve => {
+            that.decreaseFontSize();
+          });
+          return elem;
+        })();
+      icons.push(iconIncreaseFontSize);
+      icons.push(iconDecreaseFontSize);
+    }
     icons = icons.concat([
       iconMoveToTop,
       iconMoveToBottom,
@@ -272,7 +322,15 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
       ),
       that.htmlContainerUl
     );
+  if (that.parentNodeView === undefined) {
+    that.initFontSize(htmlElement);
+  }
   that.htmlElement = htmlElement;
+};
+
+NotebookNodeView.prototype.initFontSize = function(htmlElement) {
+  let that = this;
+  htmlElement.style.fontSize = `${window.my.notesFontSize}px`;
 };
 
 NotebookNodeView.prototype.isLeaf = function() {

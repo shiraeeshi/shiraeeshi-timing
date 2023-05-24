@@ -340,6 +340,22 @@ li.proc-leaf {
   height: 12px;
 }
 
+.icon-increase-font-size {
+  background-image: url('../img/proc-node-plus.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 10px;
+  height: 10px;
+}
+
+.icon-decrease-font-size {
+  background-image: url('../img/proc-node-minus.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 10px;
+  height: 10px;
+}
+
 .icon-open-tag-in-tags-tree {
   background-image: url('../img/tag-round-icon-32.png');
   background-repeat: no-repeat;

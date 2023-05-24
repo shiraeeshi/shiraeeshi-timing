@@ -23,6 +23,29 @@ for (let propName in NotebookNodeView.prototype) {
   NotebookTagsTreeNodeView.prototype[propName] = NotebookNodeView.prototype[propName];
 }
 
+NotebookTagsTreeNodeView.prototype.initFontSize = function(htmlElement) {
+  let that = this;
+  htmlElement.style.fontSize = `${window.my.tagsFontSize}px`;
+};
+
+NotebookTagsTreeNodeView.prototype.increaseFontSize = function() {
+  let that = this;
+  let fontSize = window.my.tagsFontSize;
+  fontSize++;
+  window.my.tagsFontSize = fontSize;
+  that.html().style.fontSize = `${fontSize}px`;
+}
+
+NotebookTagsTreeNodeView.prototype.decreaseFontSize = function() {
+  let that = this;
+  let fontSize = window.my.tagsFontSize;
+  if (fontSize > 1) {
+    fontSize--;
+  }
+  window.my.tagsFontSize = fontSize;
+  that.html().style.fontSize = `${fontSize}px`;
+}
+
 NotebookTagsTreeNodeView.prototype.name2html = function() {
   let that = this;
   let a = document.createElement('a');

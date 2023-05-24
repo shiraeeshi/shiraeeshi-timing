@@ -27,13 +27,7 @@ function handleServerMessage(msg) {
       return;
     }
     let config = msg.config;
-    if (config.notebook === undefined) {
-      config.notebook = {};
-    }
-    let backgroundColor = config.notebook['background-color'];
-    if (backgroundColor !== undefined) {
-      document.body.style.backgroundColor = backgroundColor;
-    }
+    handleConfig(msg.config);
     let notes_object = msg.notes;
     let forest = yamlRootObject2forest(msg.notes);
     my.notesForest = forest;
@@ -76,6 +70,26 @@ function handleServerMessage(msg) {
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
   }
+}
+
+function handleConfig(config) {
+  if (config.notebook === undefined) {
+    config.notebook = {};
+  }
+  let backgroundColor = config.notebook['background-color'];
+  if (backgroundColor !== undefined) {
+    document.body.style.backgroundColor = backgroundColor;
+  }
+  let notesFontSize = config.notebook['notes-font-size-px'];
+  if (notesFontSize === undefined) {
+    notesFontSize = 16;
+  }
+  my.notesFontSize = notesFontSize;
+  let tagsFontSize = config.notebook['tags-font-size-px'];
+  if (tagsFontSize === undefined) {
+    tagsFontSize = 16;
+  }
+  my.tagsFontSize = tagsFontSize;
 }
 
 function initBottomPanelButtons() {
