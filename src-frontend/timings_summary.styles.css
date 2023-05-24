@@ -76,12 +76,12 @@ body {
   color: white;
 }
 
-li.timing-row-parent-li > span.timing-row {
+li.timing-row-parent-li {
   color: white;
   opacity: 1;
 }
 
-li.timing-row-parent-li.greyed-out > span.timing-row {
+li.timing-row-parent-li.greyed-out {
   color: white;
   opacity: .3;
 }
@@ -91,6 +91,7 @@ li.timing-row-parent-li.extra-unhighlighted {
   display: none;
 }
 
+li.timing-row-parent-li.highlighted-from-canvas,
 .timing-row.highlighted-from-canvas {
   color: red !important;
 }

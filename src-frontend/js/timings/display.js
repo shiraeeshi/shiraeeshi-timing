@@ -201,7 +201,13 @@ export function displayTimingsAsImage(timingsCategory, categoryToHighlight, timi
 
 function highlightTimingInText(timingAtOffset) {
   try {
-    let timingRowToHighlight = document.querySelector("[data-timing-start = '" + timingAtOffset.from.join(".") + "']");
+    // let timingRowToHighlight = document.querySelector("[data-timing-start = '" + timingAtOffset.from.join(".") + "']");
+    // if (timingRowToHighlight) {
+    //   window.my.isHighlightingTimingRowInText = true;
+    //   window.my.highlightedTimingItemStart = timingAtOffset.from.join(".");
+    //   timingRowToHighlight.classList.add('highlighted-from-canvas');
+    // }
+    let timingRowToHighlight = timingAtOffset.htmlElem;
     if (timingRowToHighlight) {
       window.my.isHighlightingTimingRowInText = true;
       window.my.highlightedTimingItemStart = timingAtOffset.from.join(".");
