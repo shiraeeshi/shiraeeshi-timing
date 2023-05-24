@@ -59,6 +59,17 @@ function handleServerMessage(msg) {
       } else {
         makeTimingsTextElementsUnminimized();
       }
+    } else if (msg.keyval == "Ctrl+L") {
+      my.isToUnderlineCanvas = !my.isToUnderlineCanvas;
+      let canvasWrapper = document.getElementById("canvas-wrapper");
+      if (canvasWrapper === undefined) {
+        return;
+      }
+      if (my.isToUnderlineCanvas) {
+        canvasWrapper.classList.add('underlined');
+      } else {
+        canvasWrapper.classList.remove('underlined');
+      }
     }
     return;
   }
@@ -84,9 +95,21 @@ function handleServerMessage(msg) {
   my.imageInfo = new ImageInfo();
   my.timings = msg.timings;
   my.config = msg.config;
+  handleConfig();
   let mainContentWrapper = document.getElementById("main-content-wrapper");
   let keys = Object.keys(msg);
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage end ");
+}
+
+function handleConfig() {
+  let config = my.config;
+  my.isToUnderlineCanvas = !!config['timings-config']['underline-canvas'];
+  if (my.isToUnderlineCanvas) {
+    let canvasWrapper = document.getElementById("canvas-wrapper");
+    if (canvasWrapper !== undefined) {
+      canvasWrapper.classList.add('underlined');
+    }
+  }
 }
 
 function initResizer() {

@@ -28,7 +28,7 @@ body {
   padding-bottom: 10px;
 }
 
-#canvas-wrapper > canvas {
+#canvas-wrapper.underlined > canvas {
   border-bottom: 1px solid grey;
 }
 
