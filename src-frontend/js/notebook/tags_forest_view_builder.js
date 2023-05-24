@@ -1,15 +1,17 @@
 const { NotebookTagsTreeNodeView } = require('./tags_node_view.js');
 
-export function NotebookTagsForestViewBuilder() {
+export function NotebookTagsForestViewBuilder(isTopPanel) {
   let that = this;
   that.html = null;
   that.view = null;
+  that.isTopPanel = isTopPanel;
 }
 
 NotebookTagsForestViewBuilder.prototype.buildView = function(notebookTagsObj) {
   let that = this;
 
   let treeView = new NotebookTagsTreeNodeView(notebookTagsObj);
+  treeView.isTopPanelTree = that.isTopPanel;
 
   treeView.buildAsHtmlLiElement();
   treeView.html().classList.add('root-node');

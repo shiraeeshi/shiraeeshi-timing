@@ -6,6 +6,7 @@ export function NotesForestViewBuilder(isTopPanel) {
   let that = this;
   that.html = null;
   that.view = null;
+  that.isTopPanel = isTopPanel;
   that.rootNodeClickHandler = function(eve) {
     let initialNotesForest = buildInitialNotesForest();
     let rootNodeViewOfNotes;
@@ -25,6 +26,7 @@ NotesForestViewBuilder.prototype.buildView = function(notesForest) {
     children: notesForest
   };
   let treeView = new NotebookNodeView(rootNode);
+  treeView.isTopPanelTree = that.isTopPanel;
   that.view = treeView;
 
   treeView.buildAsHtmlLiElement();

@@ -7,7 +7,7 @@ export function showTagsAndLinks(tags) {
     let mainWrapper = document.getElementById("tags-and-links-content-top-wrapper");
     let tagsAndLinksObj = buildTagsAndLinksForest(tags);
 
-    let viewBuilder = new NotebookTagsForestViewBuilder();
+    let viewBuilder = new NotebookTagsForestViewBuilder(true);
     viewBuilder.buildView(tagsAndLinksObj);
 
     window.my.rootNodeViewOfTags = viewBuilder.getRootNodeViewOfTags();
@@ -42,7 +42,7 @@ export function showTagsAndLinksOfBottomPanel(tags) {
     let mainWrapper = document.getElementById("tags-and-links-content-bottom-wrapper");
     let tagsAndLinksObj = buildTagsAndLinksForest(tags);
 
-    let viewBuilder = new NotebookTagsForestViewBuilder();
+    let viewBuilder = new NotebookTagsForestViewBuilder(false);
     viewBuilder.buildView(tagsAndLinksObj);
 
     window.my.rootNodeViewOfTagsOfBottomPanel = viewBuilder.getRootNodeViewOfTags();

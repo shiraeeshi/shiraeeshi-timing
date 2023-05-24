@@ -14,6 +14,7 @@ export function NotebookNodeView(notebookNode, parentNodeView) {
   });
   that.hasManuallyHiddenChildren = false;
   that.htmlContainerUl = document.createElement('ul');
+  // that.isTopPanelTree = undefined;
 }
 
 NotebookNodeView.prototype.name2html = function() {
@@ -117,19 +118,37 @@ NotebookNodeView.prototype.unhideHiddenChildren = function() {
 
 NotebookNodeView.prototype.increaseFontSize = function() {
   let that = this;
-  let fontSize = window.my.notesFontSize;
+  let fontSize;
+  if (that.isTopPanelTree) {
+    fontSize = window.my.fontSizeOfTopPanelOfNotes;
+  } else {
+    fontSize = window.my.fontSizeOfBottomPanelOfNotes;
+  }
   fontSize++;
-  window.my.notesFontSize = fontSize;
+  if (that.isTopPanelTree) {
+    window.my.fontSizeOfTopPanelOfNotes = fontSize;
+  } else {
+    window.my.fontSizeOfBottomPanelOfNotes = fontSize;
+  }
   that.html().style.fontSize = `${fontSize}px`;
 }
 
 NotebookNodeView.prototype.decreaseFontSize = function() {
   let that = this;
-  let fontSize = window.my.notesFontSize;
+  let fontSize;
+  if (that.isTopPanelTree) {
+    fontSize = window.my.fontSizeOfTopPanelOfNotes;
+  } else {
+    fontSize = window.my.fontSizeOfBottomPanelOfNotes;
+  }
   if (fontSize > 1) {
     fontSize--;
   }
-  window.my.notesFontSize = fontSize;
+  if (that.isTopPanelTree) {
+    window.my.fontSizeOfTopPanelOfNotes = fontSize;
+  } else {
+    window.my.fontSizeOfBottomPanelOfNotes = fontSize;
+  }
   that.html().style.fontSize = `${fontSize}px`;
 }
 
@@ -330,7 +349,13 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
 
 NotebookNodeView.prototype.initFontSize = function(htmlElement) {
   let that = this;
-  htmlElement.style.fontSize = `${window.my.notesFontSize}px`;
+  let fontSize;
+  if (that.isTopPanelTree) {
+    fontSize = window.my.fontSizeOfTopPanelOfNotes;
+  } else {
+    fontSize = window.my.fontSizeOfBottomPanelOfNotes;
+  }
+  htmlElement.style.fontSize = `${fontSize}px`;
 };
 
 NotebookNodeView.prototype.isLeaf = function() {

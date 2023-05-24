@@ -55,7 +55,7 @@ function handleServerMessage(msg) {
 
     } else {
 
-      let viewBuilder = new NotesForestViewBuilder();
+      let viewBuilder = new NotesForestViewBuilder(true);
       viewBuilder.buildView(forest);
       my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
       appendNotesForestHtml(viewBuilder.getHtml());
@@ -80,16 +80,29 @@ function handleConfig(config) {
   if (backgroundColor !== undefined) {
     document.body.style.backgroundColor = backgroundColor;
   }
-  let notesFontSize = config.notebook['notes-font-size-px'];
-  if (notesFontSize === undefined) {
-    notesFontSize = 16;
+  let fontSizeOfTopPanelOfNotes = config.notebook['font-size-in-px-of-top-panel-of-notes'];
+  if (fontSizeOfTopPanelOfNotes === undefined) {
+    fontSizeOfTopPanelOfNotes = 16;
   }
-  my.notesFontSize = notesFontSize;
-  let tagsFontSize = config.notebook['tags-font-size-px'];
-  if (tagsFontSize === undefined) {
-    tagsFontSize = 16;
+  my.fontSizeOfTopPanelOfNotes = fontSizeOfTopPanelOfNotes;
+
+  let fontSizeOfBottomPanelOfNotes = config.notebook['font-size-in-px-of-bottom-panel-of-notes'];
+  if (fontSizeOfBottomPanelOfNotes === undefined) {
+    fontSizeOfBottomPanelOfNotes = 16;
   }
-  my.tagsFontSize = tagsFontSize;
+  my.fontSizeOfBottomPanelOfNotes = fontSizeOfBottomPanelOfNotes;
+
+  let fontSizeOfTopPanelOfTags = config.notebook['font-size-in-px-of-top-panel-of-tags'];
+  if (fontSizeOfTopPanelOfTags === undefined) {
+    fontSizeOfTopPanelOfTags = 16;
+  }
+  my.fontSizeOfTopPanelOfTags = fontSizeOfTopPanelOfTags;
+
+  let fontSizeOfBottomPanelOfTags = config.notebook['font-size-in-px-of-bottom-panel-of-tags'];
+  if (fontSizeOfBottomPanelOfTags === undefined) {
+    fontSizeOfBottomPanelOfTags = 16;
+  }
+  my.fontSizeOfBottomPanelOfTags = fontSizeOfBottomPanelOfTags;
 }
 
 function initBottomPanelButtons() {
