@@ -320,10 +320,15 @@ function timingsOf24HourDay(date) {
       // console.log("timingsOf24HourDay callback. timings:");
       // console.dir(timings);
       Object.keys(timings).forEach(key => {
-        let thisTimingsByDays = timings[key];
+        let thisProcessObject = timings[key];
+        let thisTimingsByDays = thisProcessObject.timingsByDays;
 
         let filteredTimingByDays = [];
-        result[key] = filteredTimingByDays;
+        result[key] = {
+          name: key,
+          categoryPath: thisProcessObject.categoryPath,
+          timingsByDays: filteredTimingByDays,
+        };
 
         let addedTimingsForKey = false;
 
@@ -342,7 +347,7 @@ function timingsOf24HourDay(date) {
             eachTimingDay.timings.forEach(t => {
               let d = timingDateArrays2Date(dt, t.from);
               t.fromdate = d;
-              t.categoryPath = [key];
+              t.categoryPath = thisProcessObject.categoryPath;
             });
             // result.timings = result.timings.concat(eachTimingDay.timings);
 
@@ -439,10 +444,15 @@ function filterTimingsByDifference(differenceInMillisFrom, differenceInMillisTo)
       let result = {};
 
       Object.keys(timings).forEach(key => {
-        let thisTimingsByDays = timings[key];
+        let thisProcessObject = timings[key];
+        let thisTimingsByDays = thisProcessObject.timingsByDays;
 
         let filteredTimingByDays = [];
-        result[key] = filteredTimingByDays;
+        result[key] = {
+          name: key,
+          categoryPath: thisProcessObject.categoryPath,
+          timingsByDays: filteredTimingByDays,
+        };
 
         let addedTimingsForKey = false;
 
@@ -462,7 +472,7 @@ function filterTimingsByDifference(differenceInMillisFrom, differenceInMillisTo)
               let diff = dateDifferenceInMillis(now, d);
               if (diff < differenceInMillisFrom && diff > differenceInMillisTo) {
                 t.fromdate = d;
-                t.categoryPath = [key];
+                t.categoryPath = thisProcessObject.categoryPath;
                 let dtstr = dt.join(".");
 
                 filteredEachTimingDay.timings.push(t);

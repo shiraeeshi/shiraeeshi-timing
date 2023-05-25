@@ -4,7 +4,8 @@ export function fromTimingsByCategoriesToTimingsByDates(timingsByCategories) {
   let timingsByDates = {};
 
   Object.keys(timingsByCategories).forEach(key => {
-    let thisTimingsByDays = timingsByCategories[key];
+    let thisProcessObject = timingsByCategories[key];
+    let thisTimingsByDays = thisProcessObject.timingsByDays;
     for (let i = thisTimingsByDays.length - 1; i >= 0; i--) {
       let eachTimingDay = thisTimingsByDays[i];
       let dt = eachTimingDay.date;

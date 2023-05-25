@@ -11,6 +11,14 @@ async function readTimings(config) {
   for (let timing of config.timings) {
     let timingName = timing['name'];
     let filepath = expanduser(timing['filepath']);
+    let timingCategoryPath = timing['category-path'];
+    if (timingCategoryPath === undefined) {
+      timingCategoryPath = [timingName];
+    }
+    let resultObject = {
+      name: timingName,
+      categoryPath: timingCategoryPath,
+    };
     let frmt = timing['format'];
     if (frmt === 'txt' || !frmt) {
       let f = new LineReader(filepath, { encoding: 'utf8' });
@@ -23,13 +31,14 @@ async function readTimings(config) {
         lines.push(line.trimEnd());
       }
       let timings = parseTimingFileLines(lines);
-      result[timingName] = timings;
+      resultObject.timingsByDays = timings;
     } else if (frmt === 'yaml') {
       let fileContents = await fs.promises.readFile(filepath, { encoding: 'utf8' });
       let parsedYaml = YAML.parse(fileContents, {schema: 'failsafe'});
       let parsedTimings = parseYamlTimings(parsedYaml);
-      result[timingName] = parsedTimings;
+      resultObject.timingsByDays = parsedTimings;
     }
+    result[timingName] = resultObject;
   }
   return result;
 }
@@ -41,6 +50,15 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
     let filepath = expanduser(timing['filepath']);
     let indexFilename = timing2indexFilename[timingName];
     let indexFilepath = path.join(indexDirFilepath, indexFilename);
+    let timingCategoryPath = timing['category-path'];
+    if (timingCategoryPath === undefined) {
+      timingCategoryPath = [timingName];
+    }
+    let resultObject = {
+      name: timingName,
+      categoryPath: timingCategoryPath,
+      timingsByDays: []
+    };
     let frmt = timing['format'];
     if (frmt === 'txt' || !frmt) {
       result[timingName] = [];
@@ -65,7 +83,7 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
         }
 
         let parsedTimingsOfDate = timings[0];
-        result[timingName].push(parsedTimingsOfDate);
+        resultObject.timingsByDays.push(parsedTimingsOfDate);
       }
     } else if (frmt === 'yaml') {
       result[timingName] = [];
@@ -102,9 +120,10 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
         }
 
         let parsedTimingsOfDate = parsedTimings[0];
-        result[timingName].push(parsedTimingsOfDate);
+        resultObject.timingsByDays.push(parsedTimingsOfDate);
       }
     }
+    result[timingName] = resultObject;
   }
   return result;
 }
@@ -163,6 +182,14 @@ async function readTimingsOfToday(config, timing2indexFilename, indexDirFilepath
     if (!done) {
       offsetsOfToday = indexEntry;
     }
+    let timingCategoryPath = timing['category-path'];
+    if (timingCategoryPath === undefined) {
+      timingCategoryPath = [timingName];
+    }
+    let resultObject = {
+      name: timingName,
+      categoryPath: timingCategoryPath,
+    };
     let frmt = timing['format'];
     if (frmt === 'txt' || !frmt) {
       let timings = [];
@@ -172,7 +199,7 @@ async function readTimingsOfToday(config, timing2indexFilename, indexDirFilepath
         let lines = await _readLinesUntilPosition(f, offsetTo);
         timings = parseTimingFileLines(lines);
       }
-      result[timingName] = timings;
+      resultObject.timingsByDays = timings;
     } else if (frmt === 'yaml') {
       let parsedYaml = {};
       if (offsetsOfToday !== null) {
@@ -184,8 +211,9 @@ async function readTimingsOfToday(config, timing2indexFilename, indexDirFilepath
       }
       let parsedTimings = parseYamlTimings(parsedYaml);
 
-      result[timingName] = parsedTimings;
+      resultObject.timingsByDays = parsedTimings;
     }
+    result[timingName] = resultObject;
   }
   return result;
 }

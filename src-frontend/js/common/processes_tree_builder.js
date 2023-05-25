@@ -24,7 +24,8 @@ export function buildProcessesTree(timingsByCategories, timingsBySubcategoriesTr
 
   // populate each timing's fromdate field
   Object.keys(timingsByCategories).forEach(key => {
-    let thisTimingsByDays = timingsByCategories[key];
+    let thisProcessObject = timingsByCategories[key];
+    let thisTimingsByDays = thisProcessObject.timingsByDays;
     for (let i = thisTimingsByDays.length - 1; i >= 0; i--) {
       let eachTimingDay = thisTimingsByDays[i];
       let dt = eachTimingDay.date;
@@ -36,10 +37,15 @@ export function buildProcessesTree(timingsByCategories, timingsBySubcategoriesTr
   });
 
   Object.keys(timingsByCategories).forEach(key => {
-    let categoryRootNode = timingsBySubcategoriesTree.ensureChildWithName(key);
-    let node = categoryRootNode;
 
-    let thisTimingsByDays = timingsByCategories[key];
+    let thisProcessObject = timingsByCategories[key];
+    let thisTimingsByDays = thisProcessObject.timingsByDays;
+
+    let categoryRootNode = timingsBySubcategoriesTree;
+    for (let cat of thisProcessObject.categoryPath) {
+      categoryRootNode = categoryRootNode.ensureChildWithName(cat);
+    }
+    let node = categoryRootNode;
 
     for (let i = 0; i < thisTimingsByDays.length ; i++) {
       let eachTimingDay = thisTimingsByDays[i];

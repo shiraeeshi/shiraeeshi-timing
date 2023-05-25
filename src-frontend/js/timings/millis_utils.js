@@ -43,10 +43,15 @@ function filterTimingsByDifference(differenceInMillis) {
   }
 
   Object.keys(window.my.timings).forEach(key => {
-    let thisTimingsByDays = window.my.timings[key];
+    let thisProcessObject = window.my.timings[key];
+    let thisTimingsByDays = thisProcessObject.timingsByDays;
 
     let filteredTimingByDays = [];
-    result[key] = filteredTimingByDays;
+    result[key] = {
+      name: key,
+      categoryPath: thisProcessObject.categoryPath,
+      timingsByDays: filteredTimingByDays,
+    };
 
     let addedTimingsForKey = false;
 
@@ -66,7 +71,7 @@ function filterTimingsByDifference(differenceInMillis) {
           let diff = dateDifferenceInMillis(today, d);
           if (diff < differenceInMillis) {
             t.fromdate = d;
-            t.categoryPath = [key];
+            t.categoryPath = thisProcessObject.categoryPath;
             let dtstr = dt.join(".");
             t.dtstr = dtstr;
 
