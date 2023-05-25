@@ -18,7 +18,12 @@ export function displayTimingsAsImage(timingsCategory, categoryToHighlight, timi
   innerContentWrapper.innerHTML = "";
 
   let canvas = document.createElement("canvas");
-  let canvasWidth = 800;
+  let canvasWidth;
+  if (my.isFlexibleWidthCanvas) {
+    canvasWidth = window.my.currentWidthOfCanvas;
+  } else {
+    canvasWidth = 800;
+  }
   window.my.imageInfo.canvasWidth = canvasWidth;
   canvas.width = canvasWidth;
   canvas.height = 50;

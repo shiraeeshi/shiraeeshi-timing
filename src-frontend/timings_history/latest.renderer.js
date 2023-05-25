@@ -33,7 +33,7 @@ window.my = my;
 window.webkit.messageHandlers.timings_history_latest_msgs.onMessage(handleServerMessage);
 
 function handleServerMessage(msg) {
-  if (msg.msg_type == "keypress_event") {
+  if (msg.msg_type == "key_pressed") {
     let radioBtn24Hours = document.getElementById("day-of-24-hours");
     function showTimings() {
       if (radioBtn24Hours.checked) {
@@ -72,6 +72,17 @@ function handleServerMessage(msg) {
       } else {
         makeTimingsTextElementsUnminimized();
       }
+    } else if (msg.keyval == "Ctrl+L") {
+      my.isToUnderlineCanvas = !my.isToUnderlineCanvas;
+      let canvasWrapper = document.getElementById("canvas-wrapper");
+      if (canvasWrapper === undefined) {
+        return;
+      }
+      if (my.isToUnderlineCanvas) {
+        canvasWrapper.classList.add('underlined');
+      } else {
+        canvasWrapper.classList.remove('underlined');
+      }
     }
     return;
   }
@@ -106,7 +117,32 @@ function handleServerMessage(msg) {
     my.imageInfo = new ImageInfo();
     // my.timings = msg;
     showTimingsOf60HourDay();
+    handleConfig();
     window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage end ");
+  }
+}
+
+function handleConfig() {
+  let config = my.config;
+  let canvasWrapper = document.getElementById("canvas-wrapper");
+
+  my.isToUnderlineCanvas = !!config['timings-config']['underline-canvas'];
+  if (my.isToUnderlineCanvas) {
+    if (canvasWrapper !== undefined) {
+      canvasWrapper.classList.add('underlined');
+    }
+  }
+
+  my.isFlexibleWidthCanvas = !!config['timings-config']['canvas-with-flexible-width'];
+  if (my.isFlexibleWidthCanvas) {
+    canvasWrapper.style.width = '100%';
+
+    function handleCanvasContainerResize(eve) {
+      my.currentWidthOfCanvas = canvasWrapper.clientWidth;
+      displayTimings(window.my.currentFilteredTimings, window.my.currentFilteredProcess);
+    }
+
+    new ResizeObserver(handleCanvasContainerResize).observe(canvasWrapper);
   }
 }
 

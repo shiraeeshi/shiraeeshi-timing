@@ -2,6 +2,7 @@
 const {
   clearTimingsTextWrapper,
   makeTimingsTextElementsUnminimized,
+  displayTimings,
 } = require('./js/timings/display.js');
 
 const {
@@ -107,13 +108,27 @@ function handleServerMessage(msg) {
 
 function handleConfig() {
   let config = my.config;
+  let canvasWrapper = document.getElementById("canvas-wrapper");
+
   my.isToUnderlineCanvas = !!config['timings-config']['underline-canvas'];
   if (my.isToUnderlineCanvas) {
-    let canvasWrapper = document.getElementById("canvas-wrapper");
     if (canvasWrapper !== undefined) {
       canvasWrapper.classList.add('underlined');
     }
   }
+
+  my.isFlexibleWidthCanvas = !!config['timings-config']['canvas-with-flexible-width'];
+  if (my.isFlexibleWidthCanvas) {
+    canvasWrapper.style.width = '100%';
+
+    function handleCanvasContainerResize(eve) {
+      my.currentWidthOfCanvas = canvasWrapper.clientWidth;
+      displayTimings(window.my.currentFilteredTimings, window.my.currentFilteredProcess);
+    }
+
+    new ResizeObserver(handleCanvasContainerResize).observe(canvasWrapper);
+  }
+
   let defaultSummary = config['timings-config']['default-summary'];
   if (defaultSummary === undefined) {
     defaultSummary = 'from-zero-2.5-hours';

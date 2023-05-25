@@ -47,12 +47,45 @@ function setMenuAndKeyboardShortcuts(win) {
         }
       },
       {
+        label: 'toggle underlining the canvas',
+        accelerator: 'Ctrl+L',
+        click: () => {
+          const msg = {
+            "msg_type": "key_pressed",
+            "keyval": "Ctrl+L"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
         label: 'toggle minimal text mode',
         accelerator: 'm',
         click: () => {
           const msg = {
-            "type": "key_pressed",
+            "msg_type": "key_pressed",
             "keyval": "m"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
+        label: 'previous day',
+        accelerator: 'Left',
+        click: () => {
+          const msg = {
+            "msg_type": "key_pressed",
+            "keyval": "Left"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
+        label: 'next day',
+        accelerator: 'Right',
+        click: () => {
+          const msg = {
+            "msg_type": "key_pressed",
+            "keyval": "Right"
           };
           win.webContents.send('message-from-backend', msg);
         }

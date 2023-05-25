@@ -41,6 +41,10 @@ body {
   padding-bottom: 10px;
 }
 
+#canvas-wrapper.underlined > canvas {
+  border-bottom: 1px solid grey;
+}
+
 #categories-and-timings-container {
   flex: 1 1 auto;
   display: flex;
