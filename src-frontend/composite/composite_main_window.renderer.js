@@ -9,9 +9,16 @@ const {
   highlightNotesInForest
 } = require('../js/notebook/notebook_utils.js');
 
-const { initPeriodButtonsRow } = require('../js/timings/period_buttons.js');
+const {
+  initPeriodButtonsRow,
+  showSummaryOfLast24Hours,
+  showSummaryOfLast12Hours,
+  showSummaryFromZeroHours,
+  showSummaryFromZeroTwoAndAHalfHours,
+} = require('../js/timings/period_buttons.js');
 const { ImageInfo } = require('../js/timings/image_info.js');
 const {
+  displayTimings,
   clearTimingsTextWrapper,
   makeTimingsTextElementsUnminimized,
 } = require('../js/timings/display.js');
@@ -69,7 +76,12 @@ function handleServerMessage(msg) {
     if (msg.type == "wallpapers") {
       if (msg.config !== undefined) {
         my.config = msg.config;
-        handleConfig(my.config);
+        if (my.notesForest !== undefined) {
+          handleNotebookConfig(my.config);
+        }
+        if (my.timings !== null) {
+          handleTimingConfig(my.config);
+        }
       }
       console.log('[handleServerMessage] msg.type = wallpapers.');
       my.wallpapers.lst = msg.wallpapers;
@@ -92,6 +104,17 @@ function handleServerMessage(msg) {
           clearTimingsTextWrapper();
         } else {
           makeTimingsTextElementsUnminimized();
+        }
+      } else if (msg.keyval == "Ctrl+L") {
+        my.isToUnderlineCanvas = !my.isToUnderlineCanvas;
+        let canvasWrapper = document.getElementById("canvas-wrapper");
+        if (canvasWrapper === undefined) {
+          return;
+        }
+        if (my.isToUnderlineCanvas) {
+          canvasWrapper.classList.add('underlined');
+        } else {
+          canvasWrapper.classList.remove('underlined');
         }
       }
       return;
@@ -128,13 +151,21 @@ function handleServerMessage(msg) {
     }
     if (msg.type == "timings") {
       console.log('[handleServerMessage] msg.type = timings.');
-      if (msg.config !== undefined) {
-        my.config = msg.config;
-        handleConfig(my.config);
-      }
+
       initPeriodButtonsRow();
       my.imageInfo = new ImageInfo();
       my.timings = msg.timings;
+
+      if (msg.config !== undefined) {
+        my.config = msg.config;
+      }
+      if (my.config !== undefined) {
+        handleTimingConfig(my.config);
+
+        if (my.notesForest !== undefined) {
+          handleNotebookConfig(my.config);
+        }
+      }
       return;
     }
 
@@ -142,7 +173,13 @@ function handleServerMessage(msg) {
       console.log('[handleServerMessage] msg.type = notebook.');
       if (msg.config !== undefined) {
         my.config = msg.config;
-        handleConfig(my.config);
+      }
+      if (my.config !== undefined) {
+        handleNotebookConfig(my.config);
+
+        if (my.timings !== null) {
+          handleTimingConfig(my.config);
+        }
       }
       let notes_object = msg.notes;
       let forest = yamlRootObject2forest(msg.notes);
@@ -172,7 +209,57 @@ function handleServerMessage(msg) {
   }
 }
 
-function handleConfig(config) {
+function handleTimingConfig(config) {
+
+  let defaultSummary = config['timings-config']['default-summary'];
+  if (defaultSummary === undefined) {
+    defaultSummary = 'from-zero-2.5-hours';
+  }
+
+  if (defaultSummary === 'last-24-hours') {
+    showSummaryOfLast24Hours();
+  } else if (defaultSummary === 'last-12-hours') {
+    showSummaryOfLast12Hours();
+  } else if (defaultSummary === 'from-zero-hours') {
+    showSummaryFromZeroHours();
+  } else if (defaultSummary === 'from-zero-2.5-hours') {
+    showSummaryFromZeroTwoAndAHalfHours();
+  } else {
+    showSummaryFromZeroTwoAndAHalfHours();
+  }
+  my.periodButtonsRowVisibilityToggle.toggle();
+
+
+  let canvasWrapper = document.getElementById("canvas-wrapper");
+
+  my.isToUnderlineCanvas = !!config['timings-config']['underline-canvas'];
+  if (my.isToUnderlineCanvas) {
+    if (canvasWrapper !== undefined) {
+      canvasWrapper.classList.add('underlined');
+    }
+  }
+
+  my.isFlexibleWidthCanvas = !!config['timings-config']['canvas-with-flexible-width'];
+  if (my.isFlexibleWidthCanvas) {
+    canvasWrapper.style.width = '100%';
+
+    function handleCanvasContainerResize(eve) {
+      my.currentWidthOfCanvas = canvasWrapper.clientWidth;
+      displayTimings(window.my.currentFilteredTimings, window.my.currentFilteredProcess);
+    }
+
+    new ResizeObserver(handleCanvasContainerResize).observe(canvasWrapper);
+  } else {
+    my.canvasWidthFromConfig = config['timings-config']['canvas-width-in-px'];
+    if (my.canvasWidthFromConfig === undefined) {
+      my.canvasWidthFromConfig = 800;
+    }
+    my.currentWidthOfCanvas = my.canvasWidthFromConfig;
+    canvasWrapper.style.width = `${my.canvasWidthFromConfig}px`;
+  }
+}
+
+function handleNotebookConfig(config) {
   if (config.notebook === undefined) {
     config.notebook = {};
   }

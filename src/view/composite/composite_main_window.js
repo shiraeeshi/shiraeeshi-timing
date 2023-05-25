@@ -59,6 +59,17 @@ function setMenuAndKeyboardShortcuts(win) {
         }
       },
       {
+        label: 'toggle underlining the canvas',
+        accelerator: 'Ctrl+L',
+        click: () => {
+          const msg = {
+            "type": "key_pressed",
+            "keyval": "Ctrl+L"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
         label: 'Escape',
         accelerator: 'Escape',
         click: () => {
