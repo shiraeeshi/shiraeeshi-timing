@@ -60,6 +60,11 @@ function handleServerMessage(msg) {
     // window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage start ");
 
 
+    if (!my.hasInitializedMainResizer) {
+      initVerticalResizer();
+      my.hasInitializedMainResizer = true;
+    }
+
 
     if (msg.type == "wallpapers") {
       if (msg.config !== undefined) {
@@ -162,7 +167,6 @@ function handleServerMessage(msg) {
     }
     // window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage end ");
 
-
   } catch (err) {
     window.webkit.messageHandlers.composite_main_window.postMessage("js handleServerMessage error msg: " + err.message);
   }
@@ -178,4 +182,55 @@ function handleConfig(config) {
     fontSizeOfTopPanelOfNotes = 16;
   }
   my.fontSizeOfTopPanelOfNotes = fontSizeOfTopPanelOfNotes;
+}
+
+function initVerticalResizer() {
+  let leftHalf = document.getElementById('timings-container');
+  let resizer = document.getElementById('resizer-between-timings-and-notes');
+  let rightHalf = document.getElementById('current-notes-tree-nodes-container');
+
+  let resizerX = 0;
+  let resizerY = 0;
+
+  let leftHalfWidth = 0;
+
+  resizer.addEventListener('mousedown', (eve) => {
+    resizerX = eve.clientX;
+    resizerY = eve.clientY;
+
+    leftHalfWidth = leftHalf.getBoundingClientRect().width;
+
+    document.documentElement.style.cursor = 'ew-resize';
+
+    leftHalf.style.userSelect = 'none';
+    leftHalf.style.pointerEvents = 'none';
+
+    rightHalf.style.userSelect = 'none';
+    rightHalf.style.pointerEvents = 'none';
+
+    document.documentElement.addEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.addEventListener('mouseup', resizerMouseUpListener);
+  });
+
+  function resizerMouseMoveListener(eve) {
+    const dx = eve.clientX - resizerX;
+    const dy = eve.clientY - resizerY;
+
+    const newLeftHalfWidth = ((leftHalfWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+
+    leftHalf.style.width = `${newLeftHalfWidth}%`;
+  }
+
+  function resizerMouseUpListener(eve) {
+    document.documentElement.style.removeProperty('cursor');
+
+    leftHalf.style.removeProperty('user-select');
+    leftHalf.style.removeProperty('pointer-events');
+
+    rightHalf.style.removeProperty('user-select');
+    rightHalf.style.removeProperty('pointer-events');
+
+    document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
+  }
 }
