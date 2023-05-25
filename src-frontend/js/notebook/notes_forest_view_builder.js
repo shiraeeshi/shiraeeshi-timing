@@ -50,6 +50,7 @@ export function CurrentNotesForestViewBuilder() {
   let that = this;
   that.html = null;
   that.view = null;
+  that.isTopPanel = true;
   that.rootNodeClickHandler = function(eve) {
     highlightNotesInForest(window.my.rootNodeViewOfNotes, window.my.currentNotesForest, true);
   };

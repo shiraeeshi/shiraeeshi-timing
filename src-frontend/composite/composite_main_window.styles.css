@@ -40,9 +40,9 @@ body {
   border-bottom: 1px solid grey;
 }
 
-#notes-content-wrapper {
+#notes-content-top-wrapper {
   color: white;
-  font-size: xx-small;
+/*  font-size: xx-small; */
 }
 
 li.timing-row-parent-li > span.timing-row {
@@ -134,28 +134,15 @@ li.proc-leaf {
 
 .notebook-node-icon .tooltip {
   visibility: hidden;
-  width: 120px;
   background-color: black;
   color: #fff;
   text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-  position: absolute;
+  border-top-right-radius: 6px;
+  padding: 5px;
+  position: fixed;
   z-index: 1;
-  top: 150%;
-  left: 50%;
-  margin-left: -60px;
-}
-
-.notebook-node-icon .tooltip::after {
-  content: "";
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent transparent black transparent;
+  bottom: 0;
+  left: 0;
 }
 
 .notebook-node-icon:hover .tooltip {
@@ -164,6 +151,27 @@ li.proc-leaf {
 
 .notebook-node-title-container {
   display: inline-block;
+}
+
+.icon-open-tag-in-tags-tree,
+.icon-open-tags-of-children-in-tags-tree {
+  display: none;
+}
+
+.icon-increase-font-size {
+  background-image: url('../img/proc-node-plus.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 10px;
+  height: 10px;
+}
+
+.icon-decrease-font-size {
+  background-image: url('../img/proc-node-minus.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 10px;
+  height: 10px;
 }
 
 li.first-visible > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top,

@@ -64,6 +64,7 @@ function handleServerMessage(msg) {
     if (msg.type == "wallpapers") {
       if (msg.config !== undefined) {
         my.config = msg.config;
+        handleConfig(my.config);
       }
       console.log('[handleServerMessage] msg.type = wallpapers.');
       my.wallpapers.lst = msg.wallpapers;
@@ -124,6 +125,7 @@ function handleServerMessage(msg) {
       console.log('[handleServerMessage] msg.type = timings.');
       if (msg.config !== undefined) {
         my.config = msg.config;
+        handleConfig(my.config);
       }
       initPeriodButtonsRow();
       my.imageInfo = new ImageInfo();
@@ -135,6 +137,7 @@ function handleServerMessage(msg) {
       console.log('[handleServerMessage] msg.type = notebook.');
       if (msg.config !== undefined) {
         my.config = msg.config;
+        handleConfig(my.config);
       }
       let notes_object = msg.notes;
       let forest = yamlRootObject2forest(msg.notes);
@@ -163,4 +166,16 @@ function handleServerMessage(msg) {
   } catch (err) {
     window.webkit.messageHandlers.composite_main_window.postMessage("js handleServerMessage error msg: " + err.message);
   }
+}
+
+function handleConfig(config) {
+  if (config.notebook === undefined) {
+    config.notebook = {};
+  }
+
+  let fontSizeOfTopPanelOfNotes = config.notebook['font-size-in-px-of-top-panel-of-notes'];
+  if (fontSizeOfTopPanelOfNotes === undefined) {
+    fontSizeOfTopPanelOfNotes = 16;
+  }
+  my.fontSizeOfTopPanelOfNotes = fontSizeOfTopPanelOfNotes;
 }
