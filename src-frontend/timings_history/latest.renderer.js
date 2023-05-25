@@ -143,6 +143,13 @@ function handleConfig() {
     }
 
     new ResizeObserver(handleCanvasContainerResize).observe(canvasWrapper);
+  } else {
+    my.canvasWidthFromConfig = config['timings-config']['canvas-width-in-px'];
+    if (my.canvasWidthFromConfig === undefined) {
+      my.canvasWidthFromConfig = 800;
+    }
+    my.currentWidthOfCanvas = my.canvasWidthFromConfig;
+    canvasWrapper.style.width = `${my.canvasWidthFromConfig}px`;
   }
 }
 
