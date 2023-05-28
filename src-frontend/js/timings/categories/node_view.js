@@ -220,42 +220,65 @@ TimingsCategoryNodeView.prototype.name2html = function() {
 
     // console.log("a.onmouseenter. categoryFullName: " + categoryFullName);
 
-    let trs = document.getElementsByClassName("timing-row-parent-li");
-    let trsHighlighted = document.querySelectorAll(".timing-row-parent-li:not(.greyed-out)");
-    for (let i=0; i < trs.length; i++) {
-      trs[i].classList.add('greyed-out');
-    }
-    let timingTextViews = that.getTimingTextViewsRecursively();
-    for (let i=0; i < timingTextViews.length; i++) {
-      timingTextViews[i].classList.remove('greyed-out');
+    let trs;
+    let trsHighlighted;
+
+    if (window.my.minimalTextForTimings) {
+      let visibleLis = document.querySelectorAll('li.timing-row-parent-li:not(.minimized-to-invisibility)');
+      for (let li of visibleLis) {
+        li.classList.add('minimized-to-invisibility');
+      }
+      let timingTextViews = that.getTimingTextViewsRecursively();
+      for (let i=0; i < timingTextViews.length; i++) {
+        timingTextViews[i].classList.remove('minimized-to-invisibility');
+      }
+    } else {
+      trs = document.getElementsByClassName("timing-row-parent-li");
+      trsHighlighted = document.querySelectorAll(".timing-row-parent-li:not(.greyed-out)");
+      for (let i=0; i < trs.length; i++) {
+        trs[i].classList.add('greyed-out');
+      }
+      let timingTextViews = that.getTimingTextViewsRecursively();
+      for (let i=0; i < timingTextViews.length; i++) {
+        timingTextViews[i].classList.remove('greyed-out');
+      }
     }
     function unhighlight() {
       console.log("TimingsCategoryNodeView.onmouseenter unhighlight");
-
-      let noCategoryIsHighlighted =
-        window.my.highlightedCategory === undefined;
-
-      if (noCategoryIsHighlighted) {
+      if (window.my.minimalTextForTimings) {
         displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory);
-        for (let i=0; i < trs.length; i++) {
-          trs[i].classList.remove('greyed-out');
-          trs[i].classList.remove('extra-unhighlighted');
-        }
-      } else if (that.viewState === TimingsCategoryNodeViewState.UNHIGHLIGHTED) {
-        for (let i=0; i < timingTextViews.length; i++) {
-          timingTextViews[i].classList.add('greyed-out');
-        }
-      } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED ||
-                 that.viewState === TimingsCategoryNodeViewState.EXTRA_HIGHLIGHTED) {
-        // do nothing
-      } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD) {
-        displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory);
-        for (let i=0; i < trsHighlighted.length; i++) {
-          trsHighlighted[i].classList.remove('greyed-out');
+        let visibleLis = document.querySelectorAll('li.timing-row-parent-li:not(.minimized-to-invisibility)');
+        for (let li of visibleLis) {
+          li.classList.add('minimized-to-invisibility');
         }
       } else {
-        window.webkit.messageHandlers.timings_summary_msgs.postMessage(
-          "TimingsCategoryNodeView.onmousemove. unexpected viewState (expected a member of TimingsCategoryNodeViewState enum): " + that.viewState);
+
+        let noCategoryIsHighlighted =
+          window.my.highlightedCategory === undefined;
+
+        if (noCategoryIsHighlighted) {
+          displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory);
+          for (let i=0; i < trs.length; i++) {
+            trs[i].classList.remove('greyed-out');
+            trs[i].classList.remove('extra-unhighlighted');
+          }
+        } else if (that.viewState === TimingsCategoryNodeViewState.UNHIGHLIGHTED) {
+          for (let i=0; i < timingTextViews.length; i++) {
+            timingTextViews[i].classList.add('greyed-out');
+          }
+        } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED ||
+                  that.viewState === TimingsCategoryNodeViewState.EXTRA_HIGHLIGHTED) {
+          // do nothing
+        } else if (that.viewState === TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD) {
+          displayTimingsAsImage(window.my.currentFilteredProcess, window.my.highlightedCategory);
+          for (let i=0; i < trsHighlighted.length; i++) {
+            trsHighlighted[i].classList.remove('greyed-out');
+          }
+        } else {
+          window.webkit.messageHandlers.timings_summary_msgs.postMessage(
+            "TimingsCategoryNodeView.onmousemove. unexpected viewState (expected a member of TimingsCategoryNodeViewState enum): " + that.viewState);
+        }
+
       }
       a.removeEventListener('mouseleave', unhighlight);
     }
