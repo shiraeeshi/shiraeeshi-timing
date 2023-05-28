@@ -153,6 +153,7 @@ function handleServerMessage(msg) {
       console.log('[handleServerMessage] msg.type = timings.');
 
       initPeriodButtonsRow();
+      initResizer();
       my.imageInfo = new ImageInfo();
       my.timings = msg.timings;
 
@@ -272,7 +273,7 @@ function handleNotebookConfig(config) {
 }
 
 function initVerticalResizer() {
-  let leftHalf = document.getElementById('timings-container');
+  let leftHalf = document.getElementById('timings-main-container');
   let resizer = document.getElementById('resizer-between-timings-and-notes');
   let rightHalf = document.getElementById('current-notes-tree-nodes-container');
 
@@ -316,6 +317,57 @@ function initVerticalResizer() {
 
     rightHalf.style.removeProperty('user-select');
     rightHalf.style.removeProperty('pointer-events');
+
+    document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
+  }
+}
+
+function initResizer() {
+  let topPanel = document.getElementById('timing-category-btns-container');
+  let resizer = document.getElementById('resizer');
+  let bottomPanel = document.getElementById('inner-content-wrapper');
+
+  let resizerX = 0;
+  let resizerY = 0;
+
+  let topPanelHeight = 0;
+
+  resizer.addEventListener('mousedown', (eve) => {
+    resizerX = eve.clientX;
+    resizerY = eve.clientY;
+
+    topPanelHeight = topPanel.getBoundingClientRect().height;
+
+    document.documentElement.style.cursor = 'ns-resize';
+
+    topPanel.style.userSelect = 'none';
+    topPanel.style.pointerEvents = 'none';
+
+    bottomPanel.style.userSelect = 'none';
+    bottomPanel.style.pointerEvents = 'none';
+
+    document.documentElement.addEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.addEventListener('mouseup', resizerMouseUpListener);
+  });
+
+  function resizerMouseMoveListener(eve) {
+    const dx = eve.clientX - resizerX;
+    const dy = eve.clientY - resizerY;
+
+    const newTopPanelHeight = ((topPanelHeight + dy) * 100) / resizer.parentNode.getBoundingClientRect().height;
+
+    topPanel.style.height = `${newTopPanelHeight}%`;
+  }
+
+  function resizerMouseUpListener(eve) {
+    document.documentElement.style.removeProperty('cursor');
+
+    topPanel.style.removeProperty('user-select');
+    topPanel.style.removeProperty('pointer-events');
+
+    bottomPanel.style.removeProperty('user-select');
+    bottomPanel.style.removeProperty('pointer-events');
 
     document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
     document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);

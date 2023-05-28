@@ -22,12 +22,16 @@ body {
   display: flex;
 }
 
-#timings-container {
+#timings-main-container {
 /*  flex: initial;  */
 /*  flex: 1 1 auto;  */
+  overflow: hidden;
+  margin: 4px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   width: 50%;
   min-width: 100px;
-  overflow: auto;
 }
 
 #resizer-between-timings-and-notes {
@@ -45,15 +49,17 @@ body {
   overflow: auto;
 }
 
-#timing-category-btns-row-container {
-  display: flex;
-}
-#timing-category-btns-container {
-  flex: 1;
+#notes-content-top-wrapper {
+  color: white;
+/*  font-size: xx-small; */
 }
 
-#inner-content-wrapper {
-  color: white;
+#categories-and-timings-container {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
 #canvas-wrapper {
@@ -65,9 +71,37 @@ body {
   border-bottom: 1px solid grey;
 }
 
-#notes-content-top-wrapper {
+#hide-and-show-btns-container {
+  flex: none;
+  display: flex;
+}
+
+#timing-category-btns-container {
+  flex: 0 1 auto;
+  min-height: 25%;
+  overflow-y: auto;
+}
+
+#resizer {
+  height: 4px;
+  display: flex;
+  justify-content: center;
+}
+
+#resizer:hover {
+  cursor: ns-resize;
+}
+
+#resizer-line {
+  width: 40px;
+  border-bottom: 1px solid grey;
+}
+
+#inner-content-wrapper {
+  flex: 1 1 25%;
+  min-height: 25%;
+  overflow-y: auto;
   color: white;
-/*  font-size: xx-small; */
 }
 
 li.timing-row-parent-li > span.timing-row {
