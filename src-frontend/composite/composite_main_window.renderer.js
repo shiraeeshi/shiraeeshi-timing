@@ -24,6 +24,18 @@ const {
 } = require('../js/timings/display.js');
 
 const {
+  showTimingsOf24HourDay,
+  showTimingsOf60HourDay,
+  addListenersToButtons,
+} = require('../js/timings/history/history_buttons.js');
+
+const { HistoryImageInfo } = require('../js/timings/history/history_image_info.js');
+
+const { FrequenciesViewBuilder } = require('../js/frequencies/frequencies_view_builder.js');
+const { requestTimingsForPeriod } = require('../js/frequencies/request_timings_for_period.js');
+const { initProcessesTree } = require('../js/common/processes_tree_builder.js');
+
+const {
   turnMultilineTextIntoHtml,
   addOffsetToLineNumberInErrorMessage,
   showTimingsFormatError,
@@ -54,7 +66,9 @@ let my = {
 
   timingsFormatErrorHandler: (err) => {
     showTimingsFormatError("inner-content-wrapper", err)
-  }
+  },
+
+  dayOffset: 0
 
 };
 
@@ -73,6 +87,15 @@ function handleServerMessage(msg) {
     }
 
 
+    if (msg.msg_type == "timings_query_response") {
+      if (my.currentView === 'timings-summary') {
+        return;
+      }
+      if (my.timingsQueryResponseCallback !== undefined) {
+        my.timingsQueryResponseCallback(msg.timings);
+      }
+      return;
+    }
     if (msg.type == "wallpapers") {
       if (msg.config !== undefined) {
         my.config = msg.config;
@@ -105,6 +128,46 @@ function handleServerMessage(msg) {
         } else {
           makeTimingsTextElementsUnminimized();
         }
+      } else if (msg.keyval == "Left") {
+        my.dayOffset++;
+
+        delete my.highlightedCategory;
+        my.isHighlightingTimingRowInText = false;
+        my.isHighlightingTimingItemInImage = false;
+
+        let btnNextDay = document.getElementById("next-day");
+        btnNextDay.disabled = false;
+        let radioBtn24Hours = document.getElementById("day-of-24-hours");
+        function showTimings() {
+          if (radioBtn24Hours.checked) {
+            showTimingsOf24HourDay();
+          } else {
+            showTimingsOf60HourDay();
+          }
+        }
+        showTimings();
+      } else if (msg.keyval == "Right") {
+        if (my.dayOffset > 0) {
+          my.dayOffset--;
+        }
+
+        delete my.highlightedCategory;
+        my.isHighlightingTimingRowInText = false;
+        my.isHighlightingTimingItemInImage = false;
+
+        if (my.dayOffset <= 0) {
+          let btnNextDay = document.getElementById("next-day");
+          btnNextDay.disabled = true;
+        }
+        let radioBtn24Hours = document.getElementById("day-of-24-hours");
+        function showTimings() {
+          if (radioBtn24Hours.checked) {
+            showTimingsOf24HourDay();
+          } else {
+            showTimingsOf60HourDay();
+          }
+        }
+        showTimings();
       } else if (msg.keyval == "Ctrl+L") {
         my.isToUnderlineCanvas = !my.isToUnderlineCanvas;
         let canvasWrapper = document.getElementById("canvas-wrapper");
@@ -116,6 +179,58 @@ function handleServerMessage(msg) {
         } else {
           canvasWrapper.classList.remove('underlined');
         }
+      } else if (msg.keyval == "Ctrl+S") {
+        showOnlyTimingsSummaryInLeftPanel();
+        initPeriodButtonsRow();
+        initResizerInTimingsSummary();
+        my.imageInfo = new ImageInfo();
+        my.timings = msg.timings;
+
+        if (msg.config !== undefined) {
+          my.config = msg.config;
+        }
+        if (my.config !== undefined) {
+          handleTimingConfig(my.config);
+
+          // if (my.notesForest !== undefined) {
+          //   handleNotebookConfig(my.config);
+          // }
+        }
+      } else if (msg.keyval == "Ctrl+H") {
+        showOnlyHistoryInLeftPanel();
+        my.config = msg.config;
+        window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage start ");
+        addListenersToButtons();
+        initResizerInHistory();
+        my.imageInfo = new HistoryImageInfo();
+        // my.timings = msg;
+        showTimingsOf60HourDay();
+        handleHistoryConfig();
+        window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage end ");
+      } else if (msg.keyval == "Ctrl+F") {
+        showOnlyFrequenciesInLeftPanel();
+        my.now = new Date();
+        my.viewBuilder = new FrequenciesViewBuilder();
+
+        let millisInWeek = 7*24*60*60*1000;
+
+        let initialPeriodTo = new Date();
+        let initialPeriodFrom = new Date();
+        initialPeriodFrom.setTime(initialPeriodFrom.getTime() - millisInWeek)
+        requestTimingsForPeriod(initialPeriodFrom, initialPeriodTo).then(timings => {
+          console.log('initial handleServerMessage. timings keys:');
+          console.dir(Object.keys(timings));
+          my.timings = initProcessesTree(timings, undefined);
+          // console.log(`initial handleServerMessage. initProcessesTree result: ${JSON.stringify(my.timings)}`);
+          my.viewBuilder.buildViews(my.timings);
+          my.viewBuilder.showView();
+        }).catch(err => {
+          showTimingsFormatError("frequencies-main-content-wrapper", err);
+          console.log(`initial handleServerMessage. err: ${err}`);
+          window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
+            "initial handleServerMessage. err: " + err);
+          throw err;
+        });
       }
       return;
     }
@@ -152,8 +267,9 @@ function handleServerMessage(msg) {
     if (msg.type == "timings") {
       console.log('[handleServerMessage] msg.type = timings.');
 
+      showOnlyTimingsSummaryInLeftPanel();
       initPeriodButtonsRow();
-      initResizer();
+      initResizerInTimingsSummary();
       my.imageInfo = new ImageInfo();
       my.timings = msg.timings;
 
@@ -199,14 +315,13 @@ function handleServerMessage(msg) {
       my.currentNotesForest = currentNotesForest;
       highlightNotesInForest(my.rootNodeViewOfNotes, currentNotesForest);
 
-      let mainContentWrapper = document.getElementById("main-content-wrapper");
-      let keys = Object.keys(msg);
       return;
     }
     // window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage end ");
 
   } catch (err) {
     window.webkit.messageHandlers.composite_main_window.postMessage("js handleServerMessage error msg: " + err.message);
+    throw err;
   }
 }
 
@@ -258,6 +373,40 @@ function handleTimingConfig(config) {
     my.currentWidthOfCanvas = my.canvasWidthFromConfig;
     canvasWrapper.style.width = `${my.canvasWidthFromConfig}px`;
   }
+
+}
+
+function handleHistoryConfig() {
+  let config = my.config;
+  let canvasWrapper = document.getElementById("canvas-wrapper-in-history");
+
+  my.isToUnderlineCanvas = !!config['timings-config']['underline-canvas'];
+  if (my.isToUnderlineCanvas) {
+    if (canvasWrapper !== undefined) {
+      canvasWrapper.classList.add('underlined');
+    }
+  }
+
+  my.isFlexibleWidthCanvas = !!config['timings-config']['canvas-with-flexible-width'];
+  if (my.isFlexibleWidthCanvas) {
+    canvasWrapper.style.width = '100%';
+
+    function handleCanvasContainerResize(eve) {
+      my.currentWidthOfCanvas = canvasWrapper.clientWidth;
+      if (window.my.currentFilteredTimings !== undefined) {
+        displayTimings(window.my.currentFilteredTimings, window.my.currentFilteredProcess);
+      }
+    }
+
+    new ResizeObserver(handleCanvasContainerResize).observe(canvasWrapper);
+  } else {
+    my.canvasWidthFromConfig = config['timings-config']['canvas-width-in-px'];
+    if (my.canvasWidthFromConfig === undefined) {
+      my.canvasWidthFromConfig = 800;
+    }
+    my.currentWidthOfCanvas = my.canvasWidthFromConfig;
+    canvasWrapper.style.width = `${my.canvasWidthFromConfig}px`;
+  }
 }
 
 function handleNotebookConfig(config) {
@@ -273,7 +422,7 @@ function handleNotebookConfig(config) {
 }
 
 function initVerticalResizer() {
-  let leftHalf = document.getElementById('timings-main-container');
+  let leftHalf = document.getElementById('left-panel');
   let resizer = document.getElementById('resizer-between-timings-and-notes');
   let rightHalf = document.getElementById('current-notes-tree-nodes-container');
 
@@ -323,9 +472,9 @@ function initVerticalResizer() {
   }
 }
 
-function initResizer() {
+function initResizerInTimingsSummary() {
   let topPanel = document.getElementById('timing-category-btns-container');
-  let resizer = document.getElementById('resizer');
+  let resizer = document.getElementById('timings-summary-resizer');
   let bottomPanel = document.getElementById('inner-content-wrapper');
 
   let resizerX = 0;
@@ -372,4 +521,88 @@ function initResizer() {
     document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
     document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
   }
+}
+
+function initResizerInHistory() {
+  let topPanel = document.getElementById('timing-category-btns-container-in-history');
+  let resizer = document.getElementById('resizer-in-history');
+  let bottomPanel = document.getElementById('inner-content-wrapper-in-history');
+
+  let resizerX = 0;
+  let resizerY = 0;
+
+  let topPanelHeight = 0;
+
+  resizer.addEventListener('mousedown', (eve) => {
+    resizerX = eve.clientX;
+    resizerY = eve.clientY;
+
+    topPanelHeight = topPanel.getBoundingClientRect().height;
+
+    document.documentElement.style.cursor = 'ns-resize';
+
+    topPanel.style.userSelect = 'none';
+    topPanel.style.pointerEvents = 'none';
+
+    bottomPanel.style.userSelect = 'none';
+    bottomPanel.style.pointerEvents = 'none';
+
+    document.documentElement.addEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.addEventListener('mouseup', resizerMouseUpListener);
+  });
+
+  function resizerMouseMoveListener(eve) {
+    const dx = eve.clientX - resizerX;
+    const dy = eve.clientY - resizerY;
+
+    const newTopPanelHeight = ((topPanelHeight + dy) * 100) / resizer.parentNode.getBoundingClientRect().height;
+
+    topPanel.style.height = `${newTopPanelHeight}%`;
+  }
+
+  function resizerMouseUpListener(eve) {
+    document.documentElement.style.removeProperty('cursor');
+
+    topPanel.style.removeProperty('user-select');
+    topPanel.style.removeProperty('pointer-events');
+
+    bottomPanel.style.removeProperty('user-select');
+    bottomPanel.style.removeProperty('pointer-events');
+
+    document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
+  }
+}
+
+function showOnlyTimingsSummaryInLeftPanel() {
+  my.currentView = 'timings-summary';
+  let timingsSummaryContainer = document.getElementById('timings-main-container');
+  let historyContainer = document.getElementById('history-main-container');
+  let frequenciesContainer = document.getElementById('frequencies-main-content-wrapper');
+
+  timingsSummaryContainer.style.display = 'flex';
+  historyContainer.style.display = 'none';
+  frequenciesContainer.style.display = 'none';
+}
+
+function showOnlyHistoryInLeftPanel() {
+  my.currentView = 'history';
+  let timingsSummaryContainer = document.getElementById('timings-main-container');
+  let historyContainer = document.getElementById('history-main-container');
+  let frequenciesContainer = document.getElementById('frequencies-main-content-wrapper');
+
+  timingsSummaryContainer.style.display = 'none';
+  historyContainer.style.display = 'flex';
+  frequenciesContainer.style.display = 'none';
+}
+
+function showOnlyFrequenciesInLeftPanel() {
+  my.currentView = 'frequencies';
+  let timingsSummaryContainer = document.getElementById('timings-main-container');
+  let historyContainer = document.getElementById('history-main-container');
+  let frequenciesContainer = document.getElementById('frequencies-main-content-wrapper');
+
+  timingsSummaryContainer.style.display = 'none';
+  historyContainer.style.display = 'none';
+  frequenciesContainer.style.removeProperty('display');
 }

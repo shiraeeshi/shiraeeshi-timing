@@ -15,7 +15,7 @@ body {
   color: white;
 }
 
-#main-container {
+#history-main-container {
   overflow: hidden;
   margin: 4px;
   display: flex;
@@ -35,45 +35,45 @@ body {
   overflow: hidden;
 }
 
-#canvas-wrapper {
+#canvas-wrapper-in-history {
   flex: none;
   padding-top: 10px;
   padding-bottom: 10px;
 }
 
-#canvas-wrapper.underlined > canvas {
+#canvas-wrapper-in-history.underlined > canvas {
   border-bottom: 1px solid grey;
 }
 
-#categories-and-timings-container {
+#categories-and-timings-container-in-history {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
 }
-#timing-category-btns-container {
+#timing-category-btns-container-in-history {
   flex: 0 1 auto;
   min-height: 25%;
   overflow-y: auto;
 }
 
-#resizer {
+#resizer-in-history {
   height: 4px;
   display: flex;
   justify-content: center;
 }
 
-#resizer:hover {
+#resizer-in-history:hover {
   cursor: ns-resize;
 }
 
-#resizer-line {
+#resizer-in-history > .resizer-line {
   width: 40px;
   border-bottom: 1px solid grey;
 }
 
-#inner-content-wrapper {
+#inner-content-wrapper-in-history {
   flex: 1 1 25%;
   min-height: 25%;
   overflow-y: auto;

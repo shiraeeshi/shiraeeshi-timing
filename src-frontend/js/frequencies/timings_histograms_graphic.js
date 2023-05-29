@@ -637,8 +637,7 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     return millisFrom >= millis && millis >= millisTo;
   }
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-  that.fillRect(ctx, {
+  that.clearRect(ctx, {
     xFrom: 0,
     yFrom: 0,
     xTo: that.canvasWidth,
@@ -854,6 +853,10 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
 //   }
 //   return yTo;
 // };
+
+TimingsHistogramsGraphic.prototype.clearRect = function(ctx, coords) {
+  ctx.clearRect(coords.xFrom, coords.yFrom, coords.xTo - coords.xFrom, coords.yTo - coords.yFrom);
+};
 
 TimingsHistogramsGraphic.prototype.fillRect = function(ctx, coords) {
   ctx.fillRect(coords.xFrom, coords.yFrom, coords.xTo - coords.xFrom, coords.yTo - coords.yFrom);

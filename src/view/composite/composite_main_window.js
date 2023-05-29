@@ -25,12 +25,10 @@ const createWindow = async (appEnv) => {
 
   win.loadFile('dist-frontend/composite/composite_main_window.html')
 
-  setMenuAndKeyboardShortcuts(win);
-
   await init(appEnv, win);
 }
 
-function setMenuAndKeyboardShortcuts(win) {
+function setMenuAndKeyboardShortcuts(win, config, configFilepath, indexDirFilepath, messageSender) {
 
   let isFullScreen = false;
   
@@ -65,6 +63,28 @@ function setMenuAndKeyboardShortcuts(win) {
           const msg = {
             "type": "key_pressed",
             "keyval": "Ctrl+L"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
+        label: 'previous day (in history)',
+        accelerator: 'Left',
+        click: () => {
+          const msg = {
+            "type": "key_pressed",
+            "keyval": "Left"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
+        label: 'next day (in history)',
+        accelerator: 'Right',
+        click: () => {
+          const msg = {
+            "type": "key_pressed",
+            "keyval": "Right"
           };
           win.webContents.send('message-from-backend', msg);
         }
@@ -108,6 +128,77 @@ function setMenuAndKeyboardShortcuts(win) {
       }
     ]
   }));
+
+  menu.append(new MenuItem({
+    label: 'view',
+    submenu: [
+      {
+        label: 'timings summary',
+        accelerator: 'Ctrl+S',
+        click: async () => {
+
+          const today = new Date();
+          const threeDaysAgo = new Date();
+
+          threeDaysAgo.setDate(threeDaysAgo.getDate() - 5);
+
+          today.setHours(0);
+          today.setMinutes(0);
+          today.setSeconds(0);
+          threeDaysAgo.setHours(0);
+          threeDaysAgo.setMinutes(0);
+          threeDaysAgo.setSeconds(0);
+
+          const timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
+
+          await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, threeDaysAgo, today)
+            .then(timingsOfThreeLastDays => {
+              console.log(`[main.js] timingsOfThreeLastDays: ${JSON.stringify(timingsOfThreeLastDays)}`);
+              let msg = {
+                "type": "key_pressed",
+                "keyval": "Ctrl+S",
+                "timings": timingsOfThreeLastDays,
+                "config": config,
+              };
+              messageSender.send(msg);
+            })
+            .catch(err => {
+              messageSender.send({
+                "type": "error_message",
+                "error_source": "timings",
+                "source_timing": err.source_timing,
+                "source_timing_location": err.source_timing_location,
+                "lineNumOffset": err.lineNumOffset,
+                "message": err.message
+              });
+            });
+        }
+      },
+      {
+        label: 'timings history',
+        accelerator: 'Ctrl+H',
+        click: () => {
+          const msg = {
+            "type": "key_pressed",
+            "keyval": "Ctrl+H",
+            "config": config,
+          };
+          messageSender.send(msg);
+        }
+      },
+      {
+        label: 'timings frequencies',
+        accelerator: 'Ctrl+F',
+        click: () => {
+          const msg = {
+            "type": "key_pressed",
+            "keyval": "Ctrl+F"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+    ]
+  }));
   
   Menu.setApplicationMenu(menu);
 }
@@ -146,6 +237,10 @@ async function init(appEnv, win) {
     console.log(`[main.js] message from timing_summary: ${msg}`);
   });
 
+  ipcMain.on('msg_from_history', (_event, msg) => {
+    console.log(`[main.js] message from history: ${msg}`);
+  });
+
   ipcMain.on('msg_from_notebook', (_event, msg) => {
     console.log(`[main.js] message from notebook: ${msg}`);
   });
@@ -180,32 +275,38 @@ async function init(appEnv, win) {
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   console.log('[init] 2');
   const config = YAML.parse(configFileContents);
-  const today = new Date();
-  const fiveDaysAgo = new Date();
 
-  fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+  registerFrequenciesRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender);
+  registerHistoryRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender);
+
+  setMenuAndKeyboardShortcuts(win, config, configFilepath, indexDirFilepath, messageSender);
+
+  const today = new Date();
+  const threeDaysAgo = new Date();
+
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 5);
 
   // today.setTime(Date.parse(dateAsYearMonthDayWithHyphens(today) + "T00:00:00")); // format: "YYYY-mm-ddT00:00:00"
   today.setHours(0);
   today.setMinutes(0);
   today.setSeconds(0);
-  // fiveDaysAgo.setTime(Date.parse(dateAsYearMonthDayWithHyphens(fiveDaysAgo) + "T00:00:00")); // format: "YYYY-mm-ddT00:00:00"
-  fiveDaysAgo.setHours(0);
-  fiveDaysAgo.setMinutes(0);
-  fiveDaysAgo.setSeconds(0);
+  // threeDaysAgo.setTime(Date.parse(dateAsYearMonthDayWithHyphens(threeDaysAgo) + "T00:00:00")); // format: "YYYY-mm-ddT00:00:00"
+  threeDaysAgo.setHours(0);
+  threeDaysAgo.setMinutes(0);
+  threeDaysAgo.setSeconds(0);
 
-  // console.log(`[main.js] fiveDaysAgo: ${fiveDaysAgo}, today: ${today}`);
-  // console.log(`[main.js] fiveDaysAgo: ${dateAsDayMonthYearWithDots(fiveDaysAgo)}, today: ${dateAsDayMonthYearWithDots(today)}`);
+  // console.log(`[main.js] threeDaysAgo: ${threeDaysAgo}, today: ${today}`);
+  // console.log(`[main.js] threeDaysAgo: ${dateAsDayMonthYearWithDots(threeDaysAgo)}, today: ${dateAsDayMonthYearWithDots(today)}`);
 
   let sentConfig = false;
 
   console.log('[init] 3');
-  readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, fiveDaysAgo, today)
-    .then(timingsOfFiveLastDays => {
-      console.log(`[main.js] timingsOfFiveLastDays: ${JSON.stringify(timingsOfFiveLastDays)}`);
+  readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, threeDaysAgo, today)
+    .then(timingsOfThreeLastDays => {
+      console.log(`[main.js] timingsOfThreeLastDays: ${JSON.stringify(timingsOfThreeLastDays)}`);
       let msg = {
         "type": "timings",
-        "timings": timingsOfFiveLastDays,
+        "timings": timingsOfThreeLastDays,
       };
       if (!sentConfig) {
         msg.config = config;
@@ -286,3 +387,100 @@ async function init(appEnv, win) {
 
 }
 
+function registerHistoryRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender) {
+  ipcMain.on('request_for_timings', async (_event, commaSeparaDatesWithDotsInThem) => {
+    let datesWithDots = commaSeparaDatesWithDotsInThem.split(',');
+    let firstDateWithDots = datesWithDots[0];
+    let lastDateWithDots = datesWithDots[datesWithDots.length - 1];
+    console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
+    let dateFrom = parseDateWithDots(firstDateWithDots);
+    let dateTo = parseDateWithDots(lastDateWithDots);
+    let timings;
+    try {
+      let timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
+      timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
+    } catch (err) {
+      let msg = {
+        "msg_type": "error_message",
+        "source_timing": err.source_timing,
+        "source_timing_location": err.source_timing_location,
+        "lineNumOffset": err.lineNumOffset,
+        "message": err.message
+      };
+      // win.webContents.send('message-from-backend', msg);
+      await messageSender.send(msg);
+      return;
+    }
+    // console.log(`[main.js] about to send timings to timing_history_latest: ${JSON.stringify(timings)}`);
+    console.log(`[main.js] about to send timings to timing_history_latest.`);
+    for (const timingName in timings) {
+      console.log(`  ${timingName} length: ${timings[timingName].timingsByDays.length}`);
+    }
+    let msg = {
+      msg_type: "timings_query_response",
+      timings: timings,
+    };
+    // win.webContents.send('message-from-backend', msg);
+    await messageSender.send(msg);
+  });
+}
+
+function registerFrequenciesRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender) {
+
+  ipcMain.on('timings_frequencies_msgs__timings_for_period', async (_event, periodStr) => {
+    let datesWithDots = periodStr.split(' - ');
+    if (datesWithDots.length !== 2) {
+      throw new Error("timings_frequencies_msgs__timings_for_period handler. error: unexpected request parameter value (expected two dates with ' - ' between them)");
+    }
+    let firstDateWithDots = datesWithDots[0];
+    let lastDateWithDots = datesWithDots[1];
+    console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
+    let dateFrom = parseDateWithDots(firstDateWithDots);
+    let dateTo = parseDateWithDots(lastDateWithDots);
+    let timings;
+    try {
+      let timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
+      timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
+    } catch (err) {
+      let msg = {
+        msg_type: "error_message",
+        source_timing: err.source_timing,
+        source_timing_location: err.source_timing_location,
+        lineNumOffset: err.lineNumOffset,
+        message: err.message
+      };
+      console.log('[composite_main_window.js] about to send error message: ' + err.message);
+      win.webContents.send('message-from-backend', msg);
+      return;
+    }
+    // console.log(`[main.js] about to send timings to timing_history_latest.`);
+    // for (const timingName in timings) {
+    //   console.log(`  ${timingName} length: ${timings[timingName].length}`);
+    // }
+    let msg = {
+      msg_type: "timings_query_response",
+      timings: timings,
+    };
+    messageSender.send(msg);
+    console.log('[composite_main_window.js] sent timings as a response to frequencies request for period');
+  });
+}
+
+function parseDateWithDots(input) {
+  let pad = v => `0${v}`.slice(-2);
+
+  let parts = input.split('\.')
+  let datePart = pad(parts[0]);
+  let monthPart = pad(parts[1]);
+  let yearPart = parts[2];
+  let result = new Date();
+  // console.log(`[parseDateWithDots] about to parse date "${input}": invoking Date.parse with ${yearPart}-${monthPart}-${datePart}T00:00:00`);
+  result.setTime(Date.parse(`${yearPart}-${monthPart}-${datePart}T00:00:00`));
+  // result.setFullYear(yearPart);
+  // result.setMonth(monthPart);
+  // result.setDate(datePart);
+  // result.setHours(0);
+  // result.setMinutes(0);
+  // result.setSeconds(0);
+  return result;
+}

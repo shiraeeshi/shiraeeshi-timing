@@ -132,6 +132,7 @@ export function showSummaryFromZeroTwoAndAHalfHours() {
       window.webkit.messageHandlers.timings_summary_msgs.postMessage(
         `btnFromZero2.5Hours click handler error. err.source_timing: ${err.source_timing}, err.fromdateStr: ${err.fromdateStr}`);
     }
+    throw err;
   }
 }
 

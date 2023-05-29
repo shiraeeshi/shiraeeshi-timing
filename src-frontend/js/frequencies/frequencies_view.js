@@ -135,7 +135,10 @@ FrequenciesView.prototype.buildHtml = function() {
         that.buildPeriodButtonsRow(),
         canvasContainer
       );
-    let resizer = withId(document.createElement('div'), 'resizer');
+    let resizer =
+      withChildren(withId(document.createElement('div'), 'resizer-in-frequencies'),
+        withClass(document.createElement('div'), 'resizer-line')
+      );
 
     initResizer(resizer, topHalf, bottomHalf);
 
@@ -232,7 +235,7 @@ FrequenciesView.prototype.buildPeriodButtonsRow = function() {
       my.viewBuilder.buildViews(my.timings);
       my.viewBuilder.showView();
     }).catch(err => {
-      showTimingsFormatError("main-content-wrapper", err);
+      showTimingsFormatError("frequencies-main-content-wrapper", err);
       console.log("btnPlusHalfYear.onclick err: " + err)
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "btnPlusHalfYear.onclick err: " + err);
@@ -253,7 +256,7 @@ FrequenciesView.prototype.buildPeriodButtonsRow = function() {
       my.viewBuilder.buildViews(my.timings);
       my.viewBuilder.showView();
     }).catch(err => {
-      showTimingsFormatError("main-content-wrapper", err);
+      showTimingsFormatError("frequencies-main-content-wrapper", err);
       console.log("btnPlusMonth.onclick err: " + err)
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "btnPlusMonth.onclick err: " + err);
@@ -274,7 +277,7 @@ FrequenciesView.prototype.buildPeriodButtonsRow = function() {
       my.viewBuilder.buildViews(my.timings);
       my.viewBuilder.showView();
     }).catch(err => {
-      showTimingsFormatError("main-content-wrapper", err);
+      showTimingsFormatError("frequencies-main-content-wrapper", err);
       console.log("btnPlusWeek.onclick err: " + err)
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "btnPlusWeek.onclick err: " + err);

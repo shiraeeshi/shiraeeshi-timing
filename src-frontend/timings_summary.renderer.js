@@ -98,7 +98,7 @@ function handleServerMessage(msg) {
     return;
   }
   initPeriodButtonsRow();
-  initResizer();
+  initResizerInTimingsSummary();
   my.imageInfo = new ImageInfo();
   my.timings = msg.timings;
   my.config = msg.config;
@@ -156,9 +156,9 @@ function handleConfig() {
 
 }
 
-function initResizer() {
+function initResizerInTimingsSummary() {
   let topPanel = document.getElementById('timing-category-btns-container');
-  let resizer = document.getElementById('resizer');
+  let resizer = document.getElementById('timings-summary-resizer');
   let bottomPanel = document.getElementById('inner-content-wrapper');
 
   let resizerX = 0;

@@ -54,17 +54,17 @@ body {
   overflow-y: auto;
 }
 
-#resizer {
+#timings-summary-resizer {
   height: 4px;
   display: flex;
   justify-content: center;
 }
 
-#resizer:hover {
+#timings-summary-resizer:hover {
   cursor: ns-resize;
 }
 
-#resizer-line {
+#timings-summary-resizer-line {
   width: 40px;
   border-bottom: 1px solid grey;
 }

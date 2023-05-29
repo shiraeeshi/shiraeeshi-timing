@@ -37,7 +37,7 @@ FrequenciesViewBuilder.prototype.getResultHtml = function() {
 
 FrequenciesViewBuilder.prototype.showView = function() {
   let that = this;
-  let wrapper = document.getElementById("main-content-wrapper");
+  let wrapper = document.getElementById("frequencies-main-content-wrapper");
   wrapper.innerHTML = "";
   wrapper.appendChild(that.getResultHtml());
 }

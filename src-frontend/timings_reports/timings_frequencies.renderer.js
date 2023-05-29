@@ -32,7 +32,7 @@ function handleServerMessage(msg) {
       return;
     }
     if (msg.msg_type == "error_message") {
-      let wrapper = document.getElementById("main-content-wrapper");
+      let wrapper = document.getElementById("frequencies-main-content-wrapper");
       let errorMessage = msg.message;
       if (msg.lineNumOffset) {
         errorMessage = addOffsetToLineNumberInErrorMessage(errorMessage, msg.lineNumOffset);
@@ -71,7 +71,7 @@ function handleServerMessage(msg) {
       my.viewBuilder.buildViews(my.timings);
       my.viewBuilder.showView();
     }).catch(err => {
-      showTimingsFormatError("main-content-wrapper", err);
+      showTimingsFormatError("frequencies-main-content-wrapper", err);
       console.log(`initial handleServerMessage. err: ${err}`);
       window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
         "initial handleServerMessage. err: " + err);
@@ -86,7 +86,7 @@ function handleServerMessage(msg) {
 }
 
 function showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree) {
-  let wrapper = document.getElementById("main-content-wrapper");
+  let wrapper = document.getElementById("frequencies-main-content-wrapper");
   wrapper.innerHTML = "";
 
   let viewBuilder = new FrequenciesViewBuilder();
@@ -131,7 +131,7 @@ function showTimingsByPrefixesAndLastModified(timingsByCategoriesByPrefixes) {
       )
     })
   );
-  let wrapper = document.getElementById("main-content-wrapper");
+  let wrapper = document.getElementById("frequencies-main-content-wrapper");
   wrapper.innerHTML = "";
 
   wrapper.appendChild(resultElem);

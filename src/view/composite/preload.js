@@ -20,6 +20,33 @@ contextBridge.exposeInMainWorld('webkit', {
         // dummy function
       }
     },
+    timings_history_latest_msgs: {
+      onMessage: (callback) => {
+        console.log('[preload.js] webkit.messageHandlers.timings_history_latest_msgs.onMessage');
+        ipcRenderer.on('message-from-backend', (_event, msg) => {
+          callback(msg);
+        });
+      },
+      postMessage: (msg) => {
+        console.log('[preload.js] webkit.messageHandlers.timings_history_latest_msgs.postMessage');
+        ipcRenderer.send('msg_from_history', msg);
+      },
+      // request_timings: (dateFrom, dateTo) => {
+      //   return ipcRenderer.invoke('request_for_timings', dateFrom, dateTo);
+      // },
+    },
+    timings_history_latest__get_timings: {
+      postMessage: (msg) => {
+        console.log('[preload.js] webkit.messageHandlers.timings_history_latest__get_timings.postMessage');
+        ipcRenderer.send('request_for_timings', msg);
+      },
+    },
+    timings_frequencies_msgs__timings_for_period: {
+      postMessage: (msg) => {
+        console.log('[preload.js] webkit.messageHandlers.timings_frequencies_msgs.postMessage');
+        ipcRenderer.send('timings_frequencies_msgs__timings_for_period', msg);
+      },
+    },
     composite_main_window: {
       onMessage: (callback) => {
         console.log('[preload.js] webkit.messageHandlers.composite_main_window.onMessage');

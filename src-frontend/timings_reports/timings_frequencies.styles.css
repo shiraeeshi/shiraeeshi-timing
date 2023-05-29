@@ -6,7 +6,7 @@ body {
   height: 98%;
 }
 
-#main-content-wrapper {
+#frequencies-main-content-wrapper {
   height: 100%;
 }
 
@@ -217,18 +217,24 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
 
 #frequencies-view-top-half {
   /* flex: 1 1 400px; */
-  border-bottom: 1px solid grey;
   display: flex;
   flex-direction: column;
   height: 50%;
 }
 
-#frequencies-view-two-halves-container > #resizer {
+#frequencies-view-two-halves-container > #resizer-in-frequencies {
   height: 2px;
+  display: flex;
+  justify-content: center;
 }
 
-#frequencies-view-two-halves-container > #resizer:hover {
+#frequencies-view-two-halves-container > #resizer-in-frequencies:hover {
   cursor: ns-resize;
+}
+
+#frequencies-view-two-halves-container > #resizer-in-frequencies > .resizer-line {
+  width: 40px;
+  border-bottom: 1px solid grey;
 }
 
 #frequencies-view-bottom-half {

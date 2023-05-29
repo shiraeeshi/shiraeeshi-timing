@@ -10,7 +10,7 @@ export function ImageInfo() {
   this.minutesMaxDiff = 0;
   this.minutesRange = 0;
   this.periodType = PeriodType.FROM_ZERO_HOURS_OF_60_HOUR_PERIOD;
-  this.minutesMaxDiffLastModified = 0;
+  this.minutesMaxDiffLastModified = new Date();
 }
 
 ImageInfo.prototype.updateAsPeriodType = function(periodType) {

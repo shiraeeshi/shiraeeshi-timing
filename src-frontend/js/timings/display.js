@@ -14,7 +14,12 @@ export function displayTimings(timingsByDates, process) {
 
 export function displayTimingsAsImage(timingsCategory, categoryToHighlight, timingItemToHighlight) {
   window.my.imageInfo.updateIfNeeded();
-  let innerContentWrapper = document.getElementById("canvas-wrapper");
+  let innerContentWrapper;
+  if (window.my.currentView === 'history') {
+    innerContentWrapper = document.getElementById("canvas-wrapper-in-history");
+  } else {
+    innerContentWrapper = document.getElementById("canvas-wrapper");
+  }
   innerContentWrapper.innerHTML = "";
 
   let canvas = document.createElement("canvas");
@@ -281,7 +286,12 @@ export function displayTimingsAsText(timingsByDates) {
   try {
     sortDatesAndTimingsInsideThem(timingsByDates);
 
-    let innerContentWrapper = document.getElementById("inner-content-wrapper");
+    let innerContentWrapper;
+    if (window.my.currentView === 'history') {
+      innerContentWrapper = document.getElementById("inner-content-wrapper-in-history");
+    } else {
+      innerContentWrapper = document.getElementById("inner-content-wrapper");
+    }
     innerContentWrapper.innerHTML = "";
 
     let timingsInDivs = timingsByDates.map(oneDayTiming => {

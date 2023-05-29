@@ -3,8 +3,8 @@ const { withChildren, withClass } = require('../../html_utils.js');
 const { dateArray2str, timeArray2str } = require('../../date_utils.js');
 const { buildProcessesTree } = require('../../common/processes_tree_builder.js');
 
-export function createAndAppendFilterByCategory(processesTree) {
-  let btnsContainer = document.getElementById('timing-category-btns-container');
+export function createAndAppendFilterByCategory(processesTree, btnsContanerId) {
+  let btnsContainer = document.getElementById(btnsContanerId || 'timing-category-btns-container');
   btnsContainer.innerHTML = "";
 
   let timingsCategoryNodeViewRoot = new TimingsCategoryNodeView(processesTree);
