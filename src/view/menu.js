@@ -5,6 +5,7 @@ const { showHistoryLatest } = require('./timings_history/history_latest.js');
 const { showFrequencies } = require('./timings_reports/timings_frequencies/timings_frequencies.js');
 const { showNotebook } = require('./notebook/notebook.js');
 const { showCompositeMainWindow } = require('./composite/composite_main_window.js');
+const { showPreferences } = require('./preferences/preferences.js');
 const { TimingTimerManager } = require('../logic/timing_timer_manager.js');
 
 export function createMenu(appEnv, tray) {
@@ -56,6 +57,12 @@ export function createMenu(appEnv, tray) {
       label: 'Timings Summary',
       click: async () => {
         await showTimingsSummary(appEnv);
+      }
+    },
+    {
+      label: 'Preferences',
+      click: async () => {
+        await showPreferences(appEnv);
       }
     },
     {

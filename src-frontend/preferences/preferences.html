@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <link rel="stylesheet" href="./preferences.styles.css">
+  </head>
+  <body>
+    <div id="preferences-main-container">
+      <div class="pc-tab">
+        <input checked="checked" id="tab1" type="radio" name="pct" />
+        <input id="tab2" type="radio" name="pct" />
+        <input id="tab3" type="radio" name="pct" />
+        <nav>
+          <ul>
+            <li class="tab1">
+              <label id="tab1-label" for="tab1">Timings</label>
+            </li>
+            <li class="tab2">
+              <label id="tab2-label" for="tab2">Timings Config</label>
+            </li>
+            <li class="tab3">
+              <label id="tab3-label" for="tab3">Notebook</label>
+            </li>
+          </ul>
+        </nav>
+        <section>
+          <div id="tab-contents-of-timings" class="tab1">
+            <div id="list-of-timings-files-panel" class="active">
+              <div id="btns-row-above-list-of-timings-files">
+                <button id="btn-new-timings-file">
+                  new timings file
+                </button>
+              </div>
+              <div id="list-of-timings-files">
+              </div>
+            </div>
+            <div id="new-timings-file-form" class="inactive">
+              <div id="new-timings-file-form-btns">
+                <button id="btn-new-timings-file-save">
+                  OK
+                </button>
+                <button id="btn-new-timings-file-cancel">
+                  Cancel
+                </button>
+              </div>
+              <div>
+                <label for="new-timing-name">Name:</label>
+                <input id="new-timing-name">
+              </div>
+              <div>
+                <label for="new-timing-filepath">Filepath:</label>
+                <input id="new-timing-filepath">
+                <button id="new-timing-filepath-btn">
+                  filepicker
+                </button>
+              </div>
+              <div>
+                <input type="checkbox" id="category-path-is-same-as-name" name="category-path-is-same-as-name" value="true" checked="true">
+                <label for="category-path-is-same-as-name">Category path is same as name</label>
+              </div>
+              <div>
+                <label for="new-timing-category-path">Category path:</label>
+                <textarea id="new-timing-category-path" rows="5" cols="20" disabled>
+                </textarea>
+              </div>
+              <div>
+                <label for="new-timing-format">Format:</label>
+                <select name="new-timing-format" id="new-timing-format">
+                  <option value="yaml">
+                    YAML
+                  </option>
+                  <option value="some format">
+                    Some format
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div id="tab-contents-of-timings-config" class="tab2">
+            <div>
+              <label for="timings-textual-display-format">Textual display format:</label>
+              <select name="timings-textual-display-format" id="timings-textual-display-format">
+                <option value="as-json">
+                  As JSON
+                </option>
+                <option value="as-tree">
+                  As tree
+                </option>
+              </select>
+            </div>
+            <div>
+              <input type="checkbox" id="underline-canvas" name="underline-canvas" value="true">
+              <label for="underline-canvas">Underline canvas</label>
+            </div>
+            <div>
+              <input type="checkbox" id="canvas-with-flexible-width" name="canvas-with-flexible-width" value="true">
+              <label for="canvas-with-flexible-width">Canvas with flexible width</label>
+            </div>
+            <div>
+              <label for="canvas-width-in-px">Canvas width in pixels:</label>
+              <input id="canvas-width-in-px">
+            </div>
+            <div>
+              <label for="default-summary">Default summary:</label>
+              <select name="timings-default-summary" id="timings-default-summary">
+                <option value="last-24-hours">
+                  Last 24 hours
+                </option>
+                <option value="last-12-hours">
+                  Last 12 hours
+                </option>
+                <option value="from-zero-hours">
+                  From zero hours
+                </option>
+                <option value="from-zero-2.5-hours">
+                  From zero 2.5 hours
+                </option>
+              </select>
+            </div>
+          </div>
+          <div id="tab-contents-of-notebook" class="tab3">
+            <div>
+              <label for="notebook-filepath">Notebook filepath:</label>
+              <input id="notebook-filepath">
+              <button id="notebook-filepath-btn">
+                filepicker
+              </button>
+            </div>
+            <div>
+              <label for="notebook-background-color">Background color:</label>
+              <input id="notebook-background-color">
+            </div>
+            <div>
+              <input type="checkbox" id="start-notebook-with-bottom-panel-of-notes-maximized" name="start-notebook-with-bottom-panel-of-notes-maximized" value="true">
+              <label for="start-notebook-with-bottom-panel-of-notes-maximized">Start with bottom panel of notes maximized</label>
+            </div>
+            <div>
+              <label for="font-size-in-px-of-top-panel-of-tags">Font size of top panel of tags:</label>
+              <input id="font-size-in-px-of-top-panel-of-tags">
+            </div>
+            <div>
+              <label for="font-size-in-px-of-bottom-panel-of-tags">Font size of bottom panel of tags:</label>
+              <input id="font-size-in-px-of-bottom-panel-of-tags">
+            </div>
+            <div>
+              <label for="font-size-in-px-of-top-panel-of-notes">Font size of top panel of notes:</label>
+              <input id="font-size-in-px-of-top-panel-of-notes">
+            </div>
+            <div>
+              <label for="font-size-in-px-of-bottom-panel-of-notes">Font size of bottom panel of notes:</label>
+              <input id="font-size-in-px-of-bottom-panel-of-notes">
+            </div>
+          </div>
+        </section>
+        <div id="bottom-buttons-row">
+          <button id="btn-save">
+            save
+          </button>
+          <button id="btn-cancel">
+            cancel
+          </button>
+          <button id="btn-reset">
+            reset
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="./preferences.bundle.js"></script>
+</html>
+

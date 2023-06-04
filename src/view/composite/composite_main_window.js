@@ -7,6 +7,8 @@ const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.j
 const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 const { parseNotebook } = require('../../logic/notebook_parser.js');
 
+const { showPreferences } = require('../preferences/preferences.js');
+
 export async function showCompositeMainWindow(appEnv) {
 
   await createWindow(appEnv);
@@ -28,7 +30,7 @@ const createWindow = async (appEnv) => {
   await init(appEnv, win);
 }
 
-function setMenuAndKeyboardShortcuts(win, config, configFilepath, indexDirFilepath, messageSender) {
+function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexDirFilepath, messageSender) {
 
   let isFullScreen = false;
   
@@ -125,7 +127,14 @@ function setMenuAndKeyboardShortcuts(win, config, configFilepath, indexDirFilepa
         click: () => {
           console.log('---===[ menu item clicked ]===---')
         }
-      }
+      },
+      {
+        role: 'preferences',
+        label: 'preferences',
+        click: async () => {
+          await showPreferences(appEnv)
+        }
+      },
     ]
   }));
 
@@ -279,7 +288,7 @@ async function init(appEnv, win) {
   registerFrequenciesRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender);
   registerHistoryRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender);
 
-  setMenuAndKeyboardShortcuts(win, config, configFilepath, indexDirFilepath, messageSender);
+  setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexDirFilepath, messageSender);
 
   const today = new Date();
   const threeDaysAgo = new Date();

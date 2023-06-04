@@ -103,6 +103,14 @@ module.exports = [
     },
   },
   {
+    entry: './src/view/preferences/preload.js',
+    target: "electron-preload",
+    output: {
+      filename: 'preload.js',
+      path: path.resolve(__dirname, 'dist/js/view/preferences'),
+    },
+  },
+  {
     entry: './src-frontend/composite/composite_main_window.renderer.js',
     target: "electron-renderer",
     output: {
@@ -152,6 +160,17 @@ module.exports = [
     output: {
       filename: 'timings_summary.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend'),
+    },
+    optimization: {
+      minimize: false,
+    },
+  },
+  {
+    entry: './src-frontend/preferences/preferences.renderer.js',
+    target: "electron-renderer",
+    output: {
+      filename: 'preferences.bundle.js',
+      path: path.resolve(__dirname, 'dist-frontend/preferences'),
     },
     optimization: {
       minimize: false,
