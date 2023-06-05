@@ -4,6 +4,8 @@ const path = require('path')
 const fs = require('fs');
 const YAML = require('yaml');
 
+const { forgetLastModifiedTimeOfTimings } = require('../../logic/timing_index_manager.js');
+
 let messageSender;
 let win;
 let appEnv;
@@ -23,15 +25,27 @@ ipcMain.on('msg_cancel', (_event) => {
 });
 
 ipcMain.on('msg_save', async (_event, msg) => {
-  let { config, changedTimings, changedTimingsConfig, changedNotebook } = msg;
+  let {
+    configWithNoTimings,
+    timings,
+    timingsToAdd,
+    namesOfTimingsToDelete,
+    changedTimings,
+    changedTimingsConfig,
+    changedNotebook
+  } = msg;
   console.log('SAVE');
   console.dir(msg);
 
   try {
     const configFd = await fs.promises.open(configFilepath, 'w');
     let indent = 2;
+    let config = createConfigToSave(configWithNoTimings, timings, namesOfTimingsToDelete);
     let data = YAML.stringify(config, indent);
     await fs.promises.writeFile(configFd, data, { encoding: 'utf8' });
+
+    // forgetLastModifiedTimesIfNeeded(timings, timingsToAdd, namesOfTimingsToDelete);
+    forgetLastModifiedTimesIfNeeded(timings);
   } catch (err) {
     messageSender.send({
       type: 'save_result',
@@ -45,6 +59,45 @@ ipcMain.on('msg_save', async (_event, msg) => {
     result: 'success'
   });
 });
+
+function createConfigToSave(configWithNoTimings, timings, namesOfTimingsToDelete) {
+  namesOfTimingsToDelete = new Set(namesOfTimingsToDelete);
+  let resultTimings = copyWithNoAdditionalFields(timings).filter(t => !namesOfTimingsToDelete.has(t.name));
+  return Object.assign({}, configWithNoTimings, {timings: resultTimings});
+}
+
+function copyWithNoAdditionalFields(timingsFileInfos) {
+  return timingsFileInfos.map(t => {
+    let copy = Object.assign({}, t);
+    delete copy.original;
+    return copy;
+  });
+}
+
+// function createTimingsByNames(timings) {
+//   let result = {};
+//   for (let t of timings) {
+//     result[t.name] = t;
+//   }
+//   return result;
+// }
+
+function forgetLastModifiedTimesIfNeeded(timings) {
+  let timingsFilesToUpdate = [];
+  // let timingsByNames = createTimingsByNames(timings);
+  for (let t of timings) {
+    if (t.original !== undefined && t.filepath !== t.original.filepath) {
+      timingsFilesToUpdate.push(t.name);
+    }
+  }
+  console.log('[forgetLastModifiedTimesIfNeeded] timingsFilesToUpdate: ');
+  console.dir(timingsFilesToUpdate);
+
+  // only delete .last_modified files for timingsFilesToUpdate
+  // the rest will be done when refreshing the index
+  // ("the rest" means creating new indexes or deleting old unneeded indexes)
+  forgetLastModifiedTimeOfTimings(timingsFilesToUpdate, indexDirFilepath);
+}
 
 export async function showPreferences(appEnvParam) {
   appEnv = appEnvParam;

@@ -10,26 +10,7 @@ const _fileExists = async filePath => fs.promises.stat(filePath).then(() => true
 
 export async function createOrRefreshIndex(configFilepath, indexDirFilepath) {
   console.log(`configFilepath: ${configFilepath}\nindexDirFilepath: ${indexDirFilepath}`);
-  const indexNamesFilepath = path.join(indexDirFilepath, 'filenames_of_indexes');
-  const timing2indexFilename = {};
-  const indexNamesFileExists = await _fileExists(indexNamesFilepath);
-  console.log(`indexNamesFileExists: ${indexNamesFileExists}`);
-  if (indexNamesFileExists) {
-    const patternNames = /index-name: ([a-z0-9-]+), timing-name: (.+)$/;
-    const lineReader = new LineReader(indexNamesFilepath, { encoding: 'utf8' });
-    while (true) {
-      let { line, isEOF } = await lineReader.readline();
-      if (isEOF) {
-        break;
-      }
-      console.log(`line: ${line}`);
-      const match = line.match(patternNames);
-      const indexName = match[1];
-      const timingName = match[2];
-      console.log(`  parsed index-name: '${indexName}'\n  parsed timings file name: '${timingName}'`);
-      timing2indexFilename[timingName] = indexName;
-    }
-  }
+  const timing2indexFilename = await _createTiming2indexFilenameMap(indexDirFilepath);
   const configFileContents = await fs.promises.readFile(configFilepath, 'utf8');
   const config = YAML.parse(configFileContents);
   for (const timing of config.timings) {
@@ -53,11 +34,37 @@ export async function createOrRefreshIndex(configFilepath, indexDirFilepath) {
       await _createIndexForTiming(timing, uuid, indexDirFilepath);
     }
   }
+
+  const setOfTimingsNamesFromConfig = new Set(config.timings.map(t => t.name));
+  const namesOfTimingsNoLongerInConfig = Object.keys(timing2indexFilename).filter(x => !setOfTimingsNamesFromConfig.has(x));
+  const indexFilenamesOfTimingsNoLongerInConfig = [];
+  for (let name of namesOfTimingsNoLongerInConfig) {
+    indexFilenamesOfTimingsNoLongerInConfig.push(timing2indexFilename[name]);
+    delete timing2indexFilename[name];
+  }
+
   console.log('[createOrRefreshIndex] 1');
+  const indexNamesFilepath = path.join(indexDirFilepath, 'filenames_of_indexes');
   const fileIndexNames = fs.createWriteStream(indexNamesFilepath, { encoding: 'utf8' });
   console.log('[createOrRefreshIndex] 2 before loop over timing2indexFilename');
   for (const [timingName, indexName] of Object.entries(timing2indexFilename)) {
     await _writeToStream(fileIndexNames, `index-name: ${indexName}, timing-name: ${timingName}\n`);
+  }
+
+  for (let indexFilename of indexFilenamesOfTimingsNoLongerInConfig) {
+    try {
+      const indexFilepath = path.join(indexDirFilepath, indexFilename);
+      await fs.promises.rm(indexFilepath, {force: true});
+    } catch (err) {
+      console.log(`[createOrRefreshIndex] error while deleting index file: ${err.message}`);
+    }
+
+    try {
+      const indexLM_Filepath = path.join(indexDirFilepath, indexFilename + '.last_modified');
+      await fs.promises.rm(indexLM_Filepath, {force: true});
+    } catch (err) {
+      console.log(`[createOrRefreshIndex] error while deleting .last_modified file: ${err.message}`);
+    }
   }
   console.log('[createOrRefreshIndex] about to return');
   return timing2indexFilename;
@@ -75,22 +82,25 @@ async function _refreshIndex(timing, indexName, indexesDirFilepath) {
   }
   const { mtimeMs: timingLastModified } = await fs.promises.stat(timingFilepath);
 
+  let indexLastModified = null;
+
   const indexLastModifiedFilepath = path.join(indexesDirFilepath, indexName + '.last_modified');
   const existsILM = await _fileExists(indexLastModifiedFilepath);
   if (existsILM) {
-    const indexLastModified = await fs.promises.readFile(indexLastModifiedFilepath).then(lmStr => Number(lmStr), _err => null);
-    if (indexLastModified === null) {
-      console.log(`couldn't read index_last_modified for timing ${timingName}, recreating index`);
-      const indexFilepath = path.join(indexesDirFilepath, indexName);
-      await fs.promises.rm(indexFilepath);
-      _createIndexForTiming(timing, indexName, indexesDirFilepath);
-    } else if (indexLastModified === timingLastModified) {
-      console.log(`index_last_modified is the same as timing_last_modified, skipping recreating index for timing ${timingName}`);
-    } else {
-      console.log(`index_last_modified != timing_last_modified, going to refresh the index for timing ${timingName}`);
-      await _truncateAfterFirstDiffAndAppendToIndex(timing, indexName, indexesDirFilepath);
-      console.log(`refreshed the index for timing ${timingName}`);
-    }
+    indexLastModified = await fs.promises.readFile(indexLastModifiedFilepath).then(lmStr => Number(lmStr), _err => null);
+  }
+  // if (indexLastModified === null) {
+  //   console.log(`couldn't read index_last_modified for timing ${timingName}, recreating index`);
+  //   const indexFilepath = path.join(indexesDirFilepath, indexName);
+  //   await fs.promises.rm(indexFilepath);
+  //   _createIndexForTiming(timing, indexName, indexesDirFilepath);
+  // } else if (indexLastModified === timingLastModified) {
+  if (indexLastModified !== null && indexLastModified === timingLastModified) {
+    console.log(`index_last_modified is the same as timing_last_modified, skipping recreating index for timing ${timingName}`);
+  } else {
+    console.log(`index_last_modified != timing_last_modified (or couldn't read index_last_modified), going to refresh the index for timing ${timingName}`);
+    await _truncateAfterFirstDiffAndAppendToIndex(timing, indexName, indexesDirFilepath);
+    console.log(`refreshed the index for timing ${timingName}`);
   }
 }
 
@@ -415,4 +425,46 @@ async function readIndexForSetOfDates(indexFilepath, setOfDates) {
     }
   }
   return offsetsByDate;
+}
+
+export async function forgetLastModifiedTimeOfTimings(timingsNames, indexDirFilepath) {
+  const timing2indexFilename = await _createTiming2indexFilenameMap(indexDirFilepath);
+
+  for (let timingName of timingsNames) {
+    let indexFilename = timing2indexFilename[timingName];
+    if (indexFilename === undefined) {
+      continue;
+    }
+
+    const indexLM_Filepath = path.join(indexDirFilepath, indexFilename + '.last_modified');
+    try {
+      await fs.promises.rm(indexLM_Filepath, {force: true});
+    } catch (err) {
+      console.log(`[forgetLastModifiedTimeOfTimings] error while deleting .last_modified file: ${err.message}`);
+    }
+  }
+}
+
+async function _createTiming2indexFilenameMap(indexDirFilepath) {
+  const indexNamesFilepath = path.join(indexDirFilepath, 'filenames_of_indexes');
+  const timing2indexFilename = {};
+  const indexNamesFileExists = await _fileExists(indexNamesFilepath);
+  console.log(`indexNamesFileExists: ${indexNamesFileExists}`);
+  if (indexNamesFileExists) {
+    const patternNames = /index-name: ([a-z0-9-]+), timing-name: (.+)$/;
+    const lineReader = new LineReader(indexNamesFilepath, { encoding: 'utf8' });
+    while (true) {
+      let { line, isEOF } = await lineReader.readline();
+      if (isEOF) {
+        break;
+      }
+      console.log(`line: ${line}`);
+      const match = line.match(patternNames);
+      const indexName = match[1];
+      const timingName = match[2];
+      console.log(`  parsed index-name: '${indexName}'\n  parsed timings file name: '${timingName}'`);
+      timing2indexFilename[timingName] = indexName;
+    }
+  }
+  return timing2indexFilename;
 }

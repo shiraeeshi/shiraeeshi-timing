@@ -10,6 +10,8 @@ app.whenReady().then(() => {
     stage: 'production'
   };
 
+  console.log(`[main.js] process.env.APP_ENV: ${process.env.APP_ENV}`);
+
   if (process.env.APP_ENV === 'development') {
     appEnv.stage = 'development';
   }

@@ -1,8 +1,13 @@
-const { withChildren } = require('../js/html_utils.js');
+const { withChildren, withClass } = require('../js/html_utils.js');
 
 window.webkit.messageHandlers.preferences_msgs.onMessage(handleServerMessage);
 
-let my = {};
+let my = {
+  timingsToAddByName: {},
+  timingsToDeleteByName: {},
+  currentTimingsFileInfoBeingEdited: undefined,
+  timingsFileInfosListView: undefined,
+};
 
 function handleServerMessage(msg) {
   if (msg.type === 'filepicker_result') {
@@ -21,20 +26,34 @@ function handleServerMessage(msg) {
   }
   let originalConfig = msg.config;
   let config = createCopyOfConfig(originalConfig);
+  my.originalConfig = originalConfig;
+  my.config = config;
+
+  let timingsToShow = createCopyOfTimings(msg.config);
+  my.timingsFileInfosListView = new TimingsFileInfosListView(timingsToShow);
 
   let btnSave = document.getElementById('btn-save');
   btnSave.addEventListener('click', (eve) => {
     let hasUnsavedChanges = 
-      showingTimingsHeaderWithStar ||
+      my.showingTimingsHeaderWithStar ||
       showingTimingsConfigHeaderWithStar ||
       showingNotebookHeaderWithStar;
     if (!hasUnsavedChanges) {
-      window.webkit.messageHandlers.preferences_msg__cancel.postMessage();
       return;
     }
+    function copyWithNoViews(timingsFileInfos) {
+      return timingsFileInfos.map(t => {
+        let copy = Object.assign({}, t);
+        delete copy.view;
+        return copy;
+      });
+    }
     window.webkit.messageHandlers.preferences_msg__save.postMessage({
-      config: config,
-      changedTimings: showingTimingsHeaderWithStar,
+      configWithNoTimings: Object.assign({}, config, {timings: []}),
+      timings: copyWithNoViews(my.timingsFileInfosListView.timingsToShow),
+      timingsToAdd: copyWithNoViews(Object.values(my.timingsToAddByName)),
+      namesOfTimingsToDelete: Object.keys(my.timingsToDeleteByName),
+      changedTimings: my.showingTimingsHeaderWithStar,
       changedTimingsConfig: showingTimingsConfigHeaderWithStar,
       changedNotebook: showingNotebookHeaderWithStar
     });
@@ -44,9 +63,11 @@ function handleServerMessage(msg) {
         return;
       }
       if (result === 'success') {
+        my.timingsFileInfosListView.handleSaveSuccess();
+
         let label = document.getElementById('tab1-label');
         label.innerHTML = 'Timings';
-        showingTimingsHeaderWithStar = false;
+        my.showingTimingsHeaderWithStar = false;
 
         label = document.getElementById('tab2-label');
         label.innerHTML = 'Timings Config';
@@ -80,14 +101,14 @@ function handleServerMessage(msg) {
     notebookInputFontSizeOfBottomPanelOfNotes.value =
       config.notebook['font-size-in-px-of-bottom-panel-of-notes'];
 
-    let hadChangesInTimings = showingTimingsHeaderWithStar;
+    let hadChangesInTimings = my.showingTimingsHeaderWithStar;
     if (hadChangesInTimings) {
-      showTimings(config.timings);
+      my.timingsFileInfosListView.reset(createCopyOfTimings(config));
     }
 
     let label = document.getElementById('tab1-label');
     label.innerHTML = 'Timings';
-    showingTimingsHeaderWithStar = false;
+    my.showingTimingsHeaderWithStar = false;
 
     label = document.getElementById('tab2-label');
     label.innerHTML = 'Timings Config';
@@ -101,7 +122,7 @@ function handleServerMessage(msg) {
   let btnCancel = document.getElementById('btn-cancel');
   btnCancel.addEventListener('click', (eve) => {
     let hasUnsavedChanges = 
-      showingTimingsHeaderWithStar ||
+      my.showingTimingsHeaderWithStar ||
       showingTimingsConfigHeaderWithStar ||
       showingNotebookHeaderWithStar;
 
@@ -114,23 +135,30 @@ function handleServerMessage(msg) {
     }
   });
 
-  let showingTimingsHeaderWithStar = false;
+  my.showingTimingsHeaderWithStar = false;
 
-  showTimings(config.timings);
+  // showTimings(my.timingsToShow);
+  my.timingsFileInfosListView.initHtml();
 
   let btnNewTimingsFile = document.getElementById('btn-new-timings-file');
   btnNewTimingsFile.addEventListener('click', (eve) => {
+    let textareaCategoryPath = document.getElementById('new-timing-category-path');
+    textareaCategoryPath.disabled = true;
+
     let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
     panelOfListOfTimingsFiles.classList.remove('active');
     panelOfListOfTimingsFiles.classList.add('inactive');
 
-    let newTimingsFileForm = document.getElementById('new-timings-file-form');
+    let newTimingsFileForm = document.getElementById('form-to-edit-timings-file-info');
     newTimingsFileForm.classList.remove('inactive');
     newTimingsFileForm.classList.add('active');
+
+    let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
+    bottomRowOfButtons.classList.add('hidden-behind-dialog');
   });
 
-  let btnNewTimingsFileSave = document.getElementById('btn-new-timings-file-save');
-  btnNewTimingsFileSave.addEventListener('click', (eve) => {
+  let btnTimingsFileInfoSave = document.getElementById('btn-timings-file-info-save');
+  btnTimingsFileInfoSave.addEventListener('click', (eve) => {
     let inputName = document.getElementById('new-timing-name');
     let inputFilepath = document.getElementById('new-timing-filepath');
     let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
@@ -140,20 +168,31 @@ function handleServerMessage(msg) {
     let name = inputName.value;
     let filepath = inputFilepath.value;
     let format = selectorOfFormat.value;
-    let categoryPathIsSameAsName = checkboxCategoryPathIsSameAsName.checked;
-    let categoryPath;
-    if (categoryPathIsSameAsName) {
-      categoryPath = [name];
-    } else {
-      categoryPath = parseCategoryPath(textareaCategoryPath.value);
-    }
 
-    config.timings.push({
+    let timingsFileInfo = {
       name: name,
       format: format,
       filepath: filepath,
-      categoryPath: categoryPath
-    });
+    }
+    let categoryPathIsSameAsName = checkboxCategoryPathIsSameAsName.checked;
+    if (!categoryPathIsSameAsName) {
+      let categoryPath = parseCategoryPath(textareaCategoryPath.value);
+      timingsFileInfo.categoryPath = categoryPath;
+    }
+
+    if (my.currentTimingsFileInfoBeingEdited) {
+      Object.assign(my.currentTimingsFileInfoBeingEdited, timingsFileInfo);
+      my.currentTimingsFileInfoBeingEdited.view.refresh();
+      delete my.currentTimingsFileInfoBeingEdited;
+    } else {
+      let newTimingsFileInfo = timingsFileInfo;
+
+      // config.timings.push(newTimingsFileInfo);
+      // my.timingsToShow.push(newTimingsFileInfo);
+      my.timingsFileInfosListView.addNewInfo(newTimingsFileInfo);
+
+      my.timingsToAddByName[name] = newTimingsFileInfo;
+    }
 
     inputName.value = '';
     inputFilepath.value = '';
@@ -162,22 +201,26 @@ function handleServerMessage(msg) {
     textareaCategoryPath.disabled = true;
     selectorOfFormat.value = 'yaml';
 
-    showTimings(config.timings);
+    // showTimings(my.timingsToShow);
 
     let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
     panelOfListOfTimingsFiles.classList.add('active');
     panelOfListOfTimingsFiles.classList.remove('inactive');
 
-    let newTimingsFileForm = document.getElementById('new-timings-file-form');
+    let newTimingsFileForm = document.getElementById('form-to-edit-timings-file-info');
     newTimingsFileForm.classList.add('inactive');
     newTimingsFileForm.classList.remove('active');
 
-    showingTimingsHeaderWithStar = true;
-    let label = document.getElementById('tab1-label');
-    label.innerHTML = 'Timings*';
+    let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
+    bottomRowOfButtons.classList.remove('hidden-behind-dialog');
+
+    showOrHideStarInTimingsHeader();
   });
-  let btnNewTimingsFileCancel = document.getElementById('btn-new-timings-file-cancel');
-  btnNewTimingsFileCancel.addEventListener('click', (eve) => {
+  let btnTimingsFileInfoEditCancel = document.getElementById('btn-timings-file-info-cancel');
+  btnTimingsFileInfoEditCancel.addEventListener('click', (eve) => {
+
+    delete my.currentTimingsFileInfoBeingEdited;
+
     let inputName = document.getElementById('new-timing-name');
     let inputFilepath = document.getElementById('new-timing-filepath');
     let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
@@ -195,9 +238,12 @@ function handleServerMessage(msg) {
     panelOfListOfTimingsFiles.classList.add('active');
     panelOfListOfTimingsFiles.classList.remove('inactive');
 
-    let newTimingsFileForm = document.getElementById('new-timings-file-form');
+    let newTimingsFileForm = document.getElementById('form-to-edit-timings-file-info');
     newTimingsFileForm.classList.add('inactive');
     newTimingsFileForm.classList.remove('active');
+
+    let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
+    bottomRowOfButtons.classList.remove('hidden-behind-dialog');
   });
 
   let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
@@ -562,25 +608,247 @@ function handleServerMessage(msg) {
   });
 }
 
-function showTimings(timings) {
+
+function TimingsFileInfosListView(timingsToShow) {
+  this.timingsToShow = timingsToShow;
+  this.timingsFileInfoViews = undefined;
+  this.html = undefined;
+}
+
+TimingsFileInfosListView.prototype.initHtml = function() {
+  let that = this;
+
+  that.timingsFileInfoViews = that.timingsToShow.map(timingsFileInfo => new TimingsFileInfoView(timingsFileInfo));
+  that.timingsFileInfoViews.forEach(v => v.initHtml());
+
   let tabContentsOfTimings = document.getElementById('list-of-timings-files');
   tabContentsOfTimings.innerHTML = '';
-  withChildren(tabContentsOfTimings,
-    ...timings.map(timing => withChildren(document.createElement('div'),
-      withChildren(document.createElement('div'),
-        document.createTextNode(`name: ${timing.name}`)
-      ),
-      withChildren(document.createElement('div'),
-        document.createTextNode(`format: ${timing.format}`)
-      ),
-      withChildren(document.createElement('div'),
-        document.createTextNode(`filepath: ${timing.filepath}`)
-      ),
-      withChildren(document.createElement('div'),
-        document.createTextNode(`category path: ${categoryPathToString(timing)}`)
-      ),
-    ))
+
+  that.html = withChildren(tabContentsOfTimings,
+    ...that.timingsFileInfoViews.map(v => v.html)
   );
+};
+
+TimingsFileInfosListView.prototype.reset = function(timingsToShow) {
+  let that = this;
+  that.timingsToShow = timingsToShow;
+  that.initHtml();
+};
+
+TimingsFileInfosListView.prototype.addNewInfo = function(timingsFileInfo) {
+  let that = this;
+  that.timingsToShow.push(timingsFileInfo);
+
+  let view = new TimingsFileInfoView(timingsFileInfo);
+  that.timingsFileInfoViews.push(view);
+
+  view.initHtml();
+
+  that.html.appendChild(view.html);
+};
+
+TimingsFileInfosListView.prototype.dataIsSameAsOriginal = function() {
+  let that = this;
+  if (Object.keys(my.timingsToAddByName).length > 0) {
+    return false;
+  }
+  if (Object.keys(my.timingsToDeleteByName).length > 0) {
+    return false;
+  }
+  for (let t of that.timingsToShow) {
+    if (t.original === undefined) {
+      continue;
+    }
+    if (!timingsFileInfoIsSameAsOriginal(t)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+TimingsFileInfosListView.prototype.handleSaveSuccess = function() {
+  let that = this;
+
+  my.timingsToAddByName = {};
+
+  let setOfDeletedNames = new Set(Object.keys(my.timingsToDeleteByName));
+  for (let t of that.timingsToShow) {
+    if (!setOfDeletedNames.has(t.name)) {
+      continue;
+    }
+    t.view.html.parentNode.removeChild(t.view.html);
+  }
+  that.timingsToShow = that.timingsToShow.filter(t => !setOfDeletedNames.has(t.name));
+  that.timingsFileInfoViews = that.timingsToShow.map(t => t.view);
+
+  my.timingsToDeleteByName = {};
+};
+
+function timingsFileInfoIsSameAsOriginal(timingsFileInfo) {
+  let fieldNames = ['name', 'filepath', 'format', 'categoryPath'];
+  let orig = timingsFileInfo.original;
+  for (let fieldName of fieldNames) {
+    let areEqual = timingsFileInfo[fieldName] === orig[fieldName];
+    if (!areEqual) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function TimingsFileInfoView(timingsFileInfo) {
+  let that = this;
+  timingsFileInfo.view = that;
+  that.timingsFileInfo = timingsFileInfo;
+  that.html = undefined;
+}
+
+TimingsFileInfoView.prototype.initHtml = function() {
+  let that = this;
+  let timingsFileInfo = that.timingsFileInfo;
+  that.nameDiv = 
+    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+      document.createTextNode(`name: ${timingsFileInfo.name}`)
+    );
+  that.formatDiv =
+    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+      document.createTextNode(`format: ${timingsFileInfo.format}`)
+    );
+  that.filepathDiv =
+    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+      document.createTextNode(`filepath: ${timingsFileInfo.filepath}`)
+    );
+  that.categoryPathDiv =
+    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+      document.createTextNode(`category path: ${categoryPathToString(timingsFileInfo)}`)
+    );
+  that.html = withChildren(withClass(document.createElement('div'), 'timings-file-info-view'),
+    that.createDivOfTimingsFileButtons(),
+    that.nameDiv,
+    that.formatDiv,
+    that.filepathDiv,
+    that.categoryPathDiv
+  );
+}
+
+TimingsFileInfoView.prototype.refresh = function() {
+  let that = this;
+  let timingsFileInfo = that.timingsFileInfo;
+
+  that.nameDiv.innerHTML = `name: ${timingsFileInfo.name}`;
+  that.formatDiv.innerHTML = `format: ${timingsFileInfo.format}`;
+  that.filepathDiv.innerHTML = `filepath: ${timingsFileInfo.filepath}`;
+  that.categoryPathDiv.innerHTML = `category path: ${categoryPathToString(timingsFileInfo)}`;
+}
+
+TimingsFileInfoView.prototype.createDivOfTimingsFileButtons = function() {
+  let that = this;
+  let timingsFileInfo = that.timingsFileInfo;
+
+  let btnEdit = 
+    withChildren(withClass(document.createElement('button'), 'btn-edit-timings-file-info'),
+      document.createTextNode('edit')
+    );
+  btnEdit.addEventListener('click', (eve) => {
+    that.btnHandlerEditTimingsFileInfo();
+  });
+
+  let btnDelete =
+    withChildren(withClass(document.createElement('button'), 'btn-delete-timings-file-info'),
+      document.createTextNode('delete')
+    );
+  btnDelete.addEventListener('click', (eve) => {
+    that.btnHandlerDeleteTimingsFileInfo();
+  });
+
+  let btnUndoDelete =
+    withChildren(withClass(document.createElement('button'), 'btn-undo-delete-of-timings-file-info'),
+      document.createTextNode('undo deletion')
+    );
+  btnUndoDelete.addEventListener('click', (eve) => {
+    that.btnHandlerUndoDeletionOfTimingsFileInfo();
+  });
+
+  return withChildren(withClass(document.createElement('div'), 'timings-file-info-buttons'),
+    btnEdit,
+    btnDelete,
+    btnUndoDelete
+  );
+}
+
+TimingsFileInfoView.prototype.btnHandlerEditTimingsFileInfo = function() {
+  let that = this;
+  let timingsFileInfo = that.timingsFileInfo;
+
+  my.currentTimingsFileInfoBeingEdited = timingsFileInfo;
+
+  let inputName = document.getElementById('new-timing-name');
+  let inputFilepath = document.getElementById('new-timing-filepath');
+  let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
+  let textareaCategoryPath = document.getElementById('new-timing-category-path');
+  let selectorOfFormat = document.getElementById('new-timing-format');
+
+  inputName.value = timingsFileInfo.name;
+  inputFilepath.value = timingsFileInfo.filepath;
+  let categoryPathIsSameAsName = timingsFileInfo.categoryPath === undefined || (timingsFileInfo.categoryPath.length === 1 && timingsFileInfo.categoryPath[0] === timingsFileInfo.name);
+  checkboxCategoryPathIsSameAsName.checked = categoryPathIsSameAsName;
+  textareaCategoryPath.disabled = categoryPathIsSameAsName;
+  if (!categoryPathIsSameAsName) {
+    textareaCategoryPath.value = timingsFileInfo.categoryPath.join('\n');
+  }
+  selectorOfFormat.value = timingsFileInfo.format;
+
+  let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
+  panelOfListOfTimingsFiles.classList.remove('active');
+  panelOfListOfTimingsFiles.classList.add('inactive');
+
+  let newTimingsFileForm = document.getElementById('form-to-edit-timings-file-info');
+  newTimingsFileForm.classList.remove('inactive');
+  newTimingsFileForm.classList.add('active');
+
+  let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
+  bottomRowOfButtons.classList.add('hidden-behind-dialog');
+};
+
+
+TimingsFileInfoView.prototype.btnHandlerDeleteTimingsFileInfo = function() {
+  let that = this;
+  let timingsFileInfo = that.timingsFileInfo;
+
+  if (my.timingsToAddByName.hasOwnProperty(timingsFileInfo.name)) {
+    delete my.timingsToAddByName[timingsFileInfo.name];
+  } else {
+    my.timingsToDeleteByName[timingsFileInfo.name] = true;
+  }
+
+  that.html.classList.add('to-be-deleted');
+  showOrHideStarInTimingsHeader();
+};
+
+
+TimingsFileInfoView.prototype.btnHandlerUndoDeletionOfTimingsFileInfo = function() {
+  let that = this;
+  let timingsFileInfo = that.timingsFileInfo;
+
+  if (my.timingsToDeleteByName[timingsFileInfo.name]) {
+    delete my.timingsToDeleteByName[timingsFileInfo.name];
+  } else {
+    my.timingsToAddByName[timingsFileInfo.name] = timingsFileInfo;
+  }
+
+  that.html.classList.remove('to-be-deleted');
+  showOrHideStarInTimingsHeader();
+}
+
+function showOrHideStarInTimingsHeader() {
+  let isSame = my.timingsFileInfosListView.dataIsSameAsOriginal();
+  my.showingTimingsHeaderWithStar = !isSame;
+  let label = document.getElementById('tab1-label');
+  if (isSame) {
+    label.innerHTML = 'Timings';
+  } else {
+    label.innerHTML = 'Timings*';
+  }
 }
 
 function createCopyOfConfig(config) {
@@ -592,6 +860,16 @@ function createCopyOfConfig(config) {
   result['timings-config'] = Object.assign({}, config['timings-config']);
   result.notebook = Object.assign({}, config.notebook);
   return result;
+}
+
+function createCopyOfTimings(config) {
+  return config.timings.map(t => createCopyOfTiming(t));
+}
+
+function createCopyOfTiming(t) {
+  let copy = Object.assign({}, t);
+  copy.original = t;
+  return copy;
 }
 
 function timingsConfigIsSameAsOriginal(timingsConfig, originalTimingsConfig) {
