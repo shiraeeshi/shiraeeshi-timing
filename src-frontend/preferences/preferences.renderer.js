@@ -39,6 +39,7 @@ function handleServerMessage(msg) {
       showingTimingsConfigHeaderWithStar ||
       showingNotebookHeaderWithStar;
     if (!hasUnsavedChanges) {
+      my.timingsFileInfosListView.handleSaveSuccess();
       return;
     }
     function copyWithNoViews(timingsFileInfos) {
@@ -673,10 +674,9 @@ TimingsFileInfosListView.prototype.handleSaveSuccess = function() {
 
   let setOfDeletedNames = new Set(Object.keys(my.timingsToDeleteByName));
   for (let t of that.timingsToShow) {
-    if (!setOfDeletedNames.has(t.name)) {
-      continue;
+    if (t.original === undefined || setOfDeletedNames.has(t.name)) {
+      t.view.html.parentNode.removeChild(t.view.html);
     }
-    t.view.html.parentNode.removeChild(t.view.html);
   }
   that.timingsToShow = that.timingsToShow.filter(t => !setOfDeletedNames.has(t.name));
   that.timingsFileInfoViews = that.timingsToShow.map(t => t.view);
