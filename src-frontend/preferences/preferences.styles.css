@@ -51,6 +51,37 @@ body {
   margin-left: 4px;
 }
 
+#tab-contents-of-timings {
+  padding: 10px;
+}
+
+#tab-contents-of-timings-config > div {
+  border: none;
+}
+
+#tab-contents-of-timings-config > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+#tab-contents-of-notebook > div {
+  border: none;
+}
+
+#tab-contents-of-notebook > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+#list-of-timings-files-panel {
+  padding: 0;
+  border: none;
+}
+
+#btns-row-above-list-of-timings-files {
+  border: none;
+  padding-left: 0;
+  padding-top: 0;
+}
+
 #list-of-timings-files-panel.active {
   display: block;
 }
@@ -67,9 +98,90 @@ body {
   display: none;
 }
 
-#btns-in-form-to-edit-timings-file-info > button {
-  float: right;
+#form-to-edit-timings-file-info {
+  padding: 0;
+}
+
+#form-to-edit-timings-file-info > div {
+  border: none;
+}
+
+#form-to-edit-timings-file-info > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+#form-to-edit-timings-file-info > #new-timing-filepath-field-container {
+  display: flex;
+}
+
+#form-to-edit-timings-file-info > #new-timing-filepath-field-container > label {
+  flex: none;
+  margin-right: 4px;
+}
+
+#form-to-edit-timings-file-info > #new-timing-filepath-field-container > input {
+  flex: 1;
+  margin-right: 4px;
+}
+
+#form-to-edit-timings-file-info > #new-timing-filepath-field-container > button {
+  flex: none;
+}
+
+#btns-in-form-to-edit-timings-file-info {
+  display: flex;
+  justify-content: flex-end;
+}
+
+#btn-timings-file-info-save {
   margin-left: 4px;
+}
+
+#new-timing-category-path {
+  vertical-align: top;
+}
+
+#list-of-timings-files {
+  padding: 0;
+  border: none;
+}
+
+#list-of-timings-files > .timings-file-info-view {
+  padding: 0;
+}
+
+#list-of-timings-files > .timings-file-info-view:not(:first-child) {
+  margin-top: 10px;
+}
+
+#list-of-timings-files > .timings-file-info-view > div {
+  border: none;
+}
+
+#list-of-timings-files > .timings-file-info-view > div:not(:last-child) {
+  border-bottom: 1px solid #ddd;
+}
+
+#list-of-timings-files > .timings-file-info-view > .timings-file-info-buttons > .btn-edit-timings-file-info {
+  margin-right: 4px;
+}
+
+#notebook-filepath-field-container {
+  display: flex;
+}
+
+#notebook-filepath-field-container > label {
+  flex: none;
+  margin-right: 4px;
+}
+
+#notebook-filepath-field-container > input {
+  flex: 1;
+  margin-right: 4px;
+}
+
+#notebook-filepath-field-container > button {
+  flex: none;
 }
 
 .pc-tab > input,
@@ -116,7 +228,7 @@ h1 {
 .pc-tab ul li label {
   font-family: "Raleway";
   float: left;
-  padding: 15px 25px;
+  padding: 10px 20px;
   border: 1px solid #ddd;
   border-bottom: 0;
   background: #eeeeee;
@@ -136,7 +248,7 @@ h1 {
   clear: both;
 }
 .pc-tab section div {
-  padding: 20px;
+  padding: 10px;
   width: 100%;
   border: 1px solid #ddd;
   background: #fff;
