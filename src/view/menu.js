@@ -66,7 +66,7 @@ export function createMenu(appEnv, tray) {
       }
     },
     {
-      label: 'Stop Program',
+      label: 'quit',
       click: () => {
         app.exit();
       }
@@ -123,7 +123,13 @@ function createSecondMenu(appEnv, firstMenu, tray, timerManager) {
           }
         },
         {
-          label: 'Stop Program',
+          label: 'Preferences',
+          click: async () => {
+            await showPreferences(appEnv);
+          }
+        },
+        {
+          label: 'quit',
           click: () => {
             app.exit();
           }
