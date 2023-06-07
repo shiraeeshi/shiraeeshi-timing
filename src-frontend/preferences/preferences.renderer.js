@@ -670,17 +670,20 @@ TimingsFileInfosListView.prototype.dataIsSameAsOriginal = function() {
 TimingsFileInfosListView.prototype.handleSaveSuccess = function() {
   let that = this;
 
-  my.timingsToAddByName = {};
 
   let setOfDeletedNames = new Set(Object.keys(my.timingsToDeleteByName));
   for (let t of that.timingsToShow) {
-    if (t.original === undefined || setOfDeletedNames.has(t.name)) {
+    let wasAddedAndDeleted = t.original === undefined && my.timingsToAddByName[t.name] === undefined;
+    let wasDeleted = setOfDeletedNames.has(t.name);
+
+    if (wasAddedAndDeleted || wasDeleted) {
       t.view.html.parentNode.removeChild(t.view.html);
     }
   }
   that.timingsToShow = that.timingsToShow.filter(t => !setOfDeletedNames.has(t.name));
   that.timingsFileInfoViews = that.timingsToShow.map(t => t.view);
 
+  my.timingsToAddByName = {};
   my.timingsToDeleteByName = {};
 };
 
