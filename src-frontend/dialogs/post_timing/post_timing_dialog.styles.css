@@ -1,0 +1,24 @@
+
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  background: #ecf0f1;
+  font-family: "Raleway";
+}
+
+#post-timing-dialog-main-container {
+  height: 100%;
+  overflow: hidden;
+}
+
+.timings-file-info div.category-path-is-same-as-name {
+  display: none;
+}
+

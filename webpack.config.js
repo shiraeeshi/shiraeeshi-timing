@@ -111,6 +111,14 @@ module.exports = [
     },
   },
   {
+    entry: './src/view/dialogs/post_timing/preload.js',
+    target: "electron-preload",
+    output: {
+      filename: 'preload.js',
+      path: path.resolve(__dirname, 'dist/js/view/dialogs/post_timing'),
+    },
+  },
+  {
     entry: './src-frontend/composite/composite_main_window.renderer.js',
     target: "electron-renderer",
     output: {
@@ -171,6 +179,17 @@ module.exports = [
     output: {
       filename: 'preferences.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/preferences'),
+    },
+    optimization: {
+      minimize: false,
+    },
+  },
+  {
+    entry: './src-frontend/dialogs/post_timing/post_timing_dialog.renderer.js',
+    target: "electron-renderer",
+    output: {
+      filename: 'post_timing_dialog.bundle.js',
+      path: path.resolve(__dirname, 'dist-frontend/dialogs/post_timing'),
     },
     optimization: {
       minimize: false,

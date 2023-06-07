@@ -6,6 +6,7 @@ const { showFrequencies } = require('./timings_reports/timings_frequencies/timin
 const { showNotebook } = require('./notebook/notebook.js');
 const { showCompositeMainWindow } = require('./composite/composite_main_window.js');
 const { showPreferences } = require('./preferences/preferences.js');
+const { showPostTimingDialog } = require('./dialogs/post_timing/post_timing_dialog.js');
 const { TimingTimerManager } = require('../logic/timing_timer_manager.js');
 
 export function createMenu(appEnv, tray) {
@@ -87,6 +88,7 @@ function createSecondMenu(appEnv, firstMenu, tray, timerManager) {
         const icon = nativeImage.createFromDataURL(iconDataUrl);
         tray.setImage(icon);
         tray.setContextMenu(firstMenu);
+        await showPostTimingDialog(appEnv);
       }
     },
     {
