@@ -100,37 +100,43 @@ body {
 
 #form-to-edit-timings-file-info {
   padding: 0;
-}
-
-#form-to-edit-timings-file-info > div {
   border: none;
 }
 
-#form-to-edit-timings-file-info > div:not(:first-child) {
+#form-to-edit-timings-file-info > #fields-of-timings-file-info-form {
+  padding: 0;
+}
+
+#form-to-edit-timings-file-info > #fields-of-timings-file-info-form > div {
+  border: none;
+}
+
+#form-to-edit-timings-file-info > #fields-of-timings-file-info-form > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
-#form-to-edit-timings-file-info > #new-timing-filepath-field-container {
+#form-to-edit-timings-file-info > #fields-of-timings-file-info-form > #new-timing-filepath-field-container {
   display: flex;
 }
 
-#form-to-edit-timings-file-info > #new-timing-filepath-field-container > label {
+#form-to-edit-timings-file-info > #fields-of-timings-file-info-form > #new-timing-filepath-field-container > label {
   flex: none;
   margin-right: 4px;
 }
 
-#form-to-edit-timings-file-info > #new-timing-filepath-field-container > input {
+#form-to-edit-timings-file-info > #fields-of-timings-file-info-form > #new-timing-filepath-field-container > input {
   flex: 1;
   margin-right: 4px;
 }
 
-#form-to-edit-timings-file-info > #new-timing-filepath-field-container > button {
+#form-to-edit-timings-file-info > #fields-of-timings-file-info-form > #new-timing-filepath-field-container > button {
   flex: none;
 }
 
 #btns-in-form-to-edit-timings-file-info {
   display: flex;
   justify-content: flex-end;
+  border: none;
 }
 
 #btn-timings-file-info-save {
@@ -158,12 +164,48 @@ body {
   border: none;
 }
 
-#list-of-timings-files > .timings-file-info-view > div:not(:last-child) {
-  border-bottom: 1px solid #ddd;
+#list-of-timings-files > .timings-file-info-view > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+#list-of-timings-files > .timings-file-info-view > .timings-file-info-buttons {
+  background-color: #32323a;
+  border: 1px solid #32323a;
+  display: flex;
+  justify-content: flex-end;
 }
 
 #list-of-timings-files > .timings-file-info-view > .timings-file-info-buttons > .btn-edit-timings-file-info {
   margin-right: 4px;
+}
+
+#list-of-timings-files > .timings-file-info-view > div.category-path-div.category-path-is-same-as-name {
+  display: none;
+}
+
+#list-of-timings-files > .timings-file-info-view .btn-undo-delete-of-timings-file-info {
+  display: none;
+}
+
+#list-of-timings-files > .timings-file-info-view.to-be-deleted > .timings-file-info-buttons {
+  background-color: #ccc;
+  border: 1px solid #ccc;
+}
+
+#list-of-timings-files > .timings-file-info-view.to-be-deleted .div-with-text {
+  opacity: 0.5;
+}
+
+#list-of-timings-files > .timings-file-info-view.to-be-deleted .btn-undo-delete-of-timings-file-info {
+  display: inline-block;
+}
+
+#list-of-timings-files > .timings-file-info-view.to-be-deleted .btn-edit-timings-file-info {
+  display: none;
+}
+
+#list-of-timings-files > .timings-file-info-view.to-be-deleted .btn-delete-timings-file-info {
+  display: none;
 }
 
 #notebook-filepath-field-container {
@@ -292,24 +334,4 @@ footer {
 footer a {
   color: #AAA;
   text-decoration: none;
-}
-
-.timings-file-info-view .btn-undo-delete-of-timings-file-info {
-  display: none;
-}
-
-.timings-file-info-view.to-be-deleted .div-with-text {
-  opacity: 0.5;
-}
-
-.timings-file-info-view.to-be-deleted .btn-undo-delete-of-timings-file-info {
-  display: inline-block;
-}
-
-.timings-file-info-view.to-be-deleted .btn-edit-timings-file-info {
-  display: none;
-}
-
-.timings-file-info-view.to-be-deleted .btn-delete-timings-file-info {
-  display: none;
 }

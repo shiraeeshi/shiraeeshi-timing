@@ -182,7 +182,7 @@ function handleServerMessage(msg) {
     }
 
     if (my.currentTimingsFileInfoBeingEdited) {
-      Object.assign(my.currentTimingsFileInfoBeingEdited, timingsFileInfo);
+      Object.assign(my.currentTimingsFileInfoBeingEdited, timingsFileInfo, {categoryPath: timingsFileInfo.categoryPath});
       my.currentTimingsFileInfoBeingEdited.view.refresh();
       delete my.currentTimingsFileInfoBeingEdited;
     } else {
@@ -722,9 +722,13 @@ TimingsFileInfoView.prototype.initHtml = function() {
       document.createTextNode(`filepath: ${timingsFileInfo.filepath}`)
     );
   that.categoryPathDiv =
-    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+    withChildren(withClass(document.createElement('div'), 'div-with-text', 'category-path-div'),
       document.createTextNode(`category path: ${categoryPathToString(timingsFileInfo)}`)
     );
+  let categoryPathIsSameAsName = timingsFileInfo.categoryPath === undefined || (timingsFileInfo.categoryPath.length === 1 && timingsFileInfo.categoryPath[0] === timingsFileInfo.name);
+  if (categoryPathIsSameAsName) {
+    that.categoryPathDiv.classList.add('category-path-is-same-as-name');
+  }
   that.html = withChildren(withClass(document.createElement('div'), 'timings-file-info-view'),
     that.createDivOfTimingsFileButtons(),
     that.nameDiv,
@@ -742,6 +746,13 @@ TimingsFileInfoView.prototype.refresh = function() {
   that.formatDiv.innerHTML = `format: ${timingsFileInfo.format}`;
   that.filepathDiv.innerHTML = `filepath: ${timingsFileInfo.filepath}`;
   that.categoryPathDiv.innerHTML = `category path: ${categoryPathToString(timingsFileInfo)}`;
+
+  let categoryPathIsSameAsName = timingsFileInfo.categoryPath === undefined || (timingsFileInfo.categoryPath.length === 1 && timingsFileInfo.categoryPath[0] === timingsFileInfo.name);
+  if (categoryPathIsSameAsName) {
+    that.categoryPathDiv.classList.add('category-path-is-same-as-name');
+  } else {
+    that.categoryPathDiv.classList.remove('category-path-is-same-as-name');
+  }
 }
 
 TimingsFileInfoView.prototype.createDivOfTimingsFileButtons = function() {
