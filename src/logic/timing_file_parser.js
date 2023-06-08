@@ -61,7 +61,6 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
     };
     let frmt = timing['format'];
     if (frmt === 'txt' || !frmt) {
-      result[timingName] = [];
       const generator = await yieldIndexForRangeOfDates(indexFilepath, dateFrom, dateTo);
       while (true) {
         let { value, done } = await generator.next();
@@ -86,7 +85,6 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
         resultObject.timingsByDays.push(parsedTimingsOfDate);
       }
     } else if (frmt === 'yaml') {
-      result[timingName] = [];
       const generator = await yieldIndexForRangeOfDates(indexFilepath, dateFrom, dateTo);
       while (true) {
         let { value, done } = await generator.next();
@@ -123,7 +121,9 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
         resultObject.timingsByDays.push(parsedTimingsOfDate);
       }
     }
-    result[timingName] = resultObject;
+    if (resultObject.timingsByDays.length > 0) {
+      result[timingName] = resultObject;
+    }
   }
   return result;
 }
