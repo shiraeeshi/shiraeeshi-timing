@@ -16,9 +16,300 @@ body {
 #post-timing-dialog-main-container {
   height: 100%;
   overflow: hidden;
+  display: flex;
+}
+
+#left-panel {
+  border-right: 1px solid grey;
+  overflow: hidden;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+#resizer {
+  width: 4px;
+}
+
+#resizer:hover {
+  cursor: ew-resize;
+}
+
+#right-panel {
+  flex: 1 1 0%;
+  overflow: hidden;
+}
+
+#period-buttons-row {
+  flex: none;
+}
+
+#left-side-processes-tree-container-ul {
+  flex: 1;
+  overflow-y: auto;
+  padding-left: 10px;
+}
+
+#right-side-processes-tree-container-div {
+}
+
+#right-side-processes-tree-container-ul {
+  padding-left: 10px;
 }
 
 .timings-file-info div.category-path-is-same-as-name {
   display: none;
 }
 
+
+.proc-node > .process-node-title-container > a, .proc-leaf > .process-node-title-container > a {
+  cursor: pointer;
+}
+
+/* .process-info > .process-node-title-container > a { */
+/*   font-style: italic; */
+/* } */
+
+.proc-node.unhighlighted-node > .process-node-title-container > a,
+.proc-leaf.unhighlighted-node > .process-node-title-container > a {
+  opacity: 0.3;
+}
+
+li.proc-node-open, li.proc-node-closed, li.proc-leaf {
+  list-style-type: none;
+}
+
+li.proc-node-open > div, li.proc-node-closed > div, li.proc-leaf > div {
+  display: inline;
+}
+
+li.proc-leaf {
+  margin-left: 14px;
+}
+
+.proc-node-icon {
+  cursor: pointer;
+}
+
+.proc-node-open .proc-node-icon {
+  background: url('../../img/proc-node-minus.png') no-repeat top left;
+}
+
+.proc-node-closed .proc-node-icon {
+  background: url('../../img/proc-node-plus.png') no-repeat top left;
+}
+
+.proc-node-open .proc-node-icon, .proc-node-closed .proc-node-icon {
+  background-size: contain;
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.proc-node-closed > ul {
+  display: none;
+}
+
+.root-node > .proc-node-icon {
+  display: none;
+}
+
+.root-node > .process-node-title-container > span {
+  cursor: pointer;
+}
+
+.root-node > ul {
+  margin-block-start: 4px;
+  padding-inline-start: 0;
+}
+
+.process-node-icon {
+  position: relative;
+  cursor: pointer;
+  background-size: contain;
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.process-node-icon .tooltip {
+  visibility: hidden;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-top-right-radius: 6px;
+  padding: 5px;
+  position: fixed;
+  z-index: 1;
+  bottom: 0;
+  left: 0;
+}
+
+.process-node-icon:hover .tooltip {
+  visibility: visible;
+}
+
+.icon-show-this-process-only {
+  background-image: url('../../img/upload-flipped-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-merge-subprocesses,
+.proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-merge-subprocesses,
+/* .proc-node.process-info    > .process-node-title-container > .process-node-icons > .icon-merge-subprocesses, */
+.proc-node.proc-leaf       > .process-node-title-container > .process-node-icons > .icon-merge-subprocesses {
+  display: none;
+}
+
+.icon-merge-subprocesses {
+  display: inline-block;
+  background-image: url('../../img/grid-on-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.icon-unmerge-subprocesses,
+.proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
+  display: none;
+}
+
+.icon-unmerge-subprocesses-as-subprocess,
+.proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses-as-subprocess {
+  display: none;
+}
+
+.proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
+  display: inline-block;
+  background-image: url('../../img/grid-off-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses-as-subprocess {
+  display: inline-block;
+  background-image: url('../../img/asset-lock-icon-21-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 8px;
+  height: 10px;
+}
+
+/* .proc-node.process-info    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses { */
+/*   display: none; */
+/* } */
+
+li:first-child > .process-node-title-container > .process-node-icons > .icon-move-to-top {
+  display: none;
+}
+
+.icon-move-to-top {
+  background-image: url('../../img/up-arrow-icon-22-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 8px;
+  height: 10px;
+}
+
+li:last-child > .process-node-title-container > .process-node-icons > .icon-move-to-bottom {
+  display: none;
+}
+
+.icon-move-to-bottom {
+  background-image: url('../../img/down-arrow-icon-22-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 8px;
+  height: 10px;
+}
+
+li:last-child > .process-node-title-container > .process-node-icons > .icon-hide-siblings-below {
+  display: none;
+}
+
+.icon-hide-siblings-below {
+  background-image: url('../../img/down-icon-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.root-node > .process-node-title-container > .process-node-icons > .icon-hide,
+.root-node > .process-node-title-container > .process-node-icons > .icon-show-this-process-only {
+  display: none;
+}
+
+.icon-hide {
+  background-image: url('../../img/eye-slash-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.proc-node .icon-unhide-hidden-children {
+  display: none;
+}
+
+.proc-node.has-hidden-children > .process-node-title-container > .process-node-icons > .icon-unhide-hidden-children {
+  display: inline-block;
+}
+
+.icon-unhide-hidden-children {
+  background-image: url('../../img/eye-icon-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+
+.process-node-title-container > div {
+  display: inline-block;
+}
+
+.process-node-title-container .process-node-icons {
+  visibility: hidden;
+  padding-left: 4px;
+}
+
+.process-node-title-container:hover .process-node-icons {
+  visibility: visible;
+}
+
+/* #processes-tree-container-ul {             */
+/*   width: 100%;                             */
+/* }                                          */
+/*                                            */
+/* #processes-tree-secondary-container-div {  */
+/*   width: 100%;                             */
+/* }                                          */
+
+#processes-tree-container-ul.inactive {
+  display: none;
+}
+
+#processes-tree-secondary-container-div.inactive {
+  display: none;
+}
+
+#secondary-show-all-btn {
+  margin-top: 16px;
+}
+
+#processes-tree-secondary-ul {
+  margin-top: unset;
+}
+
+#btn-plus-month {
+  margin-left: 4px;
+}
+
+#btn-plus-week {
+  margin-left: 4px;
+}
+
+#period-info {
+  margin-left: 4px;
+}
+
+.proc-node.in-rectangle > .process-node-title-container > a {
+  border: 1px solid black;
+}

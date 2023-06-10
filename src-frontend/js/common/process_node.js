@@ -45,6 +45,18 @@ ProcessNode.prototype.ensureChildWithName = function(name) {
   return child;
 };
 
+ProcessNode.prototype.removeFromTree = function(name) {
+  let that = this;
+  if (that.parent === null) {
+    return;
+  }
+  let idx = that.parent.children.indexOf(that);
+  if (idx >= 0) {
+    that.parent.children.splice(idx, 1);
+  }
+  delete that.parent.childrenByName[that.name];
+};
+
 ProcessNode.prototype.getTimingsToHighlightCountRecursive = function(name) {
   let that = this;
   let result = that.getOwnTimingsCountRecursive();

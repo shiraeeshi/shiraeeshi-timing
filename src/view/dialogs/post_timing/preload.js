@@ -14,6 +14,38 @@ contextBridge.exposeInMainWorld('webkit', {
         });
       }
     },
+    timings_frequencies_msgs: {
+      postMessage: (msg) => {
+        console.log('[preload.js] webkit.messageHandlers.post_timing_dialog_msgs.postMessage');
+        ipcRenderer.send('msg-from-frequencies', msg);
+      },
+    },
+    timings_frequencies_msgs__timings_for_period: {
+      postMessage: (msg) => {
+        console.log('[preload.js] webkit.messageHandlers.timings_frequencies_msgs.postMessage');
+        ipcRenderer.send('timings_frequencies_msgs__timings_for_period', msg);
+      },
+    },
+    post_timing_dialog_msgs__disable_shortcuts: {
+      postMessage: () => {
+        ipcRenderer.send('post_timing_dialog_msgs__disable_shortcuts');
+      }
+    },
+    post_timing_dialog_msgs__enable_shortcuts: {
+      postMessage: () => {
+        ipcRenderer.send('post_timing_dialog_msgs__enable_shortcuts');
+      }
+    },
+    post_timing_dialog_msgs__write_to_clipboard: {
+      postMessage: (value) => {
+        ipcRenderer.send('post_timing_dialog_msgs__write_to_clipboard', value);
+      }
+    },
+    post_timing_dialog_msgs__write_to_file: {
+      postMessage: (filepath, value) => {
+        ipcRenderer.send('post_timing_dialog_msgs__write_to_file', filepath, value);
+      }
+    }
   }
 });
 

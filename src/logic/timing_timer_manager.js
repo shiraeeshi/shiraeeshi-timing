@@ -37,12 +37,15 @@ TimingTimerManager.prototype.stopTiming = async function() {
   let deltaMinutes = Math.floor(delta / 60000);
   let deltaStr = `${deltaMinutes} m`;
 
-  let row = `${currentDateStr} ${timingStartStr} - ${timingEndStr}   (${deltaStr}) ${that.currentTimingInfo.timingName}\n`;
+  let row = `${currentDateStr} ${timingStartStr} - ${timingEndStr}   (${deltaStr})`;
+  let rowWithTimingNameAndNewline = `${row} ${that.currentTimingInfo.timingName}\n`;
 
   const timingFile = fs.createWriteStream(that.timingFilepath, { flags: 'a', encoding: 'utf8' });
-  await _writeToStream(timingFile, row);
+  await _writeToStream(timingFile, rowWithTimingNameAndNewline);
 
   delete that.currentTimingInfo;
+
+  return row;
 };
 
 function TimingTimerInfo(timingName, startedAt) {

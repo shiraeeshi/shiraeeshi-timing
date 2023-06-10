@@ -67,6 +67,12 @@ export function createMenu(appEnv, tray) {
       }
     },
     {
+      label: 'Post-Timing Dialog',
+      click: async () => {
+        await showPostTimingDialog(appEnv);
+      }
+    },
+    {
       label: 'quit',
       click: () => {
         app.exit();
@@ -83,12 +89,12 @@ function createSecondMenu(appEnv, firstMenu, tray, timerManager) {
     {
       label: 'Stop Timing',
       click: async () => {
-        await timerManager.stopTiming();
+        let datetimeKey = await timerManager.stopTiming();
         const iconDataUrl = require('../../icons/cedar-svgrepo-com.png').default;
         const icon = nativeImage.createFromDataURL(iconDataUrl);
         tray.setImage(icon);
         tray.setContextMenu(firstMenu);
-        await showPostTimingDialog(appEnv);
+        await showPostTimingDialog(appEnv, datetimeKey);
       }
     },
     {
@@ -128,6 +134,12 @@ function createSecondMenu(appEnv, firstMenu, tray, timerManager) {
           label: 'Preferences',
           click: async () => {
             await showPreferences(appEnv);
+          }
+        },
+        {
+          label: 'Post-Timing Dialog',
+          click: async () => {
+            await showPostTimingDialog(appEnv);
           }
         },
         {
