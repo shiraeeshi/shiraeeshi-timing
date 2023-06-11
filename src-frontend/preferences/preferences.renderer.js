@@ -158,6 +158,14 @@ function handleServerMessage(msg) {
     bottomRowOfButtons.classList.add('hidden-behind-dialog');
   });
 
+  let inputName = document.getElementById('new-timing-name');
+  let inputFilepath = document.getElementById('new-timing-filepath');
+  let textareaCategoryPath = document.getElementById('new-timing-category-path');
+
+  disableShortcutsOnFocus(inputName);
+  disableShortcutsOnFocus(inputFilepath);
+  disableShortcutsOnFocus(textareaCategoryPath);
+
   let btnTimingsFileInfoSave = document.getElementById('btn-timings-file-info-save');
   btnTimingsFileInfoSave.addEventListener('click', (eve) => {
     let inputName = document.getElementById('new-timing-name');
@@ -424,6 +432,7 @@ function handleServerMessage(msg) {
       showingNotebookHeaderWithStar = true;
     }
   });
+  disableShortcutsOnFocus(notebookInputFilepath);
 
   let notebookFilepathBtn = document.getElementById('notebook-filepath-btn');
   notebookFilepathBtn.addEventListener('click', async (eve) => {
@@ -463,6 +472,7 @@ function handleServerMessage(msg) {
       showingNotebookHeaderWithStar = true;
     }
   });
+  disableShortcutsOnFocus(notebookInputBackgroundColor);
 
   let notebookRadioBtnStartWithBottomPanelOfNotesMaximized =
     document.getElementById('start-notebook-with-bottom-panel-of-notes-maximized');
@@ -517,6 +527,7 @@ function handleServerMessage(msg) {
       showingNotebookHeaderWithStar = true;
     }
   });
+  disableShortcutsOnFocus(notebookInputFontSizeOfTopPanelOfTags);
 
   let notebookInputFontSizeOfBottomPanelOfTags = 
     document.getElementById('font-size-in-px-of-bottom-panel-of-tags');
@@ -547,6 +558,7 @@ function handleServerMessage(msg) {
       showingNotebookHeaderWithStar = true;
     }
   });
+  disableShortcutsOnFocus(notebookInputFontSizeOfBottomPanelOfTags);
 
   let notebookInputFontSizeOfTopPanelOfNotes = 
     document.getElementById('font-size-in-px-of-top-panel-of-notes');
@@ -577,6 +589,7 @@ function handleServerMessage(msg) {
       showingNotebookHeaderWithStar = true;
     }
   });
+  disableShortcutsOnFocus(notebookInputFontSizeOfTopPanelOfNotes);
 
   let notebookInputFontSizeOfBottomPanelOfNotes = 
     document.getElementById('font-size-in-px-of-bottom-panel-of-notes');
@@ -607,6 +620,7 @@ function handleServerMessage(msg) {
       showingNotebookHeaderWithStar = true;
     }
   });
+  disableShortcutsOnFocus(notebookInputFontSizeOfBottomPanelOfNotes);
 }
 
 
@@ -926,5 +940,14 @@ function pickFile() {
     my.filepicker_result_handler = (result) => {
       resolve(result);
     }
+  });
+}
+
+function disableShortcutsOnFocus(inputElem) {
+  inputElem.addEventListener('focus', (eve) => {
+    window.webkit.messageHandlers.preferences_msg__disable_shortcuts.postMessage();
+  });
+  inputElem.addEventListener('blur', (eve) => {
+    window.webkit.messageHandlers.preferences_msg__enable_shortcuts.postMessage();
   });
 }

@@ -11,6 +11,7 @@ let win;
 let appEnv;
 let configFilepath;
 let indexDirFilepath;
+let isDisabledShortcuts = false;
 
 ipcMain.on('msg_choose_file', async (_event) => {
   let result = await dialog.showOpenDialog({properties: ['openFile', 'promptToCreate']});
@@ -18,6 +19,13 @@ ipcMain.on('msg_choose_file', async (_event) => {
     type: 'filepicker_result',
     result: result
   });
+});
+
+ipcMain.on('msg_enable_shortcuts', (_event) => {
+  isDisabledShortcuts = false;
+});
+ipcMain.on('msg_disable_shortcuts', (_event) => {
+  isDisabledShortcuts = true;
 });
 
 ipcMain.on('msg_cancel', (_event) => {
@@ -167,6 +175,9 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'toggle fullscreen',
         accelerator: process.platform === 'darwin' ? 'f' : 'f',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           isFullScreen = !isFullScreen;
           // let window = electron.remote.getCurrentWindow();
           win.setFullScreen(isFullScreen);
@@ -176,6 +187,9 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'Escape',
         accelerator: 'Escape',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           if (isFullScreen) {
             isFullScreen = false;
             win.setFullScreen(false);
@@ -188,6 +202,9 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'open devtools',
         accelerator: 'Ctrl+Shift+J',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           win.openDevTools();
         }
       },
@@ -195,6 +212,9 @@ function setMenuAndKeyboardShortcuts(win) {
         role: 'help',
         accelerator: process.platform === 'darwin' ? 'h' : 'h',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           console.log('---===[ menu item clicked ]===---')
         }
       }

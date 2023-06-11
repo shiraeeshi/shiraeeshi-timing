@@ -20,6 +20,18 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('msg_choose_file');
       },
     },
+    preferences_msg__enable_shortcuts: {
+      postMessage: () => {
+        console.log('[preload.js] webkit.messageHandlers.preferences_msg__enable_shortcuts.postMessage');
+        ipcRenderer.send('msg_enable_shortcuts');
+      },
+    },
+    preferences_msg__disable_shortcuts: {
+      postMessage: () => {
+        console.log('[preload.js] webkit.messageHandlers.preferences_msg__disable_shortcuts.postMessage');
+        ipcRenderer.send('msg_disable_shortcuts');
+      },
+    },
     preferences_msg__cancel: {
       postMessage: () => {
         ipcRenderer.send('msg_cancel');
