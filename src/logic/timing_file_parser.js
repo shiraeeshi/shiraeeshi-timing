@@ -11,7 +11,7 @@ async function readTimings(config) {
   for (let timing of config.timings) {
     let timingName = timing['name'];
     let filepath = expanduser(timing['filepath']);
-    let timingCategoryPath = timing['category-path'];
+    let timingCategoryPath = timing.categoryPath;
     if (timingCategoryPath === undefined) {
       timingCategoryPath = [timingName];
     }
@@ -50,7 +50,7 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
     let filepath = expanduser(timing['filepath']);
     let indexFilename = timing2indexFilename[timingName];
     let indexFilepath = path.join(indexDirFilepath, indexFilename);
-    let timingCategoryPath = timing['category-path'];
+    let timingCategoryPath = timing.categoryPath;
     if (timingCategoryPath === undefined) {
       timingCategoryPath = [timingName];
     }
@@ -182,7 +182,7 @@ async function readTimingsOfToday(config, timing2indexFilename, indexDirFilepath
     if (!done) {
       offsetsOfToday = indexEntry;
     }
-    let timingCategoryPath = timing['category-path'];
+    let timingCategoryPath = timing.categoryPath;
     if (timingCategoryPath === undefined) {
       timingCategoryPath = [timingName];
     }

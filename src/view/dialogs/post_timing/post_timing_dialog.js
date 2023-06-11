@@ -163,7 +163,7 @@ async function init(appEnv, win) {
 
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
 
-  config = YAML.parse(configFileContents);
+  config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
 
   await func({
     config: config,
@@ -240,6 +240,16 @@ function _writeToStream(stream, data) {
     }
     func();
   });
+}
+
+function convertConfigFromYamlFormat(config) {
+  config.timings.forEach(timingsFileInfo => {
+    if (timingsFileInfo['category-path'] !== undefined) {
+      timingsFileInfo.categoryPath = timingsFileInfo['category-path'];
+      delete timingsFileInfo['category-path'];
+    }
+  });
+  return config;
 }
 
 function parseDateWithDots(input) {

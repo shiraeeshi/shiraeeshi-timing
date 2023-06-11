@@ -42,17 +42,21 @@ function handleServerMessage(msg) {
       my.timingsFileInfosListView.handleSaveSuccess();
       return;
     }
-    function copyWithNoViews(timingsFileInfos) {
+    function convertToBackendFormat(timingsFileInfos) {
       return timingsFileInfos.map(t => {
         let copy = Object.assign({}, t);
         delete copy.view;
+        if (copy.categoryPath !== undefined) {
+          copy['category-path'] = copy.categoryPath;
+          delete copy.categoryPath;
+        }
         return copy;
       });
     }
     window.webkit.messageHandlers.preferences_msg__save.postMessage({
       configWithNoTimings: Object.assign({}, config, {timings: []}),
-      timings: copyWithNoViews(my.timingsFileInfosListView.timingsToShow),
-      timingsToAdd: copyWithNoViews(Object.values(my.timingsToAddByName)),
+      timings: convertToBackendFormat(my.timingsFileInfosListView.timingsToShow),
+      timingsToAdd: convertToBackendFormat(Object.values(my.timingsToAddByName)),
       namesOfTimingsToDelete: Object.keys(my.timingsToDeleteByName),
       changedTimings: my.showingTimingsHeaderWithStar,
       changedTimingsConfig: showingTimingsConfigHeaderWithStar,

@@ -130,7 +130,7 @@ async function init(appEnv, win) {
   }
   console.log(`configFilepath: ${configFilepath}`);
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
-  const config = YAML.parse(configFileContents);
+  const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
 
   if (config.notebook === undefined) {
     func({
@@ -164,5 +164,17 @@ async function init(appEnv, win) {
     "notes": notebookContentsParsed,
     "config": config
   });
+}
+
+
+
+function convertConfigFromYamlFormat(config) {
+  config.timings.forEach(timingsFileInfo => {
+    if (timingsFileInfo['category-path'] !== undefined) {
+      timingsFileInfo.categoryPath = timingsFileInfo['category-path'];
+      delete timingsFileInfo['category-path'];
+    }
+  });
+  return config;
 }
 

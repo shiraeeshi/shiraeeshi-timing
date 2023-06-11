@@ -283,7 +283,7 @@ async function init(appEnv, win) {
   console.log('[init] 1');
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   console.log('[init] 2');
-  const config = YAML.parse(configFileContents);
+  const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
 
   registerFrequenciesRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender);
   registerHistoryRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender);
@@ -473,6 +473,16 @@ function registerFrequenciesRequestHandler(ipcMain, win, config, configFilepath,
     messageSender.send(msg);
     console.log('[composite_main_window.js] sent timings as a response to frequencies request for period');
   });
+}
+
+function convertConfigFromYamlFormat(config) {
+  config.timings.forEach(timingsFileInfo => {
+    if (timingsFileInfo['category-path'] !== undefined) {
+      timingsFileInfo.categoryPath = timingsFileInfo['category-path'];
+      delete timingsFileInfo['category-path'];
+    }
+  });
+  return config;
 }
 
 function parseDateWithDots(input) {

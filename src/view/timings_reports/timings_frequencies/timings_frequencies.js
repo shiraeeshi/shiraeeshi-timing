@@ -124,7 +124,7 @@ async function initMessageHandlers(appEnv, win) {
   console.log('[init] 1');
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   console.log('[init] 2');
-  const config = YAML.parse(configFileContents);
+  const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
 
   ipcMain.on('timings_frequencies_msgs', (_event, msg) => {
     console.log(`[main.js] message from timing_frequencies: ${msg}`);
@@ -171,6 +171,17 @@ async function initMessageHandlers(appEnv, win) {
     };
     win.webContents.send('message-from-backend', msg);
   });
+}
+
+
+function convertConfigFromYamlFormat(config) {
+  config.timings.forEach(timingsFileInfo => {
+    if (timingsFileInfo['category-path'] !== undefined) {
+      timingsFileInfo.categoryPath = timingsFileInfo['category-path'];
+      delete timingsFileInfo['category-path'];
+    }
+  });
+  return config;
 }
 
 
