@@ -98,16 +98,6 @@ function categoryPathIsSameAsName(timingsFileInfo) {
     );
 }
 
-function categoryPathToString(timingsFileInfo) {
-  let categoryPath;
-  if (timingsFileInfo.categoryPath !== undefined) {
-    categoryPath = timingsFileInfo.categoryPath;
-  } else {
-    categoryPath = [timingsFileInfo.name];
-  }
-  return categoryPath.join(' - ');
-}
-
 function buildTreeFromCategoryPathToFile(config) {
   function ensureChildWithName(node, name) {
     if (node.childrenByName.hasOwnProperty(name)) {
@@ -134,7 +124,10 @@ function buildTreeFromCategoryPathToFile(config) {
         node = ensureChildWithName(node, cat);
       }
     }
-    node.filepath = timingsFileInfo.filepath;
+    if (node.filepaths === undefined) {
+      node.filepaths = [];
+    }
+    node.filepaths.push(timingsFileInfo.filepath);
   });
   return rootNode;
 }

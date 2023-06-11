@@ -501,30 +501,7 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
     } else {
       let branchUntilNode = copyProcessBranchUntilNode(that.nodeInRectangle.processNode);
       that.mergeRightSideWithNewTimings(branchUntilNode);
-
-      let possibleFilepaths = getPossibleFilepaths();
-      let bottomRightPanel = document.getElementById('bottom-right-panel');
-      bottomRightPanel.innerHTML = '';
-
-      let pfHeader;
-      let pfLen = possibleFilepaths.length;
-      if (pfLen === 0) {
-        pfHeader = 'no filepath';
-      } else if (pfLen === 1) {
-        pfHeader = 'filepath:'
-      } else {
-        pfHeader = 'filepaths:'
-      }
-      withChildren(bottomRightPanel,
-        withChildren(document.createElement('span'),
-          document.createTextNode(pfHeader)
-        ),
-        ...possibleFilepaths.map(pf => withChildren(document.createElement('div'),
-          withChildren(document.createElement('span'),
-            document.createTextNode(pf.filepath)
-          )
-        ))
-      );
+      showPossibleFilepaths();
     }
   } else if (key === 'o') {
     if (!that.isCursorOnRightSide) {
@@ -556,6 +533,8 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
       that.rightSideNodeInRectangle.removeFromTree();
       newNodeInRectangle.wrapInRectangle();
       that.rightSideNodeInRectangle = newNodeInRectangle;
+
+      showPossibleFilepaths();
     } else {
       let branchUntilNode = copyProcessBranchUntilNode(that.nodeInRectangle.processNode);
       let nodeFromPath = branchUntilNode;
@@ -592,6 +571,8 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
       if (newNodeInRectangle !== undefined) {
         rightSideNode.removeFromTree();
       }
+
+      showPossibleFilepaths();
     }
   } else if (eve.ctrlKey && key === 's') {
     save();
@@ -629,26 +610,86 @@ function save() {
 function cancel() {
 }
 
+function showPossibleFilepaths() {
+
+  let possibleFilepaths = getPossibleFilepaths();
+  let bottomRightPanel = document.getElementById('bottom-right-panel');
+  bottomRightPanel.innerHTML = '';
+
+  let pfHeader;
+  let pfLen = possibleFilepaths.length;
+  if (pfLen === 0) {
+    pfHeader = 'no filepath';
+  } else if (pfLen === 1 && possibleFilepaths[0].filepaths.length == 1) {
+    pfHeader = 'filepath:'
+  } else {
+    pfHeader = 'select filepath:'
+  }
+  withChildren(bottomRightPanel,
+    withChildren(document.createElement('span'),
+      document.createTextNode(pfHeader)
+    ),
+    ...possibleFilepaths.map(pf =>
+      withChildren(document.createElement('div'),
+        withChildren(document.createElement('span'),
+          document.createTextNode(`category path: ${pf.categoryPath.join(' - ')}`)
+        ),
+        ...pf.filepaths.map(fp => withChildren(document.createElement('div'),
+          withChildren(document.createElement('label'),
+            (function() {
+              let checkbox = document.createElement('input');
+              checkbox.type = "checkbox";
+              return checkbox;
+            })(),
+            document.createTextNode(`filepath: ${fp}`)
+          )
+        )),
+        document.createElement('br'),
+      )
+    )
+  );
+}
+
 function getPossibleFilepaths() {
   let cp2fResult = [];
-  function func(cp2fNode, processNode, categoryPath) {
-    if (cp2fNode.filepath !== undefined) {
-      cp2fResult.push({
-        categoryPath: categoryPath,
-        filepath: cp2fNode.filepath
-      });
-    }
-    processNode.children.forEach(ch => {
-      if (cp2fNode.childrenByName.hasOwnProperty(ch.name)) {
-        let nextCp2fNode = cp2fNode.childrenByName[ch.name];
-        func(nextCp2fNode, ch, categoryPath.concat(ch.name));
-      }
-    });
-  }
+  // function func(cp2fNode, processNode, categoryPath) {
+  //   if (cp2fNode.filepaths !== undefined) {
+  //     cp2fResult.push({
+  //       categoryPath: categoryPath,
+  //       filepaths: cp2fNode.filepaths
+  //     });
+  //   }
+  //   processNode.children.forEach(ch => {
+  //     if (cp2fNode.childrenByName.hasOwnProperty(ch.name)) {
+  //       let nextCp2fNode = cp2fNode.childrenByName[ch.name];
+  //       func(nextCp2fNode, ch, categoryPath.concat(ch.name));
+  //     }
+  //   });
+  // }
   let cp2fNode = my.categoryPath2File;
   let processNode = my.rightSideTimings;
   let categoryPath = [];
-  func(cp2fNode, processNode, categoryPath);
+  // func(cp2fNode, processNode, categoryPath);
+  while (true) {
+    if (cp2fNode.filepaths !== undefined) {
+      cp2fResult.push({
+        categoryPath: categoryPath,
+        filepaths: cp2fNode.filepaths
+      });
+    }
+    if (processNode.children.length !== 1) {
+      break;
+    }
+    let childProcessNode = processNode.children[0];
+    if (!cp2fNode.childrenByName.hasOwnProperty(childProcessNode.name)) {
+      break;
+    }
+    let childCp2fNode = cp2fNode.childrenByName[childProcessNode.name];
+
+    processNode = childProcessNode;
+    cp2fNode = childCp2fNode;
+    categoryPath = categoryPath.concat(childProcessNode.name);
+  }
   return cp2fResult;
 }
 
