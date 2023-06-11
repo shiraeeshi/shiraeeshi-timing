@@ -549,7 +549,7 @@ PostTimingTreeNodeView.prototype.buildAsHtmlLiElement = function() {
     that.sortChildrenByLastTiming();
     that.htmlChildrenContainerUl.innerHTML = "";
     withChildren(that.htmlChildrenContainerUl, ...that.children.map(ch => ch.htmlElement));
-    if (that.processNode.isInnermostCategory && that.children.length > 0) {
+    if (!that.isToUncollapseAllInitially && that.processNode.isInnermostCategory && that.children.length > 0) {
       that.collapse();
     }
   } else {

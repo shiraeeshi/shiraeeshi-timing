@@ -20,7 +20,6 @@ body {
 }
 
 #left-panel {
-  border-right: 1px solid grey;
   overflow: hidden;
   width: 50%;
   display: flex;
@@ -36,12 +35,84 @@ body {
 }
 
 #right-panel {
+  border-left: 1px solid grey;
   flex: 1 1 0%;
   overflow: hidden;
 }
 
+
+
+
+
+
+#right-panel.as-two-panels {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#upper-right-panel,
+#bottom-right-panel {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-left: 5px;
+}
+
+#right-panel:not(.as-two-panels) > 
+#upper-right-panel {
+  height: 100%;
+}
+
+#right-panel.as-two-panels >
+#upper-right-panel {
+  height: 80%;
+  flex: 0 0 auto;
+}
+
+#right-panel.as-two-panels >
+#resizer-vertical-right {
+  display: block;
+  flex: 0 0 auto;
+  height: 4px;
+}
+
+#right-panel.as-two-panels >
+#resizer-vertical-right:hover {
+  cursor: ns-resize;
+}
+
+#right-panel.as-two-panels >
+#bottom-right-panel {
+  flex: 1 1 1px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid grey;
+}
+
+
+
+
+
+#right-panel > #main-buttons-row {
+  border-top: 1px solid grey;
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px;
+}
+
+#right-panel > #main-buttons-row > #btn-save {
+  margin-left: 4px;
+}
+
+
+
+
+
+
 #period-buttons-row {
   flex: none;
+  padding: 4px;
 }
 
 #left-side-processes-tree-container-ul {
@@ -113,6 +184,12 @@ li.proc-leaf {
 
 .root-node > .proc-node-icon {
   display: none;
+}
+
+.root-node > .process-node-title-container {
+  /* fixes an issue with top border being invisible */
+  padding: 1px;
+  display: inline-block;
 }
 
 .root-node > .process-node-title-container > span {
@@ -298,13 +375,13 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
   margin-top: unset;
 }
 
-#btn-plus-month {
-  margin-left: 4px;
-}
-
-#btn-plus-week {
-  margin-left: 4px;
-}
+/* #btn-plus-month {           */
+/*   margin-left: 4px;         */
+/* }                           */
+/*                             */
+/* #btn-plus-week {            */
+/*   margin-left: 4px;         */
+/* }                           */
 
 #period-info {
   margin-left: 4px;

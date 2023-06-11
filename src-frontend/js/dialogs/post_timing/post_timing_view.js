@@ -148,9 +148,19 @@ PostTimingView.prototype.buildHtml = function() {
     ...that.children.map(childNode => childNode.htmlElement)
   );
 
+  addListenersToMainButtons();
+
   initVerticalResizer();
+  initHorizontalResizer('upper-right-panel', 'bottom-right-panel', 'resizer-vertical-right');
 
 };
+
+function addListenersToMainButtons() {
+  let btnSave = document.getElementById('btn-save');
+  btnSave.addEventListener('click', save)
+  let btnCancel = document.getElementById('btn-cancel');
+  btnCancel.addEventListener('click', cancel)
+}
 
 PostTimingView.prototype.addListenersToPeriodButtons = function() {
   let that = this;
@@ -222,53 +232,6 @@ PostTimingView.prototype.addListenersToPeriodButtons = function() {
   };
 };
 
-PostTimingView.prototype.showThisProcessOnly = function(processViewNode) {
-  let that = this;
-  if (that.solelyDisplayedProcessViewNode !== null) {
-    that._goBackToAllProcessesNoRedraw();
-  }
-  processViewNode.processNode.borrowReferences();
-  processViewNode.isTemporaryRoot = true;
-  let processHtml = processViewNode.htmlElement;
-  processViewNode.indexToReturnTo = Array.prototype.indexOf.call(processHtml.parentNode.children, processHtml);
-  processViewNode.htmlParentToReturnTo = processHtml.parentNode;
-  processHtml.parentNode.removeChild(processHtml);
-  that.htmlChildrenContainerUl.classList.add('inactive');
-  that.htmlSecondaryUl.innerHTML = '';
-  that.htmlSecondaryUl.appendChild(processHtml);
-  that.htmlSecondaryContainerDiv.classList.remove('inactive');
-  that.solelyDisplayedProcessViewNode = processViewNode;
-  if (that.hGraphic) {
-    that.hGraphic.setProcessNode(processViewNode.processNode);
-    that.hGraphic.redraw();
-  }
-};
-
-PostTimingView.prototype.goBackToAllProcesses = function() {
-  let that = this;
-  that._goBackToAllProcessesNoRedraw();
-  if (that.hGraphic) {
-    that.hGraphic.redraw();
-  }
-};
-
-PostTimingView.prototype._goBackToAllProcessesNoRedraw = function() {
-  let that = this;
-  let processViewNode = that.solelyDisplayedProcessViewNode;
-  processViewNode.processNode.unborrowReferences();
-  processViewNode.isTemporaryRoot = false;
-  let processHtml = processViewNode.htmlElement;
-  processHtml.parentNode.removeChild(processHtml);
-  let parent = processViewNode.htmlParentToReturnTo;
-  parent.insertBefore(processHtml, parent.children[processViewNode.indexToReturnTo]);
-  that.htmlChildrenContainerUl.classList.remove('inactive');
-  that.htmlSecondaryUl.innerHTML = '';
-  that.htmlSecondaryContainerDiv.classList.add('inactive');
-  that.solelyDisplayedProcessViewNode = null;
-  if (that.hGraphic) {
-    that.hGraphic.setProcessNode(that.processNode);
-  }
-};
 
 function initVerticalResizer() {
   let leftHalf = document.getElementById('left-panel');
@@ -315,6 +278,57 @@ function initVerticalResizer() {
 
     rightHalf.style.removeProperty('user-select');
     rightHalf.style.removeProperty('pointer-events');
+
+    document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
+  }
+}
+
+function initHorizontalResizer(topPanelId, bottomPanelId, resizerId) {
+  let topPanel = document.getElementById(topPanelId);
+  let resizer = document.getElementById(resizerId);
+  let bottomPanel = document.getElementById(bottomPanelId);
+
+  let resizerX = 0;
+  let resizerY = 0;
+
+  let topPanelHeight = 0;
+
+  resizer.addEventListener('mousedown', (eve) => {
+    resizerX = eve.clientX;
+    resizerY = eve.clientY;
+
+    topPanelHeight = topPanel.getBoundingClientRect().height;
+
+    document.documentElement.style.cursor = 'ns-resize';
+
+    topPanel.style.userSelect = 'none';
+    topPanel.style.pointerEvents = 'none';
+
+    bottomPanel.style.userSelect = 'none';
+    bottomPanel.style.pointerEvents = 'none';
+
+    document.documentElement.addEventListener('mousemove', resizerMouseMoveListener);
+    document.documentElement.addEventListener('mouseup', resizerMouseUpListener);
+  });
+
+  function resizerMouseMoveListener(eve) {
+    const dx = eve.clientX - resizerX;
+    const dy = eve.clientY - resizerY;
+
+    const newTopPanelHeight = ((topPanelHeight + dy) * 100) / resizer.parentNode.getBoundingClientRect().height;
+
+    topPanel.style.height = `${newTopPanelHeight}%`;
+  }
+
+  function resizerMouseUpListener(eve) {
+    document.documentElement.style.removeProperty('cursor');
+
+    topPanel.style.removeProperty('user-select');
+    topPanel.style.removeProperty('pointer-events');
+
+    bottomPanel.style.removeProperty('user-select');
+    bottomPanel.style.removeProperty('pointer-events');
 
     document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
     document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
@@ -487,6 +501,30 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
     } else {
       let branchUntilNode = copyProcessBranchUntilNode(that.nodeInRectangle.processNode);
       that.mergeRightSideWithNewTimings(branchUntilNode);
+
+      let possibleFilepaths = getPossibleFilepaths();
+      let bottomRightPanel = document.getElementById('bottom-right-panel');
+      bottomRightPanel.innerHTML = '';
+
+      let pfHeader;
+      let pfLen = possibleFilepaths.length;
+      if (pfLen === 0) {
+        pfHeader = 'no filepath';
+      } else if (pfLen === 1) {
+        pfHeader = 'filepath:'
+      } else {
+        pfHeader = 'filepaths:'
+      }
+      withChildren(bottomRightPanel,
+        withChildren(document.createElement('span'),
+          document.createTextNode(pfHeader)
+        ),
+        ...possibleFilepaths.map(pf => withChildren(document.createElement('div'),
+          withChildren(document.createElement('span'),
+            document.createTextNode(pf.filepath)
+          )
+        ))
+      );
     }
   } else if (key === 'o') {
     if (!that.isCursorOnRightSide) {
@@ -556,33 +594,40 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
       }
     }
   } else if (eve.ctrlKey && key === 's') {
-    let possibleFilepaths = getPossibleFilepaths();
-    if (possibleFilepaths.length === 0) {
-      alert('no filepath found');
-    } else if (possibleFilepaths.length > 1) {
-      alert('possible filepaths:\n' + possibleFilepaths.map(pf => pf.filepath).join('\n'));
-    } else {
-      let pf = possibleFilepaths[0];
-      let innermostCategoryPath = findLastInnermostCategoryPath(my.rightSideTimings, pf.categoryPath);
-      if (innermostCategoryPath === undefined) {
-        alert("no process node found.\nmake sure that you've selected a process node or some of its descendant nodes.\na process node gets collapsed by default in the left-side tree\n(collapsed node hides its children and draws a plus sign icon in front of itself)");
-        return;
-      }
-      if (!isPrefix(pf.categoryPath, innermostCategoryPath)) {
-        alert([
-          "error: categoryPathToSkip should be a prefix of innermostCategoryPath",
-          `categoryPathToSkip: ${pf.categoryPath}`,
-          `innermostCategoryPath: ${innermostCategoryPath}`
-        ].join('\n'));
-        return;
-      }
-      window.webkit.messageHandlers.post_timing_dialog_msgs__write_to_file.postMessage(
-        pf.filepath,
-        convertToWritablePreYamlJson(my.rightSideTimings, pf.categoryPath, innermostCategoryPath)
-      );
-    }
+    save();
   }
 };
+
+function save() {
+  let possibleFilepaths = getPossibleFilepaths();
+  if (possibleFilepaths.length === 0) {
+    alert('no filepath found');
+  } else if (possibleFilepaths.length > 1) {
+    alert('possible filepaths:\n' + possibleFilepaths.map(pf => pf.filepath).join('\n'));
+  } else {
+    let pf = possibleFilepaths[0];
+    let innermostCategoryPath = findLastInnermostCategoryPath(my.rightSideTimings, pf.categoryPath);
+    if (innermostCategoryPath === undefined) {
+      alert("no process node found.\nmake sure that you've selected a process node or some of its descendant nodes.\na process node gets collapsed by default in the left-side tree\n(collapsed node hides its children and draws a plus sign icon in front of itself)");
+      return;
+    }
+    if (!isPrefix(pf.categoryPath, innermostCategoryPath)) {
+      alert([
+        "error: categoryPathToSkip should be a prefix of innermostCategoryPath",
+        `categoryPathToSkip: ${pf.categoryPath}`,
+        `innermostCategoryPath: ${innermostCategoryPath}`
+      ].join('\n'));
+      return;
+    }
+    window.webkit.messageHandlers.post_timing_dialog_msgs__write_to_file.postMessage(
+      pf.filepath,
+      convertToWritablePreYamlJson(my.rightSideTimings, pf.categoryPath, innermostCategoryPath)
+    );
+  }
+}
+
+function cancel() {
+}
 
 function getPossibleFilepaths() {
   let cp2fResult = [];
