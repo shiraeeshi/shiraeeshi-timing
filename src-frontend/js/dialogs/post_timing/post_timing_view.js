@@ -579,32 +579,60 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
   }
 };
 
+// function save() {
+//   let possibleFilepaths = getPossibleFilepaths();
+//   if (possibleFilepaths.length === 0) {
+//     alert('no filepath found');
+//   } else if (possibleFilepaths.length > 1) {
+//     alert('possible filepaths:\n' + possibleFilepaths.map(pf => pf.filepath).join('\n'));
+//   } else {
+//     let pf = possibleFilepaths[0];
+//     if (pf.filepaths.length > 1) {
+//       alert('possible filepaths:\n' + pf.filepaths.join('\n'));
+//       return;
+//     }
+//     let innermostCategoryPath = findLastInnermostCategoryPath(my.rightSideTimings, pf.categoryPath);
+//     if (innermostCategoryPath === undefined) {
+//       alert("no process node found.\nmake sure that you've selected a process node or some of its descendant nodes.\na process node gets collapsed by default in the left-side tree\n(collapsed node hides its children and draws a plus sign icon in front of itself)");
+//       return;
+//     }
+//     if (!isPrefix(pf.categoryPath, innermostCategoryPath)) {
+//       alert([
+//         "error: categoryPathToSkip should be a prefix of innermostCategoryPath",
+//         `categoryPathToSkip: ${pf.categoryPath}`,
+//         `innermostCategoryPath: ${innermostCategoryPath}`
+//       ].join('\n'));
+//       return;
+//     }
+//     window.webkit.messageHandlers.post_timing_dialog_msgs__write_to_file.postMessage(
+//       pf.filepaths[0],
+//       convertToWritablePreYamlJson(my.rightSideTimings, pf.categoryPath, innermostCategoryPath)
+//     );
+//   }
+// }
+
 function save() {
-  let possibleFilepaths = getPossibleFilepaths();
-  if (possibleFilepaths.length === 0) {
-    alert('no filepath found');
-  } else if (possibleFilepaths.length > 1) {
-    alert('possible filepaths:\n' + possibleFilepaths.map(pf => pf.filepath).join('\n'));
-  } else {
-    let pf = possibleFilepaths[0];
-    let innermostCategoryPath = findLastInnermostCategoryPath(my.rightSideTimings, pf.categoryPath);
-    if (innermostCategoryPath === undefined) {
-      alert("no process node found.\nmake sure that you've selected a process node or some of its descendant nodes.\na process node gets collapsed by default in the left-side tree\n(collapsed node hides its children and draws a plus sign icon in front of itself)");
-      return;
-    }
-    if (!isPrefix(pf.categoryPath, innermostCategoryPath)) {
-      alert([
-        "error: categoryPathToSkip should be a prefix of innermostCategoryPath",
-        `categoryPathToSkip: ${pf.categoryPath}`,
-        `innermostCategoryPath: ${innermostCategoryPath}`
-      ].join('\n'));
-      return;
-    }
-    window.webkit.messageHandlers.post_timing_dialog_msgs__write_to_file.postMessage(
-      pf.filepath,
-      convertToWritablePreYamlJson(my.rightSideTimings, pf.categoryPath, innermostCategoryPath)
-    );
+  if (my.selectedFilepath === undefined || my.selectedCategoryPath === undefined) {
+    alert('please select a filepath');
+    return;
   }
+  let innermostCategoryPath = findLastInnermostCategoryPath(my.rightSideTimings, my.selectedCategoryPath);
+  if (innermostCategoryPath === undefined) {
+    alert("no process node found.\nmake sure that you've selected a process node or some of its descendant nodes.\na process node gets collapsed by default in the left-side tree\n(collapsed node hides its children and draws a plus sign icon in front of itself)");
+    return;
+  }
+  if (!isPrefix(my.selectedCategoryPath, innermostCategoryPath)) {
+    alert([
+      "error: categoryPathToSkip should be a prefix of innermostCategoryPath",
+      `categoryPathToSkip: ${my.selectedCategoryPath}`,
+      `innermostCategoryPath: ${innermostCategoryPath}`
+    ].join('\n'));
+    return;
+  }
+  window.webkit.messageHandlers.post_timing_dialog_msgs__write_to_file.postMessage(
+    my.selectedFilepath,
+    convertToWritablePreYamlJson(my.rightSideTimings, my.selectedCategoryPath, innermostCategoryPath)
+  );
 }
 
 function cancel() {
@@ -616,15 +644,25 @@ function showPossibleFilepaths() {
   let bottomRightPanel = document.getElementById('bottom-right-panel');
   bottomRightPanel.innerHTML = '';
 
+  delete my.selectedFilepath;
+  delete my.selectedCategoryPath;
+  if (my.selectedFilepathCheckbox !== undefined) {
+    my.selectedFilepathCheckbox.checked = false;
+    delete my.selectedFilepathCheckbox;
+  }
+
   let pfHeader;
   let pfLen = possibleFilepaths.length;
   if (pfLen === 0) {
     pfHeader = 'no filepath';
   } else if (pfLen === 1 && possibleFilepaths[0].filepaths.length == 1) {
     pfHeader = 'filepath:'
+    my.selectedFilepath = possibleFilepaths[0].filepaths[0];
+    my.selectedCategoryPath = possibleFilepaths[0].categoryPath;
   } else {
     pfHeader = 'select filepath:'
   }
+
   withChildren(bottomRightPanel,
     withChildren(document.createElement('span'),
       document.createTextNode(pfHeader)
@@ -639,6 +677,21 @@ function showPossibleFilepaths() {
             (function() {
               let checkbox = document.createElement('input');
               checkbox.type = "checkbox";
+              if (possibleFilepaths.length === 1 && possibleFilepaths[0].filepaths.length === 1) {
+                checkbox.checked = true;
+                my.selectedFilepathCheckbox = checkbox;
+              }
+              checkbox.addEventListener('change', (eve) => {
+                let checked = checkbox.checked;
+                if (checked) {
+                  if (my.selectedFilepathCheckbox !== undefined) {
+                    my.selectedFilepathCheckbox.checked = false;
+                  }
+                  my.selectedFilepath = fp;
+                  my.selectedCategoryPath = pf.categoryPath;
+                  my.selectedFilepathCheckbox = checkbox;
+                }
+              });
               return checkbox;
             })(),
             document.createTextNode(`filepath: ${fp}`)
