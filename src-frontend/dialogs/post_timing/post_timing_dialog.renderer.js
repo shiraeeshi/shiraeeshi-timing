@@ -57,8 +57,8 @@ function handleServerMessage(msg) {
     }
 
     if (!my.addedKeyupListener) {
-      document.body.addEventListener('keydown', (eve) => {
-        my.viewBuilder.treeView.handleKeyDown(eve);
+      document.body.addEventListener('keyup', (eve) => {
+        my.viewBuilder.treeView.handleKeyUp(eve);
       });
 
       my.addedKeyupListener = true;

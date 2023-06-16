@@ -387,7 +387,7 @@ PostTimingView.prototype.enableKeyboardListener = function(key) {
   that.isKeyboardListenerDisabled = false;
 }
 
-PostTimingView.prototype.handleKeyDown = function(eve) {
+PostTimingView.prototype.handleKeyUp = function(eve) {
   let that = this;
 
   if (that.isKeyboardListenerDisabled) {
