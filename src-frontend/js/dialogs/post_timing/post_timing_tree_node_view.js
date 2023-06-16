@@ -328,6 +328,19 @@ PostTimingTreeNodeView.prototype.edit = function(changeHandler) {
     my.viewBuilder.treeView.enableKeyboardListener();
     window.webkit.messageHandlers.post_timing_dialog_msgs__enable_shortcuts.postMessage();
   });
+  inputElem.addEventListener('keypress', (eve) => {
+    if (eve.key === 'Enter') {
+      eve.preventDefault();
+    }
+  });
+  inputElem.addEventListener('keyup', (eve) => {
+    if (eve.key === 'Enter') {
+      eve.preventDefault();
+      eve.stopPropagation();
+      let event = new Event('change');
+      inputElem.dispatchEvent(event);
+    }
+  });
   inputElem.focus();
   my.viewBuilder.treeView.disableKeyboardListener();
   window.webkit.messageHandlers.post_timing_dialog_msgs__disable_shortcuts.postMessage();
