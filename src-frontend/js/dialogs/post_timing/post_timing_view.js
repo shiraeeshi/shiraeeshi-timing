@@ -69,7 +69,7 @@ PostTimingView.prototype.mergeRightSideWithNewTimings = function(branchToMerge) 
     my.rightSideTimings = branchToMerge;
     handleSelectedAsInnermostCategoryProcessNode();
   } else {
-    mergeProcessBranchInto(my.rightSideTimings, branchToMerge);
+    that.mergeProcessBranchIntoRightSide(branchToMerge);
   }
   let oldChild = that.rightSideChildrenByName[branchToMerge.name];
   if (oldChild === undefined) {
@@ -88,12 +88,23 @@ PostTimingView.prototype.mergeRightSideWithNewTimings = function(branchToMerge) 
   }
 };
 
-function mergeProcessBranchInto(processesTree, branchToMerge) {
-  let node = processesTree;
+
+PostTimingView.prototype.mergeProcessBranchIntoRightSide = function(branchToMerge) {
+  let that = this;
+  let node = my.rightSideTimings;
+  let leftSideNode = that.processNode;
   let nodeFromBranchToMerge = branchToMerge;
   while (nodeFromBranchToMerge.children.length > 0) {
     nodeFromBranchToMerge = nodeFromBranchToMerge.children[0];
     node = node.ensureChildCopyOf(nodeFromBranchToMerge);
+    node.parent.children.sort((a, b) => {
+      let leftSideA = leftSideNode.childrenByName[a.name];
+      let leftSideB = leftSideNode.childrenByName[b.name];
+      let indexA = leftSideNode.children.indexOf(leftSideA)
+      let indexB = leftSideNode.children.indexOf(leftSideB)
+      return indexA - indexB;
+    });
+    leftSideNode = leftSideNode.childrenByName[nodeFromBranchToMerge.name];
   }
   handleSelectedAsInnermostCategoryProcessNode();
 }
