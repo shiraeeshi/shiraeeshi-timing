@@ -67,8 +67,14 @@ PostTimingTreeNodeView.prototype.sortChildrenByLastTiming = function(processNode
   that.children.sort((a, b) => {
     let ta = a.processNode.getLastTimingToHighlight();
     let tb = b.processNode.getLastTimingToHighlight();
-    if (ta === undefined || tb === undefined) {
-      return 0;
+    if (ta === undefined) {
+      if (tb === undefined) {
+        return 0;
+      }
+      return -1;
+    }
+    if (tb === undefined) {
+      return 1;
     }
     return ta.fromdate.getTime() - tb.fromdate.getTime();
   });
