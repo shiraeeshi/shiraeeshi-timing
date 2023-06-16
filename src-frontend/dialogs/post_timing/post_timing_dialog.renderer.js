@@ -2,6 +2,7 @@
 const { PostTimingViewBuilder } = require('../../js/dialogs/post_timing/post_timing_view_builder.js');
 const { requestTimingsForPeriod } = require('../../js/frequencies/request_timings_for_period.js');
 const { buildProcessesTree } = require('../../js/common/processes_tree_builder.js');
+const { ProcessNode } = require('../../js/common/process_node.js')
 
 
 const {
@@ -49,8 +50,8 @@ function handleServerMessage(msg) {
     }
 
     if (!my.addedKeyupListener) {
-      document.body.addEventListener('keyup', (eve) => {
-        my.viewBuilder.treeView.handleKeyUp(eve);
+      document.body.addEventListener('keydown', (eve) => {
+        my.viewBuilder.treeView.handleKeyDown(eve);
       });
 
       my.addedKeyupListener = true;
@@ -63,6 +64,18 @@ function handleServerMessage(msg) {
     my.now = new Date();
     my.viewBuilder = new PostTimingViewBuilder();
 
+    try {
+      // my.timings = buildProcessesTree(my.categoryPath2File, undefined);
+      my.timings = buildInitialProcessesTree();
+      my.viewBuilder.buildAndShowViews(my.timings);
+    } catch (err) {
+      showTimingsFormatError("post-timing-dialog-main-container", err);
+      console.log(`initial handleServerMessage. err: ${err}`);
+      window.webkit.messageHandlers.post_timing_dialog_msgs.postMessage(
+        "initial handleServerMessage. err: " + err);
+      throw err;
+    }
+
     let millisInWeek = 7*24*60*60*1000;
 
     let initialPeriodTo = new Date();
@@ -71,7 +84,7 @@ function handleServerMessage(msg) {
     requestTimingsForPeriod(initialPeriodFrom, initialPeriodTo).then(timings => {
       console.log('initial handleServerMessage. timings keys:');
       console.dir(Object.keys(timings));
-      my.timings = buildProcessesTree(timings, undefined);
+      my.timings = buildProcessesTree(timings, my.timings);
       my.viewBuilder.buildAndShowViews(my.timings);
       // my.viewBuilder.showView();
     }).catch(err => {
@@ -130,4 +143,27 @@ function buildTreeFromCategoryPathToFile(config) {
     node.filepaths.push(timingsFileInfo.filepath);
   });
   return rootNode;
+}
+
+function buildInitialProcessesTree() {
+  function func(cp2fNode, processNode) {
+    if (cp2fNode.filepaths !== undefined &&
+        cp2fNode.filepaths.length > 0) {
+      processNode.isAtFilepath = true;
+    }
+    let childrenAreCoveredByFilepath =
+      processNode.isCoveredByFilepath ||
+      processNode.isAtFilepath;
+    Object.keys(cp2fNode.childrenByName).forEach(name => {
+      let childCp2fNode = cp2fNode.childrenByName[name];
+      let childProcessNode = processNode.ensureChildWithName(name);
+      if (childrenAreCoveredByFilepath) {
+        childProcessNode.isCoveredByFilepath = true;
+      }
+      func(childCp2fNode, childProcessNode);
+    });
+  }
+  let rootProcessNode = new ProcessNode("all");
+  func(my.categoryPath2File, rootProcessNode)
+  return rootProcessNode;
 }

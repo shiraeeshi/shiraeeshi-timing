@@ -114,7 +114,7 @@ li.proc-leaf {
 
 .icon-merge-subprocesses {
   display: inline-block;
-  background-image: url('../img/grid-on-32.png');
+  background-image: url('../img/grid-on-grey-32.png');
   background-repeat: no-repeat;
   background-position: top left;
 }
@@ -131,7 +131,7 @@ li.proc-leaf {
 
 .proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
   display: inline-block;
-  background-image: url('../img/grid-off-32.png');
+  background-image: url('../img/grid-off-grey-32.png');
   background-repeat: no-repeat;
   background-position: top left;
 }

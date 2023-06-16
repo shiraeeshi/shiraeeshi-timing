@@ -21,6 +21,27 @@ export function ProcessNode(name, parentNode) {
   // this.hasBorrowedReferences = undefined;
   // this.firstTimingOfMergedProcess = undefined;
   // this.lastTimingOfMergedProcess = undefined;
+  // this.isAtFilepath = undefined;
+  // this.isCoveredByFilepath = undefined;
+}
+
+
+ProcessNode.prototype.getPath = function() {
+  let that = this;
+  let pathInReverse = [];
+  let node = that;
+  while (true) {
+    if (node.parent === null) {
+      break;
+    }
+    pathInReverse.push(node.name);
+    node = node.parent;
+  }
+  let path = [];
+  for (let i = pathInReverse.length - 1; i >= 0; i--) {
+    path.push(pathInReverse[i]);
+  }
+  return path;
 }
 
 ProcessNode.prototype.newChildWithName = function(name) {
@@ -42,6 +63,31 @@ ProcessNode.prototype.ensureChildWithName = function(name) {
   //   child.isProcessInfo = true;
   // }
 
+  if (that.isAtFilepath || that.isCoveredByFilepath) {
+    child.isCoveredByFilepath = true;
+  }
+
+  return child;
+};
+
+ProcessNode.prototype.ensureChildCopyOf = function(node) {
+  let that = this;
+  let name = node.name;
+  let child = that.childrenByName[name];
+  if (child === undefined) {
+    child = that.newChildWithName(name, that);
+  }
+
+  if (node.isInnermostCategory) {
+    child.isInnermostCategory = true;
+  }
+  if (node.isAtFilepath) {
+    child.isAtFilepath = true;
+  }
+  if (node.isCoveredByFilepath) {
+    child.isCoveredByFilepath = true;
+  }
+
   return child;
 };
 
@@ -55,6 +101,14 @@ ProcessNode.prototype.removeFromTree = function(name) {
     that.parent.children.splice(idx, 1);
   }
   delete that.parent.childrenByName[that.name];
+};
+
+ProcessNode.prototype.hasSiblings = function(name) {
+  let that = this;
+  if (that.parent === null) {
+    return false;
+  }
+  return that.parent.children.length > 1;
 };
 
 ProcessNode.prototype.getTimingsToHighlightCountRecursive = function(name) {

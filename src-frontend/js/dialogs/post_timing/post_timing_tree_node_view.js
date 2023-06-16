@@ -2,17 +2,18 @@ const { TimingsCategoryNodeViewState } = require('../../timings/categories/node_
 
 const { withChildren, withClass } = require('../../html_utils.js');
 
-export function PostTimingTreeNodeView(processNode, parentNodeView, rootNodeView, isToUncollapseAllInitially) {
+export function PostTimingTreeNodeView(processNode, parentNodeView, rootNodeView, isRightSideTreeNode) {
   let that = this;
   that.processNode = processNode;
+  processNode.nodeView = that;
   that.parentNodeView = parentNodeView;
   that.rootNodeView = rootNodeView;
   that.name = processNode.name;
   that.isCollapsed = true;
-  that.isToUncollapseAllInitially = isToUncollapseAllInitially;
+  that.isRightSideTreeNode = isRightSideTreeNode;
   that.isUnhighlighted = false;
   that.viewState = TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD;
-  that.children = processNode.children.map(childNode => new PostTimingTreeNodeView(childNode, that, rootNodeView, isToUncollapseAllInitially));
+  that.children = processNode.children.map(childNode => new PostTimingTreeNodeView(childNode, that, rootNodeView, isRightSideTreeNode));
   that.childrenByName = {};
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
@@ -80,8 +81,8 @@ PostTimingTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
   processNode.children.forEach(childNode => {
     let oldChild = that.childrenByName[childNode.name];
     if (oldChild === undefined) {
-      let newChildView = new PostTimingTreeNodeView(childNode, that, that.rootNodeView, that.isToUncollapseAllInitially);
-      newChildView.buildAsHtmlLiElement();
+      let newChildView = new PostTimingTreeNodeView(childNode, that, that.rootNodeView, that.isRightSideTreeNode);
+      newChildView._buildAsHtmlLiElement();
       that.children.push(newChildView);
       that.childrenByName[childNode.name] = newChildView;
     } else {
@@ -89,7 +90,11 @@ PostTimingTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
     }
   });
   if (lengthBefore > 0) {
-    that.sortChildrenByLastTiming();
+    if (!that.isRightSideTreeNode) {
+      that.sortChildrenByLastTiming();
+    } else {
+      that.children = that.processNode.children.map(ch => ch.nodeView);
+    }
     that.htmlChildrenContainerUl.innerHTML = "";
     withChildren(that.htmlChildrenContainerUl, ...that.children.map(ch => ch.html()));
   }
@@ -100,7 +105,7 @@ PostTimingTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
     }
     let parent = that.htmlElement.parentNode;
     if (parent === undefined) {
-      that.buildAsHtmlLiElement();
+      that._buildAsHtmlLiElement();
       return;
     }
     let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
@@ -109,7 +114,7 @@ PostTimingTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
     }
     parent.removeChild(that.htmlElement);
     delete that.htmlElement;
-    that.buildAsHtmlLiElement();
+    that._buildAsHtmlLiElement();
     if (htmlChildIndex === parent.children.length) {
       parent.appendChild(that.htmlElement);
     } else {
@@ -117,6 +122,7 @@ PostTimingTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
     }
   }
   that.processNode.deleteStashedValues();
+  that.handleVisibilityOfCheckboxIsProcess();
 };
 
 PostTimingTreeNodeView.prototype.removeFromTree = function() {
@@ -136,9 +142,60 @@ PostTimingTreeNodeView.prototype.removeFromTree = function() {
       parent.removeChild(that.htmlElement);
     }
   }
+  if (that.parentNodeView !== undefined) {
+    that.parentNodeView.handleVisibilityOfCheckboxIsProcess();
+  }
 };
 
-PostTimingTreeNodeView.prototype.appendHtmlChildWithInput = function() {
+PostTimingTreeNodeView.prototype.handleVisibilityOfCheckboxIsProcess = function() {
+  let that = this;
+  if (that.processNode.hasSiblings()) {
+    that._hideCheckboxIsProcessRecursively();
+    return;
+  }
+  if (!that.processNode.isCoveredByFilepath) {
+    that._hideCheckboxIsProcess();
+  } else if (my.selectedCategoryPath !== undefined &&
+             isPrefixOrEquals(that.processNode.getPath(), my.selectedCategoryPath)) {
+    that._hideCheckboxIsProcess();
+  } else {
+    that._showCheckboxIsProcess();
+  }
+  that.children.forEach(ch => ch.handleVisibilityOfCheckboxIsProcess());
+};
+
+PostTimingTreeNodeView.prototype._hideCheckboxIsProcess = function() {
+  let that = this;
+  that.htmlElement && that.htmlElement.classList.add('no-checkbox-is-process');
+};
+
+PostTimingTreeNodeView.prototype._hideCheckboxIsProcessRecursively = function() {
+  let that = this;
+  that._hideCheckboxIsProcess();
+  that.children.forEach(ch => ch._hideCheckboxIsProcessRecursively());
+};
+
+PostTimingTreeNodeView.prototype._showCheckboxIsProcess = function() {
+  let that = this;
+  that.htmlElement && that.htmlElement.classList.remove('no-checkbox-is-process');
+};
+
+PostTimingTreeNodeView.prototype.addHtmlSiblingWithInput = function(changeHandler) {
+  let that = this;
+  if (that.parentNodeView === undefined) {
+    return;
+  }
+  let idx = that.parentNodeView.children.indexOf(that);
+  that.parentNodeView._insertHtmlChildWithInputAtIndex(idx + 1, changeHandler);
+};
+
+PostTimingTreeNodeView.prototype.appendHtmlChildWithInput = function(changeHandler) {
+  let that = this;
+  let idx = that.children.length;
+  that._insertHtmlChildWithInputAtIndex(idx, changeHandler);
+};
+
+PostTimingTreeNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, changeHandler) {
   let that = this;
   if (that.children.length === 0) {
     if (that.htmlElement === undefined) {
@@ -152,6 +209,8 @@ PostTimingTreeNodeView.prototype.appendHtmlChildWithInput = function() {
     if (htmlChildIndex < 0) {
       return;
     }
+    let hadHiddenCheckboxIsProcess = that.htmlElement && that.htmlElement.classList.contains('no-checkbox-is-process');
+
     parent.removeChild(that.htmlElement);
     delete that.htmlElement;
 
@@ -168,16 +227,21 @@ PostTimingTreeNodeView.prototype.appendHtmlChildWithInput = function() {
           })(),
           that.createTitleDiv()
         ),
-        (function() {
-          if (!that.isToUncollapseAllInitially && that.processNode.isInnermostCategory && that.children.length > 0) {
-            return that.htmlChildrenContainerUl;
-          } else {
-            return withChildren(that.htmlChildrenContainerUl,
-              ...that.children.map(childNode => childNode.htmlElement)
-            )
-          }
-        })()
+        // (function() {
+        //   if (!that.isRightSideTreeNode && that.processNode.isInnermostCategory && that.children.length > 0) {
+        //     return that.htmlChildrenContainerUl;
+        //   } else {
+        //     return withChildren(that.htmlChildrenContainerUl,
+        //       ...that.children.map(childNode => childNode.htmlElement)
+        //     )
+        //   }
+        // })()
+        that.htmlChildrenContainerUl
       );
+
+    if (hadHiddenCheckboxIsProcess) {
+      htmlElement.classList.add('no-checkbox-is-process');
+    }
 
     that.htmlElement = htmlElement;
 
@@ -192,21 +256,66 @@ PostTimingTreeNodeView.prototype.appendHtmlChildWithInput = function() {
 
   let inputElem = document.createElement('input');
   let htmlElem = withChildren(document.createElement('li'), inputElem);
-  that.htmlChildrenContainerUl.appendChild(htmlElem);
+  if (index < that.htmlChildrenContainerUl.children.length) {
+    that.htmlChildrenContainerUl.insertBefore(htmlElem, that.htmlChildrenContainerUl.children[index]);
+  } else {
+    that.htmlChildrenContainerUl.appendChild(htmlElem);
+  }
   inputElem.addEventListener('change', (eve) => {
     let value = inputElem.value;
     if (value === '') {
       return;
     }
     that.htmlChildrenContainerUl.removeChild(htmlElem);
-    that.processNode.ensureChildWithName(value);
+    let newProcessNode = that.processNode.ensureChildWithName(value);
+    that.processNode.children.splice(index, 0, newProcessNode);
+    that.processNode.children.pop();
     that.mergeWithNewTimings(that.processNode);
+    changeHandler(newProcessNode);
     my.viewBuilder.treeView.enableKeyboardListener();
     window.webkit.messageHandlers.post_timing_dialog_msgs__enable_shortcuts.postMessage();
   });
   inputElem.focus();
   my.viewBuilder.treeView.disableKeyboardListener();
   window.webkit.messageHandlers.post_timing_dialog_msgs__disable_shortcuts.postMessage();
+};
+
+PostTimingTreeNodeView.prototype.edit = function(changeHandler) {
+  let that = this;
+  if (that.htmlElement === undefined) {
+    return;
+  }
+  let titleContainer = that.htmlElement.querySelector('.process-node-title-container');
+  titleContainer.innerHTML = '';
+  let inputElem = document.createElement('input');
+  inputElem.value = that.name;
+  titleContainer.appendChild(inputElem);
+  inputElem.addEventListener('change', (eve) => {
+    let value = inputElem.value;
+    if (value === '' || value === that.name) {
+      return;
+    }
+    let processNodeParent = that.processNode.parent;
+    let newProcessNode = processNodeParent.ensureChildWithName(value);
+    newProcessNode.children = that.processNode.children;
+    newProcessNode.childrenByName = that.processNode.childrenByName;
+    let index = processNodeParent.children.indexOf(that.processNode);
+    that.removeFromTree();
+    processNodeParent.children.splice(index, 0, newProcessNode);
+    processNodeParent.children.pop();
+    that.parentNodeView.mergeWithNewTimings(processNodeParent);
+    changeHandler(newProcessNode.nodeView);
+    my.viewBuilder.treeView.enableKeyboardListener();
+    window.webkit.messageHandlers.post_timing_dialog_msgs__enable_shortcuts.postMessage();
+  });
+  inputElem.focus();
+  my.viewBuilder.treeView.disableKeyboardListener();
+  window.webkit.messageHandlers.post_timing_dialog_msgs__disable_shortcuts.postMessage();
+};
+
+PostTimingTreeNodeView.prototype.deleteFromTheRightSide = function() {
+  let that = this;
+  my.viewBuilder.treeView.deleteNodeFromTheRightSide(that);
 };
 
 PostTimingTreeNodeView.prototype.copyValueToClipboard = function() {
@@ -363,6 +472,20 @@ PostTimingTreeNodeView.prototype.moveToTop = function() {
   let parent = that.html().parentNode;
   parent.removeChild(that.html());
   parent.insertBefore(that.html(), parent.children[0]);
+
+  let nodeViewIndex = that.parentNodeView.children.indexOf(that);
+  if (index >= 0) {
+    that.parentNodeView.children.splice(nodeViewIndex, 1);
+    that.parentNodeView.children.splice(0, 0, that);
+  }
+
+  let parentProcessNode = that.processNode.parent;
+  let index = parentProcessNode.children.indexOf(that.processNode);
+  if (index < 0) {
+    return;
+  }
+  parentProcessNode.children.splice(index, 1);
+  parentProcessNode.children.splice(0, 0, that.processNode);
 }
 
 PostTimingTreeNodeView.prototype.moveToBottom = function() {
@@ -370,6 +493,20 @@ PostTimingTreeNodeView.prototype.moveToBottom = function() {
   let parent = that.html().parentNode;
   parent.removeChild(that.html());
   parent.appendChild(that.html());
+
+  let nodeViewIndex = that.parentNodeView.children.indexOf(that);
+  if (nodeViewIndex >= 0) {
+    that.parentNodeView.children.splice(nodeViewIndex, 1);
+    that.parentNodeView.children.push(that);
+  }
+
+  let parentProcessNode = that.processNode.parent;
+  let index = parentProcessNode.children.indexOf(that.processNode);
+  if (index < 0) {
+    return;
+  }
+  parentProcessNode.children.splice(index, 1);
+  parentProcessNode.children.push(that.processNode);
 }
 
 PostTimingTreeNodeView.prototype.hideThisItem = function() {
@@ -419,24 +556,93 @@ PostTimingTreeNodeView.prototype.html = function() {
   if (that.htmlElement !== undefined) {
     return that.htmlElement;
   }
-  that.buildAsHtmlLiElement();
+  that._buildAsHtmlLiElement();
   return that.htmlElement;
+};
+
+PostTimingTreeNodeView.prototype.checkIsProcessCheckbox = function() {
+  let that = this;
+  if (that.htmlElement === undefined) {
+    return;
+  }
+  let checkboxIsProcess = that.htmlElement.querySelector('input.checkbox-is-process');
+  if (checkboxIsProcess === undefined) {
+    return;
+  }
+  checkboxIsProcess.checked = true;
+
+  let event = new Event('change');
+  checkboxIsProcess.dispatchEvent(event);
+};
+
+PostTimingTreeNodeView.prototype.copyToTheRightSide = function() {
+  let that = this;
+  my.viewBuilder.treeView.copyNodeToTheRightSide(that);
+};
+
+PostTimingTreeNodeView.prototype.deleteCorrespondingNodeFromTheRightSide = function() {
+  let that = this;
+  my.viewBuilder.treeView.deleteCorrespondingNodeFromTheRightSide(that);
 };
 
 PostTimingTreeNodeView.prototype.createTitleDiv = function() {
   let that = this;
   let nameHtml = that.name2html();
-  let iconShowThisOnly =
+  if (that.isRightSideTreeNode) {
+    let checkboxIsProcess = document.createElement('input');
+    checkboxIsProcess.type = 'checkbox';
+    checkboxIsProcess.classList.add('checkbox-is-process');
+    if (my.selectedAsInnermostCategoryProcessNode === that.processNode) {
+      checkboxIsProcess.checked = true;
+      my.selectedAsInnermostCategoryCheckbox = checkboxIsProcess;
+    }
+    checkboxIsProcess.addEventListener('change', (eve) => {
+      if (checkboxIsProcess.checked) {
+        my.selectedAsInnermostCategoryProcessNode = that.processNode;
+        if (my.selectedAsInnermostCategoryCheckbox &&
+            my.selectedAsInnermostCategoryCheckbox !== checkboxIsProcess) {
+          my.selectedAsInnermostCategoryCheckbox.checked = false;
+        }
+        my.selectedAsInnermostCategoryCheckbox = checkboxIsProcess;
+        my.viewBuilder.treeView.showPossibleFilepaths();
+      } else {
+        if (my.selectedAsInnermostCategoryProcessNode === that.processNode) {
+          delete my.selectedAsInnermostCategoryProcessNode;
+          delete my.selectedAsInnermostCategoryCheckbox;
+          my.viewBuilder.treeView.showPossibleFilepaths();
+        }
+      }
+    });
+    nameHtml = withChildren(document.createElement('div'),
+      checkboxIsProcess,
+      nameHtml
+    );
+  }
+  let iconCopyToTheRightSide =
     (function() {
-      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-show-this-process-only'),
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-copy-to-the-right-side'),
         withClass(
           withChildren(document.createElement('span'),
-            document.createTextNode('show graph for this process only')
+            document.createTextNode('copy this node to the right side')
           ),
           'tooltip')
       );
       elem.addEventListener('click', eve => {
-        that.showThisProcessOnly();
+        that.copyToTheRightSide();
+      });
+      return elem;
+    })();
+  let iconDeleteCorrespondingNodeFromTheRightSide =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-delete-corresponding-node-from-the-right-side'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('delete this node from the right side')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        my.viewBuilder.treeView.deleteCorrespondingNodeFromTheRightSide(that);
       });
       return elem;
     })();
@@ -510,13 +716,85 @@ PostTimingTreeNodeView.prototype.createTitleDiv = function() {
       });
       return elem;
     })();
+  let iconEdit =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-edit'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('rename this node')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        my.viewBuilder.treeView.editRightSideNode(that);
+      });
+      return elem;
+    })();
+  let iconDeleteFromTheRightSide =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-delete-from-the-right-side'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('delete this node')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.deleteFromTheRightSide();
+      });
+      return elem;
+    })();
+  let iconAppendChildWithInput =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-append-child-with-input'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('append child to this node')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        my.viewBuilder.treeView.appendChildWithInputToTheRightSideNode(that);
+      });
+      return elem;
+    })();
+  let iconAddSiblingWithInput =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-add-sibling-with-input'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('add sibling node')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        my.viewBuilder.treeView.addSiblingWithInputToTheRightSideNode(that);
+      });
+      return elem;
+    })();
+  let icons;
+  if (that.isRightSideTreeNode) {
+    icons = [
+      iconMoveToTop,
+      iconMoveToBottom,
+      iconEdit,
+      iconAddSiblingWithInput,
+      iconAppendChildWithInput,
+      iconDeleteFromTheRightSide,
+    ];
+  } else {
+    icons = [
+      iconMoveToTop,
+      iconMoveToBottom,
+      iconHide,
+      iconHideSiblingsBelow,
+      iconUnhideHiddenChildren,
+      iconCopyToTheRightSide,
+      iconDeleteCorrespondingNodeFromTheRightSide,
+    ];
+  }
   let iconsDiv = withChildren(withClass(document.createElement('div'), 'process-node-icons'),
-    iconShowThisOnly,
-    iconMoveToTop,
-    iconMoveToBottom,
-    iconHide,
-    iconHideSiblingsBelow,
-    iconUnhideHiddenChildren
+    ...icons
   );
   let titleDiv = withChildren(withClass(document.createElement('div'), 'process-node-title-container'),
     nameHtml,
@@ -527,6 +805,14 @@ PostTimingTreeNodeView.prototype.createTitleDiv = function() {
 }
 
 PostTimingTreeNodeView.prototype.buildAsHtmlLiElement = function() {
+  let that = this;
+  that._buildAsHtmlLiElement();
+  if (that.isRightSideTreeNode) {
+    that.handleVisibilityOfCheckboxIsProcess();
+  }
+}
+
+PostTimingTreeNodeView.prototype._buildAsHtmlLiElement = function() {
   let that = this;
 
   if (that.children.length == 0) {
@@ -543,17 +829,17 @@ PostTimingTreeNodeView.prototype.buildAsHtmlLiElement = function() {
       if (childNode.htmlElement !== undefined) {
         continue;
       } else {
-        childNode.buildAsHtmlLiElement();
+        childNode._buildAsHtmlLiElement();
       }
     }
     that.sortChildrenByLastTiming();
     that.htmlChildrenContainerUl.innerHTML = "";
     withChildren(that.htmlChildrenContainerUl, ...that.children.map(ch => ch.htmlElement));
-    if (!that.isToUncollapseAllInitially && that.processNode.isInnermostCategory && that.children.length > 0) {
+    if (!that.isRightSideTreeNode && that.processNode.isInnermostCategory && that.children.length > 0) {
       that.collapse();
     }
   } else {
-    that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
+    that.children.forEach(childNode => childNode._buildAsHtmlLiElement());
     that.sortChildrenByLastTiming();
     let htmlElement =
       withChildren(
@@ -569,7 +855,7 @@ PostTimingTreeNodeView.prototype.buildAsHtmlLiElement = function() {
           that.createTitleDiv()
         ),
         (function() {
-          if (!that.isToUncollapseAllInitially && that.processNode.isInnermostCategory && that.children.length > 0) {
+          if (!that.isRightSideTreeNode && that.processNode.isInnermostCategory && that.children.length > 0) {
             return that.htmlChildrenContainerUl;
           } else {
             return withChildren(that.htmlChildrenContainerUl,
@@ -585,7 +871,7 @@ PostTimingTreeNodeView.prototype.buildAsHtmlLiElement = function() {
       htmlElement = withClass(htmlElement, 'merged-children');
     }
     that.htmlElement = htmlElement;
-    if (that.isToUncollapseAllInitially || (!that.processNode.isInnermostCategory && that.children.length > 0)) {
+    if (that.isRightSideTreeNode || (!that.processNode.isInnermostCategory && that.children.length > 0)) {
       that.uncollapseWithoutNotifyingChildren();
     }
   }
@@ -707,3 +993,15 @@ PostTimingTreeNodeView.prototype.parentIsHighlighted = function() {
   }
 };
 
+
+function isPrefixOrEquals(prefix, arr) {
+  if (prefix.length > arr.length) {
+    return false;
+  }
+  for (let idx = 0; idx < prefix.length; idx++) {
+    if (prefix[idx] !== arr[idx]) {
+      return false;
+    }
+  }
+  return true;
+}

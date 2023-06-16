@@ -234,6 +234,51 @@ li.proc-leaf {
   background-position: top left;
 }
 
+.proc-node.has-copy-on-the-right-side > .process-node-title-container > .process-node-icons > .icon-copy-to-the-right-side {
+  display: none;
+}
+
+.icon-copy-to-the-right-side {
+  background-image: url('../../img/chevrons-right-icon-grey-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.icon-delete-corresponding-node-from-the-right-side {
+  display: none;
+}
+
+.proc-node.has-copy-on-the-right-side > .process-node-title-container > .process-node-icons > .icon-delete-corresponding-node-from-the-right-side {
+  display: inline-block;
+  background-image: url('../../img/chevrons-left-icon-grey-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.icon-edit {
+  background-image: url('../../img/edit-icon-grey-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.icon-delete-from-the-right-side {
+  background-image: url('../../img/x-icon-5301-grey-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.icon-append-child-with-input {
+  background-image: url('../../img/file-plus-icon-grey-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.icon-add-sibling-with-input {
+  background-image: url('../../img/plus-circle-icon-grey-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
 .proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-merge-subprocesses,
 .proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-merge-subprocesses,
 /* .proc-node.process-info    > .process-node-title-container > .process-node-icons > .icon-merge-subprocesses, */
@@ -243,7 +288,7 @@ li.proc-leaf {
 
 .icon-merge-subprocesses {
   display: inline-block;
-  background-image: url('../../img/grid-on-32.png');
+  background-image: url('../../img/grid-on-grey-32.png');
   background-repeat: no-repeat;
   background-position: top left;
 }
@@ -260,7 +305,7 @@ li.proc-leaf {
 
 .proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
   display: inline-block;
-  background-image: url('../../img/grid-off-32.png');
+  background-image: url('../../img/grid-off-grey-32.png');
   background-repeat: no-repeat;
   background-position: top left;
 }
@@ -387,6 +432,10 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
   margin-left: 4px;
 }
 
-.proc-node.in-rectangle > .process-node-title-container > a {
+.proc-node.in-rectangle > .process-node-title-container a {
   border: 1px solid black;
+}
+
+.proc-node.no-checkbox-is-process > .process-node-title-container input.checkbox-is-process {
+  display: none;
 }

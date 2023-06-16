@@ -67,6 +67,7 @@ PostTimingView.prototype.mergeRightSideWithNewTimings = function(branchToMerge) 
   let that = this;
   if (my.rightSideTimings === undefined) {
     my.rightSideTimings = branchToMerge;
+    handleSelectedAsInnermostCategoryProcessNode();
   } else {
     mergeProcessBranchInto(my.rightSideTimings, branchToMerge);
   }
@@ -92,10 +93,51 @@ function mergeProcessBranchInto(processesTree, branchToMerge) {
   let nodeFromBranchToMerge = branchToMerge;
   while (nodeFromBranchToMerge.children.length > 0) {
     nodeFromBranchToMerge = nodeFromBranchToMerge.children[0];
-    node = node.ensureChildWithName(nodeFromBranchToMerge.name);
-    if (nodeFromBranchToMerge.isInnermostCategory) {
-      node.isInnermostCategory = true;
+    node = node.ensureChildCopyOf(nodeFromBranchToMerge);
+  }
+  handleSelectedAsInnermostCategoryProcessNode();
+}
+
+
+function handleSelectedAsInnermostCategoryProcessNode() {
+  if (my.selectedAsInnermostCategoryProcessNode === undefined) {
+    selectFirstInnermostCategoryIfExists();
+    return;
+  }
+  if (!isSelectedAsInnermostCategoryProcessNodeReachable()) {
+    delete my.selectedAsInnermostCategoryProcessNode;
+    selectFirstInnermostCategoryIfExists();
+  }
+}
+
+function isSelectedAsInnermostCategoryProcessNodeReachable() {
+  let processNode = my.rightSideTimings;
+  while (true) {
+    if (processNode === my.selectedAsInnermostCategoryProcessNode) {
+      return true;
     }
+    if (processNode.children.length !== 1) {
+      break;
+    }
+    processNode = processNode.children[0];
+  }
+  return false;
+}
+
+function selectFirstInnermostCategoryIfExists() {
+  let processNode = my.rightSideTimings;
+  while (true) {
+    if (processNode.isInnermostCategory) {
+      my.selectedAsInnermostCategoryProcessNode = processNode;
+      if (processNode.nodeView) {
+        processNode.nodeView.checkIsProcessCheckbox();
+      }
+      return;
+    }
+    if (processNode.children.length !== 1) {
+      break;
+    }
+    processNode = processNode.children[0];
   }
 }
 
@@ -345,7 +387,7 @@ PostTimingView.prototype.enableKeyboardListener = function(key) {
   that.isKeyboardListenerDisabled = false;
 }
 
-PostTimingView.prototype.handleKeyUp = function(eve) {
+PostTimingView.prototype.handleKeyDown = function(eve) {
   let that = this;
 
   if (that.isKeyboardListenerDisabled) {
@@ -499,80 +541,33 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
   } else if (key === 'Enter') {
     if (that.isCursorOnRightSide) {
     } else {
-      let branchUntilNode = copyProcessBranchUntilNode(that.nodeInRectangle.processNode);
-      that.mergeRightSideWithNewTimings(branchUntilNode);
-      showPossibleFilepaths();
+      that.copyNodeToTheRightSide(that.nodeInRectangle);
     }
   } else if (key === 'o') {
     if (!that.isCursorOnRightSide) {
       return;
     }
-    that.rightSideNodeInRectangle.parentNodeView.appendHtmlChildWithInput();
+    that.addSiblingWithInputToTheRightSideNode(that.rightSideNodeInRectangle);
   } else if (key === 'a') {
     if (!that.isCursorOnRightSide) {
       return;
     }
-    that.rightSideNodeInRectangle.appendHtmlChildWithInput();
+    that.appendChildWithInputToTheRightSideNode(that.rightSideNodeInRectangle);
   } else if (key === 'c') {
     if (!that.isCursorOnRightSide) {
       return;
     }
     that.rightSideNodeInRectangle.copyValueToClipboard();
+  } else if (key === 'F2') {
+    if (!that.isCursorOnRightSide) {
+      return;
+    }
+    that.editRightSideNode(that.rightSideNodeInRectangle);
   } else if (key === 'Delete') {
     if (that.isCursorOnRightSide) {
-      let newNodeInRectangle = that.rightSideNodeInRectangle.findNextSibling();
-      if (newNodeInRectangle === undefined) {
-        newNodeInRectangle = that.rightSideNodeInRectangle.findPreviousSibling();
-      }
-      if (newNodeInRectangle === undefined) {
-        newNodeInRectangle = that.rightSideNodeInRectangle.parentNodeView;
-      }
-      if (newNodeInRectangle === undefined) {
-        return;
-      }
-      that.rightSideNodeInRectangle.removeFromTree();
-      newNodeInRectangle.wrapInRectangle();
-      that.rightSideNodeInRectangle = newNodeInRectangle;
-
-      showPossibleFilepaths();
+      that.deleteNodeFromTheRightSide(that.rightSideNodeInRectangle);
     } else {
-      let branchUntilNode = copyProcessBranchUntilNode(that.nodeInRectangle.processNode);
-      let nodeFromPath = branchUntilNode;
-      let rightSideRootNode = that.rightSideChildrenByName[branchUntilNode.name];
-      let rightSideNode = rightSideRootNode;
-      if (rightSideNode === undefined) {
-        return;
-      }
-      while (nodeFromPath.children.length > 0) {
-        nodeFromPath = nodeFromPath.children[0];
-        rightSideNode = rightSideNode.childrenByName[nodeFromPath.name];
-      }
-      if (rightSideNode === undefined) {
-        return;
-      }
-
-      let newNodeInRectangle = rightSideRootNode;
-
-      if (that.rightSideNodeInRectangle !== undefined &&
-          that.rightSideNodeInRectangle !== rightSideRootNode) {
-
-        newNodeInRectangle = rightSideNode.findNextSibling();
-        if (newNodeInRectangle === undefined) {
-          newNodeInRectangle = rightSideNode.findPreviousSibling();
-        }
-        if (newNodeInRectangle === undefined) {
-          newNodeInRectangle = rightSideNode.parentNodeView;
-        }
-        if (newNodeInRectangle !== undefined) {
-          that.rightSideNodeInRectangle = newNodeInRectangle;
-        }
-      }
-
-      if (newNodeInRectangle !== undefined) {
-        rightSideNode.removeFromTree();
-      }
-
-      showPossibleFilepaths();
+      that.deleteCorrespondingNodeFromTheRightSide(that.nodeInRectangle)
     }
   } else if (eve.ctrlKey && key === 's') {
     save();
@@ -616,8 +611,9 @@ function save() {
     alert('please select a filepath');
     return;
   }
-  let innermostCategoryPath = findLastInnermostCategoryPath(my.rightSideTimings, my.selectedCategoryPath);
-  if (innermostCategoryPath === undefined) {
+  // let innermostCategoryPath = findLastInnermostCategoryPath(my.rightSideTimings, my.selectedCategoryPath);
+  let innermostCategoryPath = my.selectedAsInnermostCategoryProcessNode && my.selectedAsInnermostCategoryProcessNode.getPath();
+  if (innermostCategoryPath === undefined || innermostCategoryPath.length === 0) {
     alert("no process node found.\nmake sure that you've selected a process node or some of its descendant nodes.\na process node gets collapsed by default in the left-side tree\n(collapsed node hides its children and draws a plus sign icon in front of itself)");
     return;
   }
@@ -638,17 +634,187 @@ function save() {
 function cancel() {
 }
 
-function showPossibleFilepaths() {
+
+PostTimingView.prototype.copyNodeToTheRightSide = function(processNodeView) {
+  let that = this;
+  if (!isAllowedToAddNode(processNodeView.processNode)) {
+    alert("cannot add a node here.\n(a process node cannot have siblings)");
+    return;
+  }
+  let branchUntilNode = copyProcessBranchUntilNode(processNodeView.processNode);
+  that.mergeRightSideWithNewTimings(branchUntilNode);
+  that.showPossibleFilepaths();
+
+  let aNodeView = processNodeView;
+  while (aNodeView !== undefined) {
+    aNodeView.htmlElement.classList.add('has-copy-on-the-right-side');
+    aNodeView = aNodeView.parentNodeView;
+  }
+}
+
+PostTimingView.prototype.deleteNodeFromTheRightSide = function(processNodeView) {
+  let that = this;
+  let path = processNodeView.processNode.getPath();
+  let newNodeInRectangle = that.rightSideNodeInRectangle;
+  let wasInRectangle = that.rightSideNodeInRectangle === processNodeView;
+  if (wasInRectangle) {
+    newNodeInRectangle = processNodeView.findNextSibling();
+    if (newNodeInRectangle === undefined) {
+      newNodeInRectangle = processNodeView.findPreviousSibling();
+    }
+    if (newNodeInRectangle === undefined) {
+      newNodeInRectangle = processNodeView.parentNodeView;
+    }
+    if (newNodeInRectangle === undefined) {
+      return;
+    }
+  }
+
+  processNodeView.removeFromTree();
+
+  if (wasInRectangle) {
+    newNodeInRectangle.wrapInRectangle();
+    that.rightSideNodeInRectangle = newNodeInRectangle;
+  }
+
+  that.showPossibleFilepaths();
+  handleSelectedAsInnermostCategoryProcessNode();
+
+  let correspondingLeftSideNode = that.children[0];
+  for (let pathSegment of path) {
+    correspondingLeftSideNode = correspondingLeftSideNode.childrenByName[pathSegment];
+  }
+  if (correspondingLeftSideNode !== undefined) {
+    function func(nodeView) {
+      nodeView.htmlElement.classList.remove('has-copy-on-the-right-side');
+      nodeView.children.forEach(func);
+    }
+    func(correspondingLeftSideNode);
+  }
+}
+
+PostTimingView.prototype.deleteCorrespondingNodeFromTheRightSide = function(processNodeView) {
+  let that = this;
+  let branchUntilNode = copyProcessBranchUntilNode(processNodeView.processNode);
+  let nodeFromPath = branchUntilNode;
+  let rightSideRootNode = that.rightSideChildrenByName[branchUntilNode.name];
+  let rightSideNode = rightSideRootNode;
+  if (rightSideNode === undefined) {
+    return;
+  }
+  while (nodeFromPath.children.length > 0) {
+    nodeFromPath = nodeFromPath.children[0];
+    rightSideNode = rightSideNode.childrenByName[nodeFromPath.name];
+  }
+  if (rightSideNode === undefined) {
+    return;
+  }
+
+  let newNodeInRectangle = rightSideRootNode;
+
+  if (that.rightSideNodeInRectangle !== undefined &&
+      that.rightSideNodeInRectangle !== rightSideRootNode) {
+
+    newNodeInRectangle = rightSideNode.findNextSibling();
+    if (newNodeInRectangle === undefined) {
+      newNodeInRectangle = rightSideNode.findPreviousSibling();
+    }
+    if (newNodeInRectangle === undefined) {
+      newNodeInRectangle = rightSideNode.parentNodeView;
+    }
+    if (newNodeInRectangle !== undefined) {
+      that.rightSideNodeInRectangle = newNodeInRectangle;
+    }
+  }
+
+  if (newNodeInRectangle !== undefined) {
+    rightSideNode.removeFromTree();
+  }
+
+  that.showPossibleFilepaths();
+  handleSelectedAsInnermostCategoryProcessNode();
+
+  function func(nodeView) {
+    nodeView.htmlElement.classList.remove('has-copy-on-the-right-side');
+    nodeView.children.forEach(func);
+  }
+  func(processNodeView);
+}
+
+PostTimingView.prototype.addSiblingWithInputToTheRightSideNode = function(processNodeView) {
+  let that = this;
+  if (!processNodeView.processNode.hasSiblings() &&
+      !isProcessNodeAllowedToAddSibling(processNodeView.processNode)) {
+    alert("cannot add a node here.\n(a process node cannot have siblings)");
+    return;
+  }
+  let wasInRectangle = that.rightSideNodeInRectangle === processNodeView;
+
+  processNodeView.addHtmlSiblingWithInput(function() {
+    if (wasInRectangle) {
+      that.rightSideNodeInRectangle.removeRectangleWrapper();
+
+      let newNodeInRectangle = that.rightSideNodeInRectangle.findNextSibling();
+      newNodeInRectangle.wrapInRectangle();
+
+      that.rightSideNodeInRectangle = newNodeInRectangle;
+    }
+    that.showPossibleFilepaths();
+  });
+}
+
+PostTimingView.prototype.appendChildWithInputToTheRightSideNode = function(processNodeView) {
+  let that = this;
+  if (processNodeView.children.length === 1 &&
+      !isProcessNodeAllowedToAddSibling(processNodeView.processNode.children[0])) {
+    alert("cannot add a node here.\n(a process node cannot have siblings)");
+    return;
+  }
+  let wasInRectangle = that.rightSideNodeInRectangle === processNodeView;
+  processNodeView.appendHtmlChildWithInput(function() {
+    if (wasInRectangle) {
+      that.rightSideNodeInRectangle.removeRectangleWrapper();
+
+      let newNodeInRectangle = that.rightSideNodeInRectangle.children[that.rightSideNodeInRectangle.children.length - 1];
+      newNodeInRectangle.wrapInRectangle();
+
+      that.rightSideNodeInRectangle = newNodeInRectangle;
+    }
+
+    that.showPossibleFilepaths();
+  });
+}
+
+PostTimingView.prototype.editRightSideNode = function(processNodeView) {
+  let that = this;
+  let wasInRectangle = that.rightSideNodeInRectangle === processNodeView;
+  let wasSelected = processNodeView.processNode === my.selectedAsInnermostCategoryProcessNode;
+  processNodeView.edit(function(newNodeView) {
+    if (wasInRectangle) {
+      newNodeView.wrapInRectangle();
+      that.rightSideNodeInRectangle = newNodeView;
+    }
+    if (wasSelected) {
+      my.selectedAsInnermostCategoryProcessNode = newNodeView.processNode;
+      newNodeView.checkIsProcessCheckbox();
+    }
+  });
+}
+
+PostTimingView.prototype.showPossibleFilepaths = function() {
+  let that = this;
 
   let possibleFilepaths = getPossibleFilepaths();
   let bottomRightPanel = document.getElementById('bottom-right-panel');
   bottomRightPanel.innerHTML = '';
 
-  delete my.selectedFilepath;
-  delete my.selectedCategoryPath;
-  if (my.selectedFilepathCheckbox !== undefined) {
-    my.selectedFilepathCheckbox.checked = false;
-    delete my.selectedFilepathCheckbox;
+  if (!my.hasManuallySelectedFilepath) {
+    delete my.selectedFilepath;
+    delete my.selectedCategoryPath;
+    if (my.selectedFilepathCheckbox !== undefined) {
+      my.selectedFilepathCheckbox.checked = false;
+      delete my.selectedFilepathCheckbox;
+    }
   }
 
   let pfHeader;
@@ -662,6 +828,8 @@ function showPossibleFilepaths() {
   } else {
     pfHeader = 'select filepath:'
   }
+
+  let encounteredSelectedFilepath = false;
 
   withChildren(bottomRightPanel,
     withChildren(document.createElement('span'),
@@ -677,9 +845,11 @@ function showPossibleFilepaths() {
             (function() {
               let checkbox = document.createElement('input');
               checkbox.type = "checkbox";
-              if (possibleFilepaths.length === 1 && possibleFilepaths[0].filepaths.length === 1) {
+              // if (possibleFilepaths.length === 1 && possibleFilepaths[0].filepaths.length === 1) {
+              if (my.selectedFilepath === fp && arrays_equals(my.selectedCategoryPath, pf.categoryPath)) {
                 checkbox.checked = true;
                 my.selectedFilepathCheckbox = checkbox;
+                encounteredSelectedFilepath = true;
               }
               checkbox.addEventListener('change', (eve) => {
                 let checked = checkbox.checked;
@@ -690,7 +860,16 @@ function showPossibleFilepaths() {
                   my.selectedFilepath = fp;
                   my.selectedCategoryPath = pf.categoryPath;
                   my.selectedFilepathCheckbox = checkbox;
+                  my.hasManuallySelectedFilepath = true;
+                } else {
+                  if (my.selectedFilepath === fp) {
+                    delete my.selectedFilepath;
+                    delete my.selectedCategoryPath;
+                    delete my.selectedFilepathCheckbox;
+                    delete my.hasManuallySelectedFilepath;
+                  }
                 }
+                handleSelectedFilepathChange();
               });
               return checkbox;
             })(),
@@ -701,6 +880,15 @@ function showPossibleFilepaths() {
       )
     )
   );
+
+  if (my.hasManuallySelectedFilepath && !encounteredSelectedFilepath) {
+    delete my.selectedFilepath;
+    delete my.selectedCategoryPath;
+    if (my.selectedFilepathCheckbox !== undefined) {
+      my.selectedFilepathCheckbox.checked = false;
+      delete my.selectedFilepathCheckbox;
+    }
+  }
 }
 
 function getPossibleFilepaths() {
@@ -724,7 +912,10 @@ function getPossibleFilepaths() {
   let categoryPath = [];
   // func(cp2fNode, processNode, categoryPath);
   while (true) {
-    if (cp2fNode.filepaths !== undefined) {
+    if (processNode === my.selectedAsInnermostCategoryProcessNode) {
+      break;
+    }
+    if (cp2fNode.filepaths !== undefined && processNode.children.length <= 1) {
       cp2fResult.push({
         categoryPath: categoryPath,
         filepaths: cp2fNode.filepaths
@@ -746,6 +937,12 @@ function getPossibleFilepaths() {
   return cp2fResult;
 }
 
+function handleSelectedFilepathChange() {
+  if (my.rightSideTimings) {
+    my.rightSideTimings.nodeView.handleVisibilityOfCheckboxIsProcess();
+  }
+}
+
 function copyProcessBranchUntilNode(node) {
   let arr = [];
   while (node !== null) {
@@ -757,10 +954,7 @@ function copyProcessBranchUntilNode(node) {
   let rightSideNode = branchUntilNode;
   for (let idx = arr.length - 2; idx >= 0; idx--) {
     let leftSideNode = arr[idx];
-    rightSideNode = rightSideNode.ensureChildWithName(leftSideNode.name);
-    if (leftSideNode.isInnermostCategory) {
-      rightSideNode.isInnermostCategory = true;
-    }
+    rightSideNode = rightSideNode.ensureChildCopyOf(leftSideNode);
   }
   return branchUntilNode;
 }
@@ -787,6 +981,46 @@ function convertToWritablePreYamlJson(processesTree, categoryPathToSkip, innermo
   }
   result[result.length - 1] = func(node);
   return result;
+}
+
+function isAllowedToAddNode(processNode) {
+  let path = processNode.getPath();
+  if (my.rightSideTimings === undefined || my.rightSideTimings.children.length === 0) {
+    return true;
+  }
+  let rightSideProcessNode = my.rightSideTimings;
+  let hasCategoryLikeAncestorsCoveredByPath = false;
+  for (let i = 0; i < path.length - 1; i++) {
+    if (rightSideProcessNode.children.length > 1) {
+      break;
+    }
+    let pathSegment = path[i];
+    rightSideProcessNode = rightSideProcessNode.childrenByName[pathSegment];
+    if (rightSideProcessNode === undefined) {
+      break;
+    }
+    if (rightSideProcessNode.isCoveredByFilepath) {
+      hasCategoryLikeAncestorsCoveredByPath = true;
+    }
+  }
+  return hasCategoryLikeAncestorsCoveredByPath;
+}
+
+function isProcessNodeAllowedToAddSibling(processNode) {
+  let path = processNode.getPath();
+  let rightSideProcessNode = my.rightSideTimings;
+  let hasCategoryLikeAncestorsCoveredByPath = false;
+  for (let i = 0; i < path.length - 1; i++) {
+    if (rightSideProcessNode.children.length > 1) {
+      break;
+    }
+    let pathSegment = path[i];
+    rightSideProcessNode = rightSideProcessNode.childrenByName[pathSegment];
+    if (rightSideProcessNode.isCoveredByFilepath) {
+      hasCategoryLikeAncestorsCoveredByPath = true;
+    }
+  }
+  return hasCategoryLikeAncestorsCoveredByPath;
 }
 
 function findLastInnermostCategoryPath(processesTree, categoryPath) {
@@ -821,6 +1055,18 @@ function findInnermostCategoryPaths(processesTree, categoryPath) {
   return resultPaths;
 }
 
+function arrays_equals(first, second) {
+  if (first.length !== second.length) {
+    return false;
+  }
+  for (let idx = 0; idx < first.length; idx++) {
+    if (first[idx] !== second[idx]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function isPrefix(prefix, arr) {
   if (prefix.length > arr.length) {
     return false;
@@ -829,6 +1075,9 @@ function isPrefix(prefix, arr) {
     if (prefix[idx] !== arr[idx]) {
       return false;
     }
+  }
+  if (prefix.length === arr.length) {
+    return false;
   }
   return true;
 }
