@@ -97,6 +97,7 @@ PostTimingView.prototype.mergeProcessBranchIntoRightSide = function(branchToMerg
   while (nodeFromBranchToMerge.children.length > 0) {
     nodeFromBranchToMerge = nodeFromBranchToMerge.children[0];
     node = node.ensureChildCopyOf(nodeFromBranchToMerge);
+    node.leftSideNode = nodeFromBranchToMerge.leftSideNode;
     node.parent.children.sort((a, b) => {
       let leftSideA = leftSideNode.childrenByName[a.name];
       let leftSideB = leftSideNode.childrenByName[b.name];
@@ -801,7 +802,7 @@ PostTimingView.prototype.addSiblingWithInputToTheRightSideNode = function(proces
   }
   let wasInRectangle = that.rightSideNodeInRectangle === processNodeView;
 
-  processNodeView.addHtmlSiblingWithInput(function() {
+  processNodeView.addHtmlSiblingWithInput(function(newProcessNode) {
     if (wasInRectangle) {
       that.rightSideNodeInRectangle.removeRectangleWrapper();
 
@@ -809,6 +810,16 @@ PostTimingView.prototype.addSiblingWithInputToTheRightSideNode = function(proces
       newNodeInRectangle.wrapInRectangle();
 
       that.rightSideNodeInRectangle = newNodeInRectangle;
+    }
+    if (newProcessNode.parent !== null) {
+      let leftSideParent = newProcessNode.parent.leftSideNode;
+      if (leftSideParent !== undefined) {
+        if (leftSideParent.childrenByName.hasOwnProperty(newProcessNode.name)) {
+          let leftSideNode = leftSideParent.childrenByName[newProcessNode.name];
+          newProcessNode.leftSideNode = leftSideNode;
+          leftSideNode.nodeView.htmlElement.classList.add('has-copy-on-the-right-side')
+        }
+      }
     }
     that.showPossibleFilepaths();
     handleVisibilityOfCheckboxIsProcess();
@@ -823,7 +834,7 @@ PostTimingView.prototype.appendChildWithInputToTheRightSideNode = function(proce
     return;
   }
   let wasInRectangle = that.rightSideNodeInRectangle === processNodeView;
-  processNodeView.appendHtmlChildWithInput(function() {
+  processNodeView.appendHtmlChildWithInput(function(newProcessNode) {
     if (wasInRectangle) {
       that.rightSideNodeInRectangle.removeRectangleWrapper();
 
@@ -831,6 +842,14 @@ PostTimingView.prototype.appendChildWithInputToTheRightSideNode = function(proce
       newNodeInRectangle.wrapInRectangle();
 
       that.rightSideNodeInRectangle = newNodeInRectangle;
+    }
+    let leftSideParent = processNodeView.processNode.leftSideNode;
+    if (leftSideParent !== undefined) {
+      if (leftSideParent.childrenByName.hasOwnProperty(newProcessNode.name)) {
+        let leftSideNode = leftSideParent.childrenByName[newProcessNode.name];
+        newProcessNode.leftSideNode = leftSideNode;
+        leftSideNode.nodeView.htmlElement.classList.add('has-copy-on-the-right-side')
+      }
     }
 
     that.showPossibleFilepaths();
@@ -850,6 +869,19 @@ PostTimingView.prototype.editRightSideNode = function(processNodeView) {
     if (wasSelected) {
       my.selectedAsInnermostCategoryProcessNode = newNodeView.processNode;
       newNodeView.checkIsProcessCheckbox();
+    }
+    if (processNodeView.processNode.leftSideNode !== undefined) {
+      processNodeView.processNode.leftSideNode.nodeView.htmlElement.classList.remove('has-copy-on-the-right-side');
+    }
+    if (newNodeView.processNode.parent !== null) {
+      let leftSideParent = newNodeView.processNode.parent.leftSideNode;
+      if (leftSideParent !== undefined) {
+        if (leftSideParent.childrenByName.hasOwnProperty(newNodeView.name)) {
+          let leftSideNode = leftSideParent.childrenByName[newNodeView.name];
+          newNodeView.processNode.leftSideNode = leftSideNode;
+          leftSideNode.nodeView.htmlElement.classList.add('has-copy-on-the-right-side');
+        }
+      }
     }
   });
 }
@@ -1005,9 +1037,11 @@ function copyProcessBranchUntilNode(node) {
   let rootNode = arr[arr.length - 1];
   let branchUntilNode = Object.assign(new ProcessNode(rootNode.name), rootNode, {children: [], childrenByName: {}});
   let rightSideNode = branchUntilNode;
+  rightSideNode.leftSideNode = rootNode;
   for (let idx = arr.length - 2; idx >= 0; idx--) {
     let leftSideNode = arr[idx];
     rightSideNode = rightSideNode.ensureChildCopyOf(leftSideNode);
+    rightSideNode.leftSideNode = leftSideNode;
   }
   return branchUntilNode;
 }

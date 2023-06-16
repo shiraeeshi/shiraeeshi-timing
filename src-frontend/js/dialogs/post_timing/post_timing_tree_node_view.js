@@ -146,7 +146,11 @@ PostTimingTreeNodeView.prototype.removeFromTree = function() {
     let parent = that.htmlElement.parentNode;
     let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
     if (htmlChildIndex >= 0) {
-      parent.removeChild(that.htmlElement);
+      try {
+        parent.removeChild(that.htmlElement);
+      } catch (err) {
+        console.log(`error while removing html child: ${err.message}`);
+      }
     }
   }
   // if (that.parentNodeView !== undefined) {
