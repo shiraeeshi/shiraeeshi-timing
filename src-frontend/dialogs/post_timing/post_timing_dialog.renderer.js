@@ -48,6 +48,13 @@ function handleServerMessage(msg) {
       wrapper.appendChild(errorMessageHtml);
       return;
     }
+    if (msg.type === 'save_result') {
+      if (my.save_result_handler) {
+        my.save_result_handler(msg.result, msg);
+        delete my.save_result_handler;
+      }
+      return;
+    }
 
     if (!my.addedKeyupListener) {
       document.body.addEventListener('keydown', (eve) => {

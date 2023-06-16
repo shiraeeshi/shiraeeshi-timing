@@ -3,11 +3,12 @@ const { app, dialog, BrowserWindow, ipcMain, Menu, MenuItem, clipboard } = elect
 const path = require('path')
 const fs = require('fs');
 const YAML = require('yaml');
+
 const { readTimingsForRangeOfDates } = require('../../../logic/timing_file_parser.js');
 const { createOrRefreshIndex } = require('../../../logic/timing_index_manager.js');
 const { expanduser } = require('../../../logic/file_utils.js');
 
-// let win;
+let win;
 let configFilepath;
 let indexDirFilepath;
 let config;
@@ -18,16 +19,49 @@ ipcMain.on('post_timing_dialog_msgs__write_to_clipboard', async (_event, value) 
   clipboard.writeText(value);
 });
 
+ipcMain.on('post_timing_dialog_msgs__cancel', async (_event, value) => {
+  let focusedWindow = BrowserWindow.getFocusedWindow();
+  if (focusedWindow !== null) {
+    focusedWindow.close();
+    return;
+  }
+  if (win !== undefined) {
+    win.close();
+  }
+});
+
+ipcMain.on('post_timing_dialog_msgs__close', async (_event, value) => {
+  let focusedWindow = BrowserWindow.getFocusedWindow();
+  if (focusedWindow !== null) {
+    focusedWindow.close();
+    return;
+  }
+  if (win !== undefined) {
+    win.close();
+  }
+});
+
 ipcMain.on('post_timing_dialog_msgs__write_to_file', async (_event, filepath, value) => {
-  console.log('write to file. filepath: ' + filepath);
-  console.log('yaml:');
-  let valueWithDatetimeKey = {};
-  valueWithDatetimeKey[datetimeKey] = value;
-  let stringified = YAML.stringify(valueWithDatetimeKey, undefined, {indent: 2, indentSeq: false});
-  console.log(stringified);
-  const filepathWithExpandedUser = expanduser(filepath);
-  const file = fs.createWriteStream(filepathWithExpandedUser, { flags: 'a', encoding: 'utf8' });
-  await _writeToStream(file, stringified);
+  try {
+    console.log('write to file. filepath: ' + filepath);
+    console.log('yaml:');
+    let valueWithDatetimeKey = {};
+    valueWithDatetimeKey[datetimeKey] = value;
+    let stringified = YAML.stringify(valueWithDatetimeKey, undefined, {indent: 2, indentSeq: false});
+    console.log(stringified);
+    const filepathWithExpandedUser = expanduser(filepath);
+    await fs.promises.appendFile(filepathWithExpandedUser, stringified);
+    win.webContents.send('message-from-backend', {
+      type: 'save_result',
+      result: 'success'
+    });
+  } catch (err) {
+    win.webContents.send('message-from-backend', {
+      type: 'save_result',
+      result: 'error',
+      error_message: err.message
+    };
+  }
 });
 
 ipcMain.on('post_timing_dialog_msgs__disable_shortcuts', async (_event) => {
@@ -95,7 +129,7 @@ export async function showPostTimingDialog(appEnvParam, datetimeKeyParam) {
 }
 
 const createWindow = async (appEnv) => {
-  let win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1000,
     height: 800,
     // frame: false,
@@ -227,19 +261,6 @@ function setMenuAndKeyboardShortcuts(win) {
   }));
   
   Menu.setApplicationMenu(menu);
-}
-
-function _writeToStream(stream, data) {
-  return new Promise((resolve, err) => {
-    function func() {
-      if (stream.write(data)) {
-        resolve(undefined);
-      } else {
-        stream.once('drain', func);
-      }
-    }
-    func();
-  });
 }
 
 function convertConfigFromYamlFormat(config) {

@@ -45,7 +45,17 @@ contextBridge.exposeInMainWorld('webkit', {
       postMessage: (filepath, value) => {
         ipcRenderer.send('post_timing_dialog_msgs__write_to_file', filepath, value);
       }
-    }
+    },
+    post_timing_dialog_msgs__cancel: {
+      postMessage: () => {
+        ipcRenderer.send('post_timing_dialog_msgs__cancel');
+      }
+    },
+    post_timing_dialog_msgs__close: {
+      postMessage: () => {
+        ipcRenderer.send('post_timing_dialog_msgs__close');
+      }
+    },
   }
 });
 

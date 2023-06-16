@@ -625,6 +625,17 @@ function save() {
     ].join('\n'));
     return;
   }
+  my.save_result_handler = (result, msg) => {
+    if (result === 'error') {
+      alert(`There was an error while saving a file. Error message: "${msg.error_message}"`);
+      return;
+    }
+    if (result === 'success') {
+      alert('Saved timing successfully');
+      window.webkit.messageHandlers.post_timing_dialog_msgs__close.postMessage();
+      return;
+    }
+  };
   window.webkit.messageHandlers.post_timing_dialog_msgs__write_to_file.postMessage(
     my.selectedFilepath,
     convertToWritablePreYamlJson(my.rightSideTimings, my.selectedCategoryPath, innermostCategoryPath)
@@ -632,6 +643,9 @@ function save() {
 }
 
 function cancel() {
+  if (confirm("Please confirm cancelling by pressing OK")) {
+    window.webkit.messageHandlers.post_timing_dialog_msgs__cancel.postMessage();
+  }
 }
 
 
