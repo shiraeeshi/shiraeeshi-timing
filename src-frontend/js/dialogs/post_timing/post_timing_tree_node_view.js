@@ -76,6 +76,15 @@ PostTimingTreeNodeView.prototype.sortChildrenByLastTiming = function(processNode
 
 PostTimingTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
   let that = this;
+
+  that._mergeWithNewTimings(processNode);
+
+  that.processNode.deleteStashedValues();
+  // that.handleVisibilityOfCheckboxIsProcess();
+};
+
+PostTimingTreeNodeView.prototype._mergeWithNewTimings = function(processNode) {
+  let that = this;
   that.processNode = processNode;
   let lengthBefore = that.children.length;
   processNode.children.forEach(childNode => {
@@ -86,7 +95,7 @@ PostTimingTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
       that.children.push(newChildView);
       that.childrenByName[childNode.name] = newChildView;
     } else {
-      oldChild.mergeWithNewTimings(childNode);
+      oldChild._mergeWithNewTimings(childNode);
     }
   });
   if (lengthBefore > 0) {
@@ -121,8 +130,6 @@ PostTimingTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
       parent.insertBefore(that.htmlElement, parent.children[htmlChildIndex]);
     }
   }
-  that.processNode.deleteStashedValues();
-  that.handleVisibilityOfCheckboxIsProcess();
 };
 
 PostTimingTreeNodeView.prototype.removeFromTree = function() {
@@ -142,38 +149,38 @@ PostTimingTreeNodeView.prototype.removeFromTree = function() {
       parent.removeChild(that.htmlElement);
     }
   }
-  if (that.parentNodeView !== undefined) {
-    that.parentNodeView.handleVisibilityOfCheckboxIsProcess();
-  }
+  // if (that.parentNodeView !== undefined) {
+  //   that.parentNodeView.handleVisibilityOfCheckboxIsProcess();
+  // }
 };
 
-PostTimingTreeNodeView.prototype.handleVisibilityOfCheckboxIsProcess = function() {
-  let that = this;
-  if (that.processNode.hasSiblings()) {
-    that._hideCheckboxIsProcessRecursively();
-    return;
-  }
-  if (!that.processNode.isCoveredByFilepath) {
-    that._hideCheckboxIsProcess();
-  } else if (my.selectedCategoryPath !== undefined &&
-             isPrefixOrEquals(that.processNode.getPath(), my.selectedCategoryPath)) {
-    that._hideCheckboxIsProcess();
-  } else {
-    that._showCheckboxIsProcess();
-  }
-  that.children.forEach(ch => ch.handleVisibilityOfCheckboxIsProcess());
-};
+// PostTimingTreeNodeView.prototype.handleVisibilityOfCheckboxIsProcess = function() {
+//   let that = this;
+//   if (that.processNode.hasSiblings()) {
+//     that._hideCheckboxIsProcessRecursively();
+//     return;
+//   }
+//   if (!that.processNode.isCoveredByFilepath) {
+//     that._hideCheckboxIsProcess();
+//   } else if (my.selectedCategoryPath !== undefined &&
+//              isPrefixOrEquals(that.processNode.getPath(), my.selectedCategoryPath)) {
+//     that._hideCheckboxIsProcess();
+//   } else {
+//     that._showCheckboxIsProcess();
+//   }
+//   that.children.forEach(ch => ch.handleVisibilityOfCheckboxIsProcess());
+// };
 
 PostTimingTreeNodeView.prototype._hideCheckboxIsProcess = function() {
   let that = this;
   that.htmlElement && that.htmlElement.classList.add('no-checkbox-is-process');
 };
 
-PostTimingTreeNodeView.prototype._hideCheckboxIsProcessRecursively = function() {
-  let that = this;
-  that._hideCheckboxIsProcess();
-  that.children.forEach(ch => ch._hideCheckboxIsProcessRecursively());
-};
+// PostTimingTreeNodeView.prototype._hideCheckboxIsProcessRecursively = function() {
+//   let that = this;
+//   that._hideCheckboxIsProcess();
+//   that.children.forEach(ch => ch._hideCheckboxIsProcessRecursively());
+// };
 
 PostTimingTreeNodeView.prototype._showCheckboxIsProcess = function() {
   let that = this;
@@ -820,9 +827,9 @@ PostTimingTreeNodeView.prototype.createTitleDiv = function() {
 PostTimingTreeNodeView.prototype.buildAsHtmlLiElement = function() {
   let that = this;
   that._buildAsHtmlLiElement();
-  if (that.isRightSideTreeNode) {
-    that.handleVisibilityOfCheckboxIsProcess();
-  }
+  // if (that.isRightSideTreeNode) {
+  //   that.handleVisibilityOfCheckboxIsProcess();
+  // }
 }
 
 PostTimingTreeNodeView.prototype._buildAsHtmlLiElement = function() {
@@ -1006,15 +1013,3 @@ PostTimingTreeNodeView.prototype.parentIsHighlighted = function() {
   }
 };
 
-
-function isPrefixOrEquals(prefix, arr) {
-  if (prefix.length > arr.length) {
-    return false;
-  }
-  for (let idx = 0; idx < prefix.length; idx++) {
-    if (prefix[idx] !== arr[idx]) {
-      return false;
-    }
-  }
-  return true;
-}

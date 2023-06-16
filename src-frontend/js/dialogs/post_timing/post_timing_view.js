@@ -669,6 +669,7 @@ PostTimingView.prototype.copyNodeToTheRightSide = function(processNodeView) {
   let branchUntilNode = copyProcessBranchUntilNode(processNodeView.processNode);
   that.mergeRightSideWithNewTimings(branchUntilNode);
   that.showPossibleFilepaths();
+  handleVisibilityOfCheckboxIsProcess();
 
   let aNodeView = processNodeView;
   while (aNodeView !== undefined) {
@@ -704,6 +705,7 @@ PostTimingView.prototype.deleteNodeFromTheRightSide = function(processNodeView) 
 
   that.showPossibleFilepaths();
   handleSelectedAsInnermostCategoryProcessNode();
+  handleVisibilityOfCheckboxIsProcess();
 
   let correspondingLeftSideNode = that.children[0];
   for (let pathSegment of path) {
@@ -716,6 +718,29 @@ PostTimingView.prototype.deleteNodeFromTheRightSide = function(processNodeView) 
     }
     func(correspondingLeftSideNode);
   }
+}
+
+function handleVisibilityOfCheckboxIsProcess() {
+  function hideCheckboxRecursively(processNode) {
+    processNode.nodeView._hideCheckboxIsProcess();
+    processNode.children.forEach(hideCheckboxRecursively);
+  }
+  function func(processNode) {
+    if (processNode.hasSiblings()) {
+      hideCheckboxRecursively(processNode);
+      return;
+    }
+    if (!processNode.isCoveredByFilepath) {
+      processNode.nodeView._hideCheckboxIsProcess();
+    } else if (my.selectedCategoryPath !== undefined &&
+               isPrefixOrEquals(processNode.getPath(), my.selectedCategoryPath)) {
+      processNode.nodeView._hideCheckboxIsProcess();
+    } else {
+      processNode.nodeView._showCheckboxIsProcess();
+    }
+    processNode.children.forEach(func);
+  }
+  func(my.rightSideTimings);
 }
 
 PostTimingView.prototype.deleteCorrespondingNodeFromTheRightSide = function(processNodeView) {
@@ -758,6 +783,7 @@ PostTimingView.prototype.deleteCorrespondingNodeFromTheRightSide = function(proc
 
   that.showPossibleFilepaths();
   handleSelectedAsInnermostCategoryProcessNode();
+  handleVisibilityOfCheckboxIsProcess();
 
   function func(nodeView) {
     nodeView.htmlElement.classList.remove('has-copy-on-the-right-side');
@@ -785,6 +811,7 @@ PostTimingView.prototype.addSiblingWithInputToTheRightSideNode = function(proces
       that.rightSideNodeInRectangle = newNodeInRectangle;
     }
     that.showPossibleFilepaths();
+    handleVisibilityOfCheckboxIsProcess();
   });
 }
 
@@ -807,6 +834,7 @@ PostTimingView.prototype.appendChildWithInputToTheRightSideNode = function(proce
     }
 
     that.showPossibleFilepaths();
+    handleVisibilityOfCheckboxIsProcess();
   });
 }
 
@@ -964,7 +992,7 @@ function getPossibleFilepaths() {
 
 function handleSelectedFilepathChange() {
   if (my.rightSideTimings) {
-    my.rightSideTimings.nodeView.handleVisibilityOfCheckboxIsProcess();
+    handleVisibilityOfCheckboxIsProcess();
   }
 }
 
@@ -1103,6 +1131,18 @@ function isPrefix(prefix, arr) {
   }
   if (prefix.length === arr.length) {
     return false;
+  }
+  return true;
+}
+
+function isPrefixOrEquals(prefix, arr) {
+  if (prefix.length > arr.length) {
+    return false;
+  }
+  for (let idx = 0; idx < prefix.length; idx++) {
+    if (prefix[idx] !== arr[idx]) {
+      return false;
+    }
   }
   return true;
 }
