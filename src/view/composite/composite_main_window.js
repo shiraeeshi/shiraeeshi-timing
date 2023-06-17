@@ -20,6 +20,7 @@ const createWindow = async (appEnv) => {
     width: 1400,
     height: 1200,
     // frame: false,
+    autoHideMenuBar: true,
 		webPreferences: {
       preload: path.join(__dirname, 'view/composite/preload.js')
 		}
