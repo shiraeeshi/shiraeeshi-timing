@@ -19,6 +19,7 @@ const {
 const { ImageInfo } = require('../js/timings/image_info.js');
 const {
   displayTimings,
+  displayTimingsAsImage,
   clearTimingsTextWrapper,
   makeTimingsTextElementsUnminimized,
 } = require('../js/timings/display.js');
@@ -65,20 +66,73 @@ let my = {
   },
 
   colors: {
-    idx: 0,
-    idx_left: undefined,
-    idx_right: undefined,
-    lst: [
-      'white',
-      '#707070',
-      '#323232',
-      'black'
-    ],
+    text: {
+      idx: 0,
+      idx_left: undefined,
+      idx_right: undefined,
+      lst: [
+        'white',
+        '#707070',
+        '#323232',
+        'black'
+      ],
+    },
+    canvas: {
+      timings: {
+        idx: 0,
+        lst: [
+          {
+            "timing-regular": 'rgba(0, 0, 200, 0.5)',
+            "timing-highlighted": 'rgba(200, 0, 0, 0.5)',
+            "timing-highlighted-category": 'rgba(5, 168, 82, 0.5)',
+            "current-time-marker": 'rgba(200, 0, 0, 0.5)',
+          },
+          {
+            "timing-regular": 'rgba(0, 0, 200, 0.5)',
+            "timing-highlighted": 'rgba(200, 0, 0, 0.5)',
+            "timing-highlighted-category": 'rgba(4, 82, 40, 0.5)',
+            "current-time-marker": 'rgba(200, 0, 0, 0.5)',
+          },
+          {
+            "timing-regular": 'rgba(46, 46, 92, 0.5)',
+            "timing-highlighted": 'rgba(92, 25, 25, 0.5)',
+            "timing-highlighted-category": 'rgba(4, 82, 40, 0.5)',
+            "current-time-marker": 'rgba(92, 25, 25, 0.5)',
+          },
+        ],
+      },
+      frequencies: {
+        idx: 0,
+        lst: [
+          {
+            "timing-regular": 'rgba(100, 120, 120, 1)',
+            "timing-regular-last": 'rgba(70, 80, 80, 1)',
+            "timing-has-references": 'rgba(0, 85, 255, 1)',
+            "timing-has-references-last": 'rgba(0, 50, 150, 1)',
+            "timing-highlighted": 'rgba(190, 0, 20, 1)',
+            "timing-highlighted-last": 'rgba(140, 0, 15, 1)',
+            "scrollbar": 'rgba(0, 0, 0, 0.3)'
+          },
+          {
+            "timing-regular": 'rgba(65, 78, 78, 1)',
+            "timing-regular-last": 'rgba(48, 55, 55, 1)',
+            "timing-has-references": 'rgba(0, 54, 160, 1)',
+            "timing-has-references-last": 'rgba(0, 35, 100, 1)',
+            "timing-highlighted": 'rgba(125, 0, 15, 1)',
+            "timing-highlighted-last": 'rgba(98, 0, 10, 1)',
+            "scrollbar": 'rgba(0, 0, 0, 0.3)'
+          },
+        ]
+      }
+    }
   },
 
   timingsFormatErrorHandler: (err) => {
     showTimingsFormatError("inner-content-wrapper", err)
   },
+
+  currentFillStylesOfTimings: undefined,
+  currentFillStylesOfFrequencies: undefined,
 
   dayOffset: 0
 
@@ -244,33 +298,51 @@ function handleServerMessage(msg) {
           throw err;
         });
       } else if (msg.keyval == "t") {
-        my.colors.idx = (my.colors.idx + 1) % my.colors.lst.length;
-        delete my.colors.idx_left;
-        delete my.colors.idx_right;
-        let color = my.colors.lst[my.colors.idx];
+        my.colors.text.idx = (my.colors.text.idx + 1) % my.colors.text.lst.length;
+        delete my.colors.text.idx_left;
+        delete my.colors.text.idx_right;
+        let color = my.colors.text.lst[my.colors.text.idx];
         let leftPanel = document.getElementById('left-panel');
         leftPanel.style.color = color;
 
         let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
         notesContentWrapper.style.color = color;
       } else if (msg.keyval == "l") {
-        if (my.colors.idx_left === undefined) {
-          my.colors.idx_left = my.colors.idx;
+        if (my.colors.text.idx_left === undefined) {
+          my.colors.text.idx_left = my.colors.text.idx;
         }
-        my.colors.idx_left = (my.colors.idx_left + 1) % my.colors.lst.length;
-        let color = my.colors.lst[my.colors.idx_left];
+        my.colors.text.idx_left = (my.colors.text.idx_left + 1) % my.colors.text.lst.length;
+        let color = my.colors.text.lst[my.colors.text.idx_left];
 
         let leftPanel = document.getElementById('left-panel');
         leftPanel.style.color = color;
       } else if (msg.keyval == "r") {
-        if (my.colors.idx_right === undefined) {
-          my.colors.idx_right = my.colors.idx;
+        if (my.colors.text.idx_right === undefined) {
+          my.colors.text.idx_right = my.colors.text.idx;
         }
-        my.colors.idx_right = (my.colors.idx_right + 1) % my.colors.lst.length;
-        let color = my.colors.lst[my.colors.idx_right];
+        my.colors.text.idx_right = (my.colors.text.idx_right + 1) % my.colors.text.lst.length;
+        let color = my.colors.text.lst[my.colors.text.idx_right];
 
         let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
         notesContentWrapper.style.color = color;
+      } else if (msg.keyval == "g") {
+        if (my.currentView === 'timings-summary' || my.currentView === 'history') {
+          my.colors.canvas.timings.idx++;
+          if (my.colors.canvas.timings.idx >= my.colors.canvas.timings.lst.length) {
+            my.colors.canvas.timings.idx = 0; 
+          }
+          let obj = my.colors.canvas.timings.lst[my.colors.canvas.timings.idx];
+          my.currentFillStylesOfTimings = obj;
+          displayTimingsAsImage(my.currentFilteredProcess, my.highlightedCategory);
+        } else {
+          my.colors.canvas.frequencies.idx++;
+          if (my.colors.canvas.frequencies.idx >= my.colors.canvas.frequencies.lst.length) {
+            my.colors.canvas.frequencies.idx = 0; 
+          }
+          let obj = my.colors.canvas.frequencies.lst[my.colors.canvas.frequencies.idx];
+          my.currentFillStylesOfFrequencies = obj;
+          my.viewBuilder.viewsByName["all"].hGraphic.redraw();
+        }
       }
       return;
     }

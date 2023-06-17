@@ -767,8 +767,15 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   // }
 
   if (that.highlightedProcessNode) {
-    let timingsColor = 'rgba(100, 120, 120, 1)';
-    let lastTimingColor = 'rgba(70, 80, 80, 1)';
+    let timingsColor = (
+      my.currentFillStylesOfFrequencies &&
+      my.currentFillStylesOfFrequencies["timing-regular"]
+    ) || 'rgba(100, 120, 120, 1)';
+
+    let lastTimingColor = (
+      my.currentFillStylesOfFrequencies &&
+      my.currentFillStylesOfFrequencies["timing-regular-last"]
+    ) || 'rgba(70, 80, 80, 1)';
     // that.processes
     //   .filter(p => p.prefix != that.highlightedProcessName)
     //   .forEach(p => drawTimingsOfProcess(p, timingsColor, lastTimingColor));
@@ -779,16 +786,35 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     //     that.highlightedProcessNode.referencedTimings.length > 0) {
     if (that.highlightedProcessNodeViewState !== TimingsCategoryNodeViewState.HIGHLIGHTED &&
         that.highlightedProcessNode.hasReferencesToOutsideTimings) {
-      timingsColor = 'rgba(0, 85, 255, 1)';
-      lastTimingColor = 'rgba(0, 50, 150, 1)';
+      timingsColor = (
+        my.currentFillStylesOfFrequencies &&
+        my.currentFillStylesOfFrequencies["timing-has-references"]
+      ) || 'rgba(0, 85, 255, 1)';
+      lastTimingColor = (
+        my.currentFillStylesOfFrequencies &&
+        my.currentFillStylesOfFrequencies["timing-has-references-last"]
+      ) || 'rgba(0, 50, 150, 1)';
     } else {
-      timingsColor = 'rgba(190, 0, 20, 1)';
-      lastTimingColor = 'rgba(140, 0, 15, 1)';
+      timingsColor = (
+        my.currentFillStylesOfFrequencies &&
+        my.currentFillStylesOfFrequencies["timing-highlighted"]
+      ) || 'rgba(190, 0, 20, 1)';
+      lastTimingColor = (
+        my.currentFillStylesOfFrequencies &&
+        my.currentFillStylesOfFrequencies["timing-highlighted-last"]
+      ) || 'rgba(140, 0, 15, 1)';
     }
     drawTimingsOfProcessNode(that.highlightedProcessNode, timingsColor, lastTimingColor, undefined, true);
   } else {
-    let timingsColor = 'rgba(100, 120, 120, 1)';
-    let lastTimingColor = 'rgba(70, 80, 80, 1)';
+    let timingsColor = (
+      my.currentFillStylesOfFrequencies &&
+      my.currentFillStylesOfFrequencies["timing-regular"]
+    ) || 'rgba(100, 120, 120, 1)';
+
+    let lastTimingColor = (
+      my.currentFillStylesOfFrequencies &&
+      my.currentFillStylesOfFrequencies["timing-regular-last"]
+    ) || 'rgba(70, 80, 80, 1)';
     //that.processes.forEach(p => drawTimingsOfProcess(p, timingsColor, lastTimingColor));
     drawTimingsOfProcessNode(that.processNode, timingsColor, lastTimingColor);
   }
@@ -804,8 +830,7 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     xTo: that.canvasWidth - scrollbarBreadth,
     yTo: that.canvasHeight
   };
-  ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-  that.fillRect(ctx, hScrollbarCoords);
+  that.clearRect(ctx, hScrollbarCoords);
 
   let hScrollbarThumbsCoords = {
     xFrom: that.rangeX.from,
@@ -813,7 +838,10 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     xTo: that.rangeX.to,
     yTo: that.canvasHeight
   };
-  ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+  ctx.fillStyle = (
+    my.currentFillStylesOfFrequencies &&
+    my.currentFillStylesOfFrequencies["scrollbar"]
+  ) || 'rgba(0, 0, 0, 1)';
   that.fillRect(ctx, hScrollbarThumbsCoords);
 
   let vScrollbarCoords = {
@@ -822,8 +850,7 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     xTo: that.canvasWidth,
     yTo: that.canvasHeight - scrollbarBreadth
   };
-  ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-  that.fillRect(ctx, vScrollbarCoords);
+  that.clearRect(ctx, vScrollbarCoords);
 
   let vScrollbarThumbsCoords = {
     xFrom: that.canvasWidth - scrollbarBreadth,
@@ -833,7 +860,10 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
     // yTo: that.rangeY.to
     yTo: that.canvasHeight - scrollbarBreadth
   };
-  ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+  ctx.fillStyle = (
+    my.currentFillStylesOfFrequencies &&
+    my.currentFillStylesOfFrequencies["scrollbar"]
+  ) || 'rgba(0, 0, 0, 1)';
   that.fillRect(ctx, vScrollbarThumbsCoords);
 };
 

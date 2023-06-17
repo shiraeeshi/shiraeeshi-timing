@@ -116,6 +116,17 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         }
       },
       {
+        label: 'change colors on graph',
+        accelerator: 'g',
+        click: () => {
+          const msg = {
+            "type": "key_pressed",
+            "keyval": "g"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
         label: 'change text color',
         accelerator: 't',
         click: () => {

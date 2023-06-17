@@ -68,27 +68,39 @@ export function displayTimingsAsImage(timingsCategory, categoryToHighlight, timi
     category.children.forEach(subcat => runRecursivelyForTimingsInCategoriesExcept(subcat, exceptCategory, action));
   }
 
+  let fillStyleRegular = 'rgba(0, 0, 200, 0.5)';
+  let fillStyleHighlighted = 'rgba(200, 0, 0, 0.5)';
+  let fillStyleHighlightedCategory = 'rgba(5, 168, 82, 0.5)';
+  let fillStyleCurrentMomentMarker = 'rgba(200, 0, 0, 0.5)';
+
+  if (my.currentFillStylesOfTimings !== undefined) {
+    fillStyleRegular = my.currentFillStylesOfTimings["timing-regular"];
+    fillStyleHighlighted = my.currentFillStylesOfTimings["timing-highlighted"];
+    fillStyleHighlightedCategory = my.currentFillStylesOfTimings["timing-highlighted-category"];
+    fillStyleCurrentMomentMarker = my.currentFillStylesOfTimings["current-time-marker"];
+  }
+
   function drawTiming(timingItem, fillStyle) {
     let dtFrom = timingItem.fromdate;
     let diffFrom = (now.getTime() - dtFrom.getTime()) / (60*1000.0);
     let xFrom = (maxDiff - diffFrom) * canvasWidth * 1.0 / minutesRange;
     ctx.fillStyle = fillStyle;
     if (timingItemToHighlight && timingItemEquals(timingItem, timingItemToHighlight)) {
-      ctx.fillStyle = 'rgba(200, 0, 0, 0.5)';
+      ctx.fillStyle = fillStyleHighlighted;
     }
     ctx.fillRect(xFrom, 0, timingItem.minutes*canvasWidth*1.0/minutesRange, 50);
   }
 
   if (categoryToHighlight === undefined) {
     runRecursivelyForTimingsInCategories(timingsCategory, timingItem => {
-      drawTiming(timingItem, 'rgba(0, 0, 200, 0.5)')
+      drawTiming(timingItem, fillStyleRegular)
     });
   } else {
     runRecursivelyForTimingsInCategoriesExcept(timingsCategory, categoryToHighlight, timingItem => {
-      drawTiming(timingItem, 'rgba(0, 0, 200, 0.5)')
+      drawTiming(timingItem, fillStyleRegular)
     });
     runRecursivelyForTimingsInHighlightedCategory(categoryToHighlight, timingItem => {
-      drawTiming(timingItem, 'rgba(5, 168, 82, 0.5)')
+      drawTiming(timingItem, fillStyleHighlightedCategory)
     });
   }
 
@@ -97,7 +109,7 @@ export function displayTimingsAsImage(timingsCategory, categoryToHighlight, timi
     let currentMoment = maxDiff * unit;
     let left = (maxDiff - 15) * unit;
     let right = (maxDiff + 15) * unit;
-    ctx.fillStyle = 'rgba(200, 0, 0, 0.5)';
+    ctx.fillStyle = fillStyleCurrentMomentMarker;
     ctx.beginPath();
     ctx.moveTo(left, 50);
     ctx.lineTo(currentMoment, 40);
