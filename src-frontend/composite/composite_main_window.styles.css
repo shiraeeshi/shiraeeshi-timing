@@ -27,6 +27,7 @@ body {
   height: 100%;
   width: 67%;
   min-width: 100px;
+  color: white;
 }
 
 #timings-main-container {
@@ -106,16 +107,16 @@ body {
   flex: 1 1 25%;
   min-height: 25%;
   overflow-y: auto;
-  color: white;
+/*  color: white; */
 }
 
 li.timing-row-parent-li {
-  color: white;
+/*  color: white; */
   opacity: 1;
 }
 
 li.timing-row-parent-li.greyed-out {
-  color: white;
+/*  color: white; */
   opacity: .3;
 }
 
@@ -130,7 +131,7 @@ li.timing-row-parent-li.highlighted-from-canvas,
 }
 
 ul.timings-categories-tree {
-  color: white;
+/*  color: white; */
 }
 
 .proc-node > a, .proc-leaf > a {
@@ -321,7 +322,7 @@ li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-
 
 #frequencies-main-content-wrapper {
   height: 100%;
-  color: white;
+/*  color: white; */
 }
 
 #frequencies-main-content-wrapper
@@ -754,18 +755,18 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
   flex: 1 1 25%;
   min-height: 25%;
   overflow-y: auto;
-  color: white;
+/*  color: white; */
 }
 
 #history-main-container
 li.timing-row-parent-li {
-  color: white;
+/*  color: white; */
   opacity: 1;
 }
 
 #history-main-container
 li.timing-row-parent-li.greyed-out {
-  color: white;
+/*  color: white; */
   opacity: .3;
 }
 
@@ -785,7 +786,7 @@ li.timing-row-parent-li.highlighted-from-canvas,
 
 #history-main-container
 ul.timings-categories-tree {
-  color: white;
+/*  color: white; */
 }
 
 #history-main-container

@@ -116,6 +116,39 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         }
       },
       {
+        label: 'change text color',
+        accelerator: 't',
+        click: () => {
+          const msg = {
+            "type": "key_pressed",
+            "keyval": "t"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
+        label: 'change text color of left-side panel',
+        accelerator: 'l',
+        click: () => {
+          const msg = {
+            "type": "key_pressed",
+            "keyval": "l"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
+        label: 'change text color of right-side panel',
+        accelerator: 'r',
+        click: () => {
+          const msg = {
+            "type": "key_pressed",
+            "keyval": "r"
+          };
+          win.webContents.send('message-from-backend', msg);
+        }
+      },
+      {
         label: 'open devtools',
         accelerator: 'Ctrl+Shift+J',
         click: () => {

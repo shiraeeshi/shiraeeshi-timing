@@ -64,6 +64,18 @@ let my = {
     idx: 0
   },
 
+  colors: {
+    idx: 0,
+    idx_left: undefined,
+    idx_right: undefined,
+    lst: [
+      'white',
+      '#707070',
+      '#323232',
+      'black'
+    ],
+  },
+
   timingsFormatErrorHandler: (err) => {
     showTimingsFormatError("inner-content-wrapper", err)
   },
@@ -231,6 +243,34 @@ function handleServerMessage(msg) {
             "initial handleServerMessage. err: " + err);
           throw err;
         });
+      } else if (msg.keyval == "t") {
+        my.colors.idx = (my.colors.idx + 1) % my.colors.lst.length;
+        delete my.colors.idx_left;
+        delete my.colors.idx_right;
+        let color = my.colors.lst[my.colors.idx];
+        let leftPanel = document.getElementById('left-panel');
+        leftPanel.style.color = color;
+
+        let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
+        notesContentWrapper.style.color = color;
+      } else if (msg.keyval == "l") {
+        if (my.colors.idx_left === undefined) {
+          my.colors.idx_left = my.colors.idx;
+        }
+        my.colors.idx_left = (my.colors.idx_left + 1) % my.colors.lst.length;
+        let color = my.colors.lst[my.colors.idx_left];
+
+        let leftPanel = document.getElementById('left-panel');
+        leftPanel.style.color = color;
+      } else if (msg.keyval == "r") {
+        if (my.colors.idx_right === undefined) {
+          my.colors.idx_right = my.colors.idx;
+        }
+        my.colors.idx_right = (my.colors.idx_right + 1) % my.colors.lst.length;
+        let color = my.colors.lst[my.colors.idx_right];
+
+        let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
+        notesContentWrapper.style.color = color;
       }
       return;
     }
