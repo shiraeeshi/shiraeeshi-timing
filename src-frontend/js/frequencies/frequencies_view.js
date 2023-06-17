@@ -98,7 +98,7 @@ FrequenciesView.prototype.buildHtml = function() {
     that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
 
     let bottomHalf =
-      withChildren(withId(document.createElement('div'), 'frequencies-view-bottom-half'),
+      withChildren(withClass(withId(document.createElement('div'), 'frequencies-view-bottom-half'), 'custom-scrollbar'),
         withChildren(withId(that.htmlChildrenContainerUl, 'processes-tree-container-ul'),
           ...that.children.map(childNode => childNode.htmlElement)
         ),

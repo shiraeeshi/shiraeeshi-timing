@@ -42,12 +42,20 @@ body {
 
 #resizer-between-timings-and-notes {
   flex: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 4px;
-  border-left: 1px solid grey;
 }
 
 #resizer-between-timings-and-notes:hover {
   cursor: ew-resize;
+}
+
+#resizer-line-between-timings-and-notes {
+  height: 120px;
+  width: 4px;
+  border-left: 1px solid grey;
 }
 
 #current-notes-tree-nodes-container {
@@ -108,15 +116,6 @@ body {
   min-height: 25%;
   overflow-y: auto;
 /*  color: white; */
-}
-
-#inner-content-wrapper::-webkit-scrollbar {
-  width: 6px;
-}
-
-#inner-content-wrapper::-webkit-scrollbar-thumb {
-  background: grey;
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
 }
 
 li.timing-row-parent-li {
@@ -616,6 +615,15 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
 #frequencies-view-bottom-half {
   flex: 1 1 0%;
   overflow: auto;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: grey;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
 }
 
 #frequencies-view-top-half > #period-buttons-row {
