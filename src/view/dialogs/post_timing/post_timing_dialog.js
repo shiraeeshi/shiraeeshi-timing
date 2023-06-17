@@ -60,7 +60,7 @@ ipcMain.on('post_timing_dialog_msgs__write_to_file', async (_event, filepath, va
       type: 'save_result',
       result: 'error',
       error_message: err.message
-    };
+    });
   }
 });
 
