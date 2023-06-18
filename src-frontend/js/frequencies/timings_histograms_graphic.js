@@ -841,7 +841,7 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   ctx.fillStyle = (
     my.currentFillStylesOfFrequencies &&
     my.currentFillStylesOfFrequencies["scrollbar"]
-  ) || 'rgba(0, 0, 0, 1)';
+  ) || 'rgba(0, 0, 0, 0.3)';
   that.fillRect(ctx, hScrollbarThumbsCoords);
 
   let vScrollbarCoords = {
@@ -863,7 +863,7 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   ctx.fillStyle = (
     my.currentFillStylesOfFrequencies &&
     my.currentFillStylesOfFrequencies["scrollbar"]
-  ) || 'rgba(0, 0, 0, 1)';
+  ) || 'rgba(0, 0, 0, 0.3)';
   that.fillRect(ctx, vScrollbarThumbsCoords);
 };
 
