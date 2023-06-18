@@ -565,6 +565,14 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
       return;
     }
     that.appendChildWithInputToTheRightSideNode(that.rightSideNodeInRectangle);
+  } else if (eve.ctrlKey && key === 'x') {
+    delete my.rightSideNodeToCopy;
+    my.rightSideNodeToCut = that.rightSideNodeInRectangle.processNode;
+  } else if (eve.ctrlKey && key === 'c') {
+    delete my.rightSideNodeToCut;
+    my.rightSideNodeToCopy = that.rightSideNodeInRectangle.processNode;
+  } else if (eve.ctrlKey && key === 'v') {
+    that.pasteRightSideNode();
   } else if (key === 'c') {
     if (!that.isCursorOnRightSide) {
       return;
@@ -585,38 +593,6 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
     save();
   }
 };
-
-// function save() {
-//   let possibleFilepaths = getPossibleFilepaths();
-//   if (possibleFilepaths.length === 0) {
-//     alert('no filepath found');
-//   } else if (possibleFilepaths.length > 1) {
-//     alert('possible filepaths:\n' + possibleFilepaths.map(pf => pf.filepath).join('\n'));
-//   } else {
-//     let pf = possibleFilepaths[0];
-//     if (pf.filepaths.length > 1) {
-//       alert('possible filepaths:\n' + pf.filepaths.join('\n'));
-//       return;
-//     }
-//     let innermostCategoryPath = findLastInnermostCategoryPath(my.rightSideTimings, pf.categoryPath);
-//     if (innermostCategoryPath === undefined) {
-//       alert("no process node found.\nmake sure that you've selected a process node or some of its descendant nodes.\na process node gets collapsed by default in the left-side tree\n(collapsed node hides its children and draws a plus sign icon in front of itself)");
-//       return;
-//     }
-//     if (!isPrefix(pf.categoryPath, innermostCategoryPath)) {
-//       alert([
-//         "error: categoryPathToSkip should be a prefix of innermostCategoryPath",
-//         `categoryPathToSkip: ${pf.categoryPath}`,
-//         `innermostCategoryPath: ${innermostCategoryPath}`
-//       ].join('\n'));
-//       return;
-//     }
-//     window.webkit.messageHandlers.post_timing_dialog_msgs__write_to_file.postMessage(
-//       pf.filepaths[0],
-//       convertToWritablePreYamlJson(my.rightSideTimings, pf.categoryPath, innermostCategoryPath)
-//     );
-//   }
-// }
 
 function save() {
   if (my.selectedFilepath === undefined || my.selectedCategoryPath === undefined) {
@@ -719,6 +695,44 @@ PostTimingView.prototype.deleteNodeFromTheRightSide = function(processNodeView) 
     }
     func(correspondingLeftSideNode);
   }
+}
+
+PostTimingView.prototype.pasteRightSideNode = function() {
+  let that = this;
+  let source = my.rightSideNodeToCut || my.rightSideNodeToCopy;
+  if (source === undefined ||
+      source === that.rightSideNodeInRectangle.processNode) {
+    return;
+  }
+  function isAncestor(ancestor, processNode) {
+    while (true) {
+      if (processNode.parent === ancestor) {
+        return true;
+      }
+      if (processNode.parent === null) {
+        return false;
+      }
+      processNode = processNode.parent;
+    }
+  }
+  if (isAncestor(source, that.rightSideNodeInRectangle.processNode)) {
+    alert("cannot copy a branch into itself");
+    return;
+  }
+  function func(sourceNode, destinationParentNode) {
+    let copyOfSourceNode = destinationParentNode.ensureChildWithName(sourceNode.name);
+    sourceNode.children.forEach(ch => func(ch, copyOfSourceNode));
+  }
+  func(source, that.rightSideNodeInRectangle.processNode);
+  that.rightSideNodeInRectangle.mergeWithNewTimings(that.rightSideNodeInRectangle.processNode);
+  that.rightSideNodeInRectangle.wrapInRectangle();
+  if (my.rightSideNodeToCut !== undefined) {
+    my.rightSideNodeToCut.nodeView.removeFromTree();
+    delete my.rightSideNodeToCut;
+  }
+  that.showPossibleFilepaths();
+  handleSelectedAsInnermostCategoryProcessNode();
+  handleVisibilityOfCheckboxIsProcess();
 }
 
 function handleVisibilityOfCheckboxIsProcess() {
