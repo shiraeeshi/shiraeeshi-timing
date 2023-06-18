@@ -167,14 +167,25 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
     let { line: lineOfIndex, isEOF: indexEOF } = await indexReader.readline();
     if (indexEOF) {
       console.log(`_traverseIndexUntilFirstDiff: about to return (reached the end of the index) for timing ${timingName}`);
-      console.log('reachedTheEndOfIndex' + JSON.stringify({
-        traversedTimingUntil: prevIndexEntry.offsetFrom,
-        traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
-      }));
-      return ResultOfIndexTraverse.reachedTheEndOfIndex({
-        traversedTimingUntil: prevIndexEntry.offsetFrom,
-        traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
-      });
+      if (prevIndexEntry === null) {
+        console.log('reachedTheEndOfIndex' + JSON.stringify({
+          traversedTimingUntil: timingReader.getOffset(),
+          traversedTimingUntilLineNum: timingReader.getLineNumOffset()
+        }));
+        return ResultOfIndexTraverse.reachedTheEndOfIndex({
+          traversedTimingUntil: timingReader.getOffset(),
+          traversedTimingUntilLineNum: timingReader.getLineNumOffset()
+        });
+      } else {
+        console.log('reachedTheEndOfIndex' + JSON.stringify({
+          traversedTimingUntil: prevIndexEntry.offsetFrom,
+          traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
+        }));
+        return ResultOfIndexTraverse.reachedTheEndOfIndex({
+          traversedTimingUntil: prevIndexEntry.offsetFrom,
+          traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
+        });
+      }
     }
     while (true) {
       let offset = timingReader.getOffset();
