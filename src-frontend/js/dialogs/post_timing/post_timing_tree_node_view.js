@@ -148,20 +148,26 @@ PostTimingTreeNodeView.prototype.removeFromTree = function() {
     }
     delete that.parentNodeView.childrenByName[that.name];
   }
-  if (that.htmlElement !== undefined) {
-    let parent = that.htmlElement.parentNode;
-    let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
-    if (htmlChildIndex >= 0) {
-      try {
-        parent.removeChild(that.htmlElement);
-      } catch (err) {
-        console.log(`error while removing html child: ${err.message}`);
-      }
-    }
-  }
+  that._removeHtmlElementFromTree();
   // if (that.parentNodeView !== undefined) {
   //   that.parentNodeView.handleVisibilityOfCheckboxIsProcess();
   // }
+};
+
+PostTimingTreeNodeView.prototype._removeHtmlElementFromTree = function() {
+  let that = this;
+  if (that.htmlElement === undefined) {
+    return;
+  }
+  let parent = that.htmlElement.parentNode;
+  let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
+  if (htmlChildIndex >= 0) {
+    try {
+      parent.removeChild(that.htmlElement);
+    } catch (err) {
+      console.log(`error while removing html child: ${err.message}`);
+    }
+  }
 };
 
 // PostTimingTreeNodeView.prototype.handleVisibilityOfCheckboxIsProcess = function() {
@@ -322,7 +328,7 @@ PostTimingTreeNodeView.prototype.edit = function(changeHandler) {
   titleContainer.appendChild(inputElem);
   inputElem.addEventListener('change', (eve) => {
     let value = inputElem.value;
-    if (value === '' || value === that.name) {
+    if (value === '') {
       return;
     }
     let processNodeParent = that.processNode.parent;
@@ -330,9 +336,14 @@ PostTimingTreeNodeView.prototype.edit = function(changeHandler) {
     newProcessNode.children = that.processNode.children;
     newProcessNode.childrenByName = that.processNode.childrenByName;
     let index = processNodeParent.children.indexOf(that.processNode);
-    that.removeFromTree();
-    processNodeParent.children.splice(index, 0, newProcessNode);
-    processNodeParent.children.pop();
+    if (value === that.name) {
+      that._removeHtmlElementFromTree();
+      that.buildAsHtmlLiElement();
+    } else {
+      that.removeFromTree();
+      processNodeParent.children.splice(index, 0, newProcessNode);
+      processNodeParent.children.pop();
+    }
     that.parentNodeView.mergeWithNewTimings(processNodeParent);
     changeHandler(newProcessNode.nodeView);
     my.viewBuilder.treeView.enableKeyboardListener();
@@ -344,6 +355,13 @@ PostTimingTreeNodeView.prototype.edit = function(changeHandler) {
     }
   });
   inputElem.addEventListener('keyup', (eve) => {
+    if (eve.key === 'Escape') {
+      eve.preventDefault();
+      eve.stopPropagation();
+      inputElem.value = that.name;
+      let event = new Event('change');
+      inputElem.dispatchEvent(event);
+    }
     if (eve.key === 'Enter') {
       eve.preventDefault();
       eve.stopPropagation();
