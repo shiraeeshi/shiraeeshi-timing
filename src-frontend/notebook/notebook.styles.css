@@ -442,3 +442,9 @@ li:last-child > .notebook-node-title-container > .notebook-node-icons > .icon-hi
 .notebook-node-title-container:hover .notebook-node-icons {
   visibility: visible;
 }
+
+
+.proc-node.in-rectangle > .notebook-node-title-container div.title-container-div,
+.proc-node.in-rectangle > .notebook-node-title-container span.title-container-span {
+  border: 1px solid black;
+}

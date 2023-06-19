@@ -1,3 +1,4 @@
+const { NotebookNode } = require('../js/notebook/notebook_node.js');
 const { turnMultilineTextIntoHtml } = require('../js/html_utils.js');
 const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
 const { parseTagsFromRootForest } = require('../js/notebook/parse_tags.js');
@@ -6,7 +7,9 @@ const { NotesForestViewBuilder } = require('../js/notebook/notes_forest_view_bui
 const { appendNotesForestHtml, appendNotesForestHtmlToBottomPanel, buildInitialNotesForest, openNotesInForest, highlightNotesInForest, openTagsInForest, highlightTagsInForest } = require('../js/notebook/notebook_utils.js');
 
 let my = {
-  notesForest: null
+  notesForest: null,
+  isCursorOnRightSide: true,
+  isKeyboardListenerDisabled: false,
 };
 
 window.my = my;
@@ -26,11 +29,24 @@ function handleServerMessage(msg) {
       notebookContentWrapper.appendChild(msgHtml);
       return;
     }
+
+    if (!my.addedKeyupListener) {
+      document.body.addEventListener('keyup', (eve) => {
+        handleKeyUp(eve);
+      });
+
+      my.addedKeyupListener = true;
+    }
+
     let config = msg.config;
     handleConfig(msg.config);
     let notes_object = msg.notes;
-    let forest = yamlRootObject2forest(msg.notes);
+
+    let forestToConvertToNodes = yamlRootObject2forest(msg.notes);
+    my.notebookTree = convertToNotebookNodes(forestToConvertToNodes);
+    let forest = my.notebookTree.children;
     my.notesForest = forest;
+
     let tags = parseTagsFromRootForest(forest);
     showTagsAndLinks(tags);
     showTagsAndLinksOfBottomPanel(tags);
@@ -42,7 +58,7 @@ function handleServerMessage(msg) {
     if (configMaximizeNotesBottomPanel) {
 
       let viewBuilder = new NotesForestViewBuilder();
-      viewBuilder.buildView(forest);
+      viewBuilder.buildView(my.notebookTree);
       my.rootNodeViewOfNotesOfBottomPanel = viewBuilder.getRootNodeViewOfNotes();
       appendNotesForestHtmlToBottomPanel(viewBuilder.getHtml());
 
@@ -56,9 +72,12 @@ function handleServerMessage(msg) {
     } else {
 
       let viewBuilder = new NotesForestViewBuilder(true);
-      viewBuilder.buildView(forest);
+      viewBuilder.buildView(my.notebookTree);
       my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
       appendNotesForestHtml(viewBuilder.getHtml());
+
+      my.rightSideNodeInRectangle = my.rootNodeViewOfNotes;
+      my.rightSideNodeInRectangle.wrapInRectangle();
 
       let initialNotesForest = buildInitialNotesForest();
       highlightNotesInForest(window.my.rootNodeViewOfNotes, initialNotesForest, true);
@@ -70,6 +89,222 @@ function handleServerMessage(msg) {
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
   }
+}
+
+function handleKeyUp(eve) {
+
+  if (my.isKeyboardListenerDisabled) {
+    return;
+  }
+
+  let key = eve.key;
+
+  if (key === 'ArrowLeft') {
+    if (my.isCursorOnRightSide) {
+      if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
+        my.rightSideNodeInRectangle.removeRectangleWrapper();
+
+        let newNodeInRectangle = my.rightSideNodeInRectangle.parentNodeView;
+        newNodeInRectangle.wrapInRectangle();
+
+        my.rightSideNodeInRectangle = newNodeInRectangle;
+      }
+    } else {
+      let nodeInRectangle = that.nodeInRectangle;
+      if (nodeInRectangle.parentNodeView !== undefined) {
+        nodeInRectangle.removeRectangleWrapper();
+
+        let newNodeInRectangle = nodeInRectangle.parentNodeView;
+        newNodeInRectangle.wrapInRectangle();
+
+        that.nodeInRectangle = newNodeInRectangle;
+      }
+    }
+  } else if (key === 'ArrowRight') {
+    if (my.isCursorOnRightSide) {
+      if (my.rightSideNodeInRectangle.children.length > 0) {
+        my.rightSideNodeInRectangle.removeRectangleWrapper();
+
+        if (my.rightSideNodeInRectangle.isCollapsed) {
+          my.rightSideNodeInRectangle.toggleCollapse();
+        }
+
+        let newNodeInRectangle = my.rightSideNodeInRectangle.children[0];
+        newNodeInRectangle.wrapInRectangle();
+
+        my.rightSideNodeInRectangle = newNodeInRectangle;
+      }
+    } else {
+      let nodeInRectangle = that.nodeInRectangle;
+      if (nodeInRectangle.children.length > 0) {
+        nodeInRectangle.removeRectangleWrapper();
+
+        if (nodeInRectangle.isCollapsed) {
+          nodeInRectangle.toggleCollapse();
+        }
+
+        let newNodeInRectangle = nodeInRectangle.children[0];
+        newNodeInRectangle.wrapInRectangle();
+
+        that.nodeInRectangle = newNodeInRectangle;
+      }
+    }
+  } else if (key === 'ArrowUp') {
+    if (my.isCursorOnRightSide) {
+      if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
+
+        let newNodeInRectangle = my.rightSideNodeInRectangle.findPreviousSibling();
+        if (newNodeInRectangle === undefined) {
+          return;
+        }
+        my.rightSideNodeInRectangle.removeRectangleWrapper();
+        newNodeInRectangle.wrapInRectangle();
+
+        my.rightSideNodeInRectangle = newNodeInRectangle;
+      }
+    } else {
+      let nodeInRectangle = that.nodeInRectangle;
+      if (nodeInRectangle.parentNodeView !== undefined) {
+
+        let newNodeInRectangle = nodeInRectangle.findPreviousSibling();
+        if (newNodeInRectangle === undefined) {
+          return;
+        }
+        nodeInRectangle.removeRectangleWrapper();
+        newNodeInRectangle.wrapInRectangle();
+
+        that.nodeInRectangle = newNodeInRectangle;
+      }
+    }
+  } else if (key === 'ArrowDown') {
+    if (my.isCursorOnRightSide) {
+      if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
+
+        let newNodeInRectangle = my.rightSideNodeInRectangle.findNextSibling();
+        if (newNodeInRectangle === undefined) {
+          return;
+        }
+        my.rightSideNodeInRectangle.removeRectangleWrapper();
+        newNodeInRectangle.wrapInRectangle();
+
+        my.rightSideNodeInRectangle = newNodeInRectangle;
+      }
+    } else {
+      let nodeInRectangle = that.nodeInRectangle;
+      if (nodeInRectangle.parentNodeView !== undefined) {
+
+        let newNodeInRectangle = nodeInRectangle.findNextSibling();
+        if (newNodeInRectangle === undefined) {
+          return;
+        }
+        nodeInRectangle.removeRectangleWrapper();
+        newNodeInRectangle.wrapInRectangle();
+
+        that.nodeInRectangle = newNodeInRectangle;
+      }
+    }
+  } else if (key === ' ') {
+    if (my.isCursorOnRightSide) {
+      my.rightSideNodeInRectangle.toggleCollapse();
+    } else {
+      that.nodeInRectangle.toggleCollapse();
+    }
+  } else if (key === 'o') {
+    if (!my.isCursorOnRightSide) {
+      return;
+    }
+    addSiblingWithInputToTheRightSideNode(my.rightSideNodeInRectangle);
+  } else if (key === 'a') {
+    if (!my.isCursorOnRightSide) {
+      return;
+    }
+    appendChildWithInputToTheRightSideNode(my.rightSideNodeInRectangle);
+  } else if (eve.ctrlKey && key === 'x') {
+    delete my.rightSideNodeToCopy;
+    my.rightSideNodeToCut = my.rightSideNodeInRectangle.processNode;
+  } else if (eve.ctrlKey && key === 'c') {
+    delete my.rightSideNodeToCut;
+    my.rightSideNodeToCopy = my.rightSideNodeInRectangle.processNode;
+  } else if (eve.ctrlKey && key === 'v') {
+    pasteRightSideNode();
+  } else if (key === 'F2') {
+    if (!my.isCursorOnRightSide) {
+      return;
+    }
+    editRightSideNode(my.rightSideNodeInRectangle);
+  } else if (key === 'Delete') {
+    if (my.isCursorOnRightSide) {
+      deleteNodeFromTheRightSide(my.rightSideNodeInRectangle);
+    } else {
+      that.deleteCorrespondingNodeFromTheRightSide(that.nodeInRectangle)
+    }
+  } else if (eve.ctrlKey && key === 's') {
+    save();
+  }
+}
+
+function addSiblingWithInputToTheRightSideNode(notebookNodeView) {
+  let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
+
+  notebookNodeView.addHtmlSiblingWithInput(function(newNotebookNode) {
+    if (wasInRectangle) {
+      my.rightSideNodeInRectangle.removeRectangleWrapper();
+
+      let newNodeInRectangle = my.rightSideNodeInRectangle.findNextSibling();
+      newNodeInRectangle.wrapInRectangle();
+
+      my.rightSideNodeInRectangle = newNodeInRectangle;
+    }
+  });
+}
+
+function appendChildWithInputToTheRightSideNode(notebookNodeView) {
+  let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
+  notebookNodeView.appendHtmlChildWithInput(function(newNotebookNode) {
+    if (wasInRectangle) {
+      my.rightSideNodeInRectangle.removeRectangleWrapper();
+
+      let newNodeInRectangle = my.rightSideNodeInRectangle.children[my.rightSideNodeInRectangle.children.length - 1];
+      newNodeInRectangle.wrapInRectangle();
+
+      my.rightSideNodeInRectangle = newNodeInRectangle;
+    }
+  });
+}
+
+function editRightSideNode(notebookNodeView) {
+  let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
+  notebookNodeView.edit(function(newNodeView) {
+    if (wasInRectangle) {
+      newNodeView.wrapInRectangle();
+      my.rightSideNodeInRectangle = newNodeView;
+    }
+  });
+}
+
+function deleteNodeFromTheRightSide(notebookNodeView) {
+  let newNodeInRectangle = my.rightSideNodeInRectangle;
+  let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
+  if (wasInRectangle) {
+    newNodeInRectangle = notebookNodeView.findNextSibling();
+    if (newNodeInRectangle === undefined) {
+      newNodeInRectangle = notebookNodeView.findPreviousSibling();
+    }
+    if (newNodeInRectangle === undefined) {
+      newNodeInRectangle = notebookNodeView.parentNodeView;
+    }
+    if (newNodeInRectangle === undefined) {
+      return;
+    }
+  }
+
+  notebookNodeView.removeFromTree();
+
+  if (wasInRectangle) {
+    newNodeInRectangle.wrapInRectangle();
+    my.rightSideNodeInRectangle = newNodeInRectangle;
+  }
+
 }
 
 function handleConfig(config) {
@@ -285,4 +520,20 @@ function initVerticalResizer() {
     document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
     document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
   }
+}
+
+function convertToNotebookNodes(jsonForest) {
+  let rootNotebookNode = new NotebookNode("all");
+  for (let obj of jsonForest) {
+    let notebookNode = rootNotebookNode.ensureChildWithName(obj.name);
+    convertChildrenToNotebookNodes(obj, notebookNode);
+  }
+  return rootNotebookNode;
+}
+
+function convertChildrenToNotebookNodes(jsonObject, notebookNode) {
+  jsonObject.children.forEach(ch => {
+    let childNotebookNode = notebookNode.ensureChildWithName(ch.name);
+    convertChildrenToNotebookNodes(ch, childNotebookNode);
+  });
 }

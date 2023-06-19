@@ -4,6 +4,7 @@ const { withChildren, withClass } = require('../html_utils.js');
 export function NotebookNodeView(notebookNode, parentNodeView) {
   let that = this;
   that.notebookNode = notebookNode;
+  notebookNode.nodeView = that;
   that.name = notebookNode.name;
   that.isCollapsed = true;
   that.parentNodeView = parentNodeView;
@@ -20,18 +21,302 @@ export function NotebookNodeView(notebookNode, parentNodeView) {
 NotebookNodeView.prototype.name2html = function() {
   let that = this;
   if (that.name.includes("\n")) {
-    return withChildren(document.createElement('div'),
+    return withChildren(withClass(document.createElement('div'), 'title-container-div'),
             ...that.name.split("\n")
                         .map(line => document.createTextNode(line))
                         .flatMap(el => [el,document.createElement("br")])
                         .slice(0, -1)
           );
   } else {
-    return withChildren(document.createElement('span'),
+    return withChildren(withClass(document.createElement('span'), 'title-container-span'),
             document.createTextNode(that.name)
           );
   }
 }
+
+NotebookNodeView.prototype.mergeWithNewNodes = function(notebookNode) {
+  let that = this;
+  that.notebookNode = notebookNode;
+  let lengthBefore = that.children.length;
+  notebookNode.children.forEach(childNode => {
+    let oldChild = that.childrenByName[childNode.name];
+    if (oldChild === undefined) {
+      let newChildView = new NotebookNodeView(childNode, that);
+      newChildView.buildAsHtmlLiElement();
+      that.children.push(newChildView);
+      that.childrenByName[childNode.name] = newChildView;
+    } else {
+      oldChild.mergeWithNewNodes(childNode);
+    }
+  });
+  if (lengthBefore > 0) {
+    that.children = that.notebookNode.children.map(ch => ch.nodeView);
+    that.htmlContainerUl.innerHTML = "";
+    withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
+  }
+  let currentLength = that.children.length;
+  if (lengthBefore === 0 && currentLength > 0) {
+    if (that.htmlElement === undefined) {
+      return;
+    }
+    that._rebuildHtmlElement();
+    if (!that.isCollapsed) {
+      that.children = that.notebookNode.children.map(ch => ch.nodeView);
+      that.htmlContainerUl.innerHTML = "";
+      withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
+    }
+  }
+};
+
+NotebookNodeView.prototype._rebuildHtmlElement = function() {
+  let that = this;
+  let parent = that.htmlElement.parentNode;
+  if (parent === undefined) {
+    that.buildAsHtmlLiElement();
+    return;
+  }
+  let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
+  if (htmlChildIndex < 0) {
+    return;
+  }
+  parent.removeChild(that.htmlElement);
+  delete that.htmlElement;
+  that.buildAsHtmlLiElement();
+  if (htmlChildIndex === parent.children.length) {
+    parent.appendChild(that.htmlElement);
+  } else {
+    parent.insertBefore(that.htmlElement, parent.children[htmlChildIndex]);
+  }
+};
+
+NotebookNodeView.prototype.removeFromTree = function() {
+  let that = this;
+  that.notebookNode.removeFromTree();
+  if (that.parentNodeView !== undefined) {
+    let childIndex = that.parentNodeView.children.indexOf(that);
+    if (childIndex >= 0) {
+      that.parentNodeView.children.splice(childIndex, 1);
+    }
+    delete that.parentNodeView.childrenByName[that.name];
+  }
+  that._removeHtmlElementFromTree();
+  if (that.parentNodeView.children.length === 0) {
+    that.parentNodeView._rebuildHtmlElement();
+  }
+};
+
+NotebookNodeView.prototype._removeHtmlElementFromTree = function() {
+  let that = this;
+  if (that.htmlElement === undefined) {
+    return;
+  }
+  let parent = that.htmlElement.parentNode;
+  let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
+  if (htmlChildIndex >= 0) {
+    try {
+      parent.removeChild(that.htmlElement);
+    } catch (err) {
+      console.log(`error while removing html child: ${err.message}`);
+    }
+  }
+};
+
+NotebookNodeView.prototype.addHtmlSiblingWithInput = function(changeHandler) {
+  let that = this;
+  if (that.parentNodeView === undefined) {
+    return;
+  }
+  let idx = that.parentNodeView.children.indexOf(that);
+  that.parentNodeView._insertHtmlChildWithInputAtIndex(idx + 1, changeHandler);
+};
+
+NotebookNodeView.prototype.appendHtmlChildWithInput = function(changeHandler) {
+  let that = this;
+  if (that.isCollapsed) {
+    that.toggleCollapse();
+  }
+  let idx = that.children.length;
+  that._insertHtmlChildWithInputAtIndex(idx, changeHandler);
+};
+
+NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, changeHandler) {
+  let that = this;
+  if (that.children.length === 0) {
+    if (that.htmlElement === undefined) {
+      return;
+    }
+    let parent = that.htmlElement.parentNode;
+    if (parent === undefined) {
+      return;
+    }
+    let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
+    if (htmlChildIndex < 0) {
+      return;
+    }
+
+    parent.removeChild(that.htmlElement);
+    delete that.htmlElement;
+
+    let htmlElement =
+      withChildren(
+        withChildren(withClass(document.createElement('li'), 'proc-node', 'proc-node-closed'),
+          (function() {
+            let elem = document.createElement('span');
+            elem.classList.add('proc-node-icon');
+            elem.addEventListener('click', eve => {
+              that.toggleCollapse();
+            });
+            return elem;
+          })(),
+          that.createTitleDiv()
+        ),
+        that.htmlContainerUl
+      );
+
+    that.htmlElement = htmlElement;
+
+    that.uncollapseWithoutNotifyingChildren();
+
+    if (htmlChildIndex === parent.children.length) {
+      parent.appendChild(that.htmlElement);
+    } else {
+      parent.insertBefore(that.htmlElement, parent.children[htmlChildIndex]);
+    }
+  }
+
+  let inputElem = document.createElement('input');
+  let htmlElem = withChildren(document.createElement('li'), inputElem);
+  if (index < that.htmlContainerUl.children.length) {
+    that.htmlContainerUl.insertBefore(htmlElem, that.htmlContainerUl.children[index]);
+  } else {
+    that.htmlContainerUl.appendChild(htmlElem);
+  }
+  inputElem.addEventListener('change', (eve) => {
+    let value = inputElem.value;
+    if (value === '') {
+      return;
+    }
+    that.htmlContainerUl.removeChild(htmlElem);
+    let newProcessNode = that.notebookNode.ensureChildWithName(value);
+    that.notebookNode.children.splice(index, 0, newProcessNode);
+    that.notebookNode.children.pop();
+    that.mergeWithNewNodes(that.notebookNode);
+    that.uncollapseWithoutNotifyingChildren();
+    changeHandler(newProcessNode);
+    enableKeyboardListener();
+    window.webkit.messageHandlers.notebook_msgs__enable_shortcuts.postMessage();
+  });
+  inputElem.addEventListener('keypress', (eve) => {
+    if (eve.key === 'Enter') {
+      eve.preventDefault();
+    }
+  });
+  inputElem.addEventListener('keyup', (eve) => {
+    if (eve.key === 'Enter') {
+      eve.preventDefault();
+      eve.stopPropagation();
+      let event = new Event('change');
+      inputElem.dispatchEvent(event);
+    }
+  });
+  inputElem.focus();
+  disableKeyboardListener();
+  window.webkit.messageHandlers.notebook_msgs__disable_shortcuts.postMessage();
+};
+
+NotebookNodeView.prototype.edit = function(changeHandler) {
+  let that = this;
+  if (that.htmlElement === undefined) {
+    return;
+  }
+  let titleContainer = that.htmlElement.querySelector('.notebook-node-title-container');
+  titleContainer.innerHTML = '';
+  let inputElem = document.createElement('input');
+  inputElem.value = that.name;
+  titleContainer.appendChild(inputElem);
+  inputElem.addEventListener('change', (eve) => {
+    let value = inputElem.value;
+    if (value === '') {
+      return;
+    }
+    let notebookNodeParent = that.notebookNode.parent;
+    let newProcessNode = notebookNodeParent.ensureChildWithName(value);
+    newProcessNode.children = that.notebookNode.children;
+    newProcessNode.childrenByName = that.notebookNode.childrenByName;
+    let index = notebookNodeParent.children.indexOf(that.notebookNode);
+    if (value === that.name) {
+      that._removeHtmlElementFromTree();
+      that.buildAsHtmlLiElement();
+    } else {
+      that.removeFromTree();
+      notebookNodeParent.children.splice(index, 0, newProcessNode);
+      notebookNodeParent.children.pop();
+    }
+    that.parentNodeView.mergeWithNewNodes(notebookNodeParent);
+    changeHandler(newProcessNode.nodeView);
+    enableKeyboardListener();
+    window.webkit.messageHandlers.notebook_msgs__enable_shortcuts.postMessage();
+  });
+  inputElem.addEventListener('keypress', (eve) => {
+    if (eve.key === 'Enter') {
+      eve.preventDefault();
+    }
+  });
+  inputElem.addEventListener('keyup', (eve) => {
+    if (eve.key === 'Escape') {
+      eve.preventDefault();
+      eve.stopPropagation();
+      inputElem.value = that.name;
+      let event = new Event('change');
+      inputElem.dispatchEvent(event);
+    }
+    if (eve.key === 'Enter') {
+      eve.preventDefault();
+      eve.stopPropagation();
+      let event = new Event('change');
+      inputElem.dispatchEvent(event);
+    }
+  });
+  inputElem.focus();
+  disableKeyboardListener();
+  window.webkit.messageHandlers.notebook_msgs__disable_shortcuts.postMessage();
+};
+
+NotebookNodeView.prototype.wrapInRectangle = function() {
+  let that = this;
+  that.htmlElement && that.htmlElement.classList.add('in-rectangle');
+};
+
+NotebookNodeView.prototype.removeRectangleWrapper = function() {
+  let that = this;
+  that.htmlElement && that.htmlElement.classList.remove('in-rectangle');
+};
+
+NotebookNodeView.prototype.findPreviousSibling = function() {
+  let that = this;
+  if (that.parentNodeView === undefined) {
+    return undefined;
+  }
+  let parentChildren = that.parentNodeView.children;
+  let idx = parentChildren.indexOf(that);
+  if (idx <= 0) {
+    return undefined;
+  }
+  return parentChildren[idx - 1];
+};
+
+NotebookNodeView.prototype.findNextSibling = function() {
+  let that = this;
+  if (that.parentNodeView === undefined) {
+    return undefined;
+  }
+  let parentChildren = that.parentNodeView.children;
+  let idx = parentChildren.indexOf(that);
+  if (idx < 0 || idx === parentChildren.length - 1) {
+    return undefined;
+  }
+  return parentChildren[idx + 1];
+};
 
 NotebookNodeView.prototype._isTaggedNode = function() {
   let that = this;
@@ -161,167 +446,169 @@ NotebookNodeView.prototype.html = function() {
   return that.htmlElement;
 };
 
+NotebookNodeView.prototype.createTitleDiv = function() {
+  let that = this;
+  let nameHtml = that.name2html();
+  let iconOpenTagInTagsTree =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-open-tag-in-tags-tree'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('open the tag in tags tree')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.openTagInTagsTree();
+      });
+      return elem;
+    })();
+  let iconOpenTagsOfChildrenInTagsTree =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-open-tags-of-children-in-tags-tree'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('open tags of children in tags tree')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.openTagsOfChildrenInTagsTree();
+      });
+      return elem;
+    })();
+  let iconMoveToTop =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-move-to-top'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('move to the top of the list')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.moveToTop();
+      });
+      return elem;
+    })();
+  let iconMoveToBottom =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-move-to-bottom'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('move to the bottom of the list')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.moveToBottom();
+      });
+      return elem;
+    })();
+  let iconHide =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-hide'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('hide this item')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.hideThisItem();
+      });
+      return elem;
+    })();
+  let iconHideSiblingsBelow =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-hide-siblings-below'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('hide siblings that are below this item')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.hideSiblingsBelow();
+      });
+      return elem;
+    })();
+  let iconUnhideHiddenChildren =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-unhide-hidden-children'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('show hidden children')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.unhideHiddenChildren();
+      });
+      return elem;
+    })();
+  let icons = [];
+  if (that._isTaggedNode()) {
+    icons.push(iconOpenTagInTagsTree);
+  }
+  if (that._hasTaggedChildren()) {
+    icons.push(iconOpenTagsOfChildrenInTagsTree);
+  }
+  if (that.parentNodeView === undefined) {
+    let iconIncreaseFontSize =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-increase-font-size'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('increase font size')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.increaseFontSize();
+        });
+        return elem;
+      })();
+    let iconDecreaseFontSize =
+      (function() {
+        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-decrease-font-size'),
+          withClass(
+            withChildren(document.createElement('span'),
+              document.createTextNode('decrease font size')
+            ),
+            'tooltip')
+        );
+        elem.addEventListener('click', eve => {
+          that.decreaseFontSize();
+        });
+        return elem;
+      })();
+    icons.push(iconIncreaseFontSize);
+    icons.push(iconDecreaseFontSize);
+  }
+  icons = icons.concat([
+    iconMoveToTop,
+    iconMoveToBottom,
+    iconHide,
+    iconHideSiblingsBelow,
+    iconUnhideHiddenChildren
+  ]);
+  let iconsDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-icons'),
+    ...icons
+  );
+  let titleDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-title-container'),
+    nameHtml,
+    iconsDiv
+  );
+  return titleDiv;
+}
+
 NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
   let that = this;
 
-  function createTitleDiv() {
-    let nameHtml = that.name2html();
-    let iconOpenTagInTagsTree =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-open-tag-in-tags-tree'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('open the tag in tags tree')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.openTagInTagsTree();
-        });
-        return elem;
-      })();
-    let iconOpenTagsOfChildrenInTagsTree =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-open-tags-of-children-in-tags-tree'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('open tags of children in tags tree')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.openTagsOfChildrenInTagsTree();
-        });
-        return elem;
-      })();
-    let iconMoveToTop =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-move-to-top'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('move to the top of the list')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.moveToTop();
-        });
-        return elem;
-      })();
-    let iconMoveToBottom =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-move-to-bottom'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('move to the bottom of the list')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.moveToBottom();
-        });
-        return elem;
-      })();
-    let iconHide =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-hide'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('hide this item')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.hideThisItem();
-        });
-        return elem;
-      })();
-    let iconHideSiblingsBelow =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-hide-siblings-below'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('hide siblings that are below this item')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.hideSiblingsBelow();
-        });
-        return elem;
-      })();
-    let iconUnhideHiddenChildren =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-unhide-hidden-children'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('show hidden children')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.unhideHiddenChildren();
-        });
-        return elem;
-      })();
-    let icons = [];
-    if (that._isTaggedNode()) {
-      icons.push(iconOpenTagInTagsTree);
-    }
-    if (that._hasTaggedChildren()) {
-      icons.push(iconOpenTagsOfChildrenInTagsTree);
-    }
-    if (that.parentNodeView === undefined) {
-      let iconIncreaseFontSize =
-        (function() {
-          let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-increase-font-size'),
-            withClass(
-              withChildren(document.createElement('span'),
-                document.createTextNode('increase font size')
-              ),
-              'tooltip')
-          );
-          elem.addEventListener('click', eve => {
-            that.increaseFontSize();
-          });
-          return elem;
-        })();
-      let iconDecreaseFontSize =
-        (function() {
-          let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-decrease-font-size'),
-            withClass(
-              withChildren(document.createElement('span'),
-                document.createTextNode('decrease font size')
-              ),
-              'tooltip')
-          );
-          elem.addEventListener('click', eve => {
-            that.decreaseFontSize();
-          });
-          return elem;
-        })();
-      icons.push(iconIncreaseFontSize);
-      icons.push(iconDecreaseFontSize);
-    }
-    icons = icons.concat([
-      iconMoveToTop,
-      iconMoveToBottom,
-      iconHide,
-      iconHideSiblingsBelow,
-      iconUnhideHiddenChildren
-    ]);
-    let iconsDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-icons'),
-      ...icons
-    );
-    let titleDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-title-container'),
-      nameHtml,
-      iconsDiv
-    );
-    return titleDiv;
-  }
 
   if (that.children.length == 0) {
-    let htmlElement = withClass(withChildren(document.createElement('li'), createTitleDiv()), 'proc-node', 'proc-leaf');
+    let htmlElement = withClass(withChildren(document.createElement('li'), that.createTitleDiv()), 'proc-node', 'proc-leaf');
     that.htmlElement = htmlElement;
     return;
   }
@@ -337,7 +624,7 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
           });
           return elem;
         })(),
-        createTitleDiv()
+        that.createTitleDiv()
       ),
       that.htmlContainerUl
     );
@@ -388,12 +675,17 @@ NotebookNodeView.prototype.collapse = function() {
 
 NotebookNodeView.prototype.uncollapse = function() {
   let that = this;
+  that.uncollapseWithoutNotifyingChildren();
+  that.children.forEach(childView => childView.parentUncollapsed());
+};
+
+NotebookNodeView.prototype.uncollapseWithoutNotifyingChildren = function() {
+  let that = this;
   that.isCollapsed = false;
   if (that.html().classList.contains("proc-node-closed")) {
     that.html().classList.remove("proc-node-closed");
     that.html().classList.add("proc-node-open");
   }
-  that.children.forEach(childView => childView.parentUncollapsed());
 };
 
 NotebookNodeView.prototype._appendHtmlChildren = function() {
@@ -497,3 +789,11 @@ NotebookNodeView.prototype.parentIsHighlighted = function() {
   }
 };
 
+
+function disableKeyboardListener() {
+  my.isKeyboardListenerDisabled = true;
+}
+
+function enableKeyboardListener() {
+  my.isKeyboardListenerDisabled = false;
+}

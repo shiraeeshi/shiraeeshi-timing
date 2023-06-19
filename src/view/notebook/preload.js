@@ -14,6 +14,16 @@ contextBridge.exposeInMainWorld('webkit', {
         });
       },
     },
+    notebook_msgs__disable_shortcuts: {
+      postMessage: () => {
+        ipcRenderer.send('notebook_msgs__disable_shortcuts');
+      }
+    },
+    notebook_msgs__enable_shortcuts: {
+      postMessage: () => {
+        ipcRenderer.send('notebook_msgs__enable_shortcuts');
+      }
+    },
   }
 });
 

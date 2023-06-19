@@ -7,6 +7,16 @@ const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.j
 const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 const { parseNotebook } = require('../../logic/notebook_parser.js');
 
+let isDisabledShortcuts = false;
+
+ipcMain.on('notebook_msgs__disable_shortcuts', async (_event) => {
+  isDisabledShortcuts = true;
+});
+
+ipcMain.on('notebook_msgs__enable_shortcuts', async (_event) => {
+  isDisabledShortcuts = false;
+});
+
 export async function showNotebook(appEnv) {
 
   await createWindow(appEnv);
@@ -43,6 +53,9 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'toggle fullscreen',
         accelerator: process.platform === 'darwin' ? 'f' : 'f',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           isFullScreen = !isFullScreen;
           // let window = electron.remote.getCurrentWindow();
           win.setFullScreen(isFullScreen);
@@ -52,6 +65,9 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'Escape',
         accelerator: 'Escape',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           if (isFullScreen) {
             isFullScreen = false;
             win.setFullScreen(false);

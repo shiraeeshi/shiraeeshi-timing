@@ -19,13 +19,9 @@ export function NotesForestViewBuilder(isTopPanel) {
   };
 }
 
-NotesForestViewBuilder.prototype.buildView = function(notesForest) {
+NotesForestViewBuilder.prototype.buildView = function(notebookTree) {
   let that = this;
-  let rootNode = {
-    name: 'all',
-    children: notesForest
-  };
-  let treeView = new NotebookNodeView(rootNode);
+  let treeView = new NotebookNodeView(notebookTree);
   treeView.isTopPanelTree = that.isTopPanel;
   that.view = treeView;
 
