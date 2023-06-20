@@ -23,6 +23,19 @@ NotebookNode.prototype.ensureChildWithName = function(name) {
   return child;
 };
 
+NotebookNode.prototype.copy = function() {
+  let that = this;
+  let result = new NotebookNode(that.name);
+  function func(node, copyNode) {
+    for (let child of node.children) {
+      let copyOfChild = copyNode.ensureChildWithName(child.name);
+      func(child, copyOfChild)
+    }
+  }
+  func(that, result);
+  return result;
+};
+
 NotebookNode.prototype.removeFromTree = function(name) {
   let that = this;
   if (that.parent === null) {
@@ -33,4 +46,15 @@ NotebookNode.prototype.removeFromTree = function(name) {
     that.parent.children.splice(idx, 1);
   }
   delete that.parent.childrenByName[that.name];
+};
+
+NotebookNode.prototype.getAncestry = function() {
+  let that = this;
+  if (that.parent === null) {
+    return [];
+  } else if (that.parent.parent === null) {
+    return [];
+  } else {
+    return that.parent.getAncestry().concat([that.parent.name]);
+  }
 };

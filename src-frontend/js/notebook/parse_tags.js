@@ -2,38 +2,47 @@
 export function parseTagsFromRootForest(forest) {
   let result = [];
   forest.forEach(tree => {
-    result = result.concat(parseTagsFromNode(tree, undefined, []));
+    result = result.concat(parseTagsFromNodeRecursively(tree, []));
   });
   return result;
 }
 
-function parseTagsFromNode(node, parentNode, ancestry) {
+export function parseTagsFromNodeRecursively(node, ancestry) {
   let result = [];
-  let tag = extractTag(node.name);
-  if (tag) {
-    let tagObj = {
-      tag: tag,
-      name: node.name,
-      ancestry: ancestry
-    };
+  let tagObj = parseTagFromNodeIfExists(node, ancestry);
+  if (tagObj !== undefined) {
     result.push(tagObj);
-    node.tag = tagObj;
-    if (parentNode !== undefined) {
-      parentNode.hasChildrenWithTags = true;
-      if (parentNode.tagsOfChildren === undefined) {
-        parentNode.tagsOfChildren = [];
-      }
-      parentNode.tagsOfChildren.push(tagObj);
-    }
   }
   if (!node.children || node.children.length == 0) {
     return result;
   }
   let newAncestry = ancestry.concat([node.name]);
   node.children.forEach(subTree => {
-    result = result.concat(parseTagsFromNode(subTree, node, newAncestry));
+    result = result.concat(parseTagsFromNodeRecursively(subTree, newAncestry));
   });
   return result;
+}
+
+export function parseTagFromNodeIfExists(node, ancestry) {
+  let tag = extractTag(node.name);
+  if (tag === undefined) {
+    return;
+  }
+  let tagObj = {
+    tag: tag,
+    name: node.name,
+    ancestry: ancestry
+  };
+  node.tag = tagObj;
+  let parentNode = node.parent;
+  if (parentNode !== null) {
+    parentNode.hasChildrenWithTags = true;
+    if (parentNode.tagsOfChildren === undefined) {
+      parentNode.tagsOfChildren = [];
+    }
+    parentNode.tagsOfChildren.push(tagObj);
+  }
+  return tagObj;
 }
 
 function extractTag(str) {

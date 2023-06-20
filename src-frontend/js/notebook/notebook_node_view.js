@@ -197,12 +197,12 @@ NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, ch
       return;
     }
     that.htmlContainerUl.removeChild(htmlElem);
-    let newProcessNode = that.notebookNode.ensureChildWithName(value);
-    that.notebookNode.children.splice(index, 0, newProcessNode);
+    let newNotebookNode = that.notebookNode.ensureChildWithName(value);
+    that.notebookNode.children.splice(index, 0, newNotebookNode);
     that.notebookNode.children.pop();
     that.mergeWithNewNodes(that.notebookNode);
     that.uncollapseWithoutNotifyingChildren();
-    changeHandler(newProcessNode);
+    changeHandler(newNotebookNode);
     enableKeyboardListener();
     window.webkit.messageHandlers.notebook_msgs__enable_shortcuts.postMessage();
   });
@@ -234,26 +234,33 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
   let inputElem = document.createElement('input');
   inputElem.value = that.name;
   titleContainer.appendChild(inputElem);
+  let isHandlingChange = false;
   inputElem.addEventListener('change', (eve) => {
     let value = inputElem.value;
+    if (isHandlingChange) {
+      return;
+    } else {
+      isHandlingChange = true;
+    }
     if (value === '') {
       return;
     }
     let notebookNodeParent = that.notebookNode.parent;
-    let newProcessNode = notebookNodeParent.ensureChildWithName(value);
-    newProcessNode.children = that.notebookNode.children;
-    newProcessNode.childrenByName = that.notebookNode.childrenByName;
+    let newNotebookNode = notebookNodeParent.ensureChildWithName(value);
+    newNotebookNode.children = that.notebookNode.children;
+    newNotebookNode.childrenByName = that.notebookNode.childrenByName;
     let index = notebookNodeParent.children.indexOf(that.notebookNode);
     if (value === that.name) {
       that._removeHtmlElementFromTree();
       that.buildAsHtmlLiElement();
     } else {
       that.removeFromTree();
-      notebookNodeParent.children.splice(index, 0, newProcessNode);
+      notebookNodeParent.children.splice(index, 0, newNotebookNode);
       notebookNodeParent.children.pop();
     }
     that.parentNodeView.mergeWithNewNodes(notebookNodeParent);
-    changeHandler(newProcessNode.nodeView);
+    changeHandler(newNotebookNode.nodeView);
+    isHandlingChange = false;
     enableKeyboardListener();
     window.webkit.messageHandlers.notebook_msgs__enable_shortcuts.postMessage();
   });

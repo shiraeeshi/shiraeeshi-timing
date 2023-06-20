@@ -10,6 +10,7 @@ export function showTagsAndLinks(tags) {
     let viewBuilder = new NotebookTagsForestViewBuilder(true);
     viewBuilder.buildView(tagsAndLinksObj);
 
+    window.my.rootTagsTreeNode = tagsAndLinksObj;
     window.my.rootNodeViewOfTags = viewBuilder.getRootNodeViewOfTags();
     // withChildren(mainWrapper,
     //   withChildren(document.createElement('div'),

@@ -7,6 +7,7 @@ const { withChildren } = require('../html_utils.js');
 export function NotebookTagsTreeNodeView(notebookTagsTreeNode, parentNodeView) {
   let that = this;
   that.tagsTreeNode = notebookTagsTreeNode;
+  notebookTagsTreeNode.nodeView = that;
   that.name = notebookTagsTreeNode.name;
   that.isCollapsed = true;
   that.parentNodeView = parentNodeView;
@@ -23,6 +24,40 @@ export function NotebookTagsTreeNodeView(notebookTagsTreeNode, parentNodeView) {
 for (let propName in NotebookNodeView.prototype) {
   NotebookTagsTreeNodeView.prototype[propName] = NotebookNodeView.prototype[propName];
 }
+
+NotebookTagsTreeNodeView.prototype.mergeWithNewTags = function(tagsTreeNode) {
+  let that = this;
+  that.tagsTreeNode = tagsTreeNode;
+  let lengthBefore = that.children.length;
+  tagsTreeNode.children.forEach(childNode => {
+    let oldChild = that.childrenByName[childNode.name];
+    if (oldChild === undefined) {
+      let newChildView = new NotebookTagsTreeNodeView(childNode, that);
+      newChildView.buildAsHtmlLiElement();
+      that.children.push(newChildView);
+      that.childrenByName[childNode.name] = newChildView;
+    } else {
+      oldChild.mergeWithNewTags(childNode);
+    }
+  });
+  if (lengthBefore > 0) {
+    that.children = that.tagsTreeNode.children.map(ch => ch.nodeView);
+    that.htmlContainerUl.innerHTML = "";
+    withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
+  }
+  let currentLength = that.children.length;
+  if (lengthBefore === 0 && currentLength > 0) {
+    if (that.htmlElement === undefined) {
+      return;
+    }
+    that._rebuildHtmlElement();
+    if (!that.isCollapsed) {
+      that.children = that.tagsTreeNode.children.map(ch => ch.nodeView);
+      that.htmlContainerUl.innerHTML = "";
+      withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
+    }
+  }
+};
 
 NotebookTagsTreeNodeView.prototype.initFontSize = function(htmlElement) {
   let that = this;
@@ -81,19 +116,21 @@ NotebookTagsTreeNodeView.prototype.name2html = function() {
 };
 
 function searchByTag(tagNode) {
-  window.webkit.messageHandlers.foobar.postMessage("js searchByTag tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
+  // window.webkit.messageHandlers.foobar.postMessage("js searchByTag tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
+  console.log("js searchByTag tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
   for (let link of tagNode.links) {
-    window.webkit.messageHandlers.foobar.postMessage("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
+    // window.webkit.messageHandlers.foobar.postMessage("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
+    console.log("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
   }
   let resultForest = [];
   addTagNodeLinksToForest(tagNode, resultForest);
   window.my.lastOpenedNodesOfNotes = resultForest;
 
-  if (my.rootNodeViewOfNotesOfBottomPanel === undefined) {
-    let forest = my.notesForest;
+  // if (my.rootNodeViewOfNotesOfBottomPanel === undefined) { // TODO react to change of structure of the tree in the top panel (instead of rebuilding the bottom tree every time)
+  if (true) {
 
     let viewBuilder = new NotesForestViewBuilder();
-    viewBuilder.buildView(forest);
+    viewBuilder.buildView(my.notebookTree.copy());
     my.rootNodeViewOfNotesOfBottomPanel = viewBuilder.getRootNodeViewOfNotes();
     appendNotesForestHtmlToBottomPanel(viewBuilder.getHtml());
 

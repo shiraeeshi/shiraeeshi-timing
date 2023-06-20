@@ -1,7 +1,7 @@
 const { NotebookNode } = require('../js/notebook/notebook_node.js');
 const { turnMultilineTextIntoHtml } = require('../js/html_utils.js');
 const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
-const { parseTagsFromRootForest } = require('../js/notebook/parse_tags.js');
+const { parseTagsFromRootForest, parseTagFromNodeIfExists } = require('../js/notebook/parse_tags.js');
 const { showTagsAndLinks, showTagsAndLinksOfBottomPanel } = require('../js/notebook/show_tags.js');
 const { NotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
 const { appendNotesForestHtml, appendNotesForestHtmlToBottomPanel, buildInitialNotesForest, openNotesInForest, highlightNotesInForest, openTagsInForest, highlightTagsInForest } = require('../js/notebook/notebook_utils.js');
@@ -247,6 +247,16 @@ function addSiblingWithInputToTheRightSideNode(notebookNodeView) {
   let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
 
   notebookNodeView.addHtmlSiblingWithInput(function(newNotebookNode) {
+    let tagFromNewNode = parseTagFromNodeIfExists(newNotebookNode, newNotebookNode.getAncestry());
+    if (tagFromNewNode !== undefined) {
+      let tagPath = tagFromNewNode.tag.split(".");
+      let obj = window.my.rootTagsTreeNode;
+      tagPath.forEach(tagPathSegment => {
+        obj = obj.ensureSubtagWithName(tagPathSegment);
+      });
+      obj.links.push(tagFromNewNode);
+      window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
+    }
     if (wasInRectangle) {
       my.rightSideNodeInRectangle.removeRectangleWrapper();
 
@@ -261,6 +271,16 @@ function addSiblingWithInputToTheRightSideNode(notebookNodeView) {
 function appendChildWithInputToTheRightSideNode(notebookNodeView) {
   let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
   notebookNodeView.appendHtmlChildWithInput(function(newNotebookNode) {
+    let tagFromNewNode = parseTagFromNodeIfExists(newNotebookNode, newNotebookNode.getAncestry());
+    if (tagFromNewNode !== undefined) {
+      let tagPath = tagFromNewNode.tag.split(".");
+      let obj = window.my.rootTagsTreeNode;
+      tagPath.forEach(tagPathSegment => {
+        obj = obj.ensureSubtagWithName(tagPathSegment);
+      });
+      obj.links.push(tagFromNewNode);
+      window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
+    }
     if (wasInRectangle) {
       my.rightSideNodeInRectangle.removeRectangleWrapper();
 
@@ -274,7 +294,55 @@ function appendChildWithInputToTheRightSideNode(notebookNodeView) {
 
 function editRightSideNode(notebookNodeView) {
   let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
+  let editedNotebookNode = notebookNodeView.notebookNode;
+  let oldTagFromNode = parseTagFromNodeIfExists(editedNotebookNode, editedNotebookNode.getAncestry());
   notebookNodeView.edit(function(newNodeView) {
+    editedNotebookNode = newNodeView.notebookNode;
+    let tagFromNewNode = parseTagFromNodeIfExists(editedNotebookNode, editedNotebookNode.getAncestry());
+    let changedStructureOfTagsTree = false;
+    if (tagFromNewNode !== undefined) {
+      let tagPath = tagFromNewNode.tag.split(".");
+      let obj = window.my.rootTagsTreeNode;
+      tagPath.forEach(tagPathSegment => {
+        obj = obj.ensureSubtagWithName(tagPathSegment);
+      });
+      obj.links.push(tagFromNewNode);
+      changedStructureOfTagsTree = true;
+    }
+    if (oldTagFromNode !== undefined) {
+      if (tagFromNewNode === undefined ||
+          (oldTagFromNode.tag !== tagFromNewNode.tag)) {
+        let oldTagPath = oldTagFromNode.tag.split(".");
+        let obj = window.my.rootTagsTreeNode;
+        oldTagPath.forEach(tagPathSegment => {
+          obj = obj.subTags[tagPathSegment];
+        });
+        let foundIndex = undefined;
+        outer: for (let idx = 0; idx < obj.links.length; idx++) {
+          let link = obj.links[idx];
+          if (link.tag !== oldTagFromNode.tag) continue;
+          if (link.name !== oldTagFromNode.name) continue;
+          if (link.ancestry.length !== oldTagFromNode.ancestry.length) continue;
+          for (let i = 0; i < link.ancestry.length; i++) {
+            if (link.ancestry[i] !== oldTagFromNode.ancestry[i]) continue outer;
+          }
+          foundIndex = idx;
+          break;
+        }
+        if (foundIndex !== undefined) {
+          obj.links.splice(foundIndex, 1);
+        }
+        if (obj.links.length === 0 && obj.children.length === 0) {
+          if (obj.parent !== null) {
+            obj.parent.removeSubtagCascade(obj);
+          }
+          changedStructureOfTagsTree = true;
+        }
+      }
+    }
+    if (changedStructureOfTagsTree) {
+      window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
+    }
     if (wasInRectangle) {
       newNodeView.wrapInRectangle();
       my.rightSideNodeInRectangle = newNodeView;
