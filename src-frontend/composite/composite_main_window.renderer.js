@@ -1,5 +1,6 @@
 const { parseTagsFromRootForest } = require('../js/notebook/parse_tags.js');
 const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
+const { NotebookNode } = require('../js/notebook/notebook_node.js');
 const { CurrentNotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
 const {
   addTagNodeLinksToForest,
@@ -411,7 +412,9 @@ function handleServerMessage(msg) {
         }
       }
       let notes_object = msg.notes;
-      let forest = yamlRootObject2forest(msg.notes);
+      let forestToConvertToNodes = yamlRootObject2forest(msg.notes);
+      my.notebookTree = convertToNotebookNodes(forestToConvertToNodes);
+      let forest = my.notebookTree.children;
       my.notesForest = forest;
 
       // showTagsAndLinks(forest);
@@ -419,7 +422,7 @@ function handleServerMessage(msg) {
       let tagsAndLinksForestObj = buildTagsAndLinksForest(taggedNodes);
 
       let viewBuilder = new CurrentNotesForestViewBuilder();
-      viewBuilder.buildView(forest);
+      viewBuilder.buildView(my.notebookTree);
       my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
       appendNotesForestHtml(viewBuilder.getHtml());
 
@@ -717,4 +720,20 @@ function showOnlyFrequenciesInLeftPanel() {
   timingsSummaryContainer.style.display = 'none';
   historyContainer.style.display = 'none';
   frequenciesContainer.style.removeProperty('display');
+}
+
+function convertToNotebookNodes(jsonForest) {
+  let rootNotebookNode = new NotebookNode("all");
+  for (let obj of jsonForest) {
+    let notebookNode = rootNotebookNode.ensureChildWithName(obj.name);
+    convertChildrenToNotebookNodes(obj, notebookNode);
+  }
+  return rootNotebookNode;
+}
+
+function convertChildrenToNotebookNodes(jsonObject, notebookNode) {
+  jsonObject.children.forEach(ch => {
+    let childNotebookNode = notebookNode.ensureChildWithName(ch.name);
+    convertChildrenToNotebookNodes(ch, childNotebookNode);
+  });
 }
