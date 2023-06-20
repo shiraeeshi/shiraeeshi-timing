@@ -61,6 +61,24 @@ ProcessTreeNodeView.prototype.sortChildrenByFirstTiming = function(processNode) 
   });
 };
 
+ProcessTreeNodeView.prototype.sortChildrenByLastTiming = function(processNode) {
+  let that = this;
+  that.children.sort((a, b) => {
+    let ta = a.processNode.getLastTimingToHighlight();
+    let tb = b.processNode.getLastTimingToHighlight();
+    if (ta === undefined) {
+      if (tb === undefined) {
+        return 0;
+      }
+      return -1;
+    }
+    if (tb === undefined) {
+      return 1;
+    }
+    return ta.fromdate.getTime() - tb.fromdate.getTime();
+  });
+};
+
 ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
   let that = this;
   that.processNode = processNode;
@@ -77,7 +95,7 @@ ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
     }
   });
   if (lengthBefore > 0) {
-    that.sortChildrenByFirstTiming();
+    that.sortChildrenByLastTiming();
     that.htmlChildrenContainerUl.innerHTML = "";
     withChildren(that.htmlChildrenContainerUl, ...that.children.map(ch => ch.html()));
   }
@@ -532,7 +550,7 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
         childNode.buildAsHtmlLiElement();
       }
     }
-    that.sortChildrenByFirstTiming();
+    that.sortChildrenByLastTiming();
     that.htmlChildrenContainerUl.innerHTML = "";
     withChildren(that.htmlChildrenContainerUl, ...that.children.map(ch => ch.htmlElement));
     if (that.processNode.isInnermostCategory && that.children.length > 0) {
@@ -541,7 +559,7 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
     }
   } else {
     that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
-    that.sortChildrenByFirstTiming();
+    that.sortChildrenByLastTiming();
     let htmlElement =
       withChildren(
         withChildren(withClass(document.createElement('li'), 'proc-node', 'proc-node-closed'),
