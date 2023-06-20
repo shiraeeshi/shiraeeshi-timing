@@ -24,6 +24,11 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('notebook_msgs__enable_shortcuts');
       }
     },
+    notebook_msgs__show_context_menu: {
+      postMessage: () => {
+        ipcRenderer.send('notebook_msgs__show_context_menu');
+      }
+    }
   }
 });
 

@@ -20,6 +20,7 @@ ipcMain.on('post_timing_dialog_msgs__write_to_clipboard', async (_event, value) 
 });
 
 ipcMain.on('post_timing_dialog_msgs__cancel', async (_event, value) => {
+  // BrowserWindow.fromWebContents(_event.sender);
   let focusedWindow = BrowserWindow.getFocusedWindow();
   if (focusedWindow !== null) {
     focusedWindow.close();

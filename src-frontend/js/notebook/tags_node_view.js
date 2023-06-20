@@ -126,11 +126,10 @@ function searchByTag(tagNode) {
   addTagNodeLinksToForest(tagNode, resultForest);
   window.my.lastOpenedNodesOfNotes = resultForest;
 
-  // if (my.rootNodeViewOfNotesOfBottomPanel === undefined) { // TODO react to change of structure of the tree in the top panel (instead of rebuilding the bottom tree every time)
-  if (true) {
+  if (my.rootNodeViewOfNotesOfBottomPanel === undefined) {
 
     let viewBuilder = new NotesForestViewBuilder();
-    viewBuilder.buildView(my.notebookTree.copy());
+    viewBuilder.buildView(my.notebookTree);
     my.rootNodeViewOfNotesOfBottomPanel = viewBuilder.getRootNodeViewOfNotes();
     appendNotesForestHtmlToBottomPanel(viewBuilder.getHtml());
 

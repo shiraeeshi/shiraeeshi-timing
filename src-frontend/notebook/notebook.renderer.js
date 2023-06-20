@@ -30,6 +30,11 @@ function handleServerMessage(msg) {
       return;
     }
 
+    if (msg.type === 'contextmenu') {
+      console.log(`context menu. value: ${msg.value}`);
+      return;
+    }
+
     if (!my.addedKeyupListener) {
       document.body.addEventListener('keyup', (eve) => {
         handleKeyUp(eve);

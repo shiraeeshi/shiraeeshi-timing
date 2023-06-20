@@ -7,6 +7,30 @@ const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.j
 const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 const { parseNotebook } = require('../../logic/notebook_parser.js');
 
+ipcMain.on('notebook_msgs__show_context_menu', async (event) => {
+  const menu = Menu.buildFromTemplate([
+    {
+      label: 'Menu Item 1',
+      click: () => {
+        event.sender.send('message-from-backend', {
+          type: 'contextmenu',
+          value: 'Menu Item 1'
+        });
+      }
+    },
+    {
+      label: 'Menu Item 2',
+      click: () => {
+        event.sender.send('message-from-backend', {
+          type: 'contextmenu',
+          value: 'Menu Item 2'
+        });
+      }
+    },
+  ]);
+  menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
+});
+
 let isDisabledShortcuts = false;
 
 ipcMain.on('notebook_msgs__disable_shortcuts', async (_event) => {

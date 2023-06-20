@@ -15,23 +15,49 @@ export function NotebookNodeView(notebookNode, parentNodeView) {
   });
   that.hasManuallyHiddenChildren = false;
   that.htmlContainerUl = document.createElement('ul');
-  // that.isTopPanelTree = undefined;
+  that.isTopPanelTree = true;
 }
 
-NotebookNodeView.prototype.name2html = function() {
+export function NotebookNodeViewOfBottomPanel(notebookNode, parentNodeView) {
   let that = this;
-  if (that.name.includes("\n")) {
-    return withChildren(withClass(document.createElement('div'), 'title-container-div'),
-            ...that.name.split("\n")
-                        .map(line => document.createTextNode(line))
-                        .flatMap(el => [el,document.createElement("br")])
-                        .slice(0, -1)
-          );
-  } else {
-    return withChildren(withClass(document.createElement('span'), 'title-container-span'),
-            document.createTextNode(that.name)
-          );
-  }
+  that.notebookNode = notebookNode;
+  notebookNode.nodeViewOfBottomPanel = that;
+  that.name = notebookNode.name;
+  that.isCollapsed = true;
+  that.parentNodeView = parentNodeView;
+  that.children = notebookNode.children.map(childNode => new NotebookNodeViewOfBottomPanel(childNode, that));
+  that.childrenByName = {};
+  that.children.forEach(childView => {
+    that.childrenByName[childView.name] = childView;
+  });
+  that.hasManuallyHiddenChildren = false;
+  that.htmlContainerUl = document.createElement('ul');
+  that.isTopPanelTree = false;
+}
+
+NotebookNodeView.prototype.newChildFromNode = function(node) {
+  let that = this;
+  let newChildView = that.instantiateNewChild(node);
+  that.children.push(newChildView);
+  that.childrenByName[node.name] = newChildView;
+  return newChildView;
+}
+
+NotebookNodeView.prototype.instantiateNewChild = function(node) {
+  let that = this;
+  return new NotebookNodeView(node, that);
+}
+
+NotebookNodeView.prototype.refreshOrderOfChildrenOnScreen = function() {
+  let that = this;
+  that.refreshOrderOfChildren();
+  that.htmlContainerUl.innerHTML = "";
+  withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
+}
+
+NotebookNodeView.prototype.refreshOrderOfChildren = function() {
+  let that = this;
+  that.children = that.notebookNode.children.map(ch => ch.nodeView);
 }
 
 NotebookNodeView.prototype.mergeWithNewNodes = function(notebookNode) {
@@ -41,18 +67,14 @@ NotebookNodeView.prototype.mergeWithNewNodes = function(notebookNode) {
   notebookNode.children.forEach(childNode => {
     let oldChild = that.childrenByName[childNode.name];
     if (oldChild === undefined) {
-      let newChildView = new NotebookNodeView(childNode, that);
+      let newChildView = that.newChildFromNode(childNode);
       newChildView.buildAsHtmlLiElement();
-      that.children.push(newChildView);
-      that.childrenByName[childNode.name] = newChildView;
     } else {
       oldChild.mergeWithNewNodes(childNode);
     }
   });
   if (lengthBefore > 0) {
-    that.children = that.notebookNode.children.map(ch => ch.nodeView);
-    that.htmlContainerUl.innerHTML = "";
-    withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
+    that.refreshOrderOfChildrenOnScreen();
   }
   let currentLength = that.children.length;
   if (lengthBefore === 0 && currentLength > 0) {
@@ -61,9 +83,7 @@ NotebookNodeView.prototype.mergeWithNewNodes = function(notebookNode) {
     }
     that._rebuildHtmlElement();
     if (!that.isCollapsed) {
-      that.children = that.notebookNode.children.map(ch => ch.nodeView);
-      that.htmlContainerUl.innerHTML = "";
-      withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
+      that.refreshOrderOfChildrenOnScreen();
     }
   }
 };
@@ -200,7 +220,8 @@ NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, ch
     let newNotebookNode = that.notebookNode.ensureChildWithName(value);
     that.notebookNode.children.splice(index, 0, newNotebookNode);
     that.notebookNode.children.pop();
-    that.mergeWithNewNodes(that.notebookNode);
+    that.notebookNode.notifyChange();
+    // that.mergeWithNewNodes(that.notebookNode);
     that.uncollapseWithoutNotifyingChildren();
     changeHandler(newNotebookNode);
     enableKeyboardListener();
@@ -258,7 +279,8 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
       notebookNodeParent.children.splice(index, 0, newNotebookNode);
       notebookNodeParent.children.pop();
     }
-    that.parentNodeView.mergeWithNewNodes(notebookNodeParent);
+    notebookNodeParent.notifyChange();
+    // that.parentNodeView.mergeWithNewNodes(notebookNodeParent);
     changeHandler(newNotebookNode.nodeView);
     isHandlingChange = false;
     enableKeyboardListener();
@@ -453,6 +475,22 @@ NotebookNodeView.prototype.html = function() {
   return that.htmlElement;
 };
 
+NotebookNodeView.prototype.name2html = function() {
+  let that = this;
+  if (that.name.includes("\n")) {
+    return withChildren(withClass(document.createElement('div'), 'title-container-div'),
+            ...that.name.split("\n")
+                        .map(line => document.createTextNode(line))
+                        .flatMap(el => [el,document.createElement("br")])
+                        .slice(0, -1)
+          );
+  } else {
+    return withChildren(withClass(document.createElement('span'), 'title-container-span'),
+            document.createTextNode(that.name)
+          );
+  }
+}
+
 NotebookNodeView.prototype.createTitleDiv = function() {
   let that = this;
   let nameHtml = that.name2html();
@@ -607,7 +645,17 @@ NotebookNodeView.prototype.createTitleDiv = function() {
     nameHtml,
     iconsDiv
   );
+  that._addContextMenuListener(nameHtml);
   return titleDiv;
+}
+
+NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
+  let that = this;
+  htmlElem.addEventListener('contextmenu', (eve) => {
+    eve.preventDefault();
+    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage();
+    return false;
+  });
 }
 
 NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
@@ -803,4 +851,18 @@ function disableKeyboardListener() {
 
 function enableKeyboardListener() {
   my.isKeyboardListenerDisabled = false;
+}
+
+for (let propName in NotebookNodeView.prototype) {
+  NotebookNodeViewOfBottomPanel.prototype[propName] = NotebookNodeView.prototype[propName];
+}
+
+NotebookNodeViewOfBottomPanel.prototype.instantiateNewChild = function(node) {
+  let that = this;
+  return new NotebookNodeViewOfBottomPanel(node, that);
+}
+
+NotebookNodeViewOfBottomPanel.prototype.refreshOrderOfChildren = function() {
+  let that = this;
+  that.children = that.notebookNode.children.map(ch => ch.nodeViewOfBottomPanel);
 }

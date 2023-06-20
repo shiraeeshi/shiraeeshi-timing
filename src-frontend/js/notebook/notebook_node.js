@@ -23,17 +23,14 @@ NotebookNode.prototype.ensureChildWithName = function(name) {
   return child;
 };
 
-NotebookNode.prototype.copy = function() {
+NotebookNode.prototype.notifyChange = function() {
   let that = this;
-  let result = new NotebookNode(that.name);
-  function func(node, copyNode) {
-    for (let child of node.children) {
-      let copyOfChild = copyNode.ensureChildWithName(child.name);
-      func(child, copyOfChild)
-    }
+  if (that.nodeView) {
+    that.nodeView.mergeWithNewNodes(that);
   }
-  func(that, result);
-  return result;
+  if (that.nodeViewOfBottomPanel) {
+    that.nodeViewOfBottomPanel.mergeWithNewNodes(that);
+  }
 };
 
 NotebookNode.prototype.removeFromTree = function(name) {

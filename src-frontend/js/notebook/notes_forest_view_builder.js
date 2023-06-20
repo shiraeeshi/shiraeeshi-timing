@@ -1,4 +1,4 @@
-const { NotebookNodeView } = require('./notebook_node_view.js');
+const { NotebookNodeView, NotebookNodeViewOfBottomPanel } = require('./notebook_node_view.js');
 const { buildInitialNotesForest, highlightNotesInForest } = require('./notebook_utils.js');
 const { withChildren } = require('../html_utils.js');
 
@@ -21,8 +21,12 @@ export function NotesForestViewBuilder(isTopPanel) {
 
 NotesForestViewBuilder.prototype.buildView = function(notebookTree) {
   let that = this;
-  let treeView = new NotebookNodeView(notebookTree);
-  treeView.isTopPanelTree = that.isTopPanel;
+  let treeView;
+  if (that.isTopPanel) {
+    treeView = new NotebookNodeView(notebookTree);
+  } else {
+    treeView = new NotebookNodeViewOfBottomPanel(notebookTree);
+  }
   that.view = treeView;
 
   treeView.buildAsHtmlLiElement();
