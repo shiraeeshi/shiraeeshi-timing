@@ -340,6 +340,36 @@ li.proc-leaf {
   height: 12px;
 }
 
+
+
+
+.icon-edit {
+  background-image: url('../img/edit-icon-grey-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.icon-delete-from-the-right-side {
+  background-image: url('../img/x-icon-5301-grey-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.icon-append-child-with-input {
+  background-image: url('../img/file-plus-icon-grey-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.icon-add-sibling-with-input {
+  background-image: url('../img/plus-circle-icon-grey-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+
+
+
 .icon-increase-font-size {
   background-image: url('../img/proc-node-plus.png');
   background-repeat: no-repeat;

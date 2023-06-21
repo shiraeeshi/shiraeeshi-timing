@@ -1,4 +1,10 @@
 const { buildTagsAndLinksForest, highlightTagsInForest } = require('./notebook_utils.js');
+const {
+  addSiblingWithInputToTheRightSideNode,
+  appendChildWithInputToTheRightSideNode,
+  editRightSideNode,
+  deleteNodeFromTheRightSide,
+} = require('./notebook_node_view_utils.js');
 const { withChildren, withClass } = require('../html_utils.js');
 
 export function NotebookNodeView(notebookNode, parentNodeView) {
@@ -592,6 +598,62 @@ NotebookNodeView.prototype.createTitleDiv = function() {
       });
       return elem;
     })();
+  let iconEdit =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-edit'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('rename this node')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        editRightSideNode(that);
+      });
+      return elem;
+    })();
+  let iconDeleteFromTheRightSide =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-delete-from-the-right-side'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('delete this node')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        deleteNodeFromTheRightSide(that);
+      });
+      return elem;
+    })();
+  let iconAppendChildWithInput =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-append-child-with-input'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('append child to this node')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        appendChildWithInputToTheRightSideNode(that)
+      });
+      return elem;
+    })();
+  let iconAddSiblingWithInput =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-add-sibling-with-input'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('add sibling node')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        addSiblingWithInputToTheRightSideNode(that);
+      });
+      return elem;
+    })();
   let icons = [];
   if (that._isTaggedNode()) {
     icons.push(iconOpenTagInTagsTree);
@@ -636,7 +698,11 @@ NotebookNodeView.prototype.createTitleDiv = function() {
     iconMoveToBottom,
     iconHide,
     iconHideSiblingsBelow,
-    iconUnhideHiddenChildren
+    iconUnhideHiddenChildren,
+    iconEdit,
+    iconAddSiblingWithInput,
+    iconAppendChildWithInput,
+    iconDeleteFromTheRightSide,
   ]);
   let iconsDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-icons'),
     ...icons
