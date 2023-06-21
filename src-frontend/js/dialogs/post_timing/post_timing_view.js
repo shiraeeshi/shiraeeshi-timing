@@ -553,7 +553,26 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
   } else if (key === 'Enter') {
     if (that.isCursorOnRightSide) {
     } else {
-      that.copyNodeToTheRightSide(that.nodeInRectangle);
+      let branchUntilNode = that.copyNodeToTheRightSide(that.nodeInRectangle);
+
+      that.isCursorOnRightSide = true;
+      that.nodeInRectangle.removeRectangleWrapper();
+
+      let nodeInRectangle = that.rightSideNodeInRectangle;
+      if (nodeInRectangle !== undefined) {
+        nodeInRectangle.removeRectangleWrapper();
+      }
+
+      let node = my.rightSideTimings;
+      while (branchUntilNode.children.length > 0) {
+        branchUntilNode = branchUntilNode.children[0];
+        if (node.nodeView.isCollapsed) {
+          node.nodeView.toggleCollapse();
+        }
+        node = node.childrenByName[branchUntilNode.name];
+      }
+      node.nodeView.wrapInRectangle();
+      that.rightSideNodeInRectangle = node.nodeView;
     }
   } else if (key === 'o') {
     if (!that.isCursorOnRightSide) {
@@ -653,6 +672,7 @@ PostTimingView.prototype.copyNodeToTheRightSide = function(processNodeView) {
     aNodeView.htmlElement.classList.add('has-copy-on-the-right-side');
     aNodeView = aNodeView.parentNodeView;
   }
+  return branchUntilNode;
 }
 
 PostTimingView.prototype.deleteNodeFromTheRightSide = function(processNodeView) {
