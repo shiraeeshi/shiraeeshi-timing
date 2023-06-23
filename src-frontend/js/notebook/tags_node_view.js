@@ -129,11 +129,11 @@ function searchByTag(tagNode) {
   window.my.lastOpenedTagsTreeNode = tagNode;
 
   tagNode.handlerLinkAdded = function() {
-    showLinksOfTag(tagNode);
+    showLinksOfTag(tagNode); // TODO optimize: get the notebookNode from the new link, build its html, unhide it, unhide its ancestors
   };
 
   tagNode.handlerLinkDeleted = function() {
-    showLinksOfTag(tagNode);
+    showLinksOfTag(tagNode); // TODO optimize: get the notebookNode from the deleted link, remove its html, handle visibility of ancestors
   };
 
   showLinksOfTag(tagNode);

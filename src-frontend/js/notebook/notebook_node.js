@@ -39,7 +39,7 @@ NotebookNode.prototype.notifyInsertedChild = function(childIndex) {
     that.nodeView.mergeWithNewNodes(that);
   }
   if (that.nodeViewOfBottomPanel) {
-    that.nodeViewOfBottomPanel.mergeWithNewNodes(that);
+    that.nodeViewOfBottomPanel.mergeWithNewNodes(that); // TODO optimize
   }
 };
 
