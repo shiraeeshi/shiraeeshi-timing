@@ -118,6 +118,11 @@ NotebookNodeView.prototype._rebuildHtmlElement = function() {
 NotebookNodeView.prototype.removeFromTree = function() {
   let that = this;
   that.notebookNode.removeFromTree();
+  that.notebookNode.notifyWasRemovedFromTree();
+};
+
+NotebookNodeView.prototype.handleBeingRemovedFromTree = function() {
+  let that = this;
   if (that.parentNodeView !== undefined) {
     let childIndex = that.parentNodeView.children.indexOf(that);
     if (childIndex >= 0) {
@@ -226,8 +231,9 @@ NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, ch
     let newNotebookNode = that.notebookNode.ensureChildWithName(value);
     that.notebookNode.children.splice(index, 0, newNotebookNode);
     that.notebookNode.children.pop();
-    that.notebookNode.notifyChange();
-    // that.mergeWithNewNodes(that.notebookNode);
+    that.notebookNode.notifyInsertedChild(index);
+    // that.notebookNode.notifyChange();
+    // // that.mergeWithNewNodes(that.notebookNode);
     that.uncollapseWithoutNotifyingChildren();
     changeHandler(newNotebookNode);
     enableKeyboardListener();
@@ -284,9 +290,10 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
       that.removeFromTree();
       notebookNodeParent.children.splice(index, 0, newNotebookNode);
       notebookNodeParent.children.pop();
+      notebookNodeParent.notifyInsertedChild(index);
+      // notebookNodeParent.notifyChange();
+      // // that.parentNodeView.mergeWithNewNodes(notebookNodeParent);
     }
-    notebookNodeParent.notifyChange();
-    // that.parentNodeView.mergeWithNewNodes(notebookNodeParent);
     changeHandler(newNotebookNode.nodeView);
     isHandlingChange = false;
     enableKeyboardListener();

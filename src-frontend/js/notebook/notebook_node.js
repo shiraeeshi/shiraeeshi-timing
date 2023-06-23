@@ -23,13 +23,34 @@ NotebookNode.prototype.ensureChildWithName = function(name) {
   return child;
 };
 
-NotebookNode.prototype.notifyChange = function() {
+// NotebookNode.prototype.notifyChange = function() {
+//   let that = this;
+//   if (that.nodeView) {
+//     that.nodeView.mergeWithNewNodes(that);
+//   }
+//   if (that.nodeViewOfBottomPanel) {
+//     that.nodeViewOfBottomPanel.mergeWithNewNodes(that);
+//   }
+// };
+
+NotebookNode.prototype.notifyInsertedChild = function(childIndex) {
   let that = this;
   if (that.nodeView) {
     that.nodeView.mergeWithNewNodes(that);
   }
   if (that.nodeViewOfBottomPanel) {
     that.nodeViewOfBottomPanel.mergeWithNewNodes(that);
+  }
+};
+
+NotebookNode.prototype.notifyWasRemovedFromTree = function(name) {
+  let that = this;
+
+  if (that.nodeView) {
+    that.nodeView.handleBeingRemovedFromTree();
+  }
+  if (that.nodeViewOfBottomPanel) {
+    that.nodeViewOfBottomPanel.handleBeingRemovedFromTree();
   }
 };
 

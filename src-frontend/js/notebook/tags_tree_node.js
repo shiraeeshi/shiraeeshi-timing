@@ -44,3 +44,17 @@ TagsTreeNode.prototype.removeSubtag = function(subtag) {
     that.children.splice(foundIndex, 1);
   }
 }
+
+TagsTreeNode.prototype.notifyAddedLink = function() {
+  let that = this;
+  if (that.handlerLinkAdded) {
+    that.handlerLinkAdded();
+  }
+}
+
+TagsTreeNode.prototype.notifyDeletedLink = function() {
+  let that = this;
+  if (that.handlerLinkDeleted) {
+    that.handlerLinkDeleted();
+  }
+}

@@ -12,6 +12,7 @@ export function addSiblingWithInputToTheRightSideNode(notebookNodeView) {
         obj = obj.ensureSubtagWithName(tagPathSegment);
       });
       obj.links.push(tagFromNewNode);
+      obj.notifyAddedLink();
       window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
     }
     if (wasInRectangle) {
@@ -36,6 +37,7 @@ export function appendChildWithInputToTheRightSideNode(notebookNodeView) {
         obj = obj.ensureSubtagWithName(tagPathSegment);
       });
       obj.links.push(tagFromNewNode);
+      obj.notifyAddedLink();
       window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
     }
     if (wasInRectangle) {
@@ -64,6 +66,7 @@ export function editRightSideNode(notebookNodeView) {
         obj = obj.ensureSubtagWithName(tagPathSegment);
       });
       obj.links.push(tagFromNewNode);
+      obj.notifyAddedLink();
       changedStructureOfTagsTree = true;
     }
     if (oldTagFromNode !== undefined) {
@@ -75,6 +78,7 @@ export function editRightSideNode(notebookNodeView) {
           obj = obj.subTags[tagPathSegment];
         });
         let foundIndex = undefined;
+        let foundLink;
         outer: for (let idx = 0; idx < obj.links.length; idx++) {
           let link = obj.links[idx];
           if (link.tag !== oldTagFromNode.tag) continue;
@@ -84,10 +88,12 @@ export function editRightSideNode(notebookNodeView) {
             if (link.ancestry[i] !== oldTagFromNode.ancestry[i]) continue outer;
           }
           foundIndex = idx;
+          foundLink = link;
           break;
         }
         if (foundIndex !== undefined) {
           obj.links.splice(foundIndex, 1);
+          obj.notifyDeletedLink(foundLink);
         }
         if (obj.links.length === 0 && obj.children.length === 0) {
           if (obj.parent !== null) {
@@ -108,6 +114,7 @@ export function editRightSideNode(notebookNodeView) {
 }
 
 export function deleteNodeFromTheRightSide(notebookNodeView) {
+
   let newNodeInRectangle = my.rightSideNodeInRectangle;
   let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
   if (wasInRectangle) {
@@ -123,11 +130,50 @@ export function deleteNodeFromTheRightSide(notebookNodeView) {
     }
   }
 
+  let oldTagFromNode = parseTagFromNodeIfExists(notebookNodeView.notebookNode, notebookNodeView.notebookNode.getAncestry());
+
   notebookNodeView.removeFromTree();
 
   if (wasInRectangle) {
     newNodeInRectangle.wrapInRectangle();
     my.rightSideNodeInRectangle = newNodeInRectangle;
+  }
+
+  if (oldTagFromNode !== undefined) {
+    let changedStructureOfTagsTree = false;
+
+    let oldTagPath = oldTagFromNode.tag.split(".");
+    let obj = window.my.rootTagsTreeNode;
+    oldTagPath.forEach(tagPathSegment => {
+      obj = obj.subTags[tagPathSegment];
+    });
+    let foundIndex = undefined;
+    let foundLink;
+    outer: for (let idx = 0; idx < obj.links.length; idx++) {
+      let link = obj.links[idx];
+      if (link.tag !== oldTagFromNode.tag) continue;
+      if (link.name !== oldTagFromNode.name) continue;
+      if (link.ancestry.length !== oldTagFromNode.ancestry.length) continue;
+      for (let i = 0; i < link.ancestry.length; i++) {
+        if (link.ancestry[i] !== oldTagFromNode.ancestry[i]) continue outer;
+      }
+      foundIndex = idx;
+      foundLink = link;
+      break;
+    }
+    if (foundIndex !== undefined) {
+      obj.links.splice(foundIndex, 1);
+      obj.notifyDeletedLink(foundLink);
+    }
+    if (obj.links.length === 0 && obj.children.length === 0) {
+      if (obj.parent !== null) {
+        obj.parent.removeSubtagCascade(obj);
+      }
+      changedStructureOfTagsTree = true;
+    }
+    if (changedStructureOfTagsTree) {
+      window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
+    }
   }
 
 }

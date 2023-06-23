@@ -122,8 +122,28 @@ function searchByTag(tagNode) {
     // window.webkit.messageHandlers.foobar.postMessage("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
     console.log("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
   }
+  if (window.my.lastOpenedTagsTreeNode) {
+    delete window.my.lastOpenedTagsTreeNode.handlerLinkAdded;
+    delete window.my.lastOpenedTagsTreeNode.handlerLinkDeleted;
+  }
+  window.my.lastOpenedTagsTreeNode = tagNode;
+
+  tagNode.handlerLinkAdded = function() {
+    showLinksOfTag(tagNode);
+  };
+
+  tagNode.handlerLinkDeleted = function() {
+    showLinksOfTag(tagNode);
+  };
+
+  showLinksOfTag(tagNode);
+}
+
+function showLinksOfTag(tagNode) {
+
   let resultForest = [];
   addTagNodeLinksToForest(tagNode, resultForest);
+
   window.my.lastOpenedNodesOfNotes = resultForest;
 
   if (my.rootNodeViewOfNotesOfBottomPanel === undefined) {
