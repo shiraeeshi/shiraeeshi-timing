@@ -687,6 +687,20 @@ NotebookNodeView.prototype.createTitleDiv = function() {
       });
       return elem;
     })();
+  let iconOpenNodeInTopPanel =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-open-node-in-top-panel'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('open node in top panel')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        openNodeInTopPanel(that);
+      });
+      return elem;
+    })();
   let icons = [];
   if (that._isTaggedNode()) {
     icons.push(iconOpenTagInTagsTree);
@@ -732,6 +746,7 @@ NotebookNodeView.prototype.createTitleDiv = function() {
     iconHide,
     iconHideSiblingsBelow,
     iconUnhideHiddenChildren,
+    iconOpenNodeInTopPanel,
     iconEdit,
     iconAddSiblingWithInput,
     iconAppendChildWithInput,
@@ -746,6 +761,30 @@ NotebookNodeView.prototype.createTitleDiv = function() {
   );
   that._addContextMenuListener(nameHtml);
   return titleDiv;
+}
+
+function openNodeInTopPanel(nodeView) {
+  let topPanelNodeView = nodeView.notebookNode.nodeView;
+  if (topPanelNodeView === undefined) {
+    return;
+  }
+  let ancestry = [];
+  let ancestor = topPanelNodeView.parentNodeView;
+  while (ancestor !== undefined) {
+    ancestry.push(ancestor);
+    ancestor = ancestor.parentNodeView;
+  }
+  for (let i = ancestry.length - 1; i >= 0; i--) {
+    ancestor = ancestry[i];
+    ancestor.unhide();
+    if (ancestor.isCollapsed) {
+      ancestor.uncollapse();
+    }
+  }
+  topPanelNodeView.unhide();
+  let wrapper = document.getElementById('notes-content-top-wrapper');
+  let offsetTop = topPanelNodeView.htmlElement.offsetTop;
+  wrapper.scrollTo({top: offsetTop, behavior: 'smooth'});
 }
 
 NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
