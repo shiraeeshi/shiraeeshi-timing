@@ -94,6 +94,29 @@ NotebookNodeView.prototype.mergeWithNewNodes = function(notebookNode) {
   }
 };
 
+NotebookNodeView.prototype.handleInsertedChild = function(newChildIndex) {
+  let that = this;
+
+  let newChildNode = that.notebookNode.children[newChildIndex];
+  let newChildView = that.newChildFromNode(newChildNode);
+  newChildView.buildAsHtmlLiElement();
+
+  let lengthBefore = that.children.length - 1;
+  if (lengthBefore > 0 && that.isTopPanelTree) {
+    that.refreshOrderOfChildrenOnScreen();
+  }
+  let currentLength = that.children.length;
+  if (lengthBefore === 0 && currentLength > 0) {
+    if (that.htmlElement === undefined) {
+      return;
+    }
+    that._rebuildHtmlElement();
+    if (!that.isCollapsed && that.isTopPanelTree) {
+      that.refreshOrderOfChildrenOnScreen();
+    }
+  }
+};
+
 NotebookNodeView.prototype._rebuildHtmlElement = function() {
   let that = this;
   let parent = that.htmlElement.parentNode;
@@ -142,6 +165,9 @@ NotebookNodeView.prototype._removeHtmlElementFromTree = function() {
     return;
   }
   let parent = that.htmlElement.parentNode;
+  if (parent === null) {
+    return;
+  }
   let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
   if (htmlChildIndex >= 0) {
     try {

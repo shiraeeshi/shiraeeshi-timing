@@ -36,10 +36,10 @@ NotebookNode.prototype.ensureChildWithName = function(name) {
 NotebookNode.prototype.notifyInsertedChild = function(childIndex) {
   let that = this;
   if (that.nodeView) {
-    that.nodeView.mergeWithNewNodes(that);
+    that.nodeView.handleInsertedChild(childIndex);
   }
   if (that.nodeViewOfBottomPanel) {
-    that.nodeViewOfBottomPanel.mergeWithNewNodes(that); // TODO optimize
+    that.nodeViewOfBottomPanel.handleInsertedChild(childIndex);
   }
 };
 
