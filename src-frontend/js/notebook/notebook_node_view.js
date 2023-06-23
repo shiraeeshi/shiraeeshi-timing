@@ -97,16 +97,16 @@ NotebookNodeView.prototype.mergeWithNewNodes = function(notebookNode) {
 NotebookNodeView.prototype.handleInsertedChild = function(newChildIndex) {
   let that = this;
 
+  let lengthBefore = that.children.length;
+
   let newChildNode = that.notebookNode.children[newChildIndex];
   let newChildView = that.newChildFromNode(newChildNode);
   newChildView.buildAsHtmlLiElement();
 
-  let lengthBefore = that.children.length - 1;
   if (lengthBefore > 0 && that.isTopPanelTree) {
     that.refreshOrderOfChildrenOnScreen();
   }
-  let currentLength = that.children.length;
-  if (lengthBefore === 0 && currentLength > 0) {
+  if (lengthBefore === 0) {
     if (that.htmlElement === undefined) {
       return;
     }
