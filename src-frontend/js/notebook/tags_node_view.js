@@ -437,7 +437,12 @@ function renameTagSegmentInLinksOfNode(tagsTreeNode, oldName) {
     }
     linkTagSplitted[tagAncestry.length] = tagsTreeNode.name;
     link.tag = linkTagSplitted.join(".");
-    link.name = '>>' + link.tag + ' ' + link.name.slice(link.name.indexOf(' '));
+    let indexOfWhitespace = link.name.indexOf(' ');
+    if (indexOfWhitespace < 0) {
+      link.name = '>>' + link.tag;
+    } else {
+      link.name = '>>' + link.tag + ' ' + link.name.slice(indexOfWhitespace);
+    }
     link.notebookNode.notifyTagSegmentNameChange();
   });
 }
@@ -465,7 +470,12 @@ function renameAncestorTagSegmentInLinksOfNode(tagsTreeNode, renamedAncestorNode
     }
     linkTagSplitted[tagAncestry.length] = renamedAncestorNode.name;
     link.tag = linkTagSplitted.join(".");
-    link.name = '>>' + link.tag + ' ' + link.name.slice(link.name.indexOf(' '));
+    let indexOfWhitespace = link.name.indexOf(' ');
+    if (indexOfWhitespace < 0) {
+      link.name = '>>' + link.tag;
+    } else {
+      link.name = '>>' + link.tag + ' ' + link.name.slice(indexOfWhitespace);
+    }
     link.notebookNode.notifyTagSegmentNameChange();
   });
 }
