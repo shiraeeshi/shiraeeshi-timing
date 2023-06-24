@@ -31,7 +31,8 @@ export function parseTagFromNodeIfExists(node, ancestry) {
   let tagObj = {
     tag: tag,
     name: node.name,
-    ancestry: ancestry
+    ancestry: ancestry,
+    notebookNode: node,
   };
   node.tag = tagObj;
   let parentNode = node.parent;

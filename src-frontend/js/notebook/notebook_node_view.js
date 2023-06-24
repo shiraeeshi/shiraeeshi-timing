@@ -120,7 +120,7 @@ NotebookNodeView.prototype.handleInsertedChild = function(newChildIndex) {
 NotebookNodeView.prototype._rebuildHtmlElement = function() {
   let that = this;
   let parent = that.htmlElement.parentNode;
-  if (parent === undefined) {
+  if (parent === null) {
     that.buildAsHtmlLiElement();
     return;
   }
@@ -157,6 +157,21 @@ NotebookNodeView.prototype.handleBeingRemovedFromTree = function() {
   if (that.parentNodeView.children.length === 0) {
     that.parentNodeView._rebuildHtmlElement();
   }
+};
+
+NotebookNodeView.prototype.handleTagSegmentNameChange = function() {
+  let that = this;
+  let oldName = that.name;
+  let newName = that.notebookNode.name;
+  that.name = newName;
+  if (that.parentNodeView !== undefined) {
+    delete that.parentNodeView.childrenByName[oldName];
+    that.parentNodeView.childrenByName[newName] = that;
+  }
+  if (that.htmlElement === undefined) {
+    return;
+  }
+  that._rebuildHtmlElement();
 };
 
 NotebookNodeView.prototype._removeHtmlElementFromTree = function() {

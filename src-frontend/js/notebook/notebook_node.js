@@ -23,6 +23,23 @@ NotebookNode.prototype.ensureChildWithName = function(name) {
   return child;
 };
 
+NotebookNode.prototype.notifyTagSegmentNameChange = function() {
+  let that = this;
+  let oldName = that.name;
+  let newName = that.tag.name;
+  that.name = newName;
+  if (that.parent !== null) {
+    delete that.parent.childrenByName[oldName];
+    that.parent.childrenByName[newName] = that;
+  }
+  if (that.nodeView) {
+    that.nodeView.handleTagSegmentNameChange();
+  }
+  if (that.nodeViewOfBottomPanel) {
+    that.nodeViewOfBottomPanel.handleTagSegmentNameChange();
+  }
+};
+
 // NotebookNode.prototype.notifyChange = function() {
 //   let that = this;
 //   if (that.nodeView) {

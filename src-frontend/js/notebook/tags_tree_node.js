@@ -45,6 +45,34 @@ TagsTreeNode.prototype.removeSubtag = function(subtag) {
   }
 }
 
+TagsTreeNode.prototype.notifyWasRemovedFromTree = function(name) {
+  let that = this;
+
+  if (that.nodeView) {
+    that.nodeView.handleBeingRemovedFromTree();
+  }
+  if (that.nodeViewOfBottomPanel) {
+    that.nodeViewOfBottomPanel.handleBeingRemovedFromTree();
+  }
+};
+
+TagsTreeNode.prototype.removeFromTree = function() {
+  let that = this;
+  if (that.parent !== null) {
+    that.parent.removeSubtag(that);
+  }
+}
+
+TagsTreeNode.prototype.notifyInsertedChildTag = function(childIndex) {
+  let that = this;
+  if (that.nodeView) {
+    that.nodeView.handleInsertedChildTag(childIndex);
+  }
+  if (that.nodeViewOfBottomPanel) {
+    that.nodeViewOfBottomPanel.handleInsertedChildTag(childIndex);
+  }
+};
+
 TagsTreeNode.prototype.notifyAddedLink = function() {
   let that = this;
   if (that.handlerLinkAdded) {

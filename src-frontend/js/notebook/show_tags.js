@@ -1,11 +1,10 @@
 const { NotebookTagsForestViewBuilder } = require('./tags_forest_view_builder.js');
-const { highlightNotesInForest, buildTagsAndLinksForest } = require('./notebook_utils.js');
+const { highlightNotesInForest } = require('./notebook_utils.js');
 const { withChildren } = require('../html_utils.js');
 
-export function showTagsAndLinks(tags) {
+export function showTagsAndLinks(tagsAndLinksObj) {
   try {
     let mainWrapper = document.getElementById("tags-and-links-content-top-wrapper");
-    let tagsAndLinksObj = buildTagsAndLinksForest(tags);
 
     let viewBuilder = new NotebookTagsForestViewBuilder(true);
     viewBuilder.buildView(tagsAndLinksObj);
@@ -38,10 +37,9 @@ export function showTagsAndLinks(tags) {
   }
 }
 
-export function showTagsAndLinksOfBottomPanel(tags) {
+export function showTagsAndLinksOfBottomPanel(tagsAndLinksObj) {
   try {
     let mainWrapper = document.getElementById("tags-and-links-content-bottom-wrapper");
-    let tagsAndLinksObj = buildTagsAndLinksForest(tags);
 
     let viewBuilder = new NotebookTagsForestViewBuilder(false);
     viewBuilder.buildView(tagsAndLinksObj);

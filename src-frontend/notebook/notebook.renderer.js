@@ -4,7 +4,7 @@ const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
 const { parseTagsFromRootForest } = require('../js/notebook/parse_tags.js');
 const { showTagsAndLinks, showTagsAndLinksOfBottomPanel } = require('../js/notebook/show_tags.js');
 const { NotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
-const { appendNotesForestHtml, appendNotesForestHtmlToBottomPanel, buildInitialNotesForest, openNotesInForest, highlightNotesInForest, openTagsInForest, highlightTagsInForest } = require('../js/notebook/notebook_utils.js');
+const { appendNotesForestHtml, appendNotesForestHtmlToBottomPanel, buildInitialNotesForest, openNotesInForest, highlightNotesInForest, buildTagsAndLinksForest, openTagsInForest, highlightTagsInForest } = require('../js/notebook/notebook_utils.js');
 const {
   addSiblingWithInputToTheRightSideNode,
   appendChildWithInputToTheRightSideNode,
@@ -59,8 +59,9 @@ function handleServerMessage(msg) {
     my.notesForest = forest;
 
     let tags = parseTagsFromRootForest(forest);
-    showTagsAndLinks(tags);
-    showTagsAndLinksOfBottomPanel(tags);
+    let tagsAndLinksObj = buildTagsAndLinksForest(tags);
+    showTagsAndLinks(tagsAndLinksObj);
+    showTagsAndLinksOfBottomPanel(tagsAndLinksObj);
 
     initResizers();
     initBottomPanelButtons();
