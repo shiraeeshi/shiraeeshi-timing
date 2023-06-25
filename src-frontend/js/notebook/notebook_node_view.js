@@ -119,24 +119,29 @@ NotebookNodeView.prototype.handleInsertedChild = function(newChildIndex) {
 
 NotebookNodeView.prototype._rebuildHtmlElement = function() {
   let that = this;
-  let parent = that.htmlElement.parentNode;
-  if (parent === null) {
+  function buildAndUncollapse() {
     that.buildAsHtmlLiElement();
     if (!that.isCollapsed) {
       that.uncollapseWithoutNotifyingChildren();
     }
+  }
+  if (that.htmlElement === undefined) {
+    buildAndUncollapse();
+    return;
+  }
+  let parent = that.htmlElement.parentNode;
+  if (parent === null) {
+    buildAndUncollapse();
     return;
   }
   let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
   if (htmlChildIndex < 0) {
+    buildAndUncollapse();
     return;
   }
   parent.removeChild(that.htmlElement);
   delete that.htmlElement;
-  that.buildAsHtmlLiElement();
-  if (!that.isCollapsed) {
-    that.uncollapseWithoutNotifyingChildren();
-  }
+  buildAndUncollapse();
   if (htmlChildIndex === parent.children.length) {
     parent.appendChild(that.htmlElement);
   } else {
