@@ -38,6 +38,10 @@ function handleServerMessage(msg) {
 
     if (msg.type === 'contextmenu') {
       console.log(`context menu. value: ${msg.value}`);
+      if (my.contextMenuHandler) {
+        my.contextMenuHandler(msg.value);
+        delete my.contextMenuHandler;
+      }
       return;
     }
 
@@ -60,6 +64,7 @@ function handleServerMessage(msg) {
 
     let tags = parseTagsFromRootForest(forest);
     let tagsAndLinksObj = buildTagsAndLinksForest(tags);
+    my.tagsTree = tagsAndLinksObj;
     showTagsAndLinks(tagsAndLinksObj);
     showTagsAndLinksOfBottomPanel(tagsAndLinksObj);
 

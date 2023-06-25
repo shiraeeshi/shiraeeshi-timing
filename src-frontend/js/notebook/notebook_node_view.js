@@ -122,6 +122,9 @@ NotebookNodeView.prototype._rebuildHtmlElement = function() {
   let parent = that.htmlElement.parentNode;
   if (parent === null) {
     that.buildAsHtmlLiElement();
+    if (!that.isCollapsed) {
+      that.uncollapseWithoutNotifyingChildren();
+    }
     return;
   }
   let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
@@ -131,6 +134,9 @@ NotebookNodeView.prototype._rebuildHtmlElement = function() {
   parent.removeChild(that.htmlElement);
   delete that.htmlElement;
   that.buildAsHtmlLiElement();
+  if (!that.isCollapsed) {
+    that.uncollapseWithoutNotifyingChildren();
+  }
   if (htmlChildIndex === parent.children.length) {
     parent.appendChild(that.htmlElement);
   } else {
@@ -806,7 +812,7 @@ NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
   let that = this;
   htmlElem.addEventListener('contextmenu', (eve) => {
     eve.preventDefault();
-    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage();
+    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage('notebook-node');
     return false;
   });
 }

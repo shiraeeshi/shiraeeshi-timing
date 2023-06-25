@@ -26,12 +26,15 @@ TagsTreeNode.prototype.ensureSubtagWithName = function(name) {
   }
 }
 
-TagsTreeNode.prototype.removeSubtagCascade = function(subtag) {
+TagsTreeNode.prototype.removeSubtagCascade = function(subtag, notifyRemoval) {
   let that = this;
   that.removeSubtag(subtag);
   if (that.children.length === 0 && that.links.length === 0) {
     if (that.parent !== null) {
-      that.parent.removeSubtagCascade(that);
+      that.parent.removeSubtagCascade(that, notifyRemoval);
+      if (notifyRemoval) {
+        that.notifyWasRemovedFromTree();
+      }
     }
   }
 }
@@ -60,6 +63,13 @@ TagsTreeNode.prototype.removeFromTree = function() {
   let that = this;
   if (that.parent !== null) {
     that.parent.removeSubtag(that);
+  }
+}
+
+TagsTreeNode.prototype.removeFromTreeCascade = function(notifyRemoval) {
+  let that = this;
+  if (that.parent !== null) {
+    that.parent.removeSubtagCascade(that, notifyRemoval);
   }
 }
 

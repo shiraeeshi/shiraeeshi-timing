@@ -1,5 +1,5 @@
 const electron = require('electron');
-const { app, BrowserWindow, ipcMain, Menu, MenuItem } = electron;
+const { app, BrowserWindow, ipcMain, Menu, MenuItem, clipboard } = electron;
 const path = require('path')
 const fs = require('fs');
 const YAML = require('yaml');
@@ -7,28 +7,17 @@ const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.j
 const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 const { parseNotebook } = require('../../logic/notebook_parser.js');
 
-ipcMain.on('notebook_msgs__show_context_menu', async (event) => {
-  const menu = Menu.buildFromTemplate([
-    {
-      label: 'Menu Item 1',
-      click: () => {
-        event.sender.send('message-from-backend', {
-          type: 'contextmenu',
-          value: 'Menu Item 1'
-        });
-      }
-    },
-    {
-      label: 'Menu Item 2',
-      click: () => {
-        event.sender.send('message-from-backend', {
-          type: 'contextmenu',
-          value: 'Menu Item 2'
-        });
-      }
-    },
-  ]);
-  menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
+ipcMain.on('notebook_msgs__show_context_menu', async (event, sourceType) => {
+  if (sourceType === 'notebook-node') {
+    showContextMenuOfNotebookNode(event);
+  } else if (sourceType === 'tags-tree-node') {
+    showContextMenuOfTagsTreeNode(event);
+  }
+});
+
+
+ipcMain.on('notebook_msgs__copy_full_path_of_tag', async (event, fullPathStr) => {
+  clipboard.writeText(fullPathStr);
 });
 
 let isDisabledShortcuts = false;
@@ -206,6 +195,54 @@ async function init(appEnv, win) {
   });
 }
 
+
+function showContextMenuOfNotebookNode(event) {
+  const menu = Menu.buildFromTemplate([
+    {
+      label: 'Menu Item 1',
+      click: () => {
+        event.sender.send('message-from-backend', {
+          type: 'contextmenu',
+          value: 'Menu Item 1'
+        });
+      }
+    },
+    {
+      label: 'Menu Item 2',
+      click: () => {
+        event.sender.send('message-from-backend', {
+          type: 'contextmenu',
+          value: 'Menu Item 2'
+        });
+      }
+    },
+  ]);
+  menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
+}
+
+function showContextMenuOfTagsTreeNode(event) {
+  const menu = Menu.buildFromTemplate([
+    {
+      label: 'Copy full path',
+      click: () => {
+        event.sender.send('message-from-backend', {
+          type: 'contextmenu',
+          value: 'copy-full-path'
+        });
+      }
+    },
+    {
+      label: 'Edit full path',
+      click: () => {
+        event.sender.send('message-from-backend', {
+          type: 'contextmenu',
+          value: 'edit-full-path'
+        });
+      }
+    },
+  ]);
+  menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
+}
 
 
 function convertConfigFromYamlFormat(config) {

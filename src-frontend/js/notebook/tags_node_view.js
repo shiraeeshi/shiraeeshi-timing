@@ -59,7 +59,7 @@ NotebookTagsTreeNodeView.prototype.mergeWithNewTags = function(tagsTreeNode) {
   tagsTreeNode.children.forEach(childNode => {
     let oldChild = that.childrenByName[childNode.name];
     if (oldChild === undefined) {
-      let newChildView = new NotebookTagsTreeNodeView(childNode, that);
+      let newChildView = that.instantiateNewChild(childNode);
       newChildView.buildAsHtmlLiElement();
       that.children.push(newChildView);
       that.childrenByName[childNode.name] = newChildView;
@@ -68,9 +68,7 @@ NotebookTagsTreeNodeView.prototype.mergeWithNewTags = function(tagsTreeNode) {
     }
   });
   if (lengthBefore > 0) {
-    that.children = that.tagsTreeNode.children.map(ch => ch.nodeView);
-    that.htmlContainerUl.innerHTML = "";
-    withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
+    that.refreshOrderOfChildrenOnScreen();
   }
   let currentLength = that.children.length;
   if (lengthBefore === 0 && currentLength > 0) {
@@ -79,9 +77,7 @@ NotebookTagsTreeNodeView.prototype.mergeWithNewTags = function(tagsTreeNode) {
     }
     that._rebuildHtmlElement();
     if (!that.isCollapsed) {
-      that.children = that.tagsTreeNode.children.map(ch => ch.nodeView);
-      that.htmlContainerUl.innerHTML = "";
-      withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
+      that.refreshOrderOfChildrenOnScreen();
     }
   }
 };
@@ -296,6 +292,29 @@ NotebookTagsTreeNodeView.prototype.createTitleDiv = function() {
   return titleDiv;
 }
 
+NotebookTagsTreeNodeView.prototype._addContextMenuListener = function(htmlElem) {
+  let that = this;
+  htmlElem.addEventListener('contextmenu', (eve) => {
+    eve.preventDefault();
+    my.contextMenuHandler = function(commandName) {
+      if (commandName === 'copy-full-path') {
+        that.copyFullPath();
+      } else if (commandName === 'edit-full-path') {
+        editFullPathOfTag(that);
+      }
+    }
+    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage('tags-tree-node');
+    return false;
+  });
+}
+
+NotebookTagsTreeNodeView.prototype.copyFullPath = function() {
+  let that = this;
+  let fullPath = that.tagsTreeNode.tagAncestry.slice(1).concat(that.name);
+  let fullPathStr = fullPath.join('.');
+  window.webkit.messageHandlers.notebook_msgs__copy_full_path_of_tag.postMessage(fullPathStr);
+}
+
 NotebookTagsTreeNodeView.prototype.handleInsertedChildTag = function(newChildIndex) {
   let that = this;
 
@@ -322,6 +341,12 @@ NotebookTagsTreeNodeView.prototype.handleInsertedChildTag = function(newChildInd
 NotebookTagsTreeNodeView.prototype.removeFromTree = function() {
   let that = this;
   that.tagsTreeNode.removeFromTree();
+  that.tagsTreeNode.notifyWasRemovedFromTree();
+}
+
+NotebookTagsTreeNodeView.prototype.removeFromTreeCascade = function() {
+  let that = this;
+  that.tagsTreeNode.removeFromTreeCascade(true);
   that.tagsTreeNode.notifyWasRemovedFromTree();
 }
 
@@ -362,8 +387,7 @@ NotebookTagsTreeNodeView.prototype.edit = function(changeHandler) {
     handleTagAncestryOfDescendantsAfterRename(newTagsTreeNode, that.tagsTreeNode.name);
     let index = tagsTreeNodeParent.children.indexOf(that.tagsTreeNode);
     if (value === that.name) {
-      that._removeHtmlElementFromTree();
-      that.buildAsHtmlLiElement();
+      that._rebuildHtmlElement();
     } else {
       that.removeFromTree();
       tagsTreeNodeParent.children.splice(index, 0, newTagsTreeNode);
@@ -414,6 +438,10 @@ function editTagSegment(tagNodeView) {
     let tagsTreeNode = newTagNodeView.tagsTreeNode;
     renameTagSegmentInLinksOfNode(tagsTreeNode, oldName);
   });
+}
+
+function editFullPathOfTag(tagNodeView) {
+  tagNodeView.editFullPath();
 }
 
 function renameTagSegmentInLinksOfNode(tagsTreeNode, oldName) {
@@ -477,6 +505,157 @@ function renameAncestorTagSegmentInLinksOfNode(tagsTreeNode, renamedAncestorNode
       link.name = '>>' + link.tag + ' ' + link.name.slice(indexOfWhitespace);
     }
     link.notebookNode.notifyTagSegmentNameChange();
+  });
+}
+
+NotebookTagsTreeNodeView.prototype.editFullPath = function(changeHandler) {
+  let that = this;
+  if (that.htmlElement === undefined) {
+    return;
+  }
+  let titleContainer = that.htmlElement.querySelector('.notebook-node-title-container');
+  titleContainer.innerHTML = '';
+  let inputElem = document.createElement('input');
+  inputElem.value = that.tagsTreeNode.tagAncestry.slice(1).concat(that.name).join('.');
+  titleContainer.appendChild(inputElem);
+  let isHandlingChange = false;
+  inputElem.addEventListener('change', (eve) => {
+    let value = inputElem.value;
+    if (isHandlingChange) {
+      return;
+    } else {
+      isHandlingChange = true;
+    }
+    if (value === '') {
+      return;
+    }
+    let oldPath = that.tagsTreeNode.tagAncestry.slice(1).concat(that.name);
+    let oldPathStr = oldPath.join('.');
+    if (value === oldPathStr) {
+      that._rebuildHtmlElement();
+      return;
+    }
+    if (value.indexOf(' ') >= 0) {
+      alert('tags cannot contain whitespaces');
+      return;
+    }
+    let newPath = value.split('.');
+
+    renameTagFullPathInLinksOfNode(that.tagsTreeNode, newPath);
+    that.tagsTreeNode.children.forEach(function func(descendantNode) {
+      renameAncestorTagFullPathInLinksOfNode(descendantNode, oldPath, newPath);
+      descendantNode.children.forEach(func);
+    });
+
+    let newTagsTreeNode = (function() {
+      let aNode = my.tagsTree;
+      for (let newPathSegment of newPath) {
+        aNode = aNode.ensureSubtagWithName(newPathSegment);
+      }
+      return aNode;
+    })();
+    // TODO merge old and new children, links, subTags; remove duplicate html elements from page dom
+    newTagsTreeNode.children = newTagsTreeNode.children.concat(that.tagsTreeNode.children);
+    newTagsTreeNode.links = newTagsTreeNode.links.concat(that.tagsTreeNode.links);
+    newTagsTreeNode.subTags = {...newTagsTreeNode.subTags, ...that.tagsTreeNode.subTags};
+
+    that.removeFromTreeCascade();
+
+    if (my.tagsTree.nodeView) {
+      my.tagsTree.nodeView.mergeWithNewTags(my.tagsTree);
+    }
+    if (my.tagsTree.nodeViewOfBottomPanel) {
+      my.tagsTree.nodeViewOfBottomPanel.mergeWithNewTags(my.tagsTree);
+    }
+
+    isHandlingChange = false;
+    enableKeyboardListener();
+    window.webkit.messageHandlers.notebook_msgs__enable_shortcuts.postMessage();
+  });
+  inputElem.addEventListener('keypress', (eve) => {
+    if (eve.key === 'Enter') {
+      eve.preventDefault();
+    }
+  });
+  inputElem.addEventListener('keyup', (eve) => {
+    if (eve.key === 'Escape') {
+      eve.preventDefault();
+      eve.stopPropagation();
+      inputElem.value = that.name;
+      let event = new Event('change');
+      inputElem.dispatchEvent(event);
+    }
+    if (eve.key === 'Enter') {
+      eve.preventDefault();
+      eve.stopPropagation();
+      let event = new Event('change');
+      inputElem.dispatchEvent(event);
+    }
+  });
+  inputElem.focus();
+  disableKeyboardListener();
+  window.webkit.messageHandlers.notebook_msgs__disable_shortcuts.postMessage();
+};
+
+function renameTagFullPathInLinksOfNode(tagsTreeNode, newFullPath) {
+  let tagAncestry = tagsTreeNode.tagAncestry.slice(1);
+  let links = tagsTreeNode.links;
+  links.forEach(link => {
+    let linkTagSplitted = link.tag.split(".");
+    if (linkTagSplitted.length <= tagAncestry.length) {
+      console.log(`expected link tag length to be greater than tag ancestry length.\n  link tag: ${link.tag}\n  link to: ${link.ancestry.concat(link.name).join(" -> ")}\ntag ancestry + tag name: ${tagAncestry.concat(tagsTreeNode.name).join(".")}`);
+      return;
+    }
+    for (let i = 0; i < tagAncestry.length; i++) {
+      if (linkTagSplitted[i] !== tagAncestry[i]) {
+        console.log(`expected link tag segment to be equals to tag ancestry segment. index: ${i}, link tag segment: ${linkTagSplitted[i]}, tag ancestry segment: ${tagAncestry[i]}, link tag: ${link.tag}, link to: ${link.ancestry.concat(link.name).join(" -> ")}`);
+        continue;
+      }
+    }
+    if (linkTagSplitted[tagAncestry.length] !== tagsTreeNode.name) {
+      console.log(`expected link tag segment to be equals to old name tags tree node. old name: ${tagsTreeNode.name}, link tag: ${link.tag}, link to: ${link.ancestry.concat(link.name).join(" -> ")}`);
+      return;
+    }
+    // linkTagSplitted[tagAncestry.length] = tagsTreeNode.name;
+    // link.tag = linkTagSplitted.join(".");
+    let newPathOfLink = newFullPath.concat(linkTagSplitted.slice(tagAncestry.length + 1));
+    link.tag = newPathOfLink.join(".");
+    let indexOfWhitespace = link.name.indexOf(' ');
+    if (indexOfWhitespace < 0) {
+      link.name = '>>' + link.tag;
+    } else {
+      link.name = '>>' + link.tag + ' ' + link.name.slice(indexOfWhitespace);
+    }
+    link.notebookNode.notifyTagPathChange();
+  });
+}
+
+function renameAncestorTagFullPathInLinksOfNode(tagsTreeNode, oldFullPath, newFullPath) {
+  tagsTreeNode.tagAncestry = [my.tagsTree.name].concat(newFullPath.concat(tagsTreeNode.tagAncestry.slice(newFullPath.length + 1)));
+  let links = tagsTreeNode.links;
+  links.forEach(link => {
+    let linkTagSplitted = link.tag.split(".");
+    if (linkTagSplitted.length <= oldFullPath.length) {
+      console.log(`expected link tag length to be greater than length of old full path.\n  link tag: ${link.tag}\n  link to: ${link.ancestry.concat(link.name).join(" -> ")}\n  old full path: ${oldFullPath.join(".")}`);
+      return;
+    }
+    for (let i = 0; i < oldFullPath.length; i++) {
+      if (linkTagSplitted[i] !== oldFullPath[i]) {
+        console.log(`expected link tag segment to be equals to old full path segment. index: ${i}, link tag segment: ${linkTagSplitted[i]}, old full path segment: ${oldFullPath[i]}, link tag: ${link.tag}, link to: ${link.ancestry.concat(link.name).join(" -> ")}`);
+        continue;
+      }
+    }
+    // linkTagSplitted[tagAncestry.length] = renamedAncestorNode.name;
+    // link.tag = linkTagSplitted.join(".");
+    let newPathOfLink = newFullPath.concat(linkTagSplitted.slice(oldFullPath.length));
+    link.tag = newPathOfLink.join(".");
+    let indexOfWhitespace = link.name.indexOf(' ');
+    if (indexOfWhitespace < 0) {
+      link.name = '>>' + link.tag;
+    } else {
+      link.name = '>>' + link.tag + ' ' + link.name.slice(indexOfWhitespace);
+    }
+    link.notebookNode.notifyTagPathChange();
   });
 }
 

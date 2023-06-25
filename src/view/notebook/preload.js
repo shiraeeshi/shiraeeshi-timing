@@ -25,10 +25,15 @@ contextBridge.exposeInMainWorld('webkit', {
       }
     },
     notebook_msgs__show_context_menu: {
-      postMessage: () => {
-        ipcRenderer.send('notebook_msgs__show_context_menu');
+      postMessage: (sourceType) => {
+        ipcRenderer.send('notebook_msgs__show_context_menu', sourceType);
       }
-    }
+    },
+    notebook_msgs__copy_full_path_of_tag: {
+      postMessage: (fullPathStr) => {
+        ipcRenderer.send('notebook_msgs__copy_full_path_of_tag', fullPathStr);
+      }
+    },
   }
 });
 
