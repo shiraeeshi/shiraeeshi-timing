@@ -554,10 +554,19 @@ NotebookTagsTreeNodeView.prototype.editFullPath = function(changeHandler) {
       }
       return aNode;
     })();
-    // TODO merge old and new children, links, subTags; remove duplicate html elements from page dom
-    newTagsTreeNode.children = newTagsTreeNode.children.concat(that.tagsTreeNode.children);
-    newTagsTreeNode.links = newTagsTreeNode.links.concat(that.tagsTreeNode.links);
-    newTagsTreeNode.subTags = {...newTagsTreeNode.subTags, ...that.tagsTreeNode.subTags};
+    (function mergeSubtagsAndLinks(srcNode, dstNode) {
+      dstNode.links = dstNode.links.concat(srcNode.links);
+      for (let subtagName in srcNode.subTags) {
+        let sourceSubtag = srcNode.subTags[subtagName];
+        let destinationSubtag = dstNode.subTags[subtagName];
+        if (destinationSubtag !== undefined) {
+          mergeSubtagsAndLinks(sourceSubtag, destinationSubtag);
+        } else {
+          dstNode.subTags[subtagName] = sourceSubtag;
+          dstNode.children.push(sourceSubtag);
+        }
+      }
+    })(that.tagsTreeNode, newTagsTreeNode);
 
     that.removeFromTreeCascade();
 
