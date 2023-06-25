@@ -1,6 +1,6 @@
 const { NotebookNode } = require('../js/notebook/notebook_node.js');
 const { turnMultilineTextIntoHtml } = require('../js/html_utils.js');
-const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
+const { yamlRootObject2forest, convertNotebookTreeToPreYamlJson } = require('../js/notebook/yaml2forest.js');
 const { parseTagsFromRootForest } = require('../js/notebook/parse_tags.js');
 const { showTagsAndLinks, showTagsAndLinksOfBottomPanel } = require('../js/notebook/show_tags.js');
 const { NotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
@@ -45,6 +45,32 @@ function handleServerMessage(msg) {
       return;
     }
 
+    if (msg.type === 'save-command') {
+
+      let preYamlJson = convertNotebookTreeToPreYamlJson(my.notebookTree);
+
+      my.save_result_handler = (result, msg) => {
+        if (result === 'error') {
+          alert(`There was an error while saving a file. Error message: "${msg.error_message}"`);
+          return;
+        }
+        if (result === 'success') {
+          alert('Saved the notebook successfully');
+          return;
+        }
+      };
+      window.webkit.messageHandlers.notebook_msgs__save_notebook.postMessage(preYamlJson, my.config.notebook.filepath);
+      return;
+    }
+
+    if (msg.type === 'save_result') {
+      if (my.save_result_handler) {
+        my.save_result_handler(msg.result, msg);
+        delete my.save_result_handler;
+      }
+      return;
+    }
+
     if (!my.addedKeyupListener) {
       document.body.addEventListener('keyup', (eve) => {
         handleKeyUp(eve);
@@ -54,6 +80,7 @@ function handleServerMessage(msg) {
     }
 
     let config = msg.config;
+    my.config = config;
     handleConfig(msg.config);
     let notes_object = msg.notes;
 

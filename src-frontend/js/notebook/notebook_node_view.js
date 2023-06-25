@@ -449,6 +449,20 @@ NotebookNodeView.prototype.moveToTop = function() {
   let parent = that.html().parentNode;
   parent.removeChild(that.html());
   parent.insertBefore(that.html(), parent.children[0]);
+
+  let nodeViewIndex = that.parentNodeView.children.indexOf(that);
+  if (nodeViewIndex >= 0) {
+    that.parentNodeView.children.splice(nodeViewIndex, 1);
+    that.parentNodeView.children.splice(0, 0, that);
+  }
+
+  let parentNotebookNode = that.notebookNode.parent;
+  let index = parentNotebookNode.children.indexOf(that.notebookNode);
+  if (index < 0) {
+    return;
+  }
+  parentNotebookNode.children.splice(index, 1);
+  parentNotebookNode.children.splice(0, 0, that.notebookNode);
 }
 
 NotebookNodeView.prototype.moveToBottom = function() {
@@ -456,6 +470,20 @@ NotebookNodeView.prototype.moveToBottom = function() {
   let parent = that.html().parentNode;
   parent.removeChild(that.html());
   parent.appendChild(that.html());
+
+  let nodeViewIndex = that.parentNodeView.children.indexOf(that);
+  if (nodeViewIndex >= 0) {
+    that.parentNodeView.children.splice(nodeViewIndex, 1);
+    that.parentNodeView.children.push(that);
+  }
+
+  let parentNotebookNode = that.notebookNode.parent;
+  let index = parentNotebookNode.children.indexOf(that.notebookNode);
+  if (index < 0) {
+    return;
+  }
+  parentNotebookNode.children.splice(index, 1);
+  parentNotebookNode.children.push(that.notebookNode);
 }
 
 NotebookNodeView.prototype.hideThisItem = function() {

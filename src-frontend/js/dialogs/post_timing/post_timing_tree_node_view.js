@@ -535,7 +535,7 @@ PostTimingTreeNodeView.prototype.moveToTop = function() {
   parent.insertBefore(that.html(), parent.children[0]);
 
   let nodeViewIndex = that.parentNodeView.children.indexOf(that);
-  if (index >= 0) {
+  if (nodeViewIndex >= 0) {
     that.parentNodeView.children.splice(nodeViewIndex, 1);
     that.parentNodeView.children.splice(0, 0, that);
   }

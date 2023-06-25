@@ -34,6 +34,11 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('notebook_msgs__copy_full_path_of_tag', fullPathStr);
       }
     },
+    notebook_msgs__save_notebook: {
+      postMessage: (preYamlJson, filepath) => {
+        ipcRenderer.send('notebook_msgs__save_notebook', preYamlJson, filepath);
+      }
+    },
   }
 });
 

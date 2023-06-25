@@ -6,6 +6,48 @@ const YAML = require('yaml');
 const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.js');
 const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 const { parseNotebook } = require('../../logic/notebook_parser.js');
+const { expanduser } = require('../../logic/file_utils.js');
+
+ipcMain.on('notebook_msgs__save_notebook', async (event, preYamlJson, filepath) => {
+  try {
+    // console.log(`notebook_msgs__save_notebook filepath: ${filepath}`);
+    console.dir(Object.keys(preYamlJson));
+    let stringified = YAML.stringify(preYamlJson, undefined, {indent: 2, indentSeq: false});
+    const filepathWithExpandedUser = expanduser(filepath);
+    const dirname = path.dirname(filepathWithExpandedUser);
+    const ext = path.extname(filepath);
+    const filenameNoExt = path.basename(filepath, ext);
+    let suffix = (function() {
+      const date = new Date();
+
+      function pad(v) {
+        return `0${v}`.slice(-2);
+      }
+
+      let day = pad(date.getDate());
+      let month = pad(date.getMonth() + 1);
+      let year = date.getFullYear()
+      let hours = pad(date.getHours());
+      let minutes = pad(date.getMinutes());
+      let seconds = pad(date.getSeconds());
+      return `_${year}_${month}_${day}__${hours}_${minutes}_${seconds}`;
+    })();
+
+    const copyTo = path.join(dirname, filenameNoExt + suffix + ext);
+    await fs.promises.copyFile(filepathWithExpandedUser, copyTo);
+    await fs.promises.writeFile(filepathWithExpandedUser, stringified);
+    event.sender.send('message-from-backend', {
+      type: 'save_result',
+      result: 'success'
+    });
+  } catch (err) {
+    event.sender.send('message-from-backend', {
+      type: 'save_result',
+      result: 'error',
+      error_message: err.message
+    });
+  }
+});
 
 ipcMain.on('notebook_msgs__show_context_menu', async (event, sourceType) => {
   if (sourceType === 'notebook-node') {
@@ -62,6 +104,15 @@ function setMenuAndKeyboardShortcuts(win) {
   menu.append(new MenuItem({
     label: 'Shiraeeshi',
     submenu: [
+      {
+        label: 'save',
+        click: () => {
+          // let window = electron.remote.getCurrentWindow();
+          win.webContents.send('message-from-backend', {
+            type: 'save-command'
+          });
+        }
+      },
       {
         label: 'toggle fullscreen',
         accelerator: process.platform === 'darwin' ? 'f' : 'f',

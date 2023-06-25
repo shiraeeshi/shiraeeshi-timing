@@ -19,6 +19,29 @@ export function yamlRootObject2forest(yamlRootObject) {
   }
 }
 
+export function convertNotebookTreeToPreYamlJson(notebookTree) {
+  try {
+    let yamlRootObject = {};
+    notebookTree.children.forEach(rootChild => {
+      // yamlRootObject[rootChild.name] = 
+      //   true;
+      yamlRootObject[rootChild.name] = 
+        rootChild.children.map(function ff(childNode) {
+          if (childNode.children.length === 0) {
+            return childNode.name;
+          }
+          let obj = {};
+          obj[childNode.name] = childNode.children.map(ff);
+          return obj;
+        });
+    });
+    return yamlRootObject;
+  } catch (err) {
+    window.webkit.messageHandlers.foobar.postMessage("js convertNotebookTreeToPreYamlJson error msg: " + err.message);
+    throw err;
+  }
+}
+
 function yamlObject2treeNode(yamlObject) {
   try {
     let keys = Object.keys(yamlObject);
