@@ -381,9 +381,7 @@ NotebookTagsTreeNodeView.prototype.edit = function(changeHandler) {
     }
     let tagsTreeNodeParent = that.tagsTreeNode.parent;
     let newTagsTreeNode = tagsTreeNodeParent.ensureSubtagWithName(value);
-    newTagsTreeNode.children = that.tagsTreeNode.children;
-    newTagsTreeNode.subTags = that.tagsTreeNode.subTags;
-    newTagsTreeNode.links = that.tagsTreeNode.links;
+    mergeSubtagsAndLinks(that.tagsTreeNode, newTagsTreeNode);
     handleTagAncestryOfDescendantsAfterRename(newTagsTreeNode, that.tagsTreeNode.name);
     let index = tagsTreeNodeParent.children.indexOf(that.tagsTreeNode);
     if (value === that.name) {
@@ -554,19 +552,7 @@ NotebookTagsTreeNodeView.prototype.editFullPath = function(changeHandler) {
       }
       return aNode;
     })();
-    (function mergeSubtagsAndLinks(srcNode, dstNode) {
-      dstNode.links = dstNode.links.concat(srcNode.links);
-      for (let subtagName in srcNode.subTags) {
-        let sourceSubtag = srcNode.subTags[subtagName];
-        let destinationSubtag = dstNode.subTags[subtagName];
-        if (destinationSubtag !== undefined) {
-          mergeSubtagsAndLinks(sourceSubtag, destinationSubtag);
-        } else {
-          dstNode.subTags[subtagName] = sourceSubtag;
-          dstNode.children.push(sourceSubtag);
-        }
-      }
-    })(that.tagsTreeNode, newTagsTreeNode);
+    mergeSubtagsAndLinks(that.tagsTreeNode, newTagsTreeNode);
 
     that.removeFromTreeCascade();
 
@@ -605,6 +591,21 @@ NotebookTagsTreeNodeView.prototype.editFullPath = function(changeHandler) {
   disableKeyboardListener();
   window.webkit.messageHandlers.notebook_msgs__disable_shortcuts.postMessage();
 };
+
+function mergeSubtagsAndLinks(srcNode, dstNode) {
+  dstNode.links = dstNode.links.concat(srcNode.links);
+  for (let subtagName in srcNode.subTags) {
+    let sourceSubtag = srcNode.subTags[subtagName];
+    let destinationSubtag = dstNode.subTags[subtagName];
+    if (destinationSubtag !== undefined) {
+      mergeSubtagsAndLinks(sourceSubtag, destinationSubtag);
+    } else {
+      dstNode.subTags[subtagName] = sourceSubtag;
+      dstNode.children.push(sourceSubtag);
+    }
+    dstNode.subTags[subtagName].parent = dstNode;
+  }
+}
 
 function renameTagFullPathInLinksOfNode(tagsTreeNode, newFullPath) {
   let tagAncestry = tagsTreeNode.tagAncestry.slice(1);
