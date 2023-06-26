@@ -10,6 +10,7 @@ const {
   appendChildWithInputToTheRightSideNode,
   editRightSideNode,
   deleteNodeFromTheRightSide,
+  pasteNodeInto,
 } = require('../js/notebook/notebook_node_view_utils.js');
 
 let my = {
@@ -264,13 +265,13 @@ function handleKeyUp(eve) {
     }
     appendChildWithInputToTheRightSideNode(my.rightSideNodeInRectangle);
   } else if (eve.ctrlKey && key === 'x') {
-    delete my.rightSideNodeToCopy;
-    my.rightSideNodeToCut = my.rightSideNodeInRectangle.processNode;
+    delete my.notebookNodeToCopy;
+    my.notebookNodeToCut = my.rightSideNodeInRectangle.notebookNode;
   } else if (eve.ctrlKey && key === 'c') {
-    delete my.rightSideNodeToCut;
-    my.rightSideNodeToCopy = my.rightSideNodeInRectangle.processNode;
+    delete my.notebookNodeToCut;
+    my.notebookNodeToCopy = my.rightSideNodeInRectangle.notebookNode;
   } else if (eve.ctrlKey && key === 'v') {
-    pasteRightSideNode();
+    pasteNodeInto(my.rightSideNodeInRectangle.notebookNode);
   } else if (key === 'F2') {
     if (!my.isCursorOnRightSide) {
       return;

@@ -106,6 +106,7 @@ export function buildTagsAndLinksForest(taggedNodes) {
       obj = obj.ensureSubtagWithName(tagPathSegment);
     });
     obj.links.push(taggedNode);
+    taggedNode.tagsTreeNode = obj;
   });
   return result;
 }

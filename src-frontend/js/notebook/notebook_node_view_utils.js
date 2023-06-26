@@ -1,10 +1,17 @@
 const { parseTagFromNodeIfExists } = require('./parse_tags.js');
 
+function getTagFromNodeIfExists(notebookNode) {
+  if (notebookNode.tag !== undefined) {
+    return notebookNode.tag;
+  }
+  return parseTagFromNodeIfExists(notebookNode, notebookNode.getAncestry());
+}
+
 export function addSiblingWithInputToTheRightSideNode(notebookNodeView) {
   let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
 
   notebookNodeView.addHtmlSiblingWithInput(function(newNotebookNode) {
-    let tagFromNewNode = parseTagFromNodeIfExists(newNotebookNode, newNotebookNode.getAncestry());
+    let tagFromNewNode = getTagFromNodeIfExists(newNotebookNode);
     if (tagFromNewNode !== undefined) {
       let tagPath = tagFromNewNode.tag.split(".");
       let obj = window.my.rootTagsTreeNode;
@@ -12,6 +19,7 @@ export function addSiblingWithInputToTheRightSideNode(notebookNodeView) {
         obj = obj.ensureSubtagWithName(tagPathSegment);
       });
       obj.links.push(tagFromNewNode);
+      tagFromNewNode.tagsTreeNode = obj;
       obj.notifyAddedLink();
       window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
     }
@@ -29,7 +37,7 @@ export function addSiblingWithInputToTheRightSideNode(notebookNodeView) {
 export function appendChildWithInputToTheRightSideNode(notebookNodeView) {
   let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
   notebookNodeView.appendHtmlChildWithInput(function(newNotebookNode) {
-    let tagFromNewNode = parseTagFromNodeIfExists(newNotebookNode, newNotebookNode.getAncestry());
+    let tagFromNewNode = getTagFromNodeIfExists(newNotebookNode);
     if (tagFromNewNode !== undefined) {
       let tagPath = tagFromNewNode.tag.split(".");
       let obj = window.my.rootTagsTreeNode;
@@ -37,6 +45,7 @@ export function appendChildWithInputToTheRightSideNode(notebookNodeView) {
         obj = obj.ensureSubtagWithName(tagPathSegment);
       });
       obj.links.push(tagFromNewNode);
+      tagFromNewNode.tagsTreeNode = obj;
       obj.notifyAddedLink();
       window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
     }
@@ -54,10 +63,10 @@ export function appendChildWithInputToTheRightSideNode(notebookNodeView) {
 export function editRightSideNode(notebookNodeView) {
   let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
   let editedNotebookNode = notebookNodeView.notebookNode;
-  let oldTagFromNode = parseTagFromNodeIfExists(editedNotebookNode, editedNotebookNode.getAncestry());
+  let oldTagFromNode = getTagFromNodeIfExists(editedNotebookNode);
   notebookNodeView.edit(function(newNodeView) {
     editedNotebookNode = newNodeView.notebookNode;
-    let tagFromNewNode = parseTagFromNodeIfExists(editedNotebookNode, editedNotebookNode.getAncestry());
+    let tagFromNewNode = getTagFromNodeIfExists(editedNotebookNode);
     let changedStructureOfTagsTree = false;
     if (tagFromNewNode !== undefined) {
       let tagPath = tagFromNewNode.tag.split(".");
@@ -66,6 +75,7 @@ export function editRightSideNode(notebookNodeView) {
         obj = obj.ensureSubtagWithName(tagPathSegment);
       });
       obj.links.push(tagFromNewNode);
+      tagFromNewNode.tagsTreeNode = obj;
       obj.notifyAddedLink();
       changedStructureOfTagsTree = true;
     }
@@ -130,7 +140,7 @@ export function deleteNodeFromTheRightSide(notebookNodeView) {
     }
   }
 
-  let oldTagFromNode = parseTagFromNodeIfExists(notebookNodeView.notebookNode, notebookNodeView.notebookNode.getAncestry());
+  let oldTagFromNode = getTagFromNodeIfExists(notebookNodeView.notebookNode);
 
   notebookNodeView.removeFromTree();
 
@@ -176,5 +186,97 @@ export function deleteNodeFromTheRightSide(notebookNodeView) {
     }
   }
 
+}
+
+export function pasteNodeInto(notebookNode) {
+  let source = my.notebookNodeToCut || my.notebookNodeToCopy;
+  if (source === undefined ||
+      source === notebookNode) {
+    return;
+  }
+
+  let isCutAndPaste = source === my.notebookNodeToCut;
+
+  function isAncestor(ancestor, processNode) {
+    while (true) {
+      if (processNode.parent === ancestor) {
+        return true;
+      }
+      if (processNode.parent === null) {
+        return false;
+      }
+      processNode = processNode.parent;
+    }
+  }
+  if (isAncestor(source, notebookNode)) {
+    alert("cannot copy a branch into itself");
+    return;
+  }
+  function cutAndPaste(sourceNode, destinationParentNode) {
+    let copyOfSourceNode = destinationParentNode.ensureChildWithName(sourceNode.name);
+    sourceNode.children.forEach(ch => cutAndPaste(ch, copyOfSourceNode));
+
+    if (sourceNode.tag) {
+      let tag = sourceNode.tag;
+      tag.ancestry = copyOfSourceNode.getAncestry();
+      tag.notebookNode = copyOfSourceNode;
+
+      copyOfSourceNode.tag = tag;
+    }
+
+    if (sourceNode.tagsOfChildren !== undefined && sourceNode.tagsOfChildren.length > 0) {
+      copyOfSourceNode.tagsOfChildren = sourceNode.tagsOfChildren;
+    }
+  }
+  function copyAndPaste(sourceNode, destinationParentNode) {
+    let copyOfSourceNode = destinationParentNode.ensureChildWithName(sourceNode.name);
+    sourceNode.children.forEach(ch => copyAndPaste(ch, copyOfSourceNode));
+
+    if (sourceNode.tag) {
+      let tag = sourceNode.tag;
+      let copyOfTag = {
+        tag: tag.tag,
+        name: tag.name,
+        ancestry: copyOfSourceNode.getAncestry(),
+        notebookNode: copyOfSourceNode,
+      };
+
+      copyOfSourceNode.tag = copyOfTag;
+      tag.copy = copyOfTag;
+
+      if (tag.tagsTreeNode) {
+        tag.tagsTreeNode.links.push(copyOfTag);
+      }
+    }
+
+    if (sourceNode.tagsOfChildren !== undefined && sourceNode.tagsOfChildren.length > 0) {
+      copyOfSourceNode.tagsOfChildren = sourceNode.tagsOfChildren.map(t => t.copy);
+    }
+  }
+  if (isCutAndPaste) {
+    cutAndPaste(source, notebookNode);
+  } else {
+    copyAndPaste(source, notebookNode);
+  }
+  if (notebookNode.nodeView) {
+    notebookNode.nodeView.mergeWithNewNodes(notebookNode);
+
+    if (my.rightSideNodeInRectangle === notebookNode.nodeView) {
+      my.rightSideNodeInRectangle.wrapInRectangle();
+    }
+  }
+  if (notebookNode.nodeViewOfBottomPanel) {
+    notebookNode.nodeViewOfBottomPanel.mergeWithNewNodes(notebookNode);
+
+    if (my.rightSideNodeInRectangle === notebookNode.nodeViewOfBottomPanel) {
+      my.rightSideNodeInRectangle.wrapInRectangle();
+    }
+  }
+  if (my.notebookNodeToCut !== undefined) {
+    if (my.notebookNodeToCut.nodeView) {
+      my.notebookNodeToCut.nodeView.removeFromTree();
+    }
+    delete my.notebookNodeToCut;
+  }
 }
 

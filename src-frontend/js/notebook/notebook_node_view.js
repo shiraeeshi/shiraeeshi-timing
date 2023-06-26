@@ -4,6 +4,7 @@ const {
   appendChildWithInputToTheRightSideNode,
   editRightSideNode,
   deleteNodeFromTheRightSide,
+  pasteNodeInto,
 } = require('./notebook_node_view_utils.js');
 const { withChildren, withClass } = require('../html_utils.js');
 
@@ -817,6 +818,26 @@ NotebookNodeView.prototype.createTitleDiv = function() {
   return titleDiv;
 }
 
+NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
+  let that = this;
+  htmlElem.addEventListener('contextmenu', (eve) => {
+    eve.preventDefault();
+    my.contextMenuHandler = function(commandName) {
+      if (commandName === 'cut-node') {
+        delete my.notebookNodeToCopy;
+        my.notebookNodeToCut = that.notebookNode;
+      } else if (commandName === 'copy-node') {
+        delete my.notebookNodeToCut;
+        my.notebookNodeToCopy = that.notebookNode;
+      } else if (commandName === 'paste-node') {
+        pasteNodeInto(that.notebookNode);
+      }
+    }
+    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage('notebook-node');
+    return false;
+  });
+}
+
 function openNodeInTopPanel(nodeView) {
   let topPanelNodeView = nodeView.notebookNode.nodeView;
   if (topPanelNodeView === undefined) {
@@ -839,15 +860,6 @@ function openNodeInTopPanel(nodeView) {
   let wrapper = document.getElementById('notes-content-top-wrapper');
   let offsetTop = topPanelNodeView.htmlElement.offsetTop;
   wrapper.scrollTo({top: offsetTop, behavior: 'smooth'});
-}
-
-NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
-  let that = this;
-  htmlElem.addEventListener('contextmenu', (eve) => {
-    eve.preventDefault();
-    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage('notebook-node');
-    return false;
-  });
 }
 
 NotebookNodeView.prototype.buildAsHtmlLiElement = function() {

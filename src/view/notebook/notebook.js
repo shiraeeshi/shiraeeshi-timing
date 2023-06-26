@@ -250,20 +250,29 @@ async function init(appEnv, win) {
 function showContextMenuOfNotebookNode(event) {
   const menu = Menu.buildFromTemplate([
     {
-      label: 'Menu Item 1',
+      label: 'Cut node',
       click: () => {
         event.sender.send('message-from-backend', {
           type: 'contextmenu',
-          value: 'Menu Item 1'
+          value: 'cut-node'
         });
       }
     },
     {
-      label: 'Menu Item 2',
+      label: 'Copy node',
       click: () => {
         event.sender.send('message-from-backend', {
           type: 'contextmenu',
-          value: 'Menu Item 2'
+          value: 'copy-node'
+        });
+      }
+    },
+    {
+      label: 'Paste node',
+      click: () => {
+        event.sender.send('message-from-backend', {
+          type: 'contextmenu',
+          value: 'paste-node'
         });
       }
     },
