@@ -545,6 +545,8 @@ NotebookTagsTreeNodeView.prototype.editFullPath = function(changeHandler) {
       descendantNode.children.forEach(func);
     });
 
+    that.removeFromTreeCascade();
+
     let newTagsTreeNode = (function() {
       let aNode = my.tagsTree;
       for (let newPathSegment of newPath) {
@@ -553,8 +555,6 @@ NotebookTagsTreeNodeView.prototype.editFullPath = function(changeHandler) {
       return aNode;
     })();
     mergeSubtagsAndLinks(that.tagsTreeNode, newTagsTreeNode);
-
-    that.removeFromTreeCascade();
 
     if (my.tagsTree.nodeView) {
       my.tagsTree.nodeView.mergeWithNewTags(my.tagsTree);
