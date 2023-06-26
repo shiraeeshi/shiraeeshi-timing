@@ -212,8 +212,23 @@ export function pasteNodeInto(notebookNode) {
     alert("cannot copy a branch into itself");
     return;
   }
+  function ensureCopyAndNotify(sourceNode, destinationParentNode) {
+    let copyOfSourceNode = destinationParentNode.childrenByName[sourceNode.name];
+    if (copyOfSourceNode === undefined) {
+      copyOfSourceNode = destinationParentNode.ensureChildWithName(sourceNode.name);
+      let idxOfNewChild;
+      let lastIdx = destinationParentNode.children.length - 1;
+      if (copyOfSourceNode === destinationParentNode.children[lastIdx]) {
+        idxOfNewChild = lastIdx;
+      } else {
+        idxOfNewChild = destinationParentNode.children.indexOf(copyOfSourceNode);
+      }
+      destinationParentNode.notifyInsertedChild(idxOfNewChild);
+    }
+    return copyOfSourceNode;
+  }
   function cutAndPaste(sourceNode, destinationParentNode) {
-    let copyOfSourceNode = destinationParentNode.ensureChildWithName(sourceNode.name);
+    let copyOfSourceNode = ensureCopyAndNotify(sourceNode, destinationParentNode);
     sourceNode.children.forEach(ch => cutAndPaste(ch, copyOfSourceNode));
 
     if (sourceNode.tag) {
@@ -222,6 +237,12 @@ export function pasteNodeInto(notebookNode) {
       tag.notebookNode = copyOfSourceNode;
 
       copyOfSourceNode.tag = tag;
+
+      if (!affectsCurrentlyOpenedTagsTreeNode) {
+        if (tag.tagsTreeNode === my.lastOpenedTagsTreeNode) {
+          affectsCurrentlyOpenedTagsTreeNode = true;
+        }
+      }
     }
 
     if (sourceNode.tagsOfChildren !== undefined && sourceNode.tagsOfChildren.length > 0) {
@@ -229,7 +250,7 @@ export function pasteNodeInto(notebookNode) {
     }
   }
   function copyAndPaste(sourceNode, destinationParentNode) {
-    let copyOfSourceNode = destinationParentNode.ensureChildWithName(sourceNode.name);
+    let copyOfSourceNode = ensureCopyAndNotify(sourceNode, destinationParentNode);
     sourceNode.children.forEach(ch => copyAndPaste(ch, copyOfSourceNode));
 
     if (sourceNode.tag) {
@@ -246,6 +267,11 @@ export function pasteNodeInto(notebookNode) {
 
       if (tag.tagsTreeNode) {
         tag.tagsTreeNode.links.push(copyOfTag);
+        if (!affectsCurrentlyOpenedTagsTreeNode) {
+          if (tag.tagsTreeNode === my.lastOpenedTagsTreeNode) {
+            affectsCurrentlyOpenedTagsTreeNode = true;
+          }
+        }
       }
     }
 
@@ -253,20 +279,24 @@ export function pasteNodeInto(notebookNode) {
       copyOfSourceNode.tagsOfChildren = sourceNode.tagsOfChildren.map(t => t.copy);
     }
   }
+  let affectsCurrentlyOpenedTagsTreeNode = false;
   if (isCutAndPaste) {
     cutAndPaste(source, notebookNode);
   } else {
     copyAndPaste(source, notebookNode);
   }
+  if (my.lastOpenedTagsTreeNode && affectsCurrentlyOpenedTagsTreeNode) {
+    my.lastOpenedTagsTreeNode.notifyLinksChanged();
+  }
   if (notebookNode.nodeView) {
-    notebookNode.nodeView.mergeWithNewNodes(notebookNode);
+    // notebookNode.nodeView.mergeWithNewNodes(notebookNode);
 
     if (my.rightSideNodeInRectangle === notebookNode.nodeView) {
       my.rightSideNodeInRectangle.wrapInRectangle();
     }
   }
   if (notebookNode.nodeViewOfBottomPanel) {
-    notebookNode.nodeViewOfBottomPanel.mergeWithNewNodes(notebookNode);
+    // notebookNode.nodeViewOfBottomPanel.mergeWithNewNodes(notebookNode);
 
     if (my.rightSideNodeInRectangle === notebookNode.nodeViewOfBottomPanel) {
       my.rightSideNodeInRectangle.wrapInRectangle();

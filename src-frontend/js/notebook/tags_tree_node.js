@@ -96,3 +96,10 @@ TagsTreeNode.prototype.notifyDeletedLink = function() {
     that.handlerLinkDeleted();
   }
 }
+
+TagsTreeNode.prototype.notifyLinksChanged = function() {
+  let that = this;
+  if (that.handlerLinksChanged) {
+    that.handlerLinksChanged();
+  }
+}

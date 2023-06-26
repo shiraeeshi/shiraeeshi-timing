@@ -679,6 +679,7 @@ function searchByTag(tagNode) {
   if (window.my.lastOpenedTagsTreeNode) {
     delete window.my.lastOpenedTagsTreeNode.handlerLinkAdded;
     delete window.my.lastOpenedTagsTreeNode.handlerLinkDeleted;
+    delete window.my.lastOpenedTagsTreeNode.handlerLinksChanged;
   }
   window.my.lastOpenedTagsTreeNode = tagNode;
 
@@ -689,6 +690,10 @@ function searchByTag(tagNode) {
   tagNode.handlerLinkDeleted = function() {
     showLinksOfTag(tagNode); // TODO optimize: get the notebookNode from the deleted link, remove its html, handle visibility of ancestors
   };
+
+  tagNode.handlerLinksChanged = function() {
+    showLinksOfTag(tagNode);
+  }
 
   showLinksOfTag(tagNode);
 }
