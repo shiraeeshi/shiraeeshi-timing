@@ -576,7 +576,7 @@ NotebookTagsTreeNodeView.prototype.editFullPath = function(changeHandler) {
     if (eve.key === 'Escape') {
       eve.preventDefault();
       eve.stopPropagation();
-      inputElem.value = that.name;
+      inputElem.value = that.tagsTreeNode.tagAncestry.slice(1).concat(that.name).join('.');
       let event = new Event('change');
       inputElem.dispatchEvent(event);
     }
