@@ -917,6 +917,7 @@ PostTimingView.prototype.editRightSideNode = function(processNodeView) {
         }
       }
     }
+    handleVisibilityOfCheckboxIsProcess();
   });
 }
 
