@@ -77,7 +77,7 @@ ipcMain.on('notebook_msgs__show_context_menu', async (event, sourceType, options
   if (sourceType === 'notebook-node') {
     showContextMenuOfNotebookNode(event, options);
   } else if (sourceType === 'tags-tree-node') {
-    showContextMenuOfTagsTreeNode(event);
+    showContextMenuOfTagsTreeNode(event, options);
   }
 });
 
@@ -366,32 +366,35 @@ function showContextMenuOfNotebookNode(event, options) {
         sendContextMenuCommand(event, 'hide-siblings-below')
       }
     },
-  ];
-  if (options.hasHiddenChildren) {
-    listOfMenuItems.push({
+    {
       label: 'Unhide hidden children',
+      enabled: options.hasHiddenChildren,
       click: () => {
         sendContextMenuCommand(event, 'unhide-hidden-children')
       }
-    });
-  }
-  if (options.isTaggedNode) {
-    listOfMenuItems.push({
+    },
+    {
+      type: 'separator'
+    },
+    {
       label: 'Open tag in tags tree',
+      enabled: options.isTaggedNode,
       click: () => {
         sendContextMenuCommand(event, 'open-tag-in-tags-tree')
       }
-    });
-  }
-  if (options.hasTaggedChildren) {
-    listOfMenuItems.push({
+    },
+    {
       label: 'Open tags of children in tags tree',
+      enabled: options.hasTaggedChildren,
       click: () => {
         sendContextMenuCommand(event, 'open-tags-of-children-in-tags-tree')
       }
-    });
-  }
+    },
+  ];
   if (!options.isTopPanelTree) {
+    listOfMenuItems.push({
+      type: 'separator'
+    });
     listOfMenuItems.push({
       label: 'Open node in top panel',
       click: () => {
@@ -403,27 +406,88 @@ function showContextMenuOfNotebookNode(event, options) {
   menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
 }
 
-function showContextMenuOfTagsTreeNode(event) {
-  const menu = Menu.buildFromTemplate([
+function showContextMenuOfTagsTreeNode(event, options) {
+  let listOfMenuItems = [
     {
       label: 'Copy full path',
       click: () => {
-        event.sender.send('message-from-backend', {
-          type: 'contextmenu',
-          value: 'copy-full-path'
-        });
+        sendContextMenuCommand(event, 'copy-full-path');
       }
     },
     {
       label: 'Edit full path',
       click: () => {
-        event.sender.send('message-from-backend', {
-          type: 'contextmenu',
-          value: 'edit-full-path'
-        });
+        sendContextMenuCommand(event, 'edit-full-path');
       }
     },
-  ]);
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Edit',
+      click: () => {
+        sendContextMenuCommand(event, 'edit')
+      }
+    },
+    {
+      label: 'Increase font size',
+      click: () => {
+        sendContextMenuCommand(event, 'increase-font-size')
+      }
+    },
+    {
+      label: 'Decrease font size',
+      click: () => {
+        sendContextMenuCommand(event, 'decrease-font-size')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Move to top',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-top')
+      }
+    },
+    {
+      label: 'Move to bottom',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-bottom')
+      }
+    },
+    {
+      label: 'Hide',
+      click: () => {
+        sendContextMenuCommand(event, 'hide')
+      }
+    },
+    {
+      label: 'Hide siblings below',
+      click: () => {
+        sendContextMenuCommand(event, 'hide-siblings-below')
+      }
+    },
+    {
+      label: 'Unhide hidden children',
+      enabled: options.hasHiddenChildren,
+      click: () => {
+        sendContextMenuCommand(event, 'unhide-hidden-children')
+      }
+    },
+  ];
+  if (!options.isTopPanelTree) {
+    listOfMenuItems.push({
+      type: 'separator'
+    });
+    listOfMenuItems.push({
+      label: 'Open node in top panel',
+      click: () => {
+        sendContextMenuCommand(event, 'open-node-in-top-panel')
+      }
+    });
+  }
+  const menu = Menu.buildFromTemplate(listOfMenuItems);
   menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
 }
 

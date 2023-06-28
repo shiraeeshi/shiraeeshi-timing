@@ -460,11 +460,7 @@ li:last-child > .notebook-node-title-container > .notebook-node-icons > .icon-hi
   background-position: top left;
 }
 
-#notes-content-top-wrapper .icon-open-node-in-top-panel {
-  display: none;
-}
-
-#notes-content-bottom-wrapper .icon-open-node-in-top-panel {
+.icon-open-node-in-top-panel {
   background-image: url('../img/arrow-single-up-32.png');
   background-repeat: no-repeat;
   background-position: top left;

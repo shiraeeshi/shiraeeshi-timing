@@ -1,6 +1,6 @@
 const { NotebookNodeView } = require('./notebook_node_view.js');
 const { NotesForestViewBuilder } = require('./notes_forest_view_builder.js');
-const { appendNotesForestHtmlToBottomPanel, addTagNodeLinksToForest, highlightNotesInForest } = require('./notebook_utils.js');
+const { appendNotesForestHtmlToBottomPanel, addTagNodeLinksToForest, highlightNotesInForest, openPathInTagsForest } = require('./notebook_utils.js');
 const { withChildren, withClass } = require('../html_utils.js');
 
 
@@ -276,7 +276,8 @@ NotebookTagsTreeNodeView.prototype._createIconsList = function() {
           'tooltip')
       );
       elem.addEventListener('click', eve => {
-        openNodeInTopPanel(that);
+        let path = that.tagsTreeNode.tagAncestry.concat([that.name]);
+        openPathInTagsForest(window.my.rootNodeViewOfTags, path);
       });
       return elem;
     })();
@@ -339,9 +340,33 @@ NotebookTagsTreeNodeView.prototype._addContextMenuListener = function(htmlElem) 
         that.copyFullPath();
       } else if (commandName === 'edit-full-path') {
         editFullPathOfTag(that);
+      } else if (commandName === 'edit') {
+        editTagSegment(that);
+      } else if (commandName === 'move-to-top') {
+        that.moveToTop();
+      } else if (commandName === 'move-to-bottom') {
+        that.moveToBottom();
+      } else if (commandName === 'hide') {
+        that.hideThisItem();
+      } else if (commandName === 'hide-siblings-below') {
+        that.hideSiblingsBelow();
+      } else if (commandName === 'unhide-hidden-children') {
+        that.unhideHiddenChildren();
+      } else if (commandName === 'increase-font-size') {
+        let rootNodeView = that._getRootNodeView();
+        rootNodeView.increaseFontSize();
+      } else if (commandName === 'decrease-font-size') {
+        let rootNodeView = that._getRootNodeView();
+        rootNodeView.decreaseFontSize();
+      } else if (commandName === 'open-node-in-top-panel') {
+        let path = that.tagsTreeNode.tagAncestry.concat([that.name]);
+        openPathInTagsForest(window.my.rootNodeViewOfTags, path);
       }
     }
-    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage('tags-tree-node');
+    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage('tags-tree-node', {
+      isTopPanelTree: that.isTopPanelTree,
+      hasHiddenChildren: that.html().classList.contains('has-hidden-children'),
+    });
     return false;
   });
 }

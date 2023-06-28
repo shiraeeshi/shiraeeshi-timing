@@ -862,10 +862,10 @@ NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
       } else if (commandName === 'unhide-hidden-children') {
         that.unhideHiddenChildren();
       } else if (commandName === 'increase-font-size') {
-        let rootNodeView = getRootNodeView(that);
+        let rootNodeView = that._getRootNodeView();
         rootNodeView.increaseFontSize();
       } else if (commandName === 'decrease-font-size') {
-        let rootNodeView = getRootNodeView(that);
+        let rootNodeView = that._getRootNodeView();
         rootNodeView.decreaseFontSize();
       } else if (commandName === 'open-tag-in-tags-tree') {
         that.openTagInTagsTree();
@@ -1095,6 +1095,17 @@ NotebookNodeView.prototype.parentIsHighlighted = function() {
   }
 };
 
+NotebookNodeView.prototype._getRootNodeView = function() {
+  let that = this;
+  let nodeView = that;
+  while (true) {
+    if (nodeView.parentNodeView === undefined) {
+      return nodeView;
+    }
+    nodeView = nodeView.parentNodeView;
+  }
+}
+
 
 function disableKeyboardListener() {
   my.isKeyboardListenerDisabled = true;
@@ -1102,15 +1113,6 @@ function disableKeyboardListener() {
 
 function enableKeyboardListener() {
   my.isKeyboardListenerDisabled = false;
-}
-
-function getRootNodeView(nodeView) {
-  while (true) {
-    if (nodeView.parentNodeView === undefined) {
-      return nodeView;
-    }
-    nodeView = nodeView.parentNodeView;
-  }
 }
 
 for (let propName in NotebookNodeView.prototype) {

@@ -74,6 +74,30 @@ export function highlightTagsInForest(rootNodeViewOfTags, forestToHighlight) {
   }
 }
 
+export function openPathInTagsForest(rootNodeViewOfTags, path) {
+  try {
+    if (path.length === 0) {
+      return;
+    }
+    let tagsToOpen = new TagsTreeNode(path[0]);
+    let node = tagsToOpen;
+    for (let pathSegment of path.slice(1)) {
+      node = node.ensureSubtagWithName(pathSegment);
+    }
+
+    if (tagsToOpen.name === rootNodeViewOfTags.name) {
+      rootNodeViewOfTags.highlightTree(tagsToOpen);
+    }
+
+    // let tagsOuterWrapper = document.getElementById('tags-and-links-content-outer-wrapper');
+    // tagsOuterWrapper.classList.add('as-two-panels');
+
+  } catch (err) {
+    window.webkit.messageHandlers.foobar.postMessage("js openPathInTagsForest error msg: " + err.message);
+    throw err;
+  }
+}
+
 export function openTagsInForest(rootNodeViewOfTags, forestToHighlight) {
   try {
 
