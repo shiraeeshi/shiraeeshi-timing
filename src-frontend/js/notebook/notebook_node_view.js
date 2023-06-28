@@ -519,6 +519,7 @@ NotebookNodeView.prototype.hideSiblingsBelow = function() {
 NotebookNodeView.prototype.unhideHiddenChildren = function() {
   let that = this;
   that.children.forEach(childNode => childNode.unhide());
+  that.refreshOrderOfChildrenOnScreen();
   let parent = that.html().parentNode;
   that.html().classList.remove('has-hidden-children');
   that.hasManuallyHiddenChildren = false;

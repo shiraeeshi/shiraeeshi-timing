@@ -129,6 +129,48 @@ NotebookTagsTreeNodeView.prototype.decreaseFontSize = function() {
   that.html().style.fontSize = `${fontSize}px`;
 }
 
+NotebookTagsTreeNodeView.prototype.moveToTop = function() {
+  let that = this;
+  let parent = that.html().parentNode;
+  parent.removeChild(that.html());
+  parent.insertBefore(that.html(), parent.children[0]);
+
+  let nodeViewIndex = that.parentNodeView.children.indexOf(that);
+  if (nodeViewIndex >= 0) {
+    that.parentNodeView.children.splice(nodeViewIndex, 1);
+    that.parentNodeView.children.splice(0, 0, that);
+  }
+
+  let parentTagsTreeNode = that.tagsTreeNode.parent;
+  let index = parentTagsTreeNode.children.indexOf(that.tagsTreeNode);
+  if (index < 0) {
+    return;
+  }
+  parentTagsTreeNode.children.splice(index, 1);
+  parentTagsTreeNode.children.splice(0, 0, that.tagsTreeNode);
+}
+
+NotebookTagsTreeNodeView.prototype.moveToBottom = function() {
+  let that = this;
+  let parent = that.html().parentNode;
+  parent.removeChild(that.html());
+  parent.appendChild(that.html());
+
+  let nodeViewIndex = that.parentNodeView.children.indexOf(that);
+  if (nodeViewIndex >= 0) {
+    that.parentNodeView.children.splice(nodeViewIndex, 1);
+    that.parentNodeView.children.push(that);
+  }
+
+  let parentTagsTreeNode = that.tagsTreeNode.parent;
+  let index = parentTagsTreeNode.children.indexOf(that.tagsTreeNode);
+  if (index < 0) {
+    return;
+  }
+  parentTagsTreeNode.children.splice(index, 1);
+  parentTagsTreeNode.children.push(that.tagsTreeNode);
+}
+
 NotebookTagsTreeNodeView.prototype.name2html = function() {
   let that = this;
   let a = document.createElement('a');
