@@ -12,7 +12,31 @@ ipcMain.on('notebook_msgs__save_notebook', async (event, preYamlJson, filepath) 
   try {
     // console.log(`notebook_msgs__save_notebook filepath: ${filepath}`);
     console.dir(Object.keys(preYamlJson));
-    let stringified = YAML.stringify(preYamlJson, undefined, {indent: 2, indentSeq: false});
+    // // let stringified = YAML.stringify(preYamlJson, {indent: 2, indentSeq: false});
+    // let stringified = YAML.stringify(preYamlJson, {
+    //   indent: 2,
+    //   indentSeq: false,
+    //   // blockQuote: 'literal',
+    //   defaultKeyType: 'PLAIN',
+    //   // defaultStringType: 'BLOCK_LITERAL',
+    // });
+
+    let doc = new YAML.Document(preYamlJson);
+    YAML.visit(doc, (key, node, path) => {
+      if (key === 'key' && node.type === undefined) {
+        let containsNewline = node.value.indexOf('\n') >= 0;
+        if (containsNewline) {
+          node.type = 'BLOCK_LITERAL';
+          return node;
+        }
+      }
+    });
+
+    let stringified = YAML.stringify(doc, {
+      indent: 2,
+      indentSeq: false,
+    });
+
     const filepathWithExpandedUser = expanduser(filepath);
     const dirname = path.dirname(filepathWithExpandedUser);
     const ext = path.extname(filepath);
