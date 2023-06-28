@@ -823,7 +823,15 @@ NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
   htmlElem.addEventListener('contextmenu', (eve) => {
     eve.preventDefault();
     my.contextMenuHandler = function(commandName) {
-      if (commandName === 'cut-node') {
+      if (commandName === 'edit') {
+        editRightSideNode(that);
+      } else if (commandName === 'add-sibling-with-input') {
+        addSiblingWithInputToTheRightSideNode(that);
+      } else if (commandName === 'append-child-with-input') {
+        appendChildWithInputToTheRightSideNode(that)
+      } else if (commandName === 'delete') {
+        deleteNodeFromTheRightSide(that);
+      } else if (commandName === 'cut-node') {
         delete my.notebookNodeToCopy;
         my.notebookNodeToCut = that.notebookNode;
       } else if (commandName === 'copy-node') {
@@ -831,9 +839,36 @@ NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
         my.notebookNodeToCopy = that.notebookNode;
       } else if (commandName === 'paste-node') {
         pasteNodeInto(that.notebookNode);
+      } else if (commandName === 'move-to-top') {
+        that.moveToTop();
+      } else if (commandName === 'move-to-bottom') {
+        that.moveToBottom();
+      } else if (commandName === 'hide') {
+        that.hideThisItem();
+      } else if (commandName === 'hide-siblings-below') {
+        that.hideSiblingsBelow();
+      } else if (commandName === 'unhide-hidden-children') {
+        that.unhideHiddenChildren();
+      } else if (commandName === 'increase-font-size') {
+        let rootNodeView = getRootNodeView(that);
+        rootNodeView.increaseFontSize();
+      } else if (commandName === 'decrease-font-size') {
+        let rootNodeView = getRootNodeView(that);
+        rootNodeView.decreaseFontSize();
+      } else if (commandName === 'open-tag-in-tags-tree') {
+        that.openTagInTagsTree();
+      } else if (commandName === 'open-tags-of-children-in-tags-tree') {
+        that.openTagsOfChildrenInTagsTree();
+      } else if (commandName === 'open-node-in-top-panel') {
+        openNodeInTopPanel(that);
       }
     }
-    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage('notebook-node');
+    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage('notebook-node', {
+      isTopPanelTree: that.isTopPanelTree,
+      isTaggedNode: that._isTaggedNode(),
+      hasTaggedChildren: that._hasTaggedChildren(),
+      hasHiddenChildren: that.html().classList.contains('has-hidden-children'),
+    });
     return false;
   });
 }
@@ -1055,6 +1090,15 @@ function disableKeyboardListener() {
 
 function enableKeyboardListener() {
   my.isKeyboardListenerDisabled = false;
+}
+
+function getRootNodeView(nodeView) {
+  while (true) {
+    if (nodeView.parentNodeView === undefined) {
+      return nodeView;
+    }
+    nodeView = nodeView.parentNodeView;
+  }
 }
 
 for (let propName in NotebookNodeView.prototype) {

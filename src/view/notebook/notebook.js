@@ -73,9 +73,9 @@ ipcMain.on('notebook_msgs__save_notebook', async (event, preYamlJson, filepath) 
   }
 });
 
-ipcMain.on('notebook_msgs__show_context_menu', async (event, sourceType) => {
+ipcMain.on('notebook_msgs__show_context_menu', async (event, sourceType, options) => {
   if (sourceType === 'notebook-node') {
-    showContextMenuOfNotebookNode(event);
+    showContextMenuOfNotebookNode(event, options);
   } else if (sourceType === 'tags-tree-node') {
     showContextMenuOfTagsTreeNode(event);
   }
@@ -270,37 +270,136 @@ async function init(appEnv, win) {
   });
 }
 
+function sendContextMenuCommand(event, command) {
+  event.sender.send('message-from-backend', {
+    type: 'contextmenu',
+    value: command
+  });
+}
 
-function showContextMenuOfNotebookNode(event) {
-  const menu = Menu.buildFromTemplate([
+function showContextMenuOfNotebookNode(event, options) {
+  const listOfMenuItems = [
+    {
+      label: 'Edit',
+      click: () => {
+        sendContextMenuCommand(event, 'edit')
+      }
+    },
+    {
+      label: 'Add sibling',
+      click: () => {
+        sendContextMenuCommand(event, 'add-sibling-with-input')
+      }
+    },
+    {
+      label: 'Append child',
+      click: () => {
+        sendContextMenuCommand(event, 'append-child-with-input')
+      }
+    },
+    {
+      label: 'Delete',
+      click: () => {
+        sendContextMenuCommand(event, 'delete')
+      }
+    },
+    {
+      type: 'separator'
+    },
     {
       label: 'Cut node',
       click: () => {
-        event.sender.send('message-from-backend', {
-          type: 'contextmenu',
-          value: 'cut-node'
-        });
+        sendContextMenuCommand(event, 'cut-node')
       }
     },
     {
       label: 'Copy node',
       click: () => {
-        event.sender.send('message-from-backend', {
-          type: 'contextmenu',
-          value: 'copy-node'
-        });
+        sendContextMenuCommand(event, 'copy-node')
       }
     },
     {
       label: 'Paste node',
       click: () => {
-        event.sender.send('message-from-backend', {
-          type: 'contextmenu',
-          value: 'paste-node'
-        });
+        sendContextMenuCommand(event, 'paste-node')
       }
     },
-  ]);
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Increase font size',
+      click: () => {
+        sendContextMenuCommand(event, 'increase-font-size')
+      }
+    },
+    {
+      label: 'Decrease font size',
+      click: () => {
+        sendContextMenuCommand(event, 'decrease-font-size')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Move to top',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-top')
+      }
+    },
+    {
+      label: 'Move to bottom',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-bottom')
+      }
+    },
+    {
+      label: 'Hide',
+      click: () => {
+        sendContextMenuCommand(event, 'hide')
+      }
+    },
+    {
+      label: 'Hide siblings below',
+      click: () => {
+        sendContextMenuCommand(event, 'hide-siblings-below')
+      }
+    },
+  ];
+  if (options.hasHiddenChildren) {
+    listOfMenuItems.push({
+      label: 'Unhide hidden children',
+      click: () => {
+        sendContextMenuCommand(event, 'unhide-hidden-children')
+      }
+    });
+  }
+  if (options.isTaggedNode) {
+    listOfMenuItems.push({
+      label: 'Open tag in tags tree',
+      click: () => {
+        sendContextMenuCommand(event, 'open-tag-in-tags-tree')
+      }
+    });
+  }
+  if (options.hasTaggedChildren) {
+    listOfMenuItems.push({
+      label: 'Open tags of children in tags tree',
+      click: () => {
+        sendContextMenuCommand(event, 'open-tags-of-children-in-tags-tree')
+      }
+    });
+  }
+  if (!options.isTopPanelTree) {
+    listOfMenuItems.push({
+      label: 'Open node in top panel',
+      click: () => {
+        sendContextMenuCommand(event, 'open-node-in-top-panel')
+      }
+    });
+  }
+  const menu = Menu.buildFromTemplate(listOfMenuItems);
   menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
 }
 
