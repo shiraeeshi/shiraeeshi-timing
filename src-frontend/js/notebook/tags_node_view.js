@@ -138,9 +138,8 @@ NotebookTagsTreeNodeView.prototype.name2html = function() {
   return withChildren(a, document.createTextNode(that.name))
 };
 
-NotebookTagsTreeNodeView.prototype.createTitleDiv = function() {
+NotebookTagsTreeNodeView.prototype._createIconsList = function() {
   let that = this;
-  let nameHtml = that.name2html();
   let iconMoveToTop =
     (function() {
       let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-move-to-top'),
@@ -272,25 +271,22 @@ NotebookTagsTreeNodeView.prototype.createTitleDiv = function() {
     icons.push(iconIncreaseFontSize);
     icons.push(iconDecreaseFontSize);
   }
-  icons = icons.concat([
-    iconOpenNodeInTopPanel,
-    iconEdit,
-    iconMoveToTop,
-    iconMoveToBottom,
-    iconHide,
-    iconHideSiblingsBelow,
-    iconUnhideHiddenChildren,
-  ]);
-  let iconsDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-icons'),
-    ...icons
-  );
-  let titleDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-title-container'),
-    nameHtml,
-    iconsDiv
-  );
-  that._addContextMenuListener(nameHtml);
-  return titleDiv;
-}
+  function addIconIfConfigAllows(icon, configName) {
+    if (my.config.notebook[configName]) {
+      icons.push(icon);
+    }
+  }
+  if (!that.isTopPanelTree) {
+    addIconIfConfigAllows(iconOpenNodeInTopPanel, 'tag-icon-open-in-tree-above');
+  }
+  addIconIfConfigAllows(iconEdit, 'tag-icon-edit');
+  addIconIfConfigAllows(iconMoveToTop, 'tag-icon-move-to-top');
+  addIconIfConfigAllows(iconMoveToBottom, 'tag-icon-move-to-bottom');
+  addIconIfConfigAllows(iconHide, 'tag-icon-hide');
+  addIconIfConfigAllows(iconHideSiblingsBelow, 'tag-icon-hide-siblings-below');
+  addIconIfConfigAllows(iconUnhideHiddenChildren, 'tag-icon-unhide-hidden-children');
+  return icons;
+};
 
 NotebookTagsTreeNodeView.prototype._addContextMenuListener = function(htmlElem) {
   let that = this;

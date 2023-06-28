@@ -585,9 +585,8 @@ NotebookNodeView.prototype.name2html = function() {
   }
 }
 
-NotebookNodeView.prototype.createTitleDiv = function() {
+NotebookNodeView.prototype._createIconsList = function() {
   let that = this;
-  let nameHtml = that.name2html();
   let iconOpenTagInTagsTree =
     (function() {
       let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-open-tag-in-tags-tree'),
@@ -757,10 +756,10 @@ NotebookNodeView.prototype.createTitleDiv = function() {
       return elem;
     })();
   let icons = [];
-  if (that._isTaggedNode()) {
+  if (that._isTaggedNode() && my.config.notebook['notes-icon-open-tag-in-tags-tree']) {
     icons.push(iconOpenTagInTagsTree);
   }
-  if (that._hasTaggedChildren()) {
+  if (that._hasTaggedChildren() && my.config.notebook['notes-icon-open-tags-of-children-in-tags-tree']) {
     icons.push(iconOpenTagsOfChildrenInTagsTree);
   }
   if (that.parentNodeView === undefined) {
@@ -795,18 +794,30 @@ NotebookNodeView.prototype.createTitleDiv = function() {
     icons.push(iconIncreaseFontSize);
     icons.push(iconDecreaseFontSize);
   }
-  icons = icons.concat([
-    iconMoveToTop,
-    iconMoveToBottom,
-    iconHide,
-    iconHideSiblingsBelow,
-    iconUnhideHiddenChildren,
-    iconOpenNodeInTopPanel,
-    iconEdit,
-    iconAddSiblingWithInput,
-    iconAppendChildWithInput,
-    iconDeleteFromTheRightSide,
-  ]);
+  function addIconIfConfigAllows(icon, configName) {
+    if (my.config.notebook[configName]) {
+      icons.push(icon);
+    }
+  }
+  addIconIfConfigAllows(iconMoveToTop, 'notes-icon-move-to-top');
+  addIconIfConfigAllows(iconMoveToBottom, 'notes-icon-move-to-bottom');
+  addIconIfConfigAllows(iconHide, 'notes-icon-hide');
+  addIconIfConfigAllows(iconHideSiblingsBelow, 'notes-icon-hide-siblings-below');
+  addIconIfConfigAllows(iconUnhideHiddenChildren, 'notes-icon-unhide-hidden-children');
+  if (!that.isTopPanelTree) {
+    addIconIfConfigAllows(iconOpenNodeInTopPanel, 'notes-icon-open-in-tree-above');
+  }
+  addIconIfConfigAllows(iconEdit, 'notes-icon-edit');
+  addIconIfConfigAllows(iconAddSiblingWithInput, 'notes-icon-add-sibling-node');
+  addIconIfConfigAllows(iconAppendChildWithInput, 'notes-icon-append-child-node');
+  addIconIfConfigAllows(iconDeleteFromTheRightSide, 'notes-icon-delete');
+  return icons;
+}
+
+NotebookNodeView.prototype.createTitleDiv = function() {
+  let that = this;
+  let nameHtml = that.name2html();
+  let icons = that._createIconsList();
   let iconsDiv = withChildren(withClass(document.createElement('div'), 'notebook-node-icons'),
     ...icons
   );

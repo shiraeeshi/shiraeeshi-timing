@@ -625,6 +625,56 @@ function handleServerMessage(msg) {
     }
   });
   disableShortcutsOnFocus(notebookInputFontSizeOfBottomPanelOfNotes);
+
+  function initNotebookCheckbox(htmlElemId, configName) {
+    if (configName === undefined) {
+      configName = htmlElemId;
+    }
+
+    let notebookCheckbox = document.getElementById(htmlElemId);
+    notebookCheckbox.checked = !!config['notebook'][configName];
+    notebookCheckbox.addEventListener('change', (eve) => {
+      let currentValue = notebookCheckbox.checked;
+      config['notebook'][configName] = currentValue;
+      let sameAsOldValue = currentValue === !!originalConfig['notebook'][configName];
+      let label = document.getElementById('tab3-label');
+      if (!sameAsOldValue) {
+        if (!showingNotebookHeaderWithStar) {
+          label.innerHTML = 'Notebook*';
+          showingNotebookHeaderWithStar = true;
+        }
+        return;
+      }
+      if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+        label.innerHTML = 'Notebook';
+        showingNotebookHeaderWithStar = false;
+      } else {
+        label.innerHTML = 'Notebook*';
+        showingNotebookHeaderWithStar = true;
+      }
+    });
+  }
+
+  initNotebookCheckbox('tag-icon-open-in-tree-above');
+  initNotebookCheckbox('tag-icon-edit');
+  initNotebookCheckbox('tag-icon-move-to-top');
+  initNotebookCheckbox('tag-icon-move-to-bottom');
+  initNotebookCheckbox('tag-icon-hide');
+  initNotebookCheckbox('tag-icon-hide-siblings-below');
+  initNotebookCheckbox('tag-icon-unhide-hidden-children');
+
+  initNotebookCheckbox('notes-icon-open-in-tree-above');
+  initNotebookCheckbox('notes-icon-open-tag-in-tags-tree');
+  initNotebookCheckbox('notes-icon-open-tags-of-children-in-tags-tree');
+  initNotebookCheckbox('notes-icon-edit');
+  initNotebookCheckbox('notes-icon-move-to-top');
+  initNotebookCheckbox('notes-icon-move-to-bottom');
+  initNotebookCheckbox('notes-icon-hide');
+  initNotebookCheckbox('notes-icon-hide-siblings-below');
+  initNotebookCheckbox('notes-icon-unhide-hidden-children');
+  initNotebookCheckbox('notes-icon-add-sibling-node');
+  initNotebookCheckbox('notes-icon-append-child-node');
+  initNotebookCheckbox('notes-icon-delete');
 }
 
 
