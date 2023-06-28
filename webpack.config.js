@@ -5,6 +5,8 @@ module.exports = [
   {
     entry: './src/main.js',
     target: "electron-main",
+    mode: 'development',
+    devtool: 'source-map',
     output: {
       filename: 'main.js',
       path: path.resolve(__dirname, 'dist', 'js'),
@@ -121,6 +123,8 @@ module.exports = [
   {
     entry: './src-frontend/composite/composite_main_window.renderer.js',
     target: "electron-renderer",
+    mode: 'development',
+    devtool: 'source-map',
     output: {
       filename: 'composite_main_window.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/composite'),
@@ -132,6 +136,8 @@ module.exports = [
   {
     entry: './src-frontend/notebook/notebook.renderer.js',
     target: "electron-renderer",
+    mode: 'development',
+    devtool: 'source-map',
     output: {
       filename: 'notebook.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/notebook'),
@@ -143,6 +149,8 @@ module.exports = [
   {
     entry: './src-frontend/timings_reports/timings_frequencies.renderer.js',
     target: "electron-renderer",
+    mode: 'development',
+    devtool: 'source-map',
     output: {
       filename: 'timings_frequencies.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/timings_reports'),
@@ -154,6 +162,8 @@ module.exports = [
   {
     entry: './src-frontend/timings_history/latest.renderer.js',
     target: "electron-renderer",
+    mode: 'development',
+    devtool: 'source-map',
     output: {
       filename: 'latest.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/timings_history'),
@@ -165,6 +175,8 @@ module.exports = [
   {
     entry: './src-frontend/timings_summary.renderer.js',
     target: "electron-renderer",
+    mode: 'development',
+    devtool: 'source-map',
     output: {
       filename: 'timings_summary.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend'),
@@ -176,6 +188,8 @@ module.exports = [
   {
     entry: './src-frontend/preferences/preferences.renderer.js',
     target: "electron-renderer",
+    mode: 'development',
+    devtool: 'source-map',
     output: {
       filename: 'preferences.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/preferences'),
@@ -187,6 +201,8 @@ module.exports = [
   {
     entry: './src-frontend/dialogs/post_timing/post_timing_dialog.renderer.js',
     target: "electron-renderer",
+    mode: 'development',
+    devtool: 'source-map',
     output: {
       filename: 'post_timing_dialog.bundle.js',
       path: path.resolve(__dirname, 'dist-frontend/dialogs/post_timing'),
