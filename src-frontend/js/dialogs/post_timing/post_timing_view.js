@@ -669,6 +669,7 @@ PostTimingView.prototype.copyNodeToTheRightSide = function(processNodeView) {
 
   let aNodeView = processNodeView;
   while (aNodeView !== undefined) {
+    aNodeView.hasCopyOnTheRightSide = true;
     aNodeView.htmlElement.classList.add('has-copy-on-the-right-side');
     aNodeView = aNodeView.parentNodeView;
   }
@@ -710,6 +711,7 @@ PostTimingView.prototype.deleteNodeFromTheRightSide = function(processNodeView) 
   }
   if (correspondingLeftSideNode !== undefined) {
     function func(nodeView) {
+      nodeView.hasCopyOnTheRightSide = false;
       nodeView.htmlElement.classList.remove('has-copy-on-the-right-side');
       nodeView.children.forEach(func);
     }
@@ -821,6 +823,7 @@ PostTimingView.prototype.deleteCorrespondingNodeFromTheRightSide = function(proc
   handleVisibilityOfCheckboxIsProcess();
 
   function func(nodeView) {
+    nodeView.hasCopyOnTheRightSide = false;
     nodeView.htmlElement.classList.remove('has-copy-on-the-right-side');
     nodeView.children.forEach(func);
   }
@@ -851,6 +854,7 @@ PostTimingView.prototype.addSiblingWithInputToTheRightSideNode = function(proces
         if (leftSideParent.childrenByName.hasOwnProperty(newProcessNode.name)) {
           let leftSideNode = leftSideParent.childrenByName[newProcessNode.name];
           newProcessNode.leftSideNode = leftSideNode;
+          leftSideNode.nodeView.hasCopyOnTheRightSide = true;
           leftSideNode.nodeView.htmlElement.classList.add('has-copy-on-the-right-side')
         }
       }
@@ -882,6 +886,7 @@ PostTimingView.prototype.appendChildWithInputToTheRightSideNode = function(proce
       if (leftSideParent.childrenByName.hasOwnProperty(newProcessNode.name)) {
         let leftSideNode = leftSideParent.childrenByName[newProcessNode.name];
         newProcessNode.leftSideNode = leftSideNode;
+        leftSideNode.nodeView.hasCopyOnTheRightSide = true;
         leftSideNode.nodeView.htmlElement.classList.add('has-copy-on-the-right-side')
       }
     }
@@ -905,6 +910,7 @@ PostTimingView.prototype.editRightSideNode = function(processNodeView) {
       newNodeView.checkIsProcessCheckbox();
     }
     if (processNodeView.processNode.leftSideNode !== undefined) {
+      processNodeView.processNode.leftSideNode.nodeView.hasCopyOnTheRightSide = false;
       processNodeView.processNode.leftSideNode.nodeView.htmlElement.classList.remove('has-copy-on-the-right-side');
     }
     if (newNodeView.processNode.parent !== null) {
@@ -913,6 +919,7 @@ PostTimingView.prototype.editRightSideNode = function(processNodeView) {
         if (leftSideParent.childrenByName.hasOwnProperty(newNodeView.name)) {
           let leftSideNode = leftSideParent.childrenByName[newNodeView.name];
           newNodeView.processNode.leftSideNode = leftSideNode;
+          leftSideNode.nodeView.hasCopyOnTheRightSide = true;
           leftSideNode.nodeView.htmlElement.classList.add('has-copy-on-the-right-side');
         }
       }

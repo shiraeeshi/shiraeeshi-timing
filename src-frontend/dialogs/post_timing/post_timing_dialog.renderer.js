@@ -32,6 +32,16 @@ function handleServerMessage(msg) {
       }
       return;
     }
+
+    if (msg.msg_type === 'contextmenu') {
+      console.log(`context menu. value: ${msg.value}`);
+      if (my.contextMenuHandler) {
+        my.contextMenuHandler(msg.value);
+        delete my.contextMenuHandler;
+      }
+      return;
+    }
+
     if (msg.msg_type == "error_message") {
       let wrapper = document.getElementById("post-timing-dialog-main-container");
       let errorMessage = msg.message;
@@ -66,6 +76,8 @@ function handleServerMessage(msg) {
     }
 
     let config = msg.config;
+
+    my.config = msg.config;
 
     my.categoryPath2File = buildTreeFromCategoryPathToFile(config);
 

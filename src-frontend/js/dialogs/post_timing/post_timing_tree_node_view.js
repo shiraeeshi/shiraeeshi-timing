@@ -25,6 +25,7 @@ export function PostTimingTreeNodeView(processNode, parentNodeView, rootNodeView
   that.htmlParentToReturnTo = undefined;
   that.indexToReturnTo = undefined;
   that.htmlChildrenContainerUl = document.createElement('ul');
+  // that.hasCopyOnTheRightSide = undefined;
 }
 
 PostTimingTreeNodeView.prototype.getRoot = function() {
@@ -660,39 +661,8 @@ PostTimingTreeNodeView.prototype.deleteCorrespondingNodeFromTheRightSide = funct
   my.viewBuilder.treeView.deleteCorrespondingNodeFromTheRightSide(that);
 };
 
-PostTimingTreeNodeView.prototype.createTitleDiv = function() {
+PostTimingTreeNodeView.prototype._createIconsList = function() {
   let that = this;
-  let nameHtml = that.name2html();
-  if (that.isRightSideTreeNode) {
-    let checkboxIsProcess = document.createElement('input');
-    checkboxIsProcess.type = 'checkbox';
-    checkboxIsProcess.classList.add('checkbox-is-process');
-    if (my.selectedAsInnermostCategoryProcessNode === that.processNode) {
-      checkboxIsProcess.checked = true;
-      my.selectedAsInnermostCategoryCheckbox = checkboxIsProcess;
-    }
-    checkboxIsProcess.addEventListener('change', (eve) => {
-      if (checkboxIsProcess.checked) {
-        my.selectedAsInnermostCategoryProcessNode = that.processNode;
-        if (my.selectedAsInnermostCategoryCheckbox &&
-            my.selectedAsInnermostCategoryCheckbox !== checkboxIsProcess) {
-          my.selectedAsInnermostCategoryCheckbox.checked = false;
-        }
-        my.selectedAsInnermostCategoryCheckbox = checkboxIsProcess;
-        my.viewBuilder.treeView.showPossibleFilepaths();
-      } else {
-        if (my.selectedAsInnermostCategoryProcessNode === that.processNode) {
-          delete my.selectedAsInnermostCategoryProcessNode;
-          delete my.selectedAsInnermostCategoryCheckbox;
-          my.viewBuilder.treeView.showPossibleFilepaths();
-        }
-      }
-    });
-    nameHtml = withChildren(document.createElement('div'),
-      checkboxIsProcess,
-      nameHtml
-    );
-  }
   let iconCopyToTheRightSide =
     (function() {
       let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-copy-to-the-right-side'),
@@ -847,27 +817,65 @@ PostTimingTreeNodeView.prototype.createTitleDiv = function() {
       });
       return elem;
     })();
-  let icons;
-  if (that.isRightSideTreeNode) {
-    icons = [
-      iconMoveToTop,
-      iconMoveToBottom,
-      iconEdit,
-      iconAddSiblingWithInput,
-      iconAppendChildWithInput,
-      iconDeleteFromTheRightSide,
-    ];
-  } else {
-    icons = [
-      iconMoveToTop,
-      iconMoveToBottom,
-      iconHide,
-      iconHideSiblingsBelow,
-      iconUnhideHiddenChildren,
-      iconCopyToTheRightSide,
-      iconDeleteCorrespondingNodeFromTheRightSide,
-    ];
+  let icons = [];
+  function addIconIfConfigAllows(icon, configName) {
+    if (my.config.post_timing_dialog[configName]) {
+      icons.push(icon);
+    }
   }
+  if (that.isRightSideTreeNode) {
+    addIconIfConfigAllows(iconMoveToTop, 'icon-right-side-node-move-to-top');
+    addIconIfConfigAllows(iconMoveToBottom, 'icon-right-side-node-move-to-bottom');
+    addIconIfConfigAllows(iconEdit, 'icon-right-side-node-edit');
+    addIconIfConfigAllows(iconAddSiblingWithInput, 'icon-right-side-node-add-sibling');
+    addIconIfConfigAllows(iconAppendChildWithInput, 'icon-right-side-node-append-child');
+    addIconIfConfigAllows(iconDeleteFromTheRightSide, 'icon-right-side-node-delete');
+  } else {
+    addIconIfConfigAllows(iconMoveToTop, 'icon-left-side-node-move-to-top');
+    addIconIfConfigAllows(iconMoveToBottom, 'icon-left-side-node-move-to-bottom');
+    addIconIfConfigAllows(iconHide, 'icon-left-side-node-hide');
+    addIconIfConfigAllows(iconHideSiblingsBelow, 'icon-left-side-node-hide-siblings-below');
+    addIconIfConfigAllows(iconUnhideHiddenChildren, 'icon-left-side-node-unhide-hidden-children');
+    addIconIfConfigAllows(iconCopyToTheRightSide, 'icon-left-side-node-copy-to-the-right-side');
+    addIconIfConfigAllows(iconDeleteCorrespondingNodeFromTheRightSide, 'icon-left-side-node-delete-corresponding-node-from-the-right-side');
+  }
+  return icons;
+};
+
+PostTimingTreeNodeView.prototype.createTitleDiv = function() {
+  let that = this;
+  let nameHtml = that.name2html();
+  if (that.isRightSideTreeNode) {
+    let checkboxIsProcess = document.createElement('input');
+    checkboxIsProcess.type = 'checkbox';
+    checkboxIsProcess.classList.add('checkbox-is-process');
+    if (my.selectedAsInnermostCategoryProcessNode === that.processNode) {
+      checkboxIsProcess.checked = true;
+      my.selectedAsInnermostCategoryCheckbox = checkboxIsProcess;
+    }
+    checkboxIsProcess.addEventListener('change', (eve) => {
+      if (checkboxIsProcess.checked) {
+        my.selectedAsInnermostCategoryProcessNode = that.processNode;
+        if (my.selectedAsInnermostCategoryCheckbox &&
+            my.selectedAsInnermostCategoryCheckbox !== checkboxIsProcess) {
+          my.selectedAsInnermostCategoryCheckbox.checked = false;
+        }
+        my.selectedAsInnermostCategoryCheckbox = checkboxIsProcess;
+        my.viewBuilder.treeView.showPossibleFilepaths();
+      } else {
+        if (my.selectedAsInnermostCategoryProcessNode === that.processNode) {
+          delete my.selectedAsInnermostCategoryProcessNode;
+          delete my.selectedAsInnermostCategoryCheckbox;
+          my.viewBuilder.treeView.showPossibleFilepaths();
+        }
+      }
+    });
+    nameHtml = withChildren(document.createElement('div'),
+      checkboxIsProcess,
+      nameHtml
+    );
+  }
+  let icons = that._createIconsList();
   let iconsDiv = withChildren(withClass(document.createElement('div'), 'process-node-icons'),
     ...icons
   );
@@ -876,7 +884,50 @@ PostTimingTreeNodeView.prototype.createTitleDiv = function() {
     iconsDiv
   );
   that._initMouseEnterListener(titleDiv);
+  that._addContextMenuListener(nameHtml);
   return titleDiv;
+}
+
+PostTimingTreeNodeView.prototype._addContextMenuListener = function(htmlElem) {
+  let that = this;
+  htmlElem.addEventListener('contextmenu', (eve) => {
+    eve.preventDefault();
+    my.contextMenuHandler = function(commandName) {
+      if (commandName === 'right-side-node-edit') {
+        my.viewBuilder.treeView.editRightSideNode(that);
+      } else if (commandName === 'right-side-node-add-sibling-with-input') {
+        my.viewBuilder.treeView.addSiblingWithInputToTheRightSideNode(that);
+      } else if (commandName === 'right-side-node-append-child-with-input') {
+        my.viewBuilder.treeView.appendChildWithInputToTheRightSideNode(that);
+      } else if (commandName === 'right-side-node-delete') {
+        that.deleteFromTheRightSide();
+      } else if (commandName === 'right-side-node-move-to-top') {
+        that.moveToTop();
+      } else if (commandName === 'right-side-node-move-to-bottom') {
+        that.moveToBottom();
+      } else if (commandName === 'left-side-node-move-to-top') {
+        that.moveToTop();
+      } else if (commandName === 'left-side-node-move-to-bottom') {
+        that.moveToBottom();
+      } else if (commandName === 'left-side-node-hide') {
+        that.hideThisItem();
+      } else if (commandName === 'left-side-node-hide-siblings-below') {
+        that.hideSiblingsBelow();
+      } else if (commandName === 'left-side-node-unhide-hidden-children') {
+        that.unhideHiddenChildren();
+      } else if (commandName === 'left-side-node-copy-to-the-right-side') {
+        that.copyToTheRightSide();
+      } else if (commandName === 'left-side-node-delete-corresponding-node-from-the-right-side') {
+        my.viewBuilder.treeView.deleteCorrespondingNodeFromTheRightSide(that);
+      }
+    }
+    window.webkit.messageHandlers.post_timing_dialog_msgs__show_context_menu.postMessage({
+      isRightSideTreeNode: that.isRightSideTreeNode,
+      hasCopyOnTheRightSide: !!that.hasCopyOnTheRightSide,
+      hasHiddenChildren: that.html().classList.contains('has-hidden-children'),
+    });
+    return false;
+  });
 }
 
 PostTimingTreeNodeView.prototype.buildAsHtmlLiElement = function() {

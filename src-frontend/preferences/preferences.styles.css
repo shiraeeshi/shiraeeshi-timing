@@ -87,6 +87,14 @@ body {
   border-top: 1px solid #ddd;
 }
 
+#tab-contents-of-post-timing-dialog > div {
+  border: none;
+}
+
+#tab-contents-of-post-timing-dialog > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
 #list-of-timings-files-panel {
   padding: 0;
   border: none;
@@ -322,6 +330,45 @@ body {
 
 
 
+#post-timing-dialog-node-icons-wrapper {
+  display: flex;
+  padding: 0;
+  border: none;
+  padding-left: 10%;
+}
+
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-left-panel {
+  flex: 0 0 auto;
+  width: 35%;
+  padding: 0;
+  border: none;
+}
+
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-right-panel {
+  flex: 1 1 1px;
+  padding: 0;
+  border: none;
+  border-left: 1px solid #ddd;
+}
+
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-left-panel > div {
+  border: none;
+}
+
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-left-panel > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-right-panel > div {
+  border: none;
+}
+
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-right-panel > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+
+
 .pc-tab > input,
 .pc-tab section > div {
   display: none;
@@ -330,14 +377,16 @@ body {
 #tab1:checked ~ section .tab1,
 #tab2:checked ~ section .tab2,
 #tab3:checked ~ section .tab3,
-#tab4:checked ~ section .tab4 {
+#tab4:checked ~ section .tab4,
+#tab5:checked ~ section .tab5 {
   display: block;
 }
 
 #tab1:checked ~ nav .tab1,
 #tab2:checked ~ nav .tab2,
 #tab3:checked ~ nav .tab3,
-#tab4:checked ~ nav .tab4 {
+#tab4:checked ~ nav .tab4,
+#tab5:checked ~ nav .tab5 {
   color: red;
 }
 
@@ -406,7 +455,8 @@ h1 {
 #tab1:checked ~ nav .tab1 label,
 #tab2:checked ~ nav .tab2 label,
 #tab3:checked ~ nav .tab3 label,
-#tab4:checked ~ nav .tab4 label {
+#tab4:checked ~ nav .tab4 label,
+#tab5:checked ~ nav .tab5 label {
   background: white;
   color: #111;
   position: relative;
@@ -414,7 +464,8 @@ h1 {
 #tab1:checked ~ nav .tab1 label:after,
 #tab2:checked ~ nav .tab2 label:after,
 #tab3:checked ~ nav .tab3 label:after,
-#tab4:checked ~ nav .tab4 label:after {
+#tab4:checked ~ nav .tab4 label:after,
+#tab5:checked ~ nav .tab5 label:after {
   content: "";
   display: block;
   position: absolute;

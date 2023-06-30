@@ -19,6 +19,14 @@ ipcMain.on('msg-from-frequencies', (_event, msg) => {
   console.log(`[main.js] message from timings_frequencies: ${msg}`);
 });
 
+ipcMain.on('post_timing_dialog_msgs__show_context_menu', async (event, options) => {
+  if (options.isRightSideTreeNode) {
+    showContextMenuOfRightSideTreeNode(event, options);
+  } else {
+    showContextMenuOfLeftSideTreeNode(event, options);
+  }
+});
+
 ipcMain.on('post_timing_dialog_msgs__write_to_clipboard', async (_event, value) => {
   clipboard.writeText(value);
 });
@@ -286,6 +294,114 @@ function setMenuAndKeyboardShortcuts(win) {
   }));
   
   Menu.setApplicationMenu(menu);
+}
+
+function sendContextMenuCommand(event, command) {
+  event.sender.send('message-from-backend', {
+    msg_type: 'contextmenu',
+    value: command
+  });
+}
+
+function showContextMenuOfRightSideTreeNode(event, options) {
+  const listOfMenuItems = [
+    {
+      label: 'Edit',
+      click: () => {
+        sendContextMenuCommand(event, 'right-side-node-edit')
+      }
+    },
+    {
+      label: 'Add sibling',
+      click: () => {
+        sendContextMenuCommand(event, 'right-side-node-add-sibling-with-input')
+      }
+    },
+    {
+      label: 'Append child',
+      click: () => {
+        sendContextMenuCommand(event, 'right-side-node-append-child-with-input')
+      }
+    },
+    {
+      label: 'Delete',
+      click: () => {
+        sendContextMenuCommand(event, 'right-side-node-delete')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Move to top',
+      click: () => {
+        sendContextMenuCommand(event, 'right-side-node-move-to-top')
+      }
+    },
+    {
+      label: 'Move to bottom',
+      click: () => {
+        sendContextMenuCommand(event, 'right-side-node-move-to-bottom')
+      }
+    },
+  ];
+  const menu = Menu.buildFromTemplate(listOfMenuItems);
+  menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
+}
+
+function showContextMenuOfLeftSideTreeNode(event, options) {
+  const listOfMenuItems = [
+    {
+      label: 'Move to top',
+      click: () => {
+        sendContextMenuCommand(event, 'left-side-node-move-to-top')
+      }
+    },
+    {
+      label: 'Move to bottom',
+      click: () => {
+        sendContextMenuCommand(event, 'left-side-node-move-to-bottom')
+      }
+    },
+    {
+      label: 'Hide',
+      click: () => {
+        sendContextMenuCommand(event, 'left-side-node-hide')
+      }
+    },
+    {
+      label: 'Hide siblings below',
+      click: () => {
+        sendContextMenuCommand(event, 'left-side-node-hide-siblings-below')
+      }
+    },
+    {
+      label: 'Unhide hidden children',
+      enabled: options.hasHiddenChildren,
+      click: () => {
+        sendContextMenuCommand(event, 'left-side-node-unhide-hidden-children')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Copy node to the right side',
+      enabled: !options.hasCopyOnTheRightSide,
+      click: () => {
+        sendContextMenuCommand(event, 'left-side-node-copy-to-the-right-side')
+      }
+    },
+    {
+      label: 'Delete corresponding node from the right side',
+      enabled: options.hasCopyOnTheRightSide,
+      click: () => {
+        sendContextMenuCommand(event, 'left-side-node-delete-corresponding-node-from-the-right-side')
+      }
+    },
+  ];
+  const menu = Menu.buildFromTemplate(listOfMenuItems);
+  menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
 }
 
 function convertConfigFromYamlFormat(config) {

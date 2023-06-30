@@ -36,6 +36,11 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('post_timing_dialog_msgs__enable_shortcuts');
       }
     },
+    post_timing_dialog_msgs__show_context_menu: {
+      postMessage: (options) => {
+        ipcRenderer.send('post_timing_dialog_msgs__show_context_menu', options);
+      }
+    },
     post_timing_dialog_msgs__write_to_clipboard: {
       postMessage: (value) => {
         ipcRenderer.send('post_timing_dialog_msgs__write_to_clipboard', value);

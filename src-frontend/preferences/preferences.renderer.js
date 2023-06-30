@@ -38,7 +38,8 @@ function handleServerMessage(msg) {
       my.showingTimingsHeaderWithStar ||
       showingTimingsConfigHeaderWithStar ||
       showingNotebookHeaderWithStar ||
-      showingFrequenciesHeaderWithStar;
+      showingFrequenciesHeaderWithStar ||
+      showingPostTimingDialogHeaderWithStar;
     if (!hasUnsavedChanges) {
       my.timingsFileInfosListView.handleSaveSuccess();
       return;
@@ -86,6 +87,10 @@ function handleServerMessage(msg) {
         label = document.getElementById('tab4-label');
         label.innerHTML = 'Frequencies';
         showingFrequenciesHeaderWithStar = false;
+
+        label = document.getElementById('tab5-label');
+        label.innerHTML = 'Post-timing dialog';
+        showingPostTimingDialogHeaderWithStar = false;
       }
     };
   });
@@ -173,6 +178,10 @@ function handleServerMessage(msg) {
     label = document.getElementById('tab4-label');
     label.innerHTML = 'Frequencies';
     showingFrequenciesHeaderWithStar = false;
+
+    label = document.getElementById('tab5-label');
+    label.innerHTML = 'Post-timing dialog';
+    showingPostTimingDialogHeaderWithStar = false;
   });
 
   let btnCancel = document.getElementById('btn-cancel');
@@ -768,6 +777,53 @@ function handleServerMessage(msg) {
   initFrequenciesCheckbox('icon-hide');
   initFrequenciesCheckbox('icon-hide-siblings-below');
   initFrequenciesCheckbox('icon-unhide-hidden-children');
+
+
+  let showingPostTimingDialogHeaderWithStar = false;
+
+  function initPostTimingDialogCheckbox(configName, htmlElemId) {
+    if (htmlElemId === undefined) {
+      htmlElemId = configName;
+    }
+
+    let checkbox = document.getElementById(htmlElemId);
+    checkbox.checked = !!config['post_timing_dialog'][configName];
+    checkbox.addEventListener('change', (eve) => {
+      let currentValue = checkbox.checked;
+      config['post_timing_dialog'][configName] = currentValue;
+      let sameAsOldValue = currentValue === !!originalConfig['post_timing_dialog'][configName];
+      let label = document.getElementById('tab5-label');
+      if (!sameAsOldValue) {
+        if (!showingPostTimingDialogHeaderWithStar) {
+          label.innerHTML = 'Post-timing dialog*';
+          showingPostTimingDialogHeaderWithStar = true;
+        }
+        return;
+      }
+      if (postTimingDialogConfigIsSameAsOriginal(config['post_timing_dialog'], originalConfig['post_timing_dialog'])) {
+        label.innerHTML = 'Post-timing dialog';
+        showingPostTimingDialogHeaderWithStar = false;
+      } else {
+        label.innerHTML = 'Post-timing dialog*';
+        showingPostTimingDialogHeaderWithStar = true;
+      }
+    });
+  }
+
+  initPostTimingDialogCheckbox('icon-right-side-node-move-to-top');
+  initPostTimingDialogCheckbox('icon-right-side-node-move-to-bottom');
+  initPostTimingDialogCheckbox('icon-right-side-node-edit');
+  initPostTimingDialogCheckbox('icon-right-side-node-add-sibling');
+  initPostTimingDialogCheckbox('icon-right-side-node-append-child');
+  initPostTimingDialogCheckbox('icon-right-side-node-delete');
+
+  initPostTimingDialogCheckbox('icon-left-side-node-move-to-top');
+  initPostTimingDialogCheckbox('icon-left-side-node-move-to-bottom');
+  initPostTimingDialogCheckbox('icon-left-side-node-hide');
+  initPostTimingDialogCheckbox('icon-left-side-node-hide-siblings-below');
+  initPostTimingDialogCheckbox('icon-left-side-node-unhide-hidden-children');
+  initPostTimingDialogCheckbox('icon-left-side-node-copy-to-the-right-side');
+  initPostTimingDialogCheckbox('icon-left-side-node-delete-corresponding-node-from-the-right-side');
 }
 
 
@@ -1035,6 +1091,7 @@ function createCopyOfConfig(config) {
   result['timings-config'] = Object.assign({}, config['timings-config']);
   result.notebook = Object.assign({}, config.notebook);
   result.frequencies = Object.assign({}, config.frequencies);
+  result.post_timing_dialog = Object.assign({}, config.post_timing_dialog);
   return result;
 }
 
@@ -1109,6 +1166,31 @@ function frequenciesConfigIsSameAsOriginal(frequenciesConfig, originalFrequencie
   ];
   for (let iconPropName of iconPropNames) {
     if (frequenciesConfig[iconPropName] !== originalFrequenciesConfig[iconPropName]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function postTimingDialogConfigIsSameAsOriginal(postTimingDialogConfig, originalPostTimingDialogConfig) {
+  let iconPropNames = [
+    'icon-right-side-node-move-to-top',
+    'icon-right-side-node-move-to-bottom',
+    'icon-right-side-node-edit',
+    'icon-right-side-node-add-sibling',
+    'icon-right-side-node-append-child',
+    'icon-right-side-node-delete',
+
+    'icon-left-side-node-move-to-top',
+    'icon-left-side-node-move-to-bottom',
+    'icon-left-side-node-hide',
+    'icon-left-side-node-hide-siblings-below',
+    'icon-left-side-node-unhide-hidden-children',
+    'icon-left-side-node-copy-to-the-right-side',
+    'icon-left-side-node-delete-corresponding-node-from-the-right-side',
+  ];
+  for (let iconPropName of iconPropNames) {
+    if (postTimingDialogConfig[iconPropName] !== originalPostTimingDialogConfig[iconPropName]) {
       return false;
     }
   }
