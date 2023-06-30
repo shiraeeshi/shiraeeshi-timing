@@ -32,6 +32,16 @@ function handleServerMessage(msg) {
       }
       return;
     }
+
+    if (msg.msg_type === 'contextmenu') {
+      console.log(`context menu. value: ${msg.value}`);
+      if (my.contextMenuHandler) {
+        my.contextMenuHandler(msg.value);
+        delete my.contextMenuHandler;
+      }
+      return;
+    }
+
     if (msg.msg_type == "error_message") {
       let wrapper = document.getElementById("frequencies-main-content-wrapper");
       let errorMessage = msg.message;

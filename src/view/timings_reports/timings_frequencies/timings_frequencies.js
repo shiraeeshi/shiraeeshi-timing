@@ -10,6 +10,10 @@ ipcMain.on('timings_frequencies_msgs', (_event, msg) => {
   console.log(`[main.js] message from timing_frequencies: ${msg}`);
 });
 
+ipcMain.on('timings_frequencies_msgs__show_context_menu', async (event, options) => {
+  showContextMenuOfProcessTreeNode(event, options);
+});
+
 // ipcMain.handle('request_for_timings', async (_event, dateFrom, dateTo) => {
 //   const timings = await readTimingsForRangeOfDates(config, timing2indexFilename, dateFrom, dateTo);
 //   console.log(`[main.js] about to send timings to timing_history_latest: ${JSON.stringify(timings)}`);
@@ -186,6 +190,84 @@ async function init(appEnv, win) {
     "msg_type": "initial_message",
     "config": config,
   });
+}
+
+function sendContextMenuCommand(event, command) {
+  event.sender.send('message-from-backend', {
+    msg_type: 'contextmenu',
+    value: command
+  });
+}
+
+function showContextMenuOfProcessTreeNode(event, options) {
+  const listOfMenuItems = [
+    {
+      label: 'Show this process only',
+      click: () => {
+        sendContextMenuCommand(event, 'show-this-process-only')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Merge subprocesses',
+      enabled: options.canMergeSubprocesses,
+      click: () => {
+        sendContextMenuCommand(event, 'merge-subprocesses')
+      }
+    },
+    {
+      label: 'Unmerge subprocesses of this process',
+      enabled: options.hasMergedSubprocesses,
+      click: () => {
+        sendContextMenuCommand(event, 'unmerge-subprocesses-as-parent')
+      }
+    },
+    {
+      label: 'Unmerge subprocesses of ancestor',
+      enabled: options.isMergedSubprocess,
+      click: () => {
+        sendContextMenuCommand(event, 'unmerge-subprocesses-as-subprocess')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Move to top',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-top')
+      }
+    },
+    {
+      label: 'Move to bottom',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-bottom')
+      }
+    },
+    {
+      label: 'Hide',
+      click: () => {
+        sendContextMenuCommand(event, 'hide')
+      }
+    },
+    {
+      label: 'Hide siblings below',
+      click: () => {
+        sendContextMenuCommand(event, 'hide-siblings-below')
+      }
+    },
+    {
+      label: 'Unhide hidden children',
+      enabled: options.hasHiddenChildren,
+      click: () => {
+        sendContextMenuCommand(event, 'unhide-hidden-children')
+      }
+    },
+  ];
+  const menu = Menu.buildFromTemplate(listOfMenuItems);
+  menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
 }
 
 

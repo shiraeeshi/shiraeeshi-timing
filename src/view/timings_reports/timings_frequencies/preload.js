@@ -20,6 +20,11 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('timings_frequencies_msgs__timings_for_period', msg);
       },
     },
+    timings_frequencies_msgs__show_context_menu: {
+      postMessage: (options) => {
+        ipcRenderer.send('timings_frequencies_msgs__show_context_menu', options);
+      }
+    },
   }
 });
 

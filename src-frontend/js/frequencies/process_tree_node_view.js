@@ -543,7 +543,43 @@ ProcessTreeNodeView.prototype.createTitleDiv = function() {
     iconsDiv
   );
   that._initMouseEnterListener(titleDiv);
+  that._addContextMenuListener(nameHtml);
   return titleDiv;
+}
+
+ProcessTreeNodeView.prototype._addContextMenuListener = function(htmlElem) {
+  let that = this;
+  htmlElem.addEventListener('contextmenu', (eve) => {
+    eve.preventDefault();
+    my.contextMenuHandler = function(commandName) {
+      if (commandName === 'show-this-process-only') {
+        that.showThisProcessOnly();
+      } else if (commandName === 'merge-subprocesses') {
+        that.mergeSubprocesses();
+      } else if (commandName === 'unmerge-subprocesses-as-parent') {
+        that.unmergeSubprocesses();
+      } else if (commandName === 'unmerge-subprocesses-as-subprocess') {
+        that.unmergeSubprocesses();
+      } else if (commandName === 'move-to-top') {
+        that.moveToTop();
+      } else if (commandName === 'move-to-bottom') {
+        that.moveToBottom();
+      } else if (commandName === 'hide') {
+        that.hideThisItem();
+      } else if (commandName === 'hide-siblings-below') {
+        that.hideSiblingsBelow();
+      } else if (commandName === 'unhide-hidden-children') {
+        that.unhideHiddenChildren();
+      }
+    }
+    window.webkit.messageHandlers.timings_frequencies_msgs__show_context_menu.postMessage({
+      canMergeSubprocesses: !that.hasMergedChildren && !that.isMergedChild && that.processNode.children.length > 0,
+      hasMergedSubprocesses: that.hasMergedChildren,
+      isMergedSubprocess: that.isMergedChild,
+      hasHiddenChildren: that.html().classList.contains('has-hidden-children'),
+    });
+    return false;
+  });
 }
 
 ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
