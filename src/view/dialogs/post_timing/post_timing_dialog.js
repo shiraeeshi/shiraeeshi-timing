@@ -33,7 +33,7 @@ ipcMain.on('post_timing_dialog_msgs__cancel', async (event) => {
   //   win.close();
   // }
   let window = BrowserWindow.fromWebContents(event.sender);
-  widnow.close();
+  window.close();
 });
 
 ipcMain.on('post_timing_dialog_msgs__close', async (event) => {
@@ -46,7 +46,7 @@ ipcMain.on('post_timing_dialog_msgs__close', async (event) => {
   //   win.close();
   // }
   let window = BrowserWindow.fromWebContents(event.sender);
-  widnow.close();
+  window.close();
 });
 
 ipcMain.on('post_timing_dialog_msgs__write_to_file', async (event, filepath, value) => {
