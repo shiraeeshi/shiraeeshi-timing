@@ -5,6 +5,7 @@ const { withChildren, withClass } = require('../html_utils.js');
 export function ProcessTreeNodeView(processNode, hGraphic, parentNodeView, rootNodeView) {
   let that = this;
   that.processNode = processNode;
+  processNode.nodeView = that;
   that.parentNodeView = parentNodeView;
   that.hGraphic = hGraphic;
   that.rootNodeView = rootNodeView;
@@ -49,6 +50,18 @@ ProcessTreeNodeView.prototype.findSubtreeByViewState = function(viewState) {
   return undefined;
 };
 
+ProcessTreeNodeView.prototype.refreshOrderOfChildrenOnScreen = function() {
+  let that = this;
+  that.refreshOrderOfChildren();
+  that.htmlChildrenContainerUl.innerHTML = "";
+  withChildren(that.htmlChildrenContainerUl, ...that.children.map(ch => ch.html()));
+}
+
+ProcessTreeNodeView.prototype.refreshOrderOfChildren = function() {
+  let that = this;
+  that.children = that.processNode.children.map(ch => ch.nodeView);
+}
+
 ProcessTreeNodeView.prototype.sortChildrenByFirstTiming = function(processNode) {
   let that = this;
   that.children.sort((a, b) => {
@@ -63,9 +76,9 @@ ProcessTreeNodeView.prototype.sortChildrenByFirstTiming = function(processNode) 
 
 ProcessTreeNodeView.prototype.sortChildrenByLastTiming = function(processNode) {
   let that = this;
-  that.children.sort((a, b) => {
-    let ta = a.processNode.getLastTimingToHighlight();
-    let tb = b.processNode.getLastTimingToHighlight();
+  that.processNode.children.sort((a, b) => {
+    let ta = a.getLastTimingToHighlight();
+    let tb = b.getLastTimingToHighlight();
     if (ta === undefined) {
       if (tb === undefined) {
         return 0;
@@ -77,6 +90,7 @@ ProcessTreeNodeView.prototype.sortChildrenByLastTiming = function(processNode) {
     }
     return ta.fromdate.getTime() - tb.fromdate.getTime();
   });
+  that.refreshOrderOfChildren();
 };
 
 ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
@@ -265,6 +279,20 @@ ProcessTreeNodeView.prototype.moveToTop = function() {
   let parent = that.html().parentNode;
   parent.removeChild(that.html());
   parent.insertBefore(that.html(), parent.children[0]);
+
+  let nodeViewIndex = that.parentNodeView.children.indexOf(that);
+  if (nodeViewIndex >= 0) {
+    that.parentNodeView.children.splice(nodeViewIndex, 1);
+    that.parentNodeView.children.splice(0, 0, that);
+  }
+
+  let parentProcessNode = that.processNode.parent;
+  let index = parentProcessNode.children.indexOf(that.processNode);
+  if (index < 0) {
+    return;
+  }
+  parentProcessNode.children.splice(index, 1);
+  parentProcessNode.children.splice(0, 0, that.processNode);
 }
 
 ProcessTreeNodeView.prototype.moveToBottom = function() {
@@ -272,6 +300,20 @@ ProcessTreeNodeView.prototype.moveToBottom = function() {
   let parent = that.html().parentNode;
   parent.removeChild(that.html());
   parent.appendChild(that.html());
+
+  let nodeViewIndex = that.parentNodeView.children.indexOf(that);
+  if (nodeViewIndex >= 0) {
+    that.parentNodeView.children.splice(nodeViewIndex, 1);
+    that.parentNodeView.children.push(that);
+  }
+
+  let parentProcessNode = that.processNode.parent;
+  let index = parentProcessNode.children.indexOf(that.processNode);
+  if (index < 0) {
+    return;
+  }
+  parentProcessNode.children.splice(index, 1);
+  parentProcessNode.children.push(that.processNode);
 }
 
 ProcessTreeNodeView.prototype.hideThisItem = function() {
@@ -305,7 +347,8 @@ ProcessTreeNodeView.prototype.hideSiblingsBelow = function() {
 
 ProcessTreeNodeView.prototype.unhideHiddenChildren = function() {
   let that = this;
-  that.children.forEach(childNode => childNode.unhide());
+  // that.children.forEach(childNode => childNode.unhide());
+  that.refreshOrderOfChildrenOnScreen();
   let parent = that.html().parentNode;
   that.html().classList.remove('has-hidden-children');
   that.hasManuallyHiddenChildren = false;

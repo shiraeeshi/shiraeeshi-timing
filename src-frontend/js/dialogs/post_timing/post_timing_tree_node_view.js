@@ -50,6 +50,18 @@ PostTimingTreeNodeView.prototype.findSubtreeByViewState = function(viewState) {
   return undefined;
 };
 
+PostTimingTreeNodeView.prototype.refreshOrderOfChildrenOnScreen = function() {
+  let that = this;
+  that.refreshOrderOfChildren();
+  that.htmlChildrenContainerUl.innerHTML = "";
+  withChildren(that.htmlChildrenContainerUl, ...that.children.map(ch => ch.html()));
+}
+
+PostTimingTreeNodeView.prototype.refreshOrderOfChildren = function() {
+  let that = this;
+  that.children = that.processNode.children.map(ch => ch.nodeView);
+}
+
 PostTimingTreeNodeView.prototype.sortChildrenByFirstTiming = function(processNode) {
   let that = this;
   that.children.sort((a, b) => {
@@ -64,9 +76,9 @@ PostTimingTreeNodeView.prototype.sortChildrenByFirstTiming = function(processNod
 
 PostTimingTreeNodeView.prototype.sortChildrenByLastTiming = function(processNode) {
   let that = this;
-  that.children.sort((a, b) => {
-    let ta = a.processNode.getLastTimingToHighlight();
-    let tb = b.processNode.getLastTimingToHighlight();
+  that.processNode.children.sort((a, b) => {
+    let ta = a.getLastTimingToHighlight();
+    let tb = b.getLastTimingToHighlight();
     if (ta === undefined) {
       if (tb === undefined) {
         return 0;
@@ -78,6 +90,7 @@ PostTimingTreeNodeView.prototype.sortChildrenByLastTiming = function(processNode
     }
     return ta.fromdate.getTime() - tb.fromdate.getTime();
   });
+  that.refreshOrderOfChildren();
 };
 
 PostTimingTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
@@ -601,7 +614,8 @@ PostTimingTreeNodeView.prototype.hideSiblingsBelow = function() {
 
 PostTimingTreeNodeView.prototype.unhideHiddenChildren = function() {
   let that = this;
-  that.children.forEach(childNode => childNode.unhide());
+  // that.children.forEach(childNode => childNode.unhide());
+  that.refreshOrderOfChildrenOnScreen();
   let parent = that.html().parentNode;
   that.html().classList.remove('has-hidden-children');
   that.hasManuallyHiddenChildren = false;
