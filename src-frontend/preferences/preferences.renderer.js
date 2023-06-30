@@ -37,7 +37,8 @@ function handleServerMessage(msg) {
     let hasUnsavedChanges = 
       my.showingTimingsHeaderWithStar ||
       showingTimingsConfigHeaderWithStar ||
-      showingNotebookHeaderWithStar;
+      showingNotebookHeaderWithStar ||
+      showingFrequenciesHeaderWithStar;
     if (!hasUnsavedChanges) {
       my.timingsFileInfosListView.handleSaveSuccess();
       return;
@@ -81,6 +82,10 @@ function handleServerMessage(msg) {
         label = document.getElementById('tab3-label');
         label.innerHTML = 'Notebook';
         showingNotebookHeaderWithStar = false;
+
+        label = document.getElementById('tab4-label');
+        label.innerHTML = 'Frequencies';
+        showingFrequenciesHeaderWithStar = false;
       }
     };
   });
@@ -105,6 +110,48 @@ function handleServerMessage(msg) {
       config.notebook['font-size-in-px-of-top-panel-of-notes'];
     notebookInputFontSizeOfBottomPanelOfNotes.value =
       config.notebook['font-size-in-px-of-bottom-panel-of-notes'];
+    let notebookIconPropNames = [
+      'tag-icon-open-in-tree-above',
+      'tag-icon-edit',
+      'tag-icon-move-to-top',
+      'tag-icon-move-to-bottom',
+      'tag-icon-hide',
+      'tag-icon-hide-siblings-below',
+      'tag-icon-unhide-hidden-children',
+
+      'notes-icon-open-in-tree-above',
+      'notes-icon-open-tag-in-tags-tree',
+      'notes-icon-open-tags-of-children-in-tags-tree',
+      'notes-icon-edit',
+      'notes-icon-move-to-top',
+      'notes-icon-move-to-bottom',
+      'notes-icon-hide',
+      'notes-icon-hide-siblings-below',
+      'notes-icon-unhide-hidden-children',
+      'notes-icon-add-sibling-node',
+      'notes-icon-append-child-node',
+      'notes-icon-delete',
+    ];
+    for (let iconPropName of notebookIconPropNames) {
+      let checkbox = document.getElementById(iconPropName);
+      checkbox.checked = !!config.notebook[iconPropName];
+    }
+
+    let frequenciesIconPropNames = [
+      'icon-show-this-only',
+      'icon-merge-subprocesses',
+      'icon-unmerge-subprocesses-as-parent',
+      'icon-unmerge-subprocesses-as-subprocess',
+      'icon-move-to-top',
+      'icon-move-to-bottom',
+      'icon-hide',
+      'icon-hide-siblings-below',
+      'icon-unhide-hidden-children',
+    ];
+    for (let iconPropName of frequenciesIconPropNames) {
+      let checkbox = document.getElementById('frequencies-' + iconPropName);
+      checkbox.checked = !!config.frequencies[iconPropName];
+    }
 
     let hadChangesInTimings = my.showingTimingsHeaderWithStar;
     if (hadChangesInTimings) {
@@ -122,6 +169,10 @@ function handleServerMessage(msg) {
     label = document.getElementById('tab3-label');
     label.innerHTML = 'Notebook';
     showingNotebookHeaderWithStar = false;
+
+    label = document.getElementById('tab4-label');
+    label.innerHTML = 'Frequencies';
+    showingFrequenciesHeaderWithStar = false;
   });
 
   let btnCancel = document.getElementById('btn-cancel');
@@ -675,6 +726,48 @@ function handleServerMessage(msg) {
   initNotebookCheckbox('notes-icon-add-sibling-node');
   initNotebookCheckbox('notes-icon-append-child-node');
   initNotebookCheckbox('notes-icon-delete');
+
+
+  let showingFrequenciesHeaderWithStar = false;
+
+  function initFrequenciesCheckbox(configName, htmlElemId) {
+    if (htmlElemId === undefined) {
+      htmlElemId = 'frequencies-' + configName;
+    }
+
+    let checkbox = document.getElementById(htmlElemId);
+    checkbox.checked = !!config['frequencies'][configName];
+    checkbox.addEventListener('change', (eve) => {
+      let currentValue = checkbox.checked;
+      config['frequencies'][configName] = currentValue;
+      let sameAsOldValue = currentValue === !!originalConfig['frequencies'][configName];
+      let label = document.getElementById('tab4-label');
+      if (!sameAsOldValue) {
+        if (!showingFrequenciesHeaderWithStar) {
+          label.innerHTML = 'Frequencies*';
+          showingFrequenciesHeaderWithStar = true;
+        }
+        return;
+      }
+      if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
+        label.innerHTML = 'Frequencies';
+        showingFrequenciesHeaderWithStar = false;
+      } else {
+        label.innerHTML = 'Frequencies*';
+        showingFrequenciesHeaderWithStar = true;
+      }
+    });
+  }
+
+  initFrequenciesCheckbox('icon-show-this-only');
+  initFrequenciesCheckbox('icon-merge-subprocesses');
+  initFrequenciesCheckbox('icon-unmerge-subprocesses-as-parent');
+  initFrequenciesCheckbox('icon-unmerge-subprocesses-as-subprocess');
+  initFrequenciesCheckbox('icon-move-to-top');
+  initFrequenciesCheckbox('icon-move-to-bottom');
+  initFrequenciesCheckbox('icon-hide');
+  initFrequenciesCheckbox('icon-hide-siblings-below');
+  initFrequenciesCheckbox('icon-unhide-hidden-children');
 }
 
 
@@ -941,6 +1034,7 @@ function createCopyOfConfig(config) {
   }
   result['timings-config'] = Object.assign({}, config['timings-config']);
   result.notebook = Object.assign({}, config.notebook);
+  result.frequencies = Object.assign({}, config.frequencies);
   return result;
 }
 
@@ -969,7 +1063,56 @@ function notebookConfigIsSameAsOriginal(notebookConfig, originalNotebookConfig) 
          notebookConfig['font-size-in-px-of-top-panel-of-tags'] === originalNotebookConfig['font-size-in-px-of-top-panel-of-tags'] &&
          notebookConfig['font-size-in-px-of-bottom-panel-of-tags'] === originalNotebookConfig['font-size-in-px-of-bottom-panel-of-tags'] &&
          notebookConfig['font-size-in-px-of-top-panel-of-notes'] === originalNotebookConfig['font-size-in-px-of-top-panel-of-notes'] &&
-         notebookConfig['font-size-in-px-of-bottom-panel-of-notes'] === originalNotebookConfig['font-size-in-px-of-bottom-panel-of-notes'];
+         notebookConfig['font-size-in-px-of-bottom-panel-of-notes'] === originalNotebookConfig['font-size-in-px-of-bottom-panel-of-notes'] && (function() {
+           let iconPropNames = [
+            'tag-icon-open-in-tree-above',
+            'tag-icon-edit',
+            'tag-icon-move-to-top',
+            'tag-icon-move-to-bottom',
+            'tag-icon-hide',
+            'tag-icon-hide-siblings-below',
+            'tag-icon-unhide-hidden-children',
+
+            'notes-icon-open-in-tree-above',
+            'notes-icon-open-tag-in-tags-tree',
+            'notes-icon-open-tags-of-children-in-tags-tree',
+            'notes-icon-edit',
+            'notes-icon-move-to-top',
+            'notes-icon-move-to-bottom',
+            'notes-icon-hide',
+            'notes-icon-hide-siblings-below',
+            'notes-icon-unhide-hidden-children',
+            'notes-icon-add-sibling-node',
+            'notes-icon-append-child-node',
+            'notes-icon-delete',
+           ];
+           for (let iconPropName of iconPropNames) {
+             if (notebookConfig[iconPropName] !== originalNotebookConfig[iconPropName]) {
+               return false;
+             }
+           }
+           return true;
+         })();
+}
+
+function frequenciesConfigIsSameAsOriginal(frequenciesConfig, originalFrequenciesConfig) {
+  let iconPropNames = [
+    'icon-show-this-only',
+    'icon-merge-subprocesses',
+    'icon-unmerge-subprocesses-as-parent',
+    'icon-unmerge-subprocesses-as-subprocess',
+    'icon-move-to-top',
+    'icon-move-to-bottom',
+    'icon-hide',
+    'icon-hide-siblings-below',
+    'icon-unhide-hidden-children',
+  ];
+  for (let iconPropName of iconPropNames) {
+    if (frequenciesConfig[iconPropName] !== originalFrequenciesConfig[iconPropName]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function categoryPathToString(timing) {

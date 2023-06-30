@@ -6,11 +6,11 @@ const YAML = require('yaml');
 const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.js');
 const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 
-export async function showTimingsSummary(appEnv) {
+ipcMain.on('msg', (_event, msg) => {
+  console.log(`[main.js] message from timing_summary: ${msg}`);
+});
 
-  ipcMain.on('msg', (_event, msg) => {
-    console.log(`[main.js] message from timing_summary: ${msg}`);
-  });
+export async function showTimingsSummary(appEnv) {
 
   await createWindow(appEnv);
 

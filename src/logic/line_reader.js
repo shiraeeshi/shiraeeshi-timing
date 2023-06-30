@@ -97,7 +97,7 @@ LineReader.prototype._handleStreamReadable = function() {
 
 LineReader.prototype._handleStreamEnd = function() {
   const that = this;
-  console.log(`stream ended.\n  filepath: ${that.filepath}\n  chunk: ${that.chunk}`);
+  // console.log(`stream ended.\n  filepath: ${that.filepath}\n  chunk: ${that.chunk}`);
   that.state = LineReaderState.STREAM_ENDED;
   that._tryResolvePromise();
 };

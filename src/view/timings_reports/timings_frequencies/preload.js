@@ -5,7 +5,7 @@ contextBridge.exposeInMainWorld('webkit', {
     timings_frequencies_msgs: {
       postMessage: (msg) => {
         console.log('[preload.js] webkit.messageHandlers.timings_frequencies_msgs.postMessage');
-        ipcRenderer.send('msg', msg);
+        ipcRenderer.send('timings_frequencies_msgs', msg);
       },
       onMessage: (callback) => {
         console.log('[preload.js] webkit.messageHandlers.timings_frequencies_msgs.onMessage');

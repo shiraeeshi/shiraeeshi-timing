@@ -14,7 +14,8 @@ const {
 } = require('../../js/html_utils.js');
 
 let my = {
-  timings: null
+  timings: null,
+  messageHandlerNameRequestTimingsForPeriod: 'post_timing_dialog_msgs__timings_for_period',
 };
 
 window.my = my;

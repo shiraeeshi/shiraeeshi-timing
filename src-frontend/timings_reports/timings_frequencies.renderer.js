@@ -12,7 +12,8 @@ const { initProcessesTree } = require('../js/common/processes_tree_builder.js');
 const { TimingsHistogramsGraphic } = require('../js/frequencies/timings_histograms_graphic.js');
 
 let my = {
-  timings: null
+  timings: null,
+  messageHandlerNameRequestTimingsForPeriod: 'timings_frequencies_msgs__timings_for_period',
 };
 
 window.my = my;
@@ -21,7 +22,7 @@ window.webkit.messageHandlers.timings_frequencies_msgs.onMessage(handleServerMes
 
 function handleServerMessage(msg) {
   try {
-    window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage start ");
+    window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(`handleServerMessage start msg.msg_type: ${msg.msg_type}`);
     if (msg.msg_type == 'keypress_event') {
       return;
     }
@@ -49,34 +50,32 @@ function handleServerMessage(msg) {
       return;
     }
 
-    // old
-    // my.timings = msg;
-    // let timingsBySubcategoriesTree = initProcessesTree(my.timings);
-    // showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree);
+    if (msg.msg_type === "initial_message") {
+      my.config = msg.config;
 
-    // new
-    my.now = new Date();
-    my.viewBuilder = new FrequenciesViewBuilder();
+      my.now = new Date();
+      my.viewBuilder = new FrequenciesViewBuilder();
 
-    let millisInWeek = 7*24*60*60*1000;
+      let millisInWeek = 7*24*60*60*1000;
 
-    let initialPeriodTo = new Date();
-    let initialPeriodFrom = new Date();
-    initialPeriodFrom.setTime(initialPeriodFrom.getTime() - millisInWeek)
-    requestTimingsForPeriod(initialPeriodFrom, initialPeriodTo).then(timings => {
-      console.log('initial handleServerMessage. timings keys:');
-      console.dir(Object.keys(timings));
-      my.timings = initProcessesTree(timings, undefined);
-      // console.log(`initial handleServerMessage. initProcessesTree result: ${JSON.stringify(my.timings)}`);
-      my.viewBuilder.buildViews(my.timings);
-      my.viewBuilder.showView();
-    }).catch(err => {
-      showTimingsFormatError("frequencies-main-content-wrapper", err);
-      console.log(`initial handleServerMessage. err: ${err}`);
-      window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
-        "initial handleServerMessage. err: " + err);
-      throw err;
-    });
+      let initialPeriodTo = new Date();
+      let initialPeriodFrom = new Date();
+      initialPeriodFrom.setTime(initialPeriodFrom.getTime() - millisInWeek)
+      requestTimingsForPeriod(initialPeriodFrom, initialPeriodTo).then(timings => {
+        console.log('initial handleServerMessage. timings keys:');
+        console.dir(Object.keys(timings));
+        my.timings = initProcessesTree(timings, undefined);
+        // console.log(`initial handleServerMessage. initProcessesTree result: ${JSON.stringify(my.timings)}`);
+        my.viewBuilder.buildViews(my.timings);
+        my.viewBuilder.showView();
+      }).catch(err => {
+        showTimingsFormatError("frequencies-main-content-wrapper", err);
+        console.log(`initial handleServerMessage. err: ${err}`);
+        window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
+          "initial handleServerMessage. err: " + err);
+        throw err;
+      });
+    }
 
     window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage end ");
   } catch (err) {

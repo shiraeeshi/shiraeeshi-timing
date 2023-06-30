@@ -41,10 +41,10 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('request_for_timings', msg);
       },
     },
-    timings_frequencies_msgs__timings_for_period: {
+    composite_main_window_msgs__timings_for_period: {
       postMessage: (msg) => {
         console.log('[preload.js] webkit.messageHandlers.timings_frequencies_msgs.postMessage');
-        ipcRenderer.send('timings_frequencies_msgs__timings_for_period', msg);
+        ipcRenderer.send('composite_main_window_msgs__timings_for_period', msg);
       },
     },
     composite_main_window: {

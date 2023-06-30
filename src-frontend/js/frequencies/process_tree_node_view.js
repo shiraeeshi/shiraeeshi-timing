@@ -383,158 +383,174 @@ ProcessTreeNodeView.prototype.unmergeSubprocesses = function() {
   }
 }
 
+ProcessTreeNodeView.prototype._createIconsList = function() {
+  let that = this;
+  let iconShowThisOnly =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-show-this-process-only'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('show graph for this process only')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.showThisProcessOnly();
+      });
+      return elem;
+    })();
+  let iconMergeSubprocesses =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-merge-subprocesses'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('merge subprocesses in graph')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.mergeSubprocesses();
+      });
+      return elem;
+    })();
+  let iconUnmergeSubprocessesAsParent =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-unmerge-subprocesses'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('unmerge subprocesses in graph')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.unmergeSubprocesses();
+      });
+      return elem;
+    })();
+  let iconUnmergeSubprocessesAsSubprocess =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-unmerge-subprocesses-as-subprocess'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('unmerge subprocesses in graph')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.unmergeSubprocesses();
+      });
+      return elem;
+    })();
+  let iconMoveToTop =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-move-to-top'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('move to the top of the list')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.moveToTop();
+      });
+      return elem;
+    })();
+  let iconMoveToBottom =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-move-to-bottom'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('move to the bottom of the list')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.moveToBottom();
+      });
+      return elem;
+    })();
+  let iconHide =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-hide'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('hide this item')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.hideThisItem();
+      });
+      return elem;
+    })();
+  let iconHideSiblingsBelow =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-hide-siblings-below'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('hide siblings that are below this item')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.hideSiblingsBelow();
+      });
+      return elem;
+    })();
+  let iconUnhideHiddenChildren =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-unhide-hidden-children'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('show hidden children')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.unhideHiddenChildren();
+      });
+      return elem;
+    })();
+  function addIconIfConfigAllows(icon, configName) {
+    if (my.config.frequencies[configName]) {
+      icons.push(icon);
+    }
+  }
+  let icons = [];
+
+  addIconIfConfigAllows(iconShowThisOnly, 'icon-show-this-only');
+  addIconIfConfigAllows(iconMergeSubprocesses, 'icon-merge-subprocesses');
+  addIconIfConfigAllows(iconUnmergeSubprocessesAsParent, 'icon-unmerge-subprocesses-as-parent');
+  addIconIfConfigAllows(iconUnmergeSubprocessesAsSubprocess, 'icon-unmerge-subprocesses-as-subprocess');
+  addIconIfConfigAllows(iconMoveToTop, 'icon-move-to-top');
+  addIconIfConfigAllows(iconMoveToBottom, 'icon-move-to-bottom');
+  addIconIfConfigAllows(iconHide, 'icon-hide');
+  addIconIfConfigAllows(iconHideSiblingsBelow, 'icon-hide-siblings-below');
+  addIconIfConfigAllows(iconUnhideHiddenChildren, 'icon-unhide-hidden-children');
+
+  return icons;
+};
+
+ProcessTreeNodeView.prototype.createTitleDiv = function() {
+  let that = this;
+  let nameHtml = that.name2html();
+  let icons = that._createIconsList();
+  let iconsDiv = withChildren(withClass(document.createElement('div'), 'process-node-icons'),
+    ...icons
+  );
+  let titleDiv = withChildren(withClass(document.createElement('div'), 'process-node-title-container'),
+    nameHtml,
+    iconsDiv
+  );
+  that._initMouseEnterListener(titleDiv);
+  return titleDiv;
+}
+
 ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
   let that = this;
 
-  function createTitleDiv() {
-    let nameHtml = that.name2html();
-    let iconShowThisOnly =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-show-this-process-only'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('show graph for this process only')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.showThisProcessOnly();
-        });
-        return elem;
-      })();
-    let iconMergeSubprocesses =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-merge-subprocesses'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('merge subprocesses in graph')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.mergeSubprocesses();
-        });
-        return elem;
-      })();
-    let iconUnmergeSubprocessesAsParent =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-unmerge-subprocesses'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('unmerge subprocesses in graph')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.unmergeSubprocesses();
-        });
-        return elem;
-      })();
-    let iconUnmergeSubprocessesAsSubprocess =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-unmerge-subprocesses-as-subprocess'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('unmerge subprocesses in graph')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.unmergeSubprocesses();
-        });
-        return elem;
-      })();
-    let iconMoveToTop =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-move-to-top'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('move to the top of the list')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.moveToTop();
-        });
-        return elem;
-      })();
-    let iconMoveToBottom =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-move-to-bottom'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('move to the bottom of the list')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.moveToBottom();
-        });
-        return elem;
-      })();
-    let iconHide =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-hide'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('hide this item')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.hideThisItem();
-        });
-        return elem;
-      })();
-    let iconHideSiblingsBelow =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-hide-siblings-below'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('hide siblings that are below this item')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.hideSiblingsBelow();
-        });
-        return elem;
-      })();
-    let iconUnhideHiddenChildren =
-      (function() {
-        let elem = withChildren(withClass(document.createElement('span'), 'process-node-icon', 'icon-unhide-hidden-children'),
-          withClass(
-            withChildren(document.createElement('span'),
-              document.createTextNode('show hidden children')
-            ),
-            'tooltip')
-        );
-        elem.addEventListener('click', eve => {
-          that.unhideHiddenChildren();
-        });
-        return elem;
-      })();
-    let iconsDiv = withChildren(withClass(document.createElement('div'), 'process-node-icons'),
-      iconShowThisOnly,
-      iconMergeSubprocesses,
-      iconUnmergeSubprocessesAsParent,
-      iconUnmergeSubprocessesAsSubprocess,
-      iconMoveToTop,
-      iconMoveToBottom,
-      iconHide,
-      iconHideSiblingsBelow,
-      iconUnhideHiddenChildren
-    );
-    let titleDiv = withChildren(withClass(document.createElement('div'), 'process-node-title-container'),
-      nameHtml,
-      iconsDiv
-    );
-    that._initMouseEnterListener(titleDiv);
-    return titleDiv;
-  }
-
   if (that.children.length == 0) {
-    let htmlElement = withClass(withChildren(document.createElement('li'), createTitleDiv()), 'proc-node', 'proc-leaf');
+    let htmlElement = withClass(withChildren(document.createElement('li'), that.createTitleDiv()), 'proc-node', 'proc-leaf');
     // if (that.processNode.isProcessInfo) {
     //   htmlElement = withClass(htmlElement, 'process-info');
     // }
@@ -560,6 +576,9 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
   } else {
     that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
     that.sortChildrenByLastTiming();
+    if (that.processNode.isInnermostCategory && that.children.length > 0) {
+      that.mergeSubprocesses();
+    }
     let htmlElement =
       withChildren(
         withChildren(withClass(document.createElement('li'), 'proc-node', 'proc-node-closed'),
@@ -571,11 +590,10 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
             });
             return elem;
           })(),
-          createTitleDiv()
+          that.createTitleDiv()
         ),
         (function() {
           if (that.processNode.isInnermostCategory && that.children.length > 0) {
-            that.mergeSubprocesses();
             return that.htmlChildrenContainerUl;
           } else {
             return withChildren(that.htmlChildrenContainerUl,

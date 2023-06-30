@@ -9,7 +9,7 @@ const { expanduser } = require('./file_utils.js');
 const _fileExists = async filePath => fs.promises.stat(filePath).then(() => true, (e) => {console.log(`err: ${e}`); return false;});
 
 export async function createOrRefreshIndex(configFilepath, indexDirFilepath) {
-  console.log(`configFilepath: ${configFilepath}\nindexDirFilepath: ${indexDirFilepath}`);
+  // console.log(`configFilepath: ${configFilepath}\nindexDirFilepath: ${indexDirFilepath}`);
   const timing2indexFilename = await _createTiming2indexFilenameMap(indexDirFilepath);
   const configFileContents = await fs.promises.readFile(configFilepath, 'utf8');
   const config = YAML.parse(configFileContents);
@@ -21,16 +21,16 @@ export async function createOrRefreshIndex(configFilepath, indexDirFilepath) {
        const indexFilepath = path.join(indexDirFilepath, indexName);
        const indexFileExists = await _fileExists(indexFilepath);
        if (indexFileExists) {
-         console.log(`refresh_index() for timing ${timingName}`);
+         // console.log(`refresh_index() for timing ${timingName}`);
          await _refreshIndex(timing, indexName, indexDirFilepath);
        } else {
-         console.log(`create_index_for_timing() for timing ${timingName}`);
+         // console.log(`create_index_for_timing() for timing ${timingName}`);
          await _createIndexForTiming(timing, indexName, indexDirFilepath);
        }
     } else {
       const uuid = crypto.randomUUID();
       timing2indexFilename[timingName] = uuid;
-      console.log(`create_index_for_timing() for timing ${timingName} with new uuid as index name`);
+      // console.log(`create_index_for_timing() for timing ${timingName} with new uuid as index name`);
       await _createIndexForTiming(timing, uuid, indexDirFilepath);
     }
   }
@@ -43,10 +43,10 @@ export async function createOrRefreshIndex(configFilepath, indexDirFilepath) {
     delete timing2indexFilename[name];
   }
 
-  console.log('[createOrRefreshIndex] 1');
+  // console.log('[createOrRefreshIndex] 1');
   const indexNamesFilepath = path.join(indexDirFilepath, 'filenames_of_indexes');
   const fileIndexNames = fs.createWriteStream(indexNamesFilepath, { encoding: 'utf8' });
-  console.log('[createOrRefreshIndex] 2 before loop over timing2indexFilename');
+  // console.log('[createOrRefreshIndex] 2 before loop over timing2indexFilename');
   for (const [timingName, indexName] of Object.entries(timing2indexFilename)) {
     await _writeToStream(fileIndexNames, `index-name: ${indexName}, timing-name: ${timingName}\n`);
   }
@@ -66,16 +66,16 @@ export async function createOrRefreshIndex(configFilepath, indexDirFilepath) {
       console.log(`[createOrRefreshIndex] error while deleting .last_modified file: ${err.message}`);
     }
   }
-  console.log('[createOrRefreshIndex] about to return');
+  // console.log('[createOrRefreshIndex] about to return');
   return timing2indexFilename;
 }
 
 async function _refreshIndex(timing, indexName, indexesDirFilepath) {
   const timingName = timing['name'];
   const timingFilepath = expanduser(timing['filepath']);
-  console.log(`timingFilepath: ${timingFilepath} (before _fileExists)`);
+  // console.log(`timingFilepath: ${timingFilepath} (before _fileExists)`);
   const timingFileExists = await _fileExists(timingFilepath);
-  console.log(`timingFilepath: ${timingFilepath} (after _fileExists, result: ${timingFileExists})`);
+  // console.log(`timingFilepath: ${timingFilepath} (after _fileExists, result: ${timingFileExists})`);
   if (!timingFileExists) {
     console.log(`error: cannot refresh index: timing file doesn't exist: ${timingName}. filepath: ${timingFilepath}`);
     return;
@@ -96,11 +96,11 @@ async function _refreshIndex(timing, indexName, indexesDirFilepath) {
   //   _createIndexForTiming(timing, indexName, indexesDirFilepath);
   // } else if (indexLastModified === timingLastModified) {
   if (indexLastModified !== null && indexLastModified === timingLastModified) {
-    console.log(`index_last_modified is the same as timing_last_modified, skipping recreating index for timing ${timingName}`);
+    // console.log(`index_last_modified is the same as timing_last_modified, skipping recreating index for timing ${timingName}`);
   } else {
-    console.log(`index_last_modified != timing_last_modified (or couldn't read index_last_modified), going to refresh the index for timing ${timingName}`);
+    // console.log(`index_last_modified != timing_last_modified (or couldn't read index_last_modified), going to refresh the index for timing ${timingName}`);
     await _truncateAfterFirstDiffAndAppendToIndex(timing, indexName, indexesDirFilepath);
-    console.log(`refreshed the index for timing ${timingName}`);
+    // console.log(`refreshed the index for timing ${timingName}`);
   }
 }
 
@@ -160,27 +160,27 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
   if (indexIsEmpty || firstLineOfIndex !== "date,line_num_offset,offset_from,offset_to") {
     throw new Error(`error reading index: wrong format (doesn't start with header \"date,line_num_offset,offset_from,offset_to\"). timing: ${timingName}, index file: ${indexName}`);
   }
-  console.log('index file starts with header \"date,line_num_offset,offset_from,offset_to\"');
+  // console.log('index file starts with header \"date,line_num_offset,offset_from,offset_to\"');
   let prevIndexEntry = null;
   while (true) {
     let indexOffset = indexReader.getOffset();
     let { line: lineOfIndex, isEOF: indexEOF } = await indexReader.readline();
     if (indexEOF) {
-      console.log(`_traverseIndexUntilFirstDiff: about to return (reached the end of the index) for timing ${timingName}`);
+      // console.log(`_traverseIndexUntilFirstDiff: about to return (reached the end of the index) for timing ${timingName}`);
       if (prevIndexEntry === null) {
-        console.log('reachedTheEndOfIndex' + JSON.stringify({
-          traversedTimingUntil: timingReader.getOffset(),
-          traversedTimingUntilLineNum: timingReader.getLineNumOffset()
-        }));
+        // console.log('reachedTheEndOfIndex' + JSON.stringify({
+        //   traversedTimingUntil: timingReader.getOffset(),
+        //   traversedTimingUntilLineNum: timingReader.getLineNumOffset()
+        // }));
         return ResultOfIndexTraverse.reachedTheEndOfIndex({
           traversedTimingUntil: timingReader.getOffset(),
           traversedTimingUntilLineNum: timingReader.getLineNumOffset()
         });
       } else {
-        console.log('reachedTheEndOfIndex' + JSON.stringify({
-          traversedTimingUntil: prevIndexEntry.offsetFrom,
-          traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
-        }));
+        // console.log('reachedTheEndOfIndex' + JSON.stringify({
+        //   traversedTimingUntil: prevIndexEntry.offsetFrom,
+        //   traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
+        // }));
         return ResultOfIndexTraverse.reachedTheEndOfIndex({
           traversedTimingUntil: prevIndexEntry.offsetFrom,
           traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
@@ -191,17 +191,17 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
       let offset = timingReader.getOffset();
       let lineNumOffset = timingReader.getLineNumOffset();
       let { line: lineTiming, isEOF: timingEOF } = await timingReader.readline();
-      console.log(`line of timing: ${lineTiming}, offset: ${offset}`);
+      // console.log(`line of timing: ${lineTiming}, offset: ${offset}`);
       if (timingEOF) {
         if (prevIndexEntry !== null) {
           let expectedIndexLine = `${prevIndexEntry.date},${prevIndexEntry.lineNumOffset},${prevIndexEntry.offsetFrom},${offset}`;
           if (lineOfIndex !== expectedIndexLine) {
-            console.log(`(last line) _traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing ${timingName}: line_of_index != expected_index_line, line_of_index: ${lineOfIndex}, expected_index_line: ${expectedIndexLine}`);
-            console.log('reachedTheDiff' + JSON.stringify({
-              truncateIndexAt: indexOffset,
-              traversedTimingUntil: prevIndexEntry.offsetFrom,
-              traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
-            }));
+            // console.log(`(last line) _traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing ${timingName}: line_of_index != expected_index_line, line_of_index: ${lineOfIndex}, expected_index_line: ${expectedIndexLine}`);
+            // console.log('reachedTheDiff' + JSON.stringify({
+            //   truncateIndexAt: indexOffset,
+            //   traversedTimingUntil: prevIndexEntry.offsetFrom,
+            //   traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
+            // }));
             return ResultOfIndexTraverse.reachedTheDiff({
               truncateIndexAt: indexOffset,
               traversedTimingUntil: prevIndexEntry.offsetFrom,
@@ -213,11 +213,10 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
         if (endOfIndexReached) {
           return ResultOfIndexTraverse.noDiff();
         } else {
-          console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate (end_of_index_reached is False) for timing ${timingName}`);
-          console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate (end_of_index_reached is False) for timing ${timingName}. index line: ${tmpIndexLine}`);
-          console.log('indexIsLongerThanTiming' + JSON.stringify({
-            truncateIndexAt: indexReader.getOffset(),
-          }));
+          // console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate (end_of_index_reached is False) for timing ${timingName}. index line: ${tmpIndexLine}`);
+          // console.log('indexIsLongerThanTiming' + JSON.stringify({
+          //   truncateIndexAt: indexReader.getOffset(),
+          // }));
           return ResultOfIndexTraverse.indexIsLongerThanTiming({
             truncateIndexAt: indexReader.getOffset(),
           });
@@ -235,7 +234,7 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
         year += 2000;
       }
       let aDate = `${dayOfMonth}.${month}.${year}`;
-      console.log(`aDate: ${aDate}`);
+      // console.log(`aDate: ${aDate}`);
       if (prevIndexEntry === null) {
         prevIndexEntry = {date: aDate, lineNumOffset: lineNumOffset, offsetFrom: offset};
         continue;
@@ -243,12 +242,12 @@ async function _traverseIndexUntilFirstDiff(timingName, timingFilepath, indexNam
       if (aDate !== prevIndexEntry.date) {
         let expectedIndexLine = `${prevIndexEntry.date},${prevIndexEntry.lineNumOffset},${prevIndexEntry.offsetFrom},${offset}`;
         if (lineOfIndex !== expectedIndexLine) {
-          console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing ${timingName}: line_of_index != expected_index_line, line_of_index: ${lineOfIndex}, expected_index_line: ${expectedIndexLine}`);
-          console.log('reachedTheDiff' + JSON.stringify({
-            truncateIndexAt: indexOffset,
-            traversedTimingUntil: prevIndexEntry.offsetFrom,
-            traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
-          }));
+          // console.log(`_traverse_index_prefix_and_truncate_after_first_diff: about to truncate for timing ${timingName}: line_of_index != expected_index_line, line_of_index: ${lineOfIndex}, expected_index_line: ${expectedIndexLine}`);
+          // console.log('reachedTheDiff' + JSON.stringify({
+          //   truncateIndexAt: indexOffset,
+          //   traversedTimingUntil: prevIndexEntry.offsetFrom,
+          //   traversedTimingUntilLineNum: prevIndexEntry.lineNumOffset
+          // }));
           return ResultOfIndexTraverse.reachedTheDiff({
             truncateIndexAt: indexOffset,
             traversedTimingUntil: prevIndexEntry.offsetFrom,
@@ -326,15 +325,15 @@ async function _createIndexForTiming(timing, indexName, indexDirFilepath) {
 
   await fs.promises.writeFile(indexFilepath, "date,line_num_offset,offset_from,offset_to\n", { encoding: 'utf8' });
   // <debug>
-  const { size: indexFileSize } = await fs.promises.stat(indexFilepath);
-  console.log(`[_createIndexForTiming] indexFileSize: ${indexFileSize}`);
+  // const { size: indexFileSize } = await fs.promises.stat(indexFilepath);
+  // console.log(`[_createIndexForTiming] indexFileSize: ${indexFileSize}`);
   // </debug>
-  console.log(`[_createIndexForTiming] before _appendToIndexForTiming. timingFilepath: ${timingFilepath}`);
+  // console.log(`[_createIndexForTiming] before _appendToIndexForTiming. timingFilepath: ${timingFilepath}`);
   await _appendToIndexForTiming(timingName, timingFilepath, indexName, indexFilepath, 0, 0);
-  console.log('[_createIndexForTiming] after _appendToIndexForTiming');
-  console.log('[_createIndexForTiming] before _rememberTimingLastModified');
+  // console.log('[_createIndexForTiming] after _appendToIndexForTiming');
+  // console.log('[_createIndexForTiming] before _rememberTimingLastModified');
   await _rememberTimingLastModified(timingFilepath, indexName, indexDirFilepath);
-  console.log('[_createIndexForTiming] after _rememberTimingLastModified');
+  // console.log('[_createIndexForTiming] after _rememberTimingLastModified');
 }
 
 async function _rememberTimingLastModified(timingFilepath, indexName, indexDirFilepath) {
@@ -460,7 +459,7 @@ async function _createTiming2indexFilenameMap(indexDirFilepath) {
   const indexNamesFilepath = path.join(indexDirFilepath, 'filenames_of_indexes');
   const timing2indexFilename = {};
   const indexNamesFileExists = await _fileExists(indexNamesFilepath);
-  console.log(`indexNamesFileExists: ${indexNamesFileExists}`);
+  // console.log(`indexNamesFileExists: ${indexNamesFileExists}`);
   if (indexNamesFileExists) {
     const patternNames = /index-name: ([a-z0-9-]+), timing-name: (.+)$/;
     const lineReader = new LineReader(indexNamesFilepath, { encoding: 'utf8' });
@@ -469,11 +468,11 @@ async function _createTiming2indexFilenameMap(indexDirFilepath) {
       if (isEOF) {
         break;
       }
-      console.log(`line: ${line}`);
+      // console.log(`line: ${line}`);
       const match = line.match(patternNames);
       const indexName = match[1];
       const timingName = match[2];
-      console.log(`  parsed index-name: '${indexName}'\n  parsed timings file name: '${timingName}'`);
+      // console.log(`  parsed index-name: '${indexName}'\n  parsed timings file name: '${timingName}'`);
       timing2indexFilename[timingName] = indexName;
     }
   }

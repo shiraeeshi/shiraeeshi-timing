@@ -6,16 +6,11 @@ const YAML = require('yaml');
 
 const { forgetLastModifiedTimeOfTimings } = require('../../logic/timing_index_manager.js');
 
-let messageSender;
-let win;
-let appEnv;
-let configFilepath;
-let indexDirFilepath;
 let isDisabledShortcuts = false;
 
-ipcMain.on('msg_choose_file', async (_event) => {
+ipcMain.on('msg_choose_file', async (event) => {
   let result = await dialog.showOpenDialog({properties: ['openFile', 'promptToCreate']});
-  messageSender.send({
+  event.sender.send('message-from-backend', {
     type: 'filepicker_result',
     result: result
   });
@@ -28,11 +23,12 @@ ipcMain.on('msg_disable_shortcuts', (_event) => {
   isDisabledShortcuts = true;
 });
 
-ipcMain.on('msg_cancel', (_event) => {
+ipcMain.on('msg_cancel', (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
   win.close();
 });
 
-ipcMain.on('msg_save', async (_event, msg) => {
+ipcMain.on('msg_save', async (event, msg) => {
   let {
     configWithNoTimings,
     timings,
@@ -46,6 +42,20 @@ ipcMain.on('msg_save', async (_event, msg) => {
   console.dir(msg);
 
   try {
+
+    let configFilepath;
+    let indexDirFilepath;
+
+    const homeDirPath = app.getPath('home');
+
+    let appEnv = BrowserWindow.fromWebContents(event.sender).appEnv;
+    if (appEnv.stage === 'production') {
+      configFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'config', 'indic.config.txt');
+      indexDirFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'indexes');
+    } else {
+      configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+      indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
+    }
     const configFd = await fs.promises.open(configFilepath, 'w');
     let indent = 2;
     let config = createConfigToSave(configWithNoTimings, timings, namesOfTimingsToDelete);
@@ -53,16 +63,16 @@ ipcMain.on('msg_save', async (_event, msg) => {
     await fs.promises.writeFile(configFd, data, { encoding: 'utf8' });
 
     // forgetLastModifiedTimesIfNeeded(timings, timingsToAdd, namesOfTimingsToDelete);
-    forgetLastModifiedTimesIfNeeded(timings);
+    forgetLastModifiedTimesIfNeeded(timings, indexDirFilepath);
   } catch (err) {
-    messageSender.send({
+    event.sender.send('message-from-backend', {
       type: 'save_result',
       result: 'error',
       error_message: err.message
     });
     return;
   }
-  messageSender.send({
+  event.sender.send('message-from-backend', {
     type: 'save_result',
     result: 'success'
   });
@@ -90,7 +100,7 @@ function copyWithNoAdditionalFields(timingsFileInfos) {
 //   return result;
 // }
 
-function forgetLastModifiedTimesIfNeeded(timings) {
+function forgetLastModifiedTimesIfNeeded(timings, indexDirFilepath) {
   let timingsFilesToUpdate = [];
   // let timingsByNames = createTimingsByNames(timings);
   for (let t of timings) {
@@ -107,8 +117,7 @@ function forgetLastModifiedTimesIfNeeded(timings) {
   forgetLastModifiedTimeOfTimings(timingsFilesToUpdate, indexDirFilepath);
 }
 
-export async function showPreferences(appEnvParam) {
-  appEnv = appEnvParam;
+export async function showPreferences(appEnv) {
 
   ipcMain.on('msg', (_event, msg) => {
     console.log(`[main.js] message from timing_summary: ${msg}`);
@@ -119,7 +128,7 @@ export async function showPreferences(appEnvParam) {
 }
 
 const createWindow = async (appEnv) => {
-  win = new BrowserWindow({
+  let win = new BrowserWindow({
     width: 1000,
     height: 800,
     // frame: false,
@@ -127,6 +136,7 @@ const createWindow = async (appEnv) => {
       preload: path.join(__dirname, 'view/preferences/preload.js')
 		}
   })
+  win.appEnv = appEnv;
 
   setMenuAndKeyboardShortcuts(win);
 
@@ -226,13 +236,16 @@ function setMenuAndKeyboardShortcuts(win) {
 
 async function init(appEnv, win) {
 
-  messageSender = new MessageSender(win);
+  let messageSender = new MessageSender(win);
 
   async function func(msg) {
     await messageSender.send(msg);
   }
 
   const homeDirPath = app.getPath('home');
+
+  let configFilepath;
+  let indexDirFilepath;
 
   if (appEnv.stage === 'production') {
     configFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'config', 'indic.config.txt');

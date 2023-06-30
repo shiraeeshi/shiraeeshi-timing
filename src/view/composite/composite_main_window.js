@@ -9,6 +9,128 @@ const { parseNotebook } = require('../../logic/notebook_parser.js');
 
 const { showPreferences } = require('../preferences/preferences.js');
 
+ipcMain.on('msg_from_timing_summary', (_event, msg) => {
+  console.log(`[main.js] message from timing_summary: ${msg}`);
+});
+
+ipcMain.on('msg_from_history', (_event, msg) => {
+  console.log(`[main.js] message from history: ${msg}`);
+});
+
+ipcMain.on('msg_from_notebook', (_event, msg) => {
+  console.log(`[main.js] message from notebook: ${msg}`);
+});
+
+ipcMain.on('msg', (_event, msg) => {
+  console.log(`[main.js] message from composite_main_window: ${msg}`);
+});
+
+ipcMain.on('request_for_timings', async (event, commaSeparaDatesWithDotsInThem) => {
+  let datesWithDots = commaSeparaDatesWithDotsInThem.split(',');
+  let firstDateWithDots = datesWithDots[0];
+  let lastDateWithDots = datesWithDots[datesWithDots.length - 1];
+  console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
+  let dateFrom = parseDateWithDots(firstDateWithDots);
+  let dateTo = parseDateWithDots(lastDateWithDots);
+  let timings;
+  try {
+
+    const homeDirPath = app.getPath('home');
+
+    let configFilepath;
+    let indexDirFilepath;
+    let appEnv = BrowserWindow.fromWebContents(event.sender).appEnv;
+    if (appEnv.stage === 'production') {
+      configFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'config', 'indic.config.txt');
+      indexDirFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'indexes');
+    } else {
+      configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+      indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
+    }
+    const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
+    const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
+
+    let timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
+    timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
+  } catch (err) {
+    let msg = {
+      "msg_type": "error_message",
+      "source_timing": err.source_timing,
+      "source_timing_location": err.source_timing_location,
+      "lineNumOffset": err.lineNumOffset,
+      "message": err.message
+    };
+    // win.webContents.send('message-from-backend', msg);
+    event.sender.send('message-from-backend', msg);
+    return;
+  }
+  // console.log(`[main.js] about to send timings to timing_history_latest: ${JSON.stringify(timings)}`);
+  console.log(`[main.js] about to send timings to timing_history_latest.`);
+  for (const timingName in timings) {
+    console.log(`  ${timingName} length: ${timings[timingName].timingsByDays.length}`);
+  }
+  let msg = {
+    msg_type: "timings_query_response",
+    timings: timings,
+  };
+  // win.webContents.send('message-from-backend', msg);
+  event.sender.send('message-from-backend', msg);
+});
+
+ipcMain.on('composite_main_window_msgs__timings_for_period', async (event, periodStr) => {
+  let datesWithDots = periodStr.split(' - ');
+  if (datesWithDots.length !== 2) {
+    throw new Error("composite_main_window_msgs__timings_for_period handler. error: unexpected request parameter value (expected two dates with ' - ' between them)");
+  }
+  let firstDateWithDots = datesWithDots[0];
+  let lastDateWithDots = datesWithDots[1];
+  console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
+  let dateFrom = parseDateWithDots(firstDateWithDots);
+  let dateTo = parseDateWithDots(lastDateWithDots);
+  let timings;
+  try {
+
+    const homeDirPath = app.getPath('home');
+
+    let configFilepath;
+    let indexDirFilepath;
+    let appEnv = BrowserWindow.fromWebContents(event.sender).appEnv;
+    if (appEnv.stage === 'production') {
+      configFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'config', 'indic.config.txt');
+      indexDirFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'indexes');
+    } else {
+      configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+      indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
+    }
+    const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
+    const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
+
+    let timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
+    timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
+  } catch (err) {
+    let msg = {
+      msg_type: "error_message",
+      source_timing: err.source_timing,
+      source_timing_location: err.source_timing_location,
+      lineNumOffset: err.lineNumOffset,
+      message: err.message
+    };
+    console.log('[composite_main_window.js] about to send error message: ' + err.message);
+    event.sender.send('message-from-backend', msg);
+    return;
+  }
+  // console.log(`[main.js] about to send timings to timing_history_latest.`);
+  // for (const timingName in timings) {
+  //   console.log(`  ${timingName} length: ${timings[timingName].length}`);
+  // }
+  let msg = {
+    msg_type: "timings_query_response",
+    timings: timings,
+  };
+  event.sender.send('message-from-backend', msg);
+  console.log('[composite_main_window.js] sent timings as a response to frequencies request for period');
+});
+
 export async function showCompositeMainWindow(appEnv) {
 
   await createWindow(appEnv);
@@ -25,6 +147,7 @@ const createWindow = async (appEnv) => {
       preload: path.join(__dirname, 'view/composite/preload.js')
 		}
   })
+  win.appEnv = appEnv;
 
   win.loadFile('dist-frontend/composite/composite_main_window.html')
 
@@ -287,22 +410,6 @@ MessageSender.prototype._sendMessages = function(msg) {
 
 async function init(appEnv, win) {
 
-  ipcMain.on('msg_from_timing_summary', (_event, msg) => {
-    console.log(`[main.js] message from timing_summary: ${msg}`);
-  });
-
-  ipcMain.on('msg_from_history', (_event, msg) => {
-    console.log(`[main.js] message from history: ${msg}`);
-  });
-
-  ipcMain.on('msg_from_notebook', (_event, msg) => {
-    console.log(`[main.js] message from notebook: ${msg}`);
-  });
-
-  ipcMain.on('msg', (_event, msg) => {
-    console.log(`[main.js] message from composite_main_window: ${msg}`);
-  });
-
   let messageSender = new MessageSender(win);
 
   function func(msg) {
@@ -329,9 +436,6 @@ async function init(appEnv, win) {
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   console.log('[init] 2');
   const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
-
-  registerFrequenciesRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender);
-  registerHistoryRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender);
 
   setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexDirFilepath, messageSender);
 
@@ -439,85 +543,6 @@ async function init(appEnv, win) {
       func(msg);
     });
 
-}
-
-function registerHistoryRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender) {
-  ipcMain.on('request_for_timings', async (_event, commaSeparaDatesWithDotsInThem) => {
-    let datesWithDots = commaSeparaDatesWithDotsInThem.split(',');
-    let firstDateWithDots = datesWithDots[0];
-    let lastDateWithDots = datesWithDots[datesWithDots.length - 1];
-    console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
-    let dateFrom = parseDateWithDots(firstDateWithDots);
-    let dateTo = parseDateWithDots(lastDateWithDots);
-    let timings;
-    try {
-      let timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
-      timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
-    } catch (err) {
-      let msg = {
-        "msg_type": "error_message",
-        "source_timing": err.source_timing,
-        "source_timing_location": err.source_timing_location,
-        "lineNumOffset": err.lineNumOffset,
-        "message": err.message
-      };
-      // win.webContents.send('message-from-backend', msg);
-      await messageSender.send(msg);
-      return;
-    }
-    // console.log(`[main.js] about to send timings to timing_history_latest: ${JSON.stringify(timings)}`);
-    console.log(`[main.js] about to send timings to timing_history_latest.`);
-    for (const timingName in timings) {
-      console.log(`  ${timingName} length: ${timings[timingName].timingsByDays.length}`);
-    }
-    let msg = {
-      msg_type: "timings_query_response",
-      timings: timings,
-    };
-    // win.webContents.send('message-from-backend', msg);
-    await messageSender.send(msg);
-  });
-}
-
-function registerFrequenciesRequestHandler(ipcMain, win, config, configFilepath, indexDirFilepath, messageSender) {
-
-  ipcMain.on('timings_frequencies_msgs__timings_for_period', async (_event, periodStr) => {
-    let datesWithDots = periodStr.split(' - ');
-    if (datesWithDots.length !== 2) {
-      throw new Error("timings_frequencies_msgs__timings_for_period handler. error: unexpected request parameter value (expected two dates with ' - ' between them)");
-    }
-    let firstDateWithDots = datesWithDots[0];
-    let lastDateWithDots = datesWithDots[1];
-    console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
-    let dateFrom = parseDateWithDots(firstDateWithDots);
-    let dateTo = parseDateWithDots(lastDateWithDots);
-    let timings;
-    try {
-      let timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
-      timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
-    } catch (err) {
-      let msg = {
-        msg_type: "error_message",
-        source_timing: err.source_timing,
-        source_timing_location: err.source_timing_location,
-        lineNumOffset: err.lineNumOffset,
-        message: err.message
-      };
-      console.log('[composite_main_window.js] about to send error message: ' + err.message);
-      win.webContents.send('message-from-backend', msg);
-      return;
-    }
-    // console.log(`[main.js] about to send timings to timing_history_latest.`);
-    // for (const timingName in timings) {
-    //   console.log(`  ${timingName} length: ${timings[timingName].length}`);
-    // }
-    let msg = {
-      msg_type: "timings_query_response",
-      timings: timings,
-    };
-    messageSender.send(msg);
-    console.log('[composite_main_window.js] sent timings as a response to frequencies request for period');
-  });
 }
 
 function convertConfigFromYamlFormat(config) {

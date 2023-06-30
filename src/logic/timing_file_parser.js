@@ -64,7 +64,7 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
       const generator = await yieldIndexForRangeOfDates(indexFilepath, dateFrom, dateTo);
       while (true) {
         let { value, done } = await generator.next();
-        console.log(`[readTimingsForRangeOfDates] after yieldIndexForRangeOfDates. generator.next. done: ${done}`);
+        // console.log(`[readTimingsForRangeOfDates] after yieldIndexForRangeOfDates. generator.next. done: ${done}`);
         if (done) {
           break;
         }
@@ -88,13 +88,13 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
       const generator = await yieldIndexForRangeOfDates(indexFilepath, dateFrom, dateTo);
       while (true) {
         let { value, done } = await generator.next();
-        console.log(`[readTimingsForRangeOfDates] after yieldIndexForRangeOfDates. generator.next. done: ${done}`);
+        // console.log(`[readTimingsForRangeOfDates] after yieldIndexForRangeOfDates. generator.next. done: ${done}`);
         if (done) {
           break;
         }
         let {date, lineNumOffsetFrom, offsetFrom, offsetTo} = value;
         let f = new LineReader(filepath, { encoding: 'utf8', start: offsetFrom, lineNumOffset: lineNumOffsetFrom });
-        console.log(`[readTimingsForRangeOfDates] about to call _readLinesUntilPosition. date: ${date}, (dateFrom: ${dateFrom}), offsetFrom: ${offsetFrom}, offsetTo: ${offsetTo}`);
+        // console.log(`[readTimingsForRangeOfDates] about to call _readLinesUntilPosition. date: ${date}, (dateFrom: ${dateFrom}), offsetFrom: ${offsetFrom}, offsetTo: ${offsetTo}`);
         let yamlOfDate = await _readLinesUntilPosition(f, offsetTo);
         yamlOfDate = yamlOfDate.join('\n');
         let parsedYaml;
@@ -109,7 +109,7 @@ export async function readTimingsForRangeOfDates(config, timing2indexFilename, i
         let parsedTimings = parseYamlTimings(parsedYaml);
 
         if (parsedTimings.length > 1) {
-          console.log(`[readTimingsForRangeOfDates] about to throw error. parsedTimings: ${JSON.stringify(parsedTimings)}`);
+          // console.log(`[readTimingsForRangeOfDates] about to throw error. parsedTimings: ${JSON.stringify(parsedTimings)}`);
           throw new Error(`expected one item corresponding to timings of one date from parse_yaml_timings. len(parsedTimings) = ${parsedTimings.length}`);
         }
 
@@ -430,12 +430,12 @@ async function _readLinesUntilPosition(lineReader, position) {
     let offset = lineReader.getOffset();
     // console.log(`[_readLinesUntilPosition] offset: ${offset}, position: ${position}`);
     if (offset >= position) {
-      console.log(`[_readLinesUntilPosition] exiting loop (reached position)`);
+      // console.log(`[_readLinesUntilPosition] exiting loop (reached position)`);
       break;
     }
     let { line, isEOF } = await lineReader.readline();
     if (isEOF) {
-      console.log(`[_readLinesUntilPosition] exiting loop (eof)`);
+      // console.log(`[_readLinesUntilPosition] exiting loop (eof)`);
       break;
     }
     lines.push(line.trimEnd());

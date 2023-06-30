@@ -1,8 +1,9 @@
 const { date2TimingDateStrUnpadded } = require('../date_utils.js');
 
 export function requestTimingsForPeriod(periodFrom, periodTo) {
+  let messageHandlerName = my.messageHandlerNameRequestTimingsForPeriod;
   return new Promise((resolve, reject) => {
-    window.webkit.messageHandlers.timings_frequencies_msgs__timings_for_period.postMessage(
+    window.webkit.messageHandlers[messageHandlerName].postMessage(
       date2TimingDateStrUnpadded(periodFrom) +
       " - " +
       date2TimingDateStrUnpadded(periodTo)

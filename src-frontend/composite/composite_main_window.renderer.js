@@ -52,6 +52,7 @@ let my = {
   notesForest: null,
 
   currentNotesForest: null,
+  messageHandlerNameRequestTimingsForPeriod: 'composite_main_window_msgs__timings_for_period',
 
   // timings state
   timings: null,

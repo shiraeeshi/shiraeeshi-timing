@@ -8,41 +8,48 @@ const { readTimingsForRangeOfDates } = require('../../../logic/timing_file_parse
 const { createOrRefreshIndex } = require('../../../logic/timing_index_manager.js');
 const { expanduser } = require('../../../logic/file_utils.js');
 
-let win;
-let configFilepath;
-let indexDirFilepath;
-let config;
 let isDisabledShortcuts = false;
 let datetimeKey = '01.01.2023 00:00 - 01:01   (60 m)'
+
+ipcMain.on('msg', (_event, msg) => {
+  console.log(`[main.js] message from post_timing_dialog: ${msg}`);
+});
+
+ipcMain.on('msg-from-frequencies', (_event, msg) => {
+  console.log(`[main.js] message from timings_frequencies: ${msg}`);
+});
 
 ipcMain.on('post_timing_dialog_msgs__write_to_clipboard', async (_event, value) => {
   clipboard.writeText(value);
 });
 
-ipcMain.on('post_timing_dialog_msgs__cancel', async (_event, value) => {
-  // BrowserWindow.fromWebContents(_event.sender);
-  let focusedWindow = BrowserWindow.getFocusedWindow();
-  if (focusedWindow !== null) {
-    focusedWindow.close();
-    return;
-  }
-  if (win !== undefined) {
-    win.close();
-  }
+ipcMain.on('post_timing_dialog_msgs__cancel', async (event) => {
+  // let focusedWindow = BrowserWindow.getFocusedWindow();
+  // if (focusedWindow !== null) {
+  //   focusedWindow.close();
+  //   return;
+  // }
+  // if (win !== undefined) {
+  //   win.close();
+  // }
+  let window = BrowserWindow.fromWebContents(event.sender);
+  widnow.close();
 });
 
-ipcMain.on('post_timing_dialog_msgs__close', async (_event, value) => {
-  let focusedWindow = BrowserWindow.getFocusedWindow();
-  if (focusedWindow !== null) {
-    focusedWindow.close();
-    return;
-  }
-  if (win !== undefined) {
-    win.close();
-  }
+ipcMain.on('post_timing_dialog_msgs__close', async (event) => {
+  // let focusedWindow = BrowserWindow.getFocusedWindow();
+  // if (focusedWindow !== null) {
+  //   focusedWindow.close();
+  //   return;
+  // }
+  // if (win !== undefined) {
+  //   win.close();
+  // }
+  let window = BrowserWindow.fromWebContents(event.sender);
+  widnow.close();
 });
 
-ipcMain.on('post_timing_dialog_msgs__write_to_file', async (_event, filepath, value) => {
+ipcMain.on('post_timing_dialog_msgs__write_to_file', async (event, filepath, value) => {
   try {
     console.log('write to file. filepath: ' + filepath);
     console.log('yaml:');
@@ -52,12 +59,12 @@ ipcMain.on('post_timing_dialog_msgs__write_to_file', async (_event, filepath, va
     console.log(stringified);
     const filepathWithExpandedUser = expanduser(filepath);
     await fs.promises.appendFile(filepathWithExpandedUser, stringified);
-    win.webContents.send('message-from-backend', {
+    event.sender.send('message-from-backend', {
       type: 'save_result',
       result: 'success'
     });
   } catch (err) {
-    win.webContents.send('message-from-backend', {
+    event.sender.send('message-from-backend', {
       type: 'save_result',
       result: 'error',
       error_message: err.message
@@ -73,10 +80,10 @@ ipcMain.on('post_timing_dialog_msgs__enable_shortcuts', async (_event) => {
   isDisabledShortcuts = false;
 });
 
-ipcMain.on('timings_frequencies_msgs__timings_for_period', async (_event, periodStr) => {
+ipcMain.on('post_timing_dialog_msgs__timings_for_period', async (event, periodStr) => {
   let datesWithDots = periodStr.split(' - ');
   if (datesWithDots.length !== 2) {
-    throw new Error("timings_frequencies_msgs__timings_for_period handler. error: unexpected request parameter value (expected two dates with ' - ' between them)");
+    throw new Error("post_timing_dialog_msgs__timings_for_period handler. error: unexpected request parameter value (expected two dates with ' - ' between them)");
   }
   let firstDateWithDots = datesWithDots[0];
   let lastDateWithDots = datesWithDots[1];
@@ -85,6 +92,27 @@ ipcMain.on('timings_frequencies_msgs__timings_for_period', async (_event, period
   let dateTo = parseDateWithDots(lastDateWithDots);
   let timings;
   try {
+    let configFilepath;
+    let indexDirFilepath;
+
+    const homeDirPath = app.getPath('home');
+
+    let appEnv = BrowserWindow.fromWebContents(event.sender).appEnv;
+    if (appEnv.stage === 'production') {
+      configFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'config', 'indic.config.txt');
+      indexDirFilepath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'indexes');
+    } else {
+      configFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'indic.config.txt');
+      indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
+    }
+
+    console.log(`[preferences.js] configFilepath: ${configFilepath}`);
+    console.log(`[preferences.js] indexDirFilepath: ${indexDirFilepath}`);
+
+    const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
+
+    let config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
+
     let timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
     timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
   } catch (err) {
@@ -95,8 +123,9 @@ ipcMain.on('timings_frequencies_msgs__timings_for_period', async (_event, period
       lineNumOffset: err.lineNumOffset,
       message: err.message
     };
-    let win = BrowserWindow.getFocusedWindow();
-    win.webContents.send('message-from-backend', msg);
+    // let win = BrowserWindow.getFocusedWindow();
+    // win.webContents.send('message-from-backend', msg);
+    event.sender.send('message-from-backend', msg);
     return;
   }
   // console.log(`[main.js] about to send timings to timing_history_latest.`);
@@ -107,30 +136,22 @@ ipcMain.on('timings_frequencies_msgs__timings_for_period', async (_event, period
     msg_type: "timings_query_response",
     timings: timings,
   };
-  let win = BrowserWindow.getFocusedWindow();
-  win.webContents.send('message-from-backend', msg);
+  // let win = BrowserWindow.getFocusedWindow();
+  // win.webContents.send('message-from-backend', msg);
+  event.sender.send('message-from-backend', msg);
 });
 
-export async function showPostTimingDialog(appEnvParam, datetimeKeyParam) {
-  let appEnv = appEnvParam;
+export async function showPostTimingDialog(appEnv, datetimeKeyParam) {
   if (datetimeKeyParam !== undefined) {
     datetimeKey = datetimeKeyParam;
   }
-
-  ipcMain.on('msg', (_event, msg) => {
-    console.log(`[main.js] message from post_timing_dialog: ${msg}`);
-  });
-
-  ipcMain.on('msg-from-frequencies', (_event, msg) => {
-    console.log(`[main.js] message from timings_frequencies: ${msg}`);
-  });
 
   await createWindow(appEnv);
 
 }
 
 const createWindow = async (appEnv) => {
-  win = new BrowserWindow({
+  let win = new BrowserWindow({
     width: 1000,
     height: 800,
     // frame: false,
@@ -140,6 +161,7 @@ const createWindow = async (appEnv) => {
 		}
   })
 
+  win.appEnv = appEnv;
   setMenuAndKeyboardShortcuts(win);
 
   win.loadFile('dist-frontend/dialogs/post_timing/post_timing_dialog.html')
@@ -182,6 +204,8 @@ async function init(appEnv, win) {
   async function func(msg) {
     await messageSender.send(msg);
   }
+  let configFilepath;
+  let indexDirFilepath;
 
   const homeDirPath = app.getPath('home');
 
@@ -198,7 +222,7 @@ async function init(appEnv, win) {
 
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
 
-  config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
+  let config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
 
   await func({
     config: config,

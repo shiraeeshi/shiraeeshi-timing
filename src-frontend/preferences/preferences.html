@@ -12,6 +12,7 @@
         <input checked="checked" id="tab1" type="radio" name="pct" />
         <input id="tab2" type="radio" name="pct" />
         <input id="tab3" type="radio" name="pct" />
+        <input id="tab4" type="radio" name="pct" />
         <nav>
           <ul>
             <li class="tab1">
@@ -22,6 +23,9 @@
             </li>
             <li class="tab3">
               <label id="tab3-label" for="tab3">Notebook</label>
+            </li>
+            <li class="tab4">
+              <label id="tab4-label" for="tab4">Frequencies</label>
             </li>
           </ul>
         </nav>
@@ -252,6 +256,47 @@
                     <label for="notes-icon-delete">Delete</label>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+          <div id="tab-contents-of-frequencies" class="tab4">
+            <div id="div-field-node-icons">
+              Node icons in processes tree:
+              <div>
+                <input type="checkbox" id="frequencies-icon-show-this-only">
+                <label for="frequencies-icon-show-this-only">show-this-only</label>
+              </div>
+              <div>
+                <input type="checkbox" id="frequencies-icon-merge-subprocesses">
+                <label for="frequencies-icon-merge-subprocesses">merge-subprocesses</label>
+              </div>
+              <div>
+                <input type="checkbox" id="frequencies-icon-unmerge-subprocesses-as-parent">
+                <label for="frequencies-icon-unmerge-subprocesses-as-parent">unmerge-subprocesses-as-parent</label>
+              </div>
+              <div>
+                <input type="checkbox" id="frequencies-icon-unmerge-subprocesses-as-subprocess">
+                <label for="frequencies-icon-unmerge-subprocesses-as-subprocess">unmerge-subprocesses-as-subprocess</label>
+              </div>
+              <div>
+                <input type="checkbox" id="frequencies-icon-move-to-top">
+                <label for="frequencies-icon-move-to-top">move-to-top</label>
+              </div>
+              <div>
+                <input type="checkbox" id="frequencies-icon-move-to-bottom">
+                <label for="frequencies-icon-move-to-bottom">move-to-bottom</label>
+              </div>
+              <div>
+                <input type="checkbox" id="frequencies-icon-hide">
+                <label for="frequencies-icon-hide">hide</label>
+              </div>
+              <div>
+                <input type="checkbox" id="frequencies-icon-hide-siblings-below">
+                <label for="frequencies-icon-hide-siblings-below">hide-siblings-below</label>
+              </div>
+              <div>
+                <input type="checkbox" id="frequencies-icon-unhide-hidden-children">
+                <label for="frequencies-icon-unhide-hidden-children">unhide-hidden-children</label>
               </div>
             </div>
           </div>
