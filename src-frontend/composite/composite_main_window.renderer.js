@@ -53,6 +53,8 @@ let my = {
 
   currentNotesForest: null,
   messageHandlerNameRequestTimingsForPeriod: 'composite_main_window_msgs__timings_for_period',
+  messageHandlerNameShowFrequenciesContextMenu: 'composite_main_window_msgs__show_frequencies_context_menu',
+  messageHandlerNameShowNotebookContextMenu: 'composite_main_window_msgs__show_notebook_context_menu',
 
   // timings state
   timings: null,
@@ -164,6 +166,16 @@ function handleServerMessage(msg) {
       }
       return;
     }
+
+    if (msg.msg_type === 'contextmenu') {
+      console.log(`context menu. value: ${msg.value}`);
+      if (my.contextMenuHandler) {
+        my.contextMenuHandler(msg.value);
+        delete my.contextMenuHandler;
+      }
+      return;
+    }
+
     if (msg.type == "wallpapers") {
       if (msg.config !== undefined) {
         my.config = msg.config;

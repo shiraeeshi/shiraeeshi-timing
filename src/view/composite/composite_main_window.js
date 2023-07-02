@@ -25,6 +25,18 @@ ipcMain.on('msg', (_event, msg) => {
   console.log(`[main.js] message from composite_main_window: ${msg}`);
 });
 
+ipcMain.on('composite_main_window_msgs__show_frequencies_context_menu', async (event, options) => {
+  showContextMenuOfProcessTreeNode(event, options);
+});
+
+ipcMain.on('composite_main_window_msgs__show_notebook_context_menu', async (event, sourceType, options) => {
+  if (sourceType === 'notebook-node') {
+    showContextMenuOfNotebookNode(event, options);
+  } else if (sourceType === 'tags-tree-node') {
+    showContextMenuOfTagsTreeNode(event, options);
+  }
+});
+
 ipcMain.on('request_for_timings', async (event, commaSeparaDatesWithDotsInThem) => {
   let datesWithDots = commaSeparaDatesWithDotsInThem.split(',');
   let firstDateWithDots = datesWithDots[0];
@@ -543,6 +555,298 @@ async function init(appEnv, win) {
       func(msg);
     });
 
+}
+
+function sendContextMenuCommand(event, command) {
+  event.sender.send('message-from-backend', {
+    msg_type: 'contextmenu',
+    value: command
+  });
+}
+
+function showContextMenuOfProcessTreeNode(event, options) {
+  const listOfMenuItems = [
+    {
+      label: 'Show this process only',
+      click: () => {
+        sendContextMenuCommand(event, 'show-this-process-only')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Merge subprocesses',
+      enabled: options.canMergeSubprocesses,
+      click: () => {
+        sendContextMenuCommand(event, 'merge-subprocesses')
+      }
+    },
+    {
+      label: 'Unmerge subprocesses of this process',
+      enabled: options.hasMergedSubprocesses,
+      click: () => {
+        sendContextMenuCommand(event, 'unmerge-subprocesses-as-parent')
+      }
+    },
+    {
+      label: 'Unmerge subprocesses of ancestor',
+      enabled: options.isMergedSubprocess,
+      click: () => {
+        sendContextMenuCommand(event, 'unmerge-subprocesses-as-subprocess')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Move to top',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-top')
+      }
+    },
+    {
+      label: 'Move to bottom',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-bottom')
+      }
+    },
+    {
+      label: 'Hide',
+      click: () => {
+        sendContextMenuCommand(event, 'hide')
+      }
+    },
+    {
+      label: 'Hide siblings below',
+      click: () => {
+        sendContextMenuCommand(event, 'hide-siblings-below')
+      }
+    },
+    {
+      label: 'Unhide hidden children',
+      enabled: options.hasHiddenChildren,
+      click: () => {
+        sendContextMenuCommand(event, 'unhide-hidden-children')
+      }
+    },
+  ];
+  const menu = Menu.buildFromTemplate(listOfMenuItems);
+  menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
+}
+
+function showContextMenuOfNotebookNode(event, options) {
+  const listOfMenuItems = [
+    {
+      label: 'Edit',
+      click: () => {
+        sendContextMenuCommand(event, 'edit')
+      }
+    },
+    {
+      label: 'Add sibling',
+      click: () => {
+        sendContextMenuCommand(event, 'add-sibling-with-input')
+      }
+    },
+    {
+      label: 'Append child',
+      click: () => {
+        sendContextMenuCommand(event, 'append-child-with-input')
+      }
+    },
+    {
+      label: 'Delete',
+      click: () => {
+        sendContextMenuCommand(event, 'delete')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Cut node',
+      click: () => {
+        sendContextMenuCommand(event, 'cut-node')
+      }
+    },
+    {
+      label: 'Copy node',
+      click: () => {
+        sendContextMenuCommand(event, 'copy-node')
+      }
+    },
+    {
+      label: 'Paste node',
+      click: () => {
+        sendContextMenuCommand(event, 'paste-node')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Increase font size',
+      click: () => {
+        sendContextMenuCommand(event, 'increase-font-size')
+      }
+    },
+    {
+      label: 'Decrease font size',
+      click: () => {
+        sendContextMenuCommand(event, 'decrease-font-size')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Move to top',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-top')
+      }
+    },
+    {
+      label: 'Move to bottom',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-bottom')
+      }
+    },
+    {
+      label: 'Hide',
+      click: () => {
+        sendContextMenuCommand(event, 'hide')
+      }
+    },
+    {
+      label: 'Hide siblings below',
+      click: () => {
+        sendContextMenuCommand(event, 'hide-siblings-below')
+      }
+    },
+    {
+      label: 'Unhide hidden children',
+      enabled: options.hasHiddenChildren,
+      click: () => {
+        sendContextMenuCommand(event, 'unhide-hidden-children')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Open tag in tags tree',
+      enabled: options.isTaggedNode,
+      click: () => {
+        sendContextMenuCommand(event, 'open-tag-in-tags-tree')
+      }
+    },
+    {
+      label: 'Open tags of children in tags tree',
+      enabled: options.hasTaggedChildren,
+      click: () => {
+        sendContextMenuCommand(event, 'open-tags-of-children-in-tags-tree')
+      }
+    },
+  ];
+  if (!options.isTopPanelTree) {
+    listOfMenuItems.push({
+      type: 'separator'
+    });
+    listOfMenuItems.push({
+      label: 'Open node in top panel',
+      click: () => {
+        sendContextMenuCommand(event, 'open-node-in-top-panel')
+      }
+    });
+  }
+  const menu = Menu.buildFromTemplate(listOfMenuItems);
+  menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
+}
+
+function showContextMenuOfTagsTreeNode(event, options) {
+  let listOfMenuItems = [
+    {
+      label: 'Copy full path',
+      click: () => {
+        sendContextMenuCommand(event, 'copy-full-path');
+      }
+    },
+    {
+      label: 'Edit full path',
+      click: () => {
+        sendContextMenuCommand(event, 'edit-full-path');
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Edit',
+      click: () => {
+        sendContextMenuCommand(event, 'edit')
+      }
+    },
+    {
+      label: 'Increase font size',
+      click: () => {
+        sendContextMenuCommand(event, 'increase-font-size')
+      }
+    },
+    {
+      label: 'Decrease font size',
+      click: () => {
+        sendContextMenuCommand(event, 'decrease-font-size')
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Move to top',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-top')
+      }
+    },
+    {
+      label: 'Move to bottom',
+      click: () => {
+        sendContextMenuCommand(event, 'move-to-bottom')
+      }
+    },
+    {
+      label: 'Hide',
+      click: () => {
+        sendContextMenuCommand(event, 'hide')
+      }
+    },
+    {
+      label: 'Hide siblings below',
+      click: () => {
+        sendContextMenuCommand(event, 'hide-siblings-below')
+      }
+    },
+    {
+      label: 'Unhide hidden children',
+      enabled: options.hasHiddenChildren,
+      click: () => {
+        sendContextMenuCommand(event, 'unhide-hidden-children')
+      }
+    },
+  ];
+  if (!options.isTopPanelTree) {
+    listOfMenuItems.push({
+      type: 'separator'
+    });
+    listOfMenuItems.push({
+      label: 'Open node in top panel',
+      click: () => {
+        sendContextMenuCommand(event, 'open-node-in-top-panel')
+      }
+    });
+  }
+  const menu = Menu.buildFromTemplate(listOfMenuItems);
+  menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
 }
 
 function convertConfigFromYamlFormat(config) {

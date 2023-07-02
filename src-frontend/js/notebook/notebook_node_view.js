@@ -426,7 +426,7 @@ NotebookNodeView.prototype._hasTaggedChildren = function() {
   if (that.notebookNode === undefined) {
     return false;
   }
-  return that.notebookNode.hasChildrenWithTags;
+  return !!that.notebookNode.hasChildrenWithTags;
 }
 
 NotebookNodeView.prototype.openTagInTagsTree = function() {
@@ -875,7 +875,7 @@ NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
         openNodeInTopPanel(that);
       }
     }
-    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage('notebook-node', {
+    window.webkit.messageHandlers[my.messageHandlerNameShowNotebookContextMenu].postMessage('notebook-node', {
       isTopPanelTree: that.isTopPanelTree,
       isTaggedNode: that._isTaggedNode(),
       hasTaggedChildren: that._hasTaggedChildren(),

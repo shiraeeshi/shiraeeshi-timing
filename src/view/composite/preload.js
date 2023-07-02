@@ -59,5 +59,15 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('msg', msg);
       },
     },
+    composite_main_window_msgs__show_frequencies_context_menu: {
+      postMessage: (options) => {
+        ipcRenderer.send('composite_main_window_msgs__show_frequencies_context_menu', options);
+      }
+    },
+    composite_main_window_msgs__show_notebook_context_menu: {
+      postMessage: (sourceType, options) => {
+        ipcRenderer.send('composite_main_window_msgs__show_notebook_context_menu', sourceType, options);
+      }
+    },
   }
 });
