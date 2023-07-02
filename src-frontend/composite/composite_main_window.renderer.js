@@ -48,13 +48,14 @@ const { getRandomInt } = require('../js/utils.js');
 
 let my = {
 
+  messageHandlerNameRequestTimingsForPeriod: 'composite_main_window_msgs__timings_for_period',
+  messageHandlerNameShowFrequenciesContextMenu: 'composite_main_window_msgs__show_frequencies_context_menu',
+  messageHandlerNameShowNotebookContextMenu: 'composite_main_window_msgs__show_notebook_context_menu',
+
   // notebook state
   notesForest: null,
 
   currentNotesForest: null,
-  messageHandlerNameRequestTimingsForPeriod: 'composite_main_window_msgs__timings_for_period',
-  messageHandlerNameShowFrequenciesContextMenu: 'composite_main_window_msgs__show_frequencies_context_menu',
-  messageHandlerNameShowNotebookContextMenu: 'composite_main_window_msgs__show_notebook_context_menu',
 
   // timings state
   timings: null,
@@ -75,10 +76,10 @@ let my = {
       idx_left: undefined,
       idx_right: undefined,
       lst: [
-        'white',
-        '#707070',
-        '#323232',
-        'black'
+        {textColor: 'white', iconsColor: 'white'},
+        {textColor: '#707070', iconsColor: 'light-grey'},
+        {textColor: '#323232', iconsColor: 'dark-grey'},
+        {textColor: 'black', iconsColor: 'black'},
       ],
     },
     canvas: {
@@ -315,30 +316,58 @@ function handleServerMessage(msg) {
         my.colors.text.idx = (my.colors.text.idx + 1) % my.colors.text.lst.length;
         delete my.colors.text.idx_left;
         delete my.colors.text.idx_right;
-        let color = my.colors.text.lst[my.colors.text.idx];
+        let colorObj = my.colors.text.lst[my.colors.text.idx];
         let leftPanel = document.getElementById('left-panel');
-        leftPanel.style.color = color;
+        leftPanel.style.color = colorObj.textColor;
+        for (let className of leftPanel.classList) {
+          if (className.endsWith('-icons')) {
+            leftPanel.classList.remove(className);
+            break;
+          }
+        }
+        leftPanel.classList.add(colorObj.iconsColor + '-icons');
 
         let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
-        notesContentWrapper.style.color = color;
+        notesContentWrapper.style.color = colorObj.textColor;
+        for (let className of notesContentWrapper.classList) {
+          if (className.endsWith('-icons')) {
+            notesContentWrapper.classList.remove(className);
+            break;
+          }
+        }
+        notesContentWrapper.classList.add(colorObj.iconsColor + '-icons');
       } else if (msg.keyval == "l") {
         if (my.colors.text.idx_left === undefined) {
           my.colors.text.idx_left = my.colors.text.idx;
         }
         my.colors.text.idx_left = (my.colors.text.idx_left + 1) % my.colors.text.lst.length;
-        let color = my.colors.text.lst[my.colors.text.idx_left];
+        let colorObj = my.colors.text.lst[my.colors.text.idx_left];
 
         let leftPanel = document.getElementById('left-panel');
-        leftPanel.style.color = color;
+        leftPanel.style.color = colorObj.textColor;
+        for (let className of leftPanel.classList) {
+          if (className.endsWith('-icons')) {
+            leftPanel.classList.remove(className);
+            break;
+          }
+        }
+        leftPanel.classList.add(colorObj.iconsColor + '-icons');
       } else if (msg.keyval == "r") {
         if (my.colors.text.idx_right === undefined) {
           my.colors.text.idx_right = my.colors.text.idx;
         }
         my.colors.text.idx_right = (my.colors.text.idx_right + 1) % my.colors.text.lst.length;
-        let color = my.colors.text.lst[my.colors.text.idx_right];
+        let colorObj = my.colors.text.lst[my.colors.text.idx_right];
 
         let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
-        notesContentWrapper.style.color = color;
+        notesContentWrapper.style.color = colorObj.textColor;
+        for (let className of notesContentWrapper.classList) {
+          if (className.endsWith('-icons')) {
+            notesContentWrapper.classList.remove(className);
+            break;
+          }
+        }
+        notesContentWrapper.classList.add(colorObj.iconsColor + '-icons');
       } else if (msg.keyval == "g") {
         if (my.currentView === 'timings-summary' || my.currentView === 'history') {
           my.colors.canvas.timings.idx++;

@@ -164,11 +164,61 @@ li.proc-leaf {
 }
 
 .proc-node-open .proc-node-icon {
-  background: url('../img/proc-node-minus.png') no-repeat top left;
+  background: url('../img/white-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
 }
 
 .proc-node-closed .proc-node-icon {
-  background: url('../img/proc-node-plus.png') no-repeat top left;
+  background: url('../img/white-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+#notes-content-top-wrapper.black-icons .proc-node-open .proc-node-icon,
+#left-panel.black-icons .proc-node-open .proc-node-icon {
+  background: url('../img/black-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+#notes-content-top-wrapper.black-icons .proc-node-closed .proc-node-icon,
+#left-panel.black-icons .proc-node-closed .proc-node-icon {
+  background: url('../img/black-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+#notes-content-top-wrapper.dark-grey-icons .proc-node-open .proc-node-icon,
+#left-panel.dark-grey-icons .proc-node-open .proc-node-icon {
+  background: url('../img/dark-grey-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+#notes-content-top-wrapper.dark-grey-icons .proc-node-closed .proc-node-icon,
+#left-panel.dark-grey-icons .proc-node-closed .proc-node-icon {
+  background: url('../img/dark-grey-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+#notes-content-top-wrapper.light-grey-icons .proc-node-open .proc-node-icon,
+#left-panel.light-grey-icons .proc-node-open .proc-node-icon {
+  background: url('../img/light-grey-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+#notes-content-top-wrapper.light-grey-icons .proc-node-closed .proc-node-icon,
+#left-panel.light-grey-icons .proc-node-closed .proc-node-icon {
+  background: url('../img/light-grey-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+#notes-content-top-wrapper.white-icons .proc-node-open .proc-node-icon,
+#left-panel.white-icons .proc-node-open .proc-node-icon {
+  background: url('../img/white-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+#notes-content-top-wrapper.white-icons .proc-node-closed .proc-node-icon,
+#left-panel.white-icons .proc-node-closed .proc-node-icon {
+  background: url('../img/white-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
 }
 
 .proc-node-open .proc-node-icon, .proc-node-closed .proc-node-icon {
@@ -233,7 +283,7 @@ li.proc-leaf {
 }
 
 .icon-increase-font-size {
-  background-image: url('../img/proc-node-plus.png');
+  background-image: url('../img/white-proc-node-plus.png');
   background-repeat: no-repeat;
   background-position: top left;
   width: 10px;
@@ -241,11 +291,51 @@ li.proc-leaf {
 }
 
 .icon-decrease-font-size {
-  background-image: url('../img/proc-node-minus.png');
+  background-image: url('../img/white-proc-node-minus.png');
   background-repeat: no-repeat;
   background-position: top left;
   width: 10px;
   height: 10px;
+}
+
+.black-icons
+.icon-increase-font-size {
+  background-image: url('../img/black-proc-node-plus.png');
+}
+
+.black-icons
+.icon-decrease-font-size {
+  background-image: url('../img/black-proc-node-minus.png');
+}
+
+.dark-grey-icons
+.icon-increase-font-size {
+  background-image: url('../img/dark-grey-proc-node-plus.png');
+}
+
+.dark-grey-icons
+.icon-decrease-font-size {
+  background-image: url('../img/dark-grey-proc-node-minus.png');
+}
+
+.light-grey-icons
+.icon-increase-font-size {
+  background-image: url('../img/light-grey-proc-node-plus.png');
+}
+
+.light-grey-icons
+.icon-decrease-font-size {
+  background-image: url('../img/light-grey-proc-node-minus.png');
+}
+
+.white-icons
+.icon-increase-font-size {
+  background-image: url('../img/white-proc-node-plus.png');
+}
+
+.white-icons
+.icon-decrease-font-size {
+  background-image: url('../img/white-proc-node-minus.png');
 }
 
 li.first-visible > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top,
@@ -254,11 +344,31 @@ li.first-visible > .notebook-node-title-container > .notebook-node-icons > .icon
 }
 
 .icon-move-to-top {
-  background-image: url('../img/up-arrow-icon-22-32.png');
+  background-image: url('../img/white-up-arrow-icon-22-32.png');
   background-repeat: no-repeat;
   background-position: top left;
   width: 8px;
   height: 10px;
+}
+
+.black-icons
+.icon-move-to-top {
+  background-image: url('../img/black-up-arrow-icon-22-32.png');
+}
+
+.dark-grey-icons
+.icon-move-to-top {
+  background-image: url('../img/dark-grey-up-arrow-icon-22-32.png');
+}
+
+.light-grey-icons
+.icon-move-to-top {
+  background-image: url('../img/light-grey-up-arrow-icon-22-32.png');
+}
+
+.white-icons
+.icon-move-to-top {
+  background-image: url('../img/white-up-arrow-icon-22-32.png');
 }
 
 li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-bottom,
@@ -267,11 +377,31 @@ li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-
 }
 
 .icon-move-to-bottom {
-  background-image: url('../img/down-arrow-icon-22-32.png');
+  background-image: url('../img/white-down-arrow-icon-22-32.png');
   background-repeat: no-repeat;
   background-position: top left;
   width: 8px;
   height: 10px;
+}
+
+.black-icons
+.icon-move-to-bottom {
+  background-image: url('../img/black-down-arrow-icon-22-32.png');
+}
+
+.dark-grey-icons
+.icon-move-to-bottom {
+  background-image: url('../img/dark-grey-down-arrow-icon-22-32.png');
+}
+
+.light-grey-icons
+.icon-move-to-bottom {
+  background-image: url('../img/light-grey-down-arrow-icon-22-32.png');
+}
+
+.white-icons
+.icon-move-to-bottom {
+  background-image: url('../img/white-down-arrow-icon-22-32.png');
 }
 
 li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-hide-siblings-below,
@@ -280,9 +410,29 @@ li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-
 }
 
 .icon-hide-siblings-below {
-  background-image: url('../img/down-icon-32.png');
+  background-image: url('../img/white-down-icon-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.black-icons
+.icon-hide-siblings-below {
+  background-image: url('../img/black-down-icon-32.png');
+}
+
+.dark-grey-icons
+.icon-hide-siblings-below {
+  background-image: url('../img/dark-grey-down-icon-32.png');
+}
+
+.light-grey-icons
+.icon-hide-siblings-below {
+  background-image: url('../img/light-grey-down-icon-32.png');
+}
+
+.white-icons
+.icon-hide-siblings-below {
+  background-image: url('../img/white-down-icon-32.png');
 }
 
 .root-node > .notebook-node-title-container > .notebook-node-icons > .icon-hide {
@@ -290,9 +440,29 @@ li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-
 }
 
 .icon-hide {
-  background-image: url('../img/eye-slash-32.png');
+  background-image: url('../img/white-eye-slash-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.black-icons
+.icon-hide {
+  background-image: url('../img/black-eye-slash-32.png');
+}
+
+.dark-grey-icons
+.icon-hide {
+  background-image: url('../img/dark-grey-eye-slash-32.png');
+}
+
+.light-grey-icons
+.icon-hide {
+  background-image: url('../img/light-grey-eye-slash-32.png');
+}
+
+.white-icons
+.icon-hide {
+  background-image: url('../img/white-eye-slash-32.png');
 }
 
 .proc-node .icon-unhide-hidden-children {
@@ -304,9 +474,29 @@ li.last-visible > .notebook-node-title-container > .notebook-node-icons > .icon-
 }
 
 .icon-unhide-hidden-children {
-  background-image: url('../img/eye-icon-32.png');
+  background-image: url('../img/white-eye-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.black-icons
+.icon-unhide-hidden-children {
+  background-image: url('../img/black-eye-32.png');
+}
+
+.dark-grey-icons
+.icon-unhide-hidden-children {
+  background-image: url('../img/dark-grey-eye-32.png');
+}
+
+.light-grey-icons
+.icon-unhide-hidden-children {
+  background-image: url('../img/light-grey-eye-32.png');
+}
+
+.white-icons
+.icon-unhide-hidden-children {
+  background-image: url('../img/white-eye-32.png');
 }
 
 .notebook-node-title-container > div {
@@ -381,12 +571,70 @@ li.proc-leaf {
 
 #frequencies-main-content-wrapper
 .proc-node-open .proc-node-icon {
-  background: url('../img/proc-node-minus.png') no-repeat top left;
+  background: url('../img/white-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
 }
 
 #frequencies-main-content-wrapper
 .proc-node-closed .proc-node-icon {
-  background: url('../img/proc-node-plus.png') no-repeat top left;
+  background: url('../img/white-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.black-icons
+#frequencies-main-content-wrapper
+.proc-node-open .proc-node-icon {
+  background: url('../img/black-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.black-icons
+#frequencies-main-content-wrapper
+.proc-node-closed .proc-node-icon {
+  background: url('../img/black-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.dark-grey-icons
+#frequencies-main-content-wrapper
+.proc-node-open .proc-node-icon {
+  background: url('../img/dark-grey-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.dark-grey-icons
+#frequencies-main-content-wrapper
+.proc-node-closed .proc-node-icon {
+  background: url('../img/dark-grey-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.light-grey-icons
+#frequencies-main-content-wrapper
+.proc-node-open .proc-node-icon {
+  background: url('../img/light-grey-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.light-grey-icons
+#frequencies-main-content-wrapper
+.proc-node-closed .proc-node-icon {
+  background: url('../img/light-grey-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.white-icons
+#frequencies-main-content-wrapper
+.proc-node-open .proc-node-icon {
+  background: url('../img/white-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.white-icons
+#frequencies-main-content-wrapper
+.proc-node-closed .proc-node-icon {
+  background: url('../img/white-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
 }
 
 #frequencies-main-content-wrapper
@@ -453,9 +701,33 @@ li.proc-leaf {
 
 #frequencies-main-content-wrapper
 .icon-show-this-process-only {
-  background-image: url('../img/upload-flipped-32.png');
+  background-image: url('../img/white-upload-flipped-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.black-icons
+#frequencies-main-content-wrapper
+.icon-show-this-process-only {
+  background-image: url('../img/black-upload-flipped-32.png');
+}
+
+.dark-grey-icons
+#frequencies-main-content-wrapper
+.icon-show-this-process-only {
+  background-image: url('../img/dark-grey-upload-flipped-32.png');
+}
+
+.light-grey-icons
+#frequencies-main-content-wrapper
+.icon-show-this-process-only {
+  background-image: url('../img/light-grey-upload-flipped-32.png');
+}
+
+.white-icons
+#frequencies-main-content-wrapper
+.icon-show-this-process-only {
+  background-image: url('../img/white-upload-flipped-32.png');
 }
 
 #frequencies-main-content-wrapper
@@ -471,9 +743,33 @@ li.proc-leaf {
 #frequencies-main-content-wrapper
 .icon-merge-subprocesses {
   display: inline-block;
-  background-image: url('../img/grid-on-grey-32.png');
+  background-image: url('../img/white-grid-on-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.black-icons
+#frequencies-main-content-wrapper
+.icon-merge-subprocesses {
+  background-image: url('../img/black-grid-on-32.png');
+}
+
+.dark-grey-icons
+#frequencies-main-content-wrapper
+.icon-merge-subprocesses {
+  background-image: url('../img/dark-grey-grid-on-32.png');
+}
+
+.light-grey-icons
+#frequencies-main-content-wrapper
+.icon-merge-subprocesses {
+  background-image: url('../img/light-grey-grid-on-32.png');
+}
+
+.white-icons
+#frequencies-main-content-wrapper
+.icon-merge-subprocesses {
+  background-image: url('../img/white-grid-on-32.png');
 }
 
 #frequencies-main-content-wrapper
@@ -493,19 +789,67 @@ li.proc-leaf {
 #frequencies-main-content-wrapper
 .proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
   display: inline-block;
-  background-image: url('../img/grid-off-grey-32.png');
+  background-image: url('../img/white-grid-off-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.black-icons
+#frequencies-main-content-wrapper
+.proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
+  background-image: url('../img/black-grid-off-32.png');
+}
+
+.dark-grey-icons
+#frequencies-main-content-wrapper
+.proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
+  background-image: url('../img/dark-grey-grid-off-32.png');
+}
+
+.light-grey-icons
+#frequencies-main-content-wrapper
+.proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
+  background-image: url('../img/light-grey-grid-off-32.png');
+}
+
+.white-icons
+#frequencies-main-content-wrapper
+.proc-node.merged-children > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses {
+  background-image: url('../img/white-grid-off-32.png');
 }
 
 #frequencies-main-content-wrapper
 .proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses-as-subprocess {
   display: inline-block;
-  background-image: url('../img/asset-lock-icon-21-32.png');
+  background-image: url('../img/white-asset-lock-icon-21-32.png');
   background-repeat: no-repeat;
   background-position: top left;
   width: 8px;
   height: 10px;
+}
+
+.black-icons
+#frequencies-main-content-wrapper
+.proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses-as-subprocess {
+  background-image: url('../img/black-asset-lock-icon-21-32.png');
+}
+
+.dark-grey-icons
+#frequencies-main-content-wrapper
+.proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses-as-subprocess {
+  background-image: url('../img/dark-grey-asset-lock-icon-21-32.png');
+}
+
+.light-grey-icons
+#frequencies-main-content-wrapper
+.proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses-as-subprocess {
+  background-image: url('../img/light-grey-asset-lock-icon-21-32.png');
+}
+
+.white-icons
+#frequencies-main-content-wrapper
+.proc-node.merged-child    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses-as-subprocess {
+  background-image: url('../img/white-asset-lock-icon-21-32.png');
 }
 
 /* .proc-node.process-info    > .process-node-title-container > .process-node-icons > .icon-unmerge-subprocesses { */
@@ -519,11 +863,35 @@ li:first-child > .process-node-title-container > .process-node-icons > .icon-mov
 
 #frequencies-main-content-wrapper
 .icon-move-to-top {
-  background-image: url('../img/up-arrow-icon-22-32.png');
+  background-image: url('../img/white-up-arrow-icon-22-32.png');
   background-repeat: no-repeat;
   background-position: top left;
   width: 8px;
   height: 10px;
+}
+
+.black-icons
+#frequencies-main-content-wrapper
+.icon-move-to-top {
+  background-image: url('../img/black-up-arrow-icon-22-32.png');
+}
+
+.dark-grey-icons
+#frequencies-main-content-wrapper
+.icon-move-to-top {
+  background-image: url('../img/dark-grey-up-arrow-icon-22-32.png');
+}
+
+.light-grey-icons
+#frequencies-main-content-wrapper
+.icon-move-to-top {
+  background-image: url('../img/light-grey-up-arrow-icon-22-32.png');
+}
+
+.white-icons
+#frequencies-main-content-wrapper
+.icon-move-to-top {
+  background-image: url('../img/white-up-arrow-icon-22-32.png');
 }
 
 #frequencies-main-content-wrapper
@@ -533,11 +901,35 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-move
 
 #frequencies-main-content-wrapper
 .icon-move-to-bottom {
-  background-image: url('../img/down-arrow-icon-22-32.png');
+  background-image: url('../img/white-down-arrow-icon-22-32.png');
   background-repeat: no-repeat;
   background-position: top left;
   width: 8px;
   height: 10px;
+}
+
+.black-icons
+#frequencies-main-content-wrapper
+.icon-move-to-bottom {
+  background-image: url('../img/black-down-arrow-icon-22-32.png');
+}
+
+.dark-grey-icons
+#frequencies-main-content-wrapper
+.icon-move-to-bottom {
+  background-image: url('../img/dark-grey-down-arrow-icon-22-32.png');
+}
+
+.light-grey-icons
+#frequencies-main-content-wrapper
+.icon-move-to-bottom {
+  background-image: url('../img/light-grey-down-arrow-icon-22-32.png');
+}
+
+.white-icons
+#frequencies-main-content-wrapper
+.icon-move-to-bottom {
+  background-image: url('../img/white-down-arrow-icon-22-32.png');
 }
 
 #frequencies-main-content-wrapper
@@ -547,9 +939,33 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
 
 #frequencies-main-content-wrapper
 .icon-hide-siblings-below {
-  background-image: url('../img/down-icon-32.png');
+  background-image: url('../img/white-down-icon-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.black-icons
+#frequencies-main-content-wrapper
+.icon-hide-siblings-below {
+  background-image: url('../img/black-down-icon-32.png');
+}
+
+.dark-grey-icons
+#frequencies-main-content-wrapper
+.icon-hide-siblings-below {
+  background-image: url('../img/dark-grey-down-icon-32.png');
+}
+
+.light-grey-icons
+#frequencies-main-content-wrapper
+.icon-hide-siblings-below {
+  background-image: url('../img/light-grey-down-icon-32.png');
+}
+
+.white-icons
+#frequencies-main-content-wrapper
+.icon-hide-siblings-below {
+  background-image: url('../img/white-down-icon-32.png');
 }
 
 #frequencies-main-content-wrapper
@@ -561,9 +977,33 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
 
 #frequencies-main-content-wrapper
 .icon-hide {
-  background-image: url('../img/eye-slash-32.png');
+  background-image: url('../img/white-eye-slash-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.black-icons
+#frequencies-main-content-wrapper
+.icon-hide {
+  background-image: url('../img/black-eye-slash-32.png');
+}
+
+.dark-grey-icons
+#frequencies-main-content-wrapper
+.icon-hide {
+  background-image: url('../img/dark-grey-eye-slash-32.png');
+}
+
+.light-grey-icons
+#frequencies-main-content-wrapper
+.icon-hide {
+  background-image: url('../img/light-grey-eye-slash-32.png');
+}
+
+.white-icons
+#frequencies-main-content-wrapper
+.icon-hide {
+  background-image: url('../img/white-eye-slash-32.png');
 }
 
 #frequencies-main-content-wrapper
@@ -578,9 +1018,33 @@ li:last-child > .process-node-title-container > .process-node-icons > .icon-hide
 
 #frequencies-main-content-wrapper
 .icon-unhide-hidden-children {
-  background-image: url('../img/eye-icon-32.png');
+  background-image: url('../img/white-eye-32.png');
   background-repeat: no-repeat;
   background-position: top left;
+}
+
+.black-icons
+#frequencies-main-content-wrapper
+.icon-unhide-hidden-children {
+  background-image: url('../img/black-eye-32.png');
+}
+
+.dark-grey-icons
+#frequencies-main-content-wrapper
+.icon-unhide-hidden-children {
+  background-image: url('../img/dark-grey-eye-32.png');
+}
+
+.light-grey-icons
+#frequencies-main-content-wrapper
+.icon-unhide-hidden-children {
+  background-image: url('../img/light-grey-eye-32.png');
+}
+
+.white-icons
+#frequencies-main-content-wrapper
+.icon-unhide-hidden-children {
+  background-image: url('../img/white-eye-32.png');
 }
 
 #frequencies-view-two-halves-container {
@@ -850,12 +1314,70 @@ li.proc-leaf {
 
 #history-main-container
 .proc-node-open .proc-node-icon {
-  background: url('../img/proc-node-minus.png') no-repeat top left;
+  background: url('../img/white-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
 }
 
 #history-main-container
 .proc-node-closed .proc-node-icon {
-  background: url('../img/proc-node-plus.png') no-repeat top left;
+  background: url('../img/white-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.black-icons
+#history-main-container
+.proc-node-open .proc-node-icon {
+  background: url('../img/black-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.black-icons
+#history-main-container
+.proc-node-closed .proc-node-icon {
+  background: url('../img/black-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.dark-grey-icons
+#history-main-container
+.proc-node-open .proc-node-icon {
+  background: url('../img/dark-grey-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.dark-grey-icons
+#history-main-container
+.proc-node-closed .proc-node-icon {
+  background: url('../img/dark-grey-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.light-grey-icons
+#history-main-container
+.proc-node-open .proc-node-icon {
+  background: url('../img/light-grey-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.light-grey-icons
+#history-main-container
+.proc-node-closed .proc-node-icon {
+  background: url('../img/light-grey-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.white-icons
+#history-main-container
+.proc-node-open .proc-node-icon {
+  background: url('../img/white-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.white-icons
+#history-main-container
+.proc-node-closed .proc-node-icon {
+  background: url('../img/white-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
 }
 
 #history-main-container
