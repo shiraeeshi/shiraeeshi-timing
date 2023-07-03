@@ -48,10 +48,6 @@ const { getRandomInt } = require('../js/utils.js');
 
 let my = {
 
-  messageHandlerNameRequestTimingsForPeriod: 'composite_main_window_msgs__timings_for_period',
-  messageHandlerNameShowFrequenciesContextMenu: 'composite_main_window_msgs__show_frequencies_context_menu',
-  messageHandlerNameShowNotebookContextMenu: 'composite_main_window_msgs__show_notebook_context_menu',
-
   // notebook state
   notesForest: null,
 

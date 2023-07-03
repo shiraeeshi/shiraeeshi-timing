@@ -15,7 +15,6 @@ const {
 
 let my = {
   timings: null,
-  messageHandlerNameRequestTimingsForPeriod: 'post_timing_dialog_msgs__timings_for_period',
 };
 
 window.my = my;

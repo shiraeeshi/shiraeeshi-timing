@@ -29,7 +29,7 @@ contextBridge.exposeInMainWorld('webkit', {
     timings_history_latest__get_timings: {
       postMessage: (msg) => {
         console.log('[preload.js] webkit.messageHandlers.timings_history_latest__get_timings.postMessage');
-        ipcRenderer.send('request_for_timings', msg);
+        ipcRenderer.send('timings_history_latest_handle_request_for_timings', msg);
       },
     },
   }

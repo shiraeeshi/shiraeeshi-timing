@@ -875,7 +875,7 @@ NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
         openNodeInTopPanel(that);
       }
     }
-    window.webkit.messageHandlers[my.messageHandlerNameShowNotebookContextMenu].postMessage('notebook-node', {
+    window.webkit.messageHandlers.show_notebook_context_menu.postMessage('notebook-node', {
       isTopPanelTree: that.isTopPanelTree,
       isTaggedNode: that._isTaggedNode(),
       hasTaggedChildren: that._hasTaggedChildren(),

@@ -24,7 +24,7 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('notebook_msgs__enable_shortcuts');
       }
     },
-    notebook_msgs__show_context_menu: {
+    show_notebook_context_menu: {
       postMessage: (sourceType, options) => {
         ipcRenderer.send('notebook_msgs__show_context_menu', sourceType, options);
       }

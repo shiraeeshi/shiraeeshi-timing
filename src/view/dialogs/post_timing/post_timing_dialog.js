@@ -95,7 +95,7 @@ ipcMain.on('post_timing_dialog_msgs__timings_for_period', async (event, periodSt
   }
   let firstDateWithDots = datesWithDots[0];
   let lastDateWithDots = datesWithDots[1];
-  console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
+  console.log(`[post_timing_dialog.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
   let dateFrom = parseDateWithDots(firstDateWithDots);
   let dateTo = parseDateWithDots(lastDateWithDots);
   let timings;

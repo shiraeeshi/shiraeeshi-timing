@@ -615,7 +615,7 @@ ProcessTreeNodeView.prototype._addContextMenuListener = function(htmlElem) {
         that.unhideHiddenChildren();
       }
     }
-    window.webkit.messageHandlers[my.messageHandlerNameShowFrequenciesContextMenu].postMessage({
+    window.webkit.messageHandlers.show_frequencies_context_menu.postMessage({
       canMergeSubprocesses: !that.hasMergedChildren && !that.isMergedChild && that.processNode.children.length > 0,
       hasMergedSubprocesses: that.hasMergedChildren,
       isMergedSubprocess: that.isMergedChild,

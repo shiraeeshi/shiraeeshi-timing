@@ -20,7 +20,7 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('msg-from-frequencies', msg);
       },
     },
-    post_timing_dialog_msgs__timings_for_period: {
+    request_timings_for_period: {
       postMessage: (msg) => {
         console.log('[preload.js] webkit.messageHandlers.timings_frequencies_msgs.postMessage');
         ipcRenderer.send('post_timing_dialog_msgs__timings_for_period', msg);

@@ -37,11 +37,11 @@ ipcMain.on('composite_main_window_msgs__show_notebook_context_menu', async (even
   }
 });
 
-ipcMain.on('request_for_timings', async (event, commaSeparaDatesWithDotsInThem) => {
+ipcMain.on('composite_main_window_handle_request_for_timings', async (event, commaSeparaDatesWithDotsInThem) => {
   let datesWithDots = commaSeparaDatesWithDotsInThem.split(',');
   let firstDateWithDots = datesWithDots[0];
   let lastDateWithDots = datesWithDots[datesWithDots.length - 1];
-  console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
+  console.log(`[composite_main_window.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
   let dateFrom = parseDateWithDots(firstDateWithDots);
   let dateTo = parseDateWithDots(lastDateWithDots);
   let timings;
@@ -96,7 +96,7 @@ ipcMain.on('composite_main_window_msgs__timings_for_period', async (event, perio
   }
   let firstDateWithDots = datesWithDots[0];
   let lastDateWithDots = datesWithDots[1];
-  console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
+  console.log(`[composite_main_window.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
   let dateFrom = parseDateWithDots(firstDateWithDots);
   let dateTo = parseDateWithDots(lastDateWithDots);
   let timings;

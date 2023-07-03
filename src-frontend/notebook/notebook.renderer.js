@@ -17,7 +17,6 @@ let my = {
   notesForest: null,
   isCursorOnRightSide: true,
   isKeyboardListenerDisabled: false,
-  messageHandlerNameShowNotebookContextMenu: 'notebook_msgs__show_context_menu',
 };
 
 window.my = my;

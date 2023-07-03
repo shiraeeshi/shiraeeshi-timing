@@ -38,10 +38,10 @@ contextBridge.exposeInMainWorld('webkit', {
     timings_history_latest__get_timings: {
       postMessage: (msg) => {
         console.log('[preload.js] webkit.messageHandlers.timings_history_latest__get_timings.postMessage');
-        ipcRenderer.send('request_for_timings', msg);
+        ipcRenderer.send('composite_main_window_handle_request_for_timings', msg);
       },
     },
-    composite_main_window_msgs__timings_for_period: {
+    request_timings_for_period: {
       postMessage: (msg) => {
         console.log('[preload.js] webkit.messageHandlers.timings_frequencies_msgs.postMessage');
         ipcRenderer.send('composite_main_window_msgs__timings_for_period', msg);
@@ -59,12 +59,12 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('msg', msg);
       },
     },
-    composite_main_window_msgs__show_frequencies_context_menu: {
+    show_frequencies_context_menu: {
       postMessage: (options) => {
         ipcRenderer.send('composite_main_window_msgs__show_frequencies_context_menu', options);
       }
     },
-    composite_main_window_msgs__show_notebook_context_menu: {
+    show_notebook_context_menu: {
       postMessage: (sourceType, options) => {
         ipcRenderer.send('composite_main_window_msgs__show_notebook_context_menu', sourceType, options);
       }

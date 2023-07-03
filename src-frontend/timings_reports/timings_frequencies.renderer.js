@@ -13,8 +13,6 @@ const { TimingsHistogramsGraphic } = require('../js/frequencies/timings_histogra
 
 let my = {
   timings: null,
-  messageHandlerNameRequestTimingsForPeriod: 'timings_frequencies_msgs__timings_for_period',
-  messageHandlerNameShowFrequenciesContextMenu: 'timings_frequencies_msgs__show_context_menu',
 };
 
 window.my = my;

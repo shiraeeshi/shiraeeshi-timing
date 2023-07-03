@@ -194,7 +194,7 @@ async function init(appEnv, win) {
   //   return timings;
   // });
 
-  ipcMain.on('request_for_timings', async (_event, commaSeparaDatesWithDotsInThem) => {
+  ipcMain.on('timings_history_latest_handle_request_for_timings', async (_event, commaSeparaDatesWithDotsInThem) => {
     let datesWithDots = commaSeparaDatesWithDotsInThem.split(',');
     let firstDateWithDots = datesWithDots[0];
     let lastDateWithDots = datesWithDots[datesWithDots.length - 1];

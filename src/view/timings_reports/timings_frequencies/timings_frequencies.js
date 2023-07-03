@@ -27,7 +27,7 @@ ipcMain.on('timings_frequencies_msgs__timings_for_period', async (event, periodS
   }
   let firstDateWithDots = datesWithDots[0];
   let lastDateWithDots = datesWithDots[1];
-  console.log(`[main.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
+  console.log(`[timings_frequencies.js] request_timings handler.\n  firstDateWithDots: ${firstDateWithDots}\n  lastDateWithDots: ${lastDateWithDots}`);
   let dateFrom = parseDateWithDots(firstDateWithDots);
   let dateTo = parseDateWithDots(lastDateWithDots);
   let timings;
