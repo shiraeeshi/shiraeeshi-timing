@@ -173,6 +173,14 @@ function handleServerMessage(msg) {
       return;
     }
 
+    if (msg.type == "wallpapers-errors") {
+      alert([
+        'error related to wallpapers: ',
+        ...msg.errors
+      ].join('\n'));
+      return;
+    }
+
     if (msg.type == "wallpapers") {
       if (msg.config !== undefined) {
         my.config = msg.config;
@@ -184,9 +192,22 @@ function handleServerMessage(msg) {
         }
       }
       console.log('[handleServerMessage] msg.type = wallpapers.');
-      my.wallpapers.lst = msg.wallpapers;
+      my.wallpapers.lst = msg.wallpapers.map(wp => {
+        let obj = {
+          name: wp.basename,
+          relativePath: wp.relativePath,
+        };
+        return obj;
+      });
+      my.wallpapers.config = msg.wallpapersConfig;
+
       let randomIndex = getRandomInt(my.wallpapers.lst.length);
-      document.body.style.backgroundImage = `url("${my.wallpapers.lst[randomIndex]}")`;
+      document.body.style.backgroundImage = `url("${my.wallpapers.lst[randomIndex].relativePath}")`;
+      let currentWallpaperName = my.wallpapers.lst[randomIndex].name;
+      let currentWallpaperConfig = my.wallpapers.config[currentWallpaperName];
+      if (currentWallpaperConfig !== undefined) {
+        actualizeWallpaperConfig(currentWallpaperConfig);
+      }
       return;
     }
     if (msg.type == "key_pressed") {
@@ -197,7 +218,36 @@ function handleServerMessage(msg) {
         }
         // window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage current wallpaper: " +
         //   my.wallpapers.lst[my.wallpapers.idx]);
-        document.body.style.backgroundImage = `url("${my.wallpapers.lst[my.wallpapers.idx]}")`;
+        document.body.style.backgroundImage = `url("${my.wallpapers.lst[my.wallpapers.idx].relativePath}")`;
+        let currentWallpaperName = my.wallpapers.lst[my.wallpapers.idx].name;
+        let currentWallpaperConfig = my.wallpapers.config[currentWallpaperName];
+        if (currentWallpaperConfig !== undefined) {
+          actualizeWallpaperConfig(currentWallpaperConfig);
+        } else {
+          my.colors.text.idx = 0;
+          delete my.colors.text.idx_left;
+          delete my.colors.text.idx_right;
+          let colorObj = my.colors.text.lst[my.colors.text.idx];
+          let leftPanel = document.getElementById('left-panel');
+          leftPanel.style.color = colorObj.textColor;
+          for (let className of leftPanel.classList) {
+            if (className.endsWith('-icons')) {
+              leftPanel.classList.remove(className);
+              break;
+            }
+          }
+          leftPanel.classList.add(colorObj.iconsColor + '-icons');
+
+          let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
+          notesContentWrapper.style.color = colorObj.textColor;
+          for (let className of notesContentWrapper.classList) {
+            if (className.endsWith('-icons')) {
+              notesContentWrapper.classList.remove(className);
+              break;
+            }
+          }
+          notesContentWrapper.classList.add(colorObj.iconsColor + '-icons');
+        }
       } else if (msg.keyval == "m") {
         my.minimalTextForTimings = !my.minimalTextForTimings;
         if (my.minimalTextForTimings) {
@@ -309,9 +359,18 @@ function handleServerMessage(msg) {
           throw err;
         });
       } else if (msg.keyval == "t") {
-        my.colors.text.idx = (my.colors.text.idx + 1) % my.colors.text.lst.length;
+        let newIdx = (my.colors.text.idx + 1) % (my.colors.text.lst.length + 1);
+        my.colors.text.idx = newIdx;
         delete my.colors.text.idx_left;
         delete my.colors.text.idx_right;
+        if (newIdx === my.colors.text.lst.length) {
+          let currentWallpaperName = my.wallpapers.lst[my.wallpapers.idx].name;
+          let currentWallpaperConfig = my.wallpapers.config[currentWallpaperName];
+          if (currentWallpaperConfig !== undefined) {
+            actualizeWallpaperConfig(currentWallpaperConfig);
+          }
+          return;
+        }
         let colorObj = my.colors.text.lst[my.colors.text.idx];
         let leftPanel = document.getElementById('left-panel');
         leftPanel.style.color = colorObj.textColor;
@@ -758,6 +817,58 @@ function showOnlyFrequenciesInLeftPanel() {
   timingsSummaryContainer.style.display = 'none';
   historyContainer.style.display = 'none';
   frequenciesContainer.style.removeProperty('display');
+}
+
+function actualizeWallpaperConfig(wallpaperConfig) {
+  if (wallpaperConfig.position !== undefined) {
+    if (wallpaperConfig.position === 'top-left') {
+      document.body.style.backgroundPosition = 'left top';
+    } else if (wallpaperConfig.position === 'top-right') {
+      document.body.style.backgroundPosition = 'right top';
+    } else if (wallpaperConfig.position === 'bottom-left') {
+      document.body.style.backgroundPosition = 'left bottom';
+    } else if (wallpaperConfig.position === 'bottom-right') {
+      document.body.style.backgroundPosition = 'right bottom';
+    }
+  }
+  let leftPanel = document.getElementById('left-panel');
+  if (wallpaperConfig.leftSideTextColor !== undefined) {
+    if (wallpaperConfig.leftSideTextColor === 'light-grey') {
+      leftPanel.style.color = '#707070';
+    } else if (wallpaperConfig.leftSideTextColor === 'dark-grey') {
+      leftPanel.style.color = '#323232';
+    } else {
+      leftPanel.style.color = wallpaperConfig.leftSideTextColor;
+    }
+  }
+  if (wallpaperConfig.leftSideIconsColor !== undefined) {
+    for (let className of leftPanel.classList) {
+      if (className.endsWith('-icons')) {
+        leftPanel.classList.remove(className);
+        break;
+      }
+    }
+    leftPanel.classList.add(wallpaperConfig.leftSideIconsColor + '-icons');
+  }
+  let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
+  if (wallpaperConfig.rightSideTextColor !== undefined) {
+    if (wallpaperConfig.rightSideTextColor === 'light-grey') {
+      notesContentWrapper.style.color = '#707070';
+    } else if (wallpaperConfig.rightSideTextColor === 'dark-grey') {
+      notesContentWrapper.style.color = '#323232';
+    } else {
+      notesContentWrapper.style.color = wallpaperConfig.rightSideTextColor;
+    }
+  }
+  if (wallpaperConfig.rightSideIconsColor !== undefined) {
+    for (let className of notesContentWrapper.classList) {
+      if (className.endsWith('-icons')) {
+        notesContentWrapper.classList.remove(className);
+        break;
+      }
+    }
+    notesContentWrapper.classList.add(wallpaperConfig.rightSideIconsColor + '-icons');
+  }
 }
 
 function convertToNotebookNodes(jsonForest) {

@@ -531,29 +531,98 @@ async function init(appEnv, win) {
   }
 
   let wallpapersDirPath;
+  let wallpapersConfigPath;
   if (appEnv.stage === 'production') {
     wallpapersDirPath = path.join(homeDirPath, 'pm_app', 'wallpapers');
+    wallpapersConfigPath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'config', 'wallpapers.config.yaml');
   } else {
     wallpapersDirPath = path.join(homeDirPath, 'test_pm_app2', 'wallpapers');
+    wallpapersConfigPath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'wallpapers.config.yaml');
   }
-  const wallpapersFilenames = await fs.promises.readdir(wallpapersDirPath, { encoding: 'utf8' });
-  fs.promises.readdir(wallpapersDirPath, { encoding: 'utf8' })
-    .then(wallpapersFilenames => {
-      console.log(`wallpapersFilenames: ${wallpapersFilenames}`);
-      const pathOfComposite = path.join('dist-frontend', 'composite')
-      const relativePathToWallpapersDir = path.relative(pathOfComposite, wallpapersDirPath);
-      console.log(`relativePathToWallpapersDir: ${relativePathToWallpapersDir}`);
+  // fs.promises.readdir(wallpapersDirPath, { encoding: 'utf8' })
+  //   .then(wallpapersFilenames => {
+  //     console.log(`wallpapersFilenames: ${wallpapersFilenames}`);
+  //     const pathOfComposite = path.join('dist-frontend', 'composite')
+  //     const relativePathToWallpapersDir = path.relative(pathOfComposite, wallpapersDirPath);
+  //     console.log(`relativePathToWallpapersDir: ${relativePathToWallpapersDir}`);
 
-      let msg = {
-        "type": "wallpapers",
-        "wallpapers": wallpapersFilenames.map(n => path.join(relativePathToWallpapersDir, n))
-      };
-      if (!sentConfig) {
-        msg.config = config;
-        sentConfig = true;
+  //     let msg = {
+  //       "type": "wallpapers",
+  //       "wallpapers": wallpapersFilenames.map(n => path.join(relativePathToWallpapersDir, n))
+  //     };
+  //     func(msg);
+  //   });
+  Promise.allSettled([
+    fs.promises.readdir(wallpapersDirPath, { encoding: 'utf8' }),
+    fs.promises.readFile(wallpapersConfigPath, { encoding: 'utf8' })
+  ]).then(results => {
+    let [wallpapersFilenamesResult, wallpapersConfigResult] = results;
+
+    console.log('[preferences.js] wallpapersFilenamesResult');
+    console.dir(wallpapersFilenamesResult);
+    console.log('[preferences.js] wallpapersConfigResult');
+    console.dir(wallpapersConfigResult);
+
+    if (wallpapersFilenamesResult.status === 'rejected' ||
+        wallpapersConfigResult.status === 'rejected') {
+      let errors = [];
+      if (wallpapersFilenamesResult.status === 'rejected') {
+        errors.push('error while scanning wallpapers directory');
       }
-      func(msg);
-    });
+      if (wallpapersConfigResult.status === 'rejected') {
+        errors.push('error reading wallpapers config');
+      }
+      func({
+        "type": "wallpapers-errors",
+        "errors": errors,
+      });
+      return;
+    }
+    let wallpapersFilenames = wallpapersFilenamesResult.value;
+    let wallpapersConfigFileContents = wallpapersConfigResult.value;
+    let wallpapersConfig;
+    try {
+      wallpapersConfig = YAML.parse(wallpapersConfigFileContents);
+    } catch (err) {
+      let errors = [];
+      errors.push(`error while parsing wallpapers config: "${err.message}"`);
+      func({
+        "type": "wallpapers-errors",
+        "errors": errors,
+      });
+      return;
+    }
+
+    if (wallpapersConfig === null) {
+      wallpapersConfig = {};
+    }
+
+    console.log(`wallpapersFilenames: ${wallpapersFilenames}`);
+    const pathOfPreferences = path.join('dist-frontend', 'preferences')
+    const relativePathToWallpapersDir = path.relative(pathOfPreferences, wallpapersDirPath);
+    console.log(`relativePathToWallpapersDir: ${relativePathToWallpapersDir}`);
+
+    let msg = {
+      "type": "wallpapers",
+      "wallpapers": wallpapersFilenames.map(n => {
+        let obj = {
+          absolutePath: path.join(wallpapersDirPath, n),
+          relativePath: path.join(relativePathToWallpapersDir, n),
+          basename: n
+        };
+        obj.filepath = obj.absolutePath;
+        return obj;
+      }),
+      "wallpapersConfig": wallpapersConfig,
+    };
+
+    if (!sentConfig) {
+      msg.config = config;
+      sentConfig = true;
+    }
+
+    func(msg);
+  });
 
 }
 

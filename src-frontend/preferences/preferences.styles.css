@@ -33,8 +33,132 @@ body {
 }
 
 .pc-tab > section {
+/*  flex: 1 1 auto;      */
+/*  overflow-y: auto;    */
   flex: 1 1 auto;
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+.pc-tab > input,
+.pc-tab section > div {
+  display: none;
+}
+
+#tab1:checked ~ section .tab1,
+#tab2:checked ~ section .tab2,
+#tab3:checked ~ section .tab3,
+#tab4:checked ~ section .tab4,
+#tab5:checked ~ section .tab5,
+#tab6:checked ~ section .tab6 {
+  display: block;
+}
+
+#tab1:checked ~ nav .tab1,
+#tab2:checked ~ nav .tab2,
+#tab3:checked ~ nav .tab3,
+#tab4:checked ~ nav .tab4,
+#tab5:checked ~ nav .tab5,
+#tab6:checked ~ nav .tab6 {
+  color: red;
+}
+
+/* Visual Styles */
+*, *:after, *:before {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+h1 {
+  text-align: center;
+  font-weight: 100;
+  font-size: 60px;
+  color: #e74c3c;
+}
+
+/*.pc-tab {           */
+/*  width: 100%;      */
+/*  max-width: 700px; */
+/*  margin: 0 auto;   */
+/*}                   */
+.pc-tab ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pc-tab ul li label {
+  font-family: "Raleway";
+  float: left;
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  border-bottom: 0;
+  background: #eeeeee;
+  color: #444;
+}
+.pc-tab ul li label:hover {
+  background: #dddddd;
+}
+.pc-tab ul li label:active {
+  background: #ffffff;
+}
+.pc-tab ul li:not(:last-child) label {
+  border-right-width: 0;
+}
+.pc-tab section {
+  font-family: "Droid Serif";
+  clear: both;
+}
+.pc-tab section div {
+  padding: 10px;
+  width: 100%;
+  border: 1px solid #ddd;
+  background: #fff;
+  line-height: 1.5em;
+  letter-spacing: 0.3px;
+  color: #444;
+}
+.pc-tab section div h2 {
+  margin: 0;
+  font-family: "Raleway";
+  letter-spacing: 1px;
+  color: #34495e;
+}
+
+#tab1:checked ~ nav .tab1 label,
+#tab2:checked ~ nav .tab2 label,
+#tab3:checked ~ nav .tab3 label,
+#tab4:checked ~ nav .tab4 label,
+#tab5:checked ~ nav .tab5 label,
+#tab6:checked ~ nav .tab6 label {
+  background: white;
+  color: #111;
+  position: relative;
+}
+#tab1:checked ~ nav .tab1 label:after,
+#tab2:checked ~ nav .tab2 label:after,
+#tab3:checked ~ nav .tab3 label:after,
+#tab4:checked ~ nav .tab4 label:after,
+#tab5:checked ~ nav .tab5 label:after,
+#tab6:checked ~ nav .tab6 label:after {
+  content: "";
+  display: block;
+  position: absolute;
+  height: 2px;
+  width: 100%;
+  background: #ffffff;
+  left: 0;
+  bottom: -1px;
+}
+
+footer {
+  margin-top: 50px;
+  font-size: 14px;
+  color: #CCC;
+  text-align: center;
+}
+footer a {
+  color: #AAA;
+  text-decoration: none;
 }
 
 .pc-tab > #bottom-buttons-row {
@@ -51,47 +175,50 @@ body {
   margin-left: 4px;
 }
 
-#tab-contents-of-timings {
-  padding: 10px;
-}
-
-#tab-contents-of-timings-config > div {
+.pc-tab > section > .tab-contents {
+  height: 100%;
+  overflow-y: auto;
+  padding: 0;
   border: none;
 }
 
-#tab-contents-of-timings-config > div:not(:first-child) {
+#tab-contents-of-timings-config > div > div {
+  border: none;
+}
+
+#tab-contents-of-timings-config > div > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
-#tab-contents-of-notebook > div {
+#tab-contents-of-notebook > div > div {
   border: none;
 }
 
-#tab-contents-of-notebook > div:not(:first-child) {
+#tab-contents-of-notebook > div > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
-#tab-contents-of-frequencies > div {
+#tab-contents-of-frequencies > div > div {
   border: none;
 }
 
-#tab-contents-of-frequencies > div:not(:first-child) {
+#tab-contents-of-frequencies > div > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
-#tab-contents-of-frequencies > #div-field-node-icons > div {
+#tab-contents-of-frequencies > div > #div-field-node-icons > div {
   border: none;
 }
 
-#tab-contents-of-frequencies > #div-field-node-icons > div:not(:first-child) {
+#tab-contents-of-frequencies > div > #div-field-node-icons > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
-#tab-contents-of-post-timing-dialog > div {
+#tab-contents-of-post-timing-dialog > div > div {
   border: none;
 }
 
-#tab-contents-of-post-timing-dialog > div:not(:first-child) {
+#tab-contents-of-post-timing-dialog > div > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
@@ -232,6 +359,149 @@ body {
   display: none;
 }
 
+
+
+
+
+
+
+
+#list-of-wallpapers-panel {
+  padding: 0;
+  border: none;
+}
+
+#btns-row-above-list-of-wallpapers {
+  border: none;
+  padding-left: 0;
+  padding-top: 0;
+}
+
+#list-of-wallpapers-panel.active {
+  display: block;
+}
+
+#list-of-wallpapers-panel.inactive {
+  display: none;
+}
+
+#form-to-edit-wallpaper-info.active {
+  display: block;
+}
+
+#form-to-edit-wallpaper-info.inactive {
+  display: none;
+}
+
+#form-to-edit-wallpaper-info {
+  padding: 0;
+  border: none;
+}
+
+#form-to-edit-wallpaper-info > #fields-of-wallpaper-info-form {
+  padding: 0;
+}
+
+#form-to-edit-wallpaper-info > #fields-of-wallpaper-info-form > div {
+  border: none;
+}
+
+#form-to-edit-wallpaper-info > #fields-of-wallpaper-info-form > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+#form-to-edit-wallpaper-info > #fields-of-wallpaper-info-form > #new-wallpaper-filepath-field-container {
+  display: flex;
+}
+
+#form-to-edit-wallpaper-info > #fields-of-wallpaper-info-form > #new-wallpaper-filepath-field-container > label {
+  flex: none;
+  margin-right: 4px;
+}
+
+#form-to-edit-wallpaper-info > #fields-of-wallpaper-info-form > #new-wallpaper-filepath-field-container > input {
+  flex: 1;
+  margin-right: 4px;
+}
+
+#form-to-edit-wallpaper-info > #fields-of-wallpaper-info-form > #new-wallpaper-filepath-field-container > button {
+  flex: none;
+}
+
+#btns-in-form-to-edit-wallpaper-info {
+  display: flex;
+  justify-content: flex-end;
+  border: none;
+}
+
+#btn-wallpaper-info-save {
+  margin-left: 4px;
+}
+
+#list-of-wallpapers {
+  padding: 0;
+  border: none;
+}
+
+#list-of-wallpapers > .wallpaper-info-view {
+  padding: 0;
+}
+
+#list-of-wallpapers > .wallpaper-info-view:not(:first-child) {
+  margin-top: 10px;
+}
+
+#list-of-wallpapers > .wallpaper-info-view > div {
+  border: none;
+}
+
+#list-of-wallpapers > .wallpaper-info-view > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+#list-of-wallpapers > .wallpaper-info-view > .wallpaper-info-buttons {
+  background-color: #32323a;
+  border: 1px solid #32323a;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#list-of-wallpapers > .wallpaper-info-view > .wallpaper-info-buttons > .btn-edit-wallpaper-info {
+  margin-right: 4px;
+}
+
+#list-of-wallpapers > .wallpaper-info-view .btn-undo-delete-of-wallpaper-info {
+  display: none;
+}
+
+#list-of-wallpapers > .wallpaper-info-view.to-be-deleted > .wallpaper-info-buttons {
+  background-color: #ccc;
+  border: 1px solid #ccc;
+}
+
+#list-of-wallpapers > .wallpaper-info-view.to-be-deleted .div-with-text {
+  opacity: 0.5;
+}
+
+#list-of-wallpapers > .wallpaper-info-view.to-be-deleted .btn-undo-delete-of-wallpaper-info {
+  display: inline-block;
+}
+
+#list-of-wallpapers > .wallpaper-info-view.to-be-deleted .btn-edit-wallpaper-info {
+  display: none;
+}
+
+#list-of-wallpapers > .wallpaper-info-view.to-be-deleted .btn-delete-wallpaper-info {
+  display: none;
+}
+
+
+
+
+
+
+
+
 #notebook-filepath-field-container {
   display: flex;
 }
@@ -368,121 +638,3 @@ body {
 }
 
 
-
-.pc-tab > input,
-.pc-tab section > div {
-  display: none;
-}
-
-#tab1:checked ~ section .tab1,
-#tab2:checked ~ section .tab2,
-#tab3:checked ~ section .tab3,
-#tab4:checked ~ section .tab4,
-#tab5:checked ~ section .tab5 {
-  display: block;
-}
-
-#tab1:checked ~ nav .tab1,
-#tab2:checked ~ nav .tab2,
-#tab3:checked ~ nav .tab3,
-#tab4:checked ~ nav .tab4,
-#tab5:checked ~ nav .tab5 {
-  color: red;
-}
-
-/* Visual Styles */
-*, *:after, *:before {
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
-
-h1 {
-  text-align: center;
-  font-weight: 100;
-  font-size: 60px;
-  color: #e74c3c;
-}
-
-/*.pc-tab {           */
-/*  width: 100%;      */
-/*  max-width: 700px; */
-/*  margin: 0 auto;   */
-/*}                   */
-.pc-tab ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.pc-tab ul li label {
-  font-family: "Raleway";
-  float: left;
-  padding: 10px 20px;
-  border: 1px solid #ddd;
-  border-bottom: 0;
-  background: #eeeeee;
-  color: #444;
-}
-.pc-tab ul li label:hover {
-  background: #dddddd;
-}
-.pc-tab ul li label:active {
-  background: #ffffff;
-}
-.pc-tab ul li:not(:last-child) label {
-  border-right-width: 0;
-}
-.pc-tab section {
-  font-family: "Droid Serif";
-  clear: both;
-}
-.pc-tab section div {
-  padding: 10px;
-  width: 100%;
-  border: 1px solid #ddd;
-  background: #fff;
-  line-height: 1.5em;
-  letter-spacing: 0.3px;
-  color: #444;
-}
-.pc-tab section div h2 {
-  margin: 0;
-  font-family: "Raleway";
-  letter-spacing: 1px;
-  color: #34495e;
-}
-
-#tab1:checked ~ nav .tab1 label,
-#tab2:checked ~ nav .tab2 label,
-#tab3:checked ~ nav .tab3 label,
-#tab4:checked ~ nav .tab4 label,
-#tab5:checked ~ nav .tab5 label {
-  background: white;
-  color: #111;
-  position: relative;
-}
-#tab1:checked ~ nav .tab1 label:after,
-#tab2:checked ~ nav .tab2 label:after,
-#tab3:checked ~ nav .tab3 label:after,
-#tab4:checked ~ nav .tab4 label:after,
-#tab5:checked ~ nav .tab5 label:after {
-  content: "";
-  display: block;
-  position: absolute;
-  height: 2px;
-  width: 100%;
-  background: #ffffff;
-  left: 0;
-  bottom: -1px;
-}
-
-footer {
-  margin-top: 50px;
-  font-size: 14px;
-  color: #CCC;
-  text-align: center;
-}
-footer a {
-  color: #AAA;
-  text-decoration: none;
-}

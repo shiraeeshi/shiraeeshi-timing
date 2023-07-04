@@ -15,9 +15,9 @@ contextBridge.exposeInMainWorld('webkit', {
       }
     },
     preferences_msg__choose_file: {
-      postMessage: () => {
+      postMessage: (extractBasename) => {
         console.log('[preload.js] webkit.messageHandlers.preferences_msg__choose_file.postMessage');
-        ipcRenderer.send('msg_choose_file');
+        ipcRenderer.send('msg_choose_file', extractBasename);
       },
     },
     preferences_msg__enable_shortcuts: {

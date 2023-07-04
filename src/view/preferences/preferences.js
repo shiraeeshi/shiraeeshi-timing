@@ -8,8 +8,26 @@ const { forgetLastModifiedTimeOfTimings } = require('../../logic/timing_index_ma
 
 let isDisabledShortcuts = false;
 
-ipcMain.on('msg_choose_file', async (event) => {
+ipcMain.on('msg', (_event, msg) => {
+  console.log(`[preferences.js] message from preferences: ${msg}`);
+});
+
+ipcMain.on('msg_choose_file', async (event, extractBasename) => {
   let result = await dialog.showOpenDialog({properties: ['openFile', 'promptToCreate']});
+  if (!extractBasename) {
+    event.sender.send('message-from-backend', {
+      type: 'filepicker_result',
+      result: result
+    });
+    return;
+  }
+  result.filePaths = result.filePaths.map(fp => {
+    let obj = {
+      filepath: fp,
+      basename: path.basename(fp)
+    };
+    return obj;
+  });
   event.sender.send('message-from-backend', {
     type: 'filepicker_result',
     result: result
@@ -36,7 +54,10 @@ ipcMain.on('msg_save', async (event, msg) => {
     namesOfTimingsToDelete,
     changedTimings,
     changedTimingsConfig,
-    changedNotebook
+    changedNotebook,
+    wallpapers,
+    wallpapersToAdd,
+    namesOfWallpapersToDelete,
   } = msg;
   console.log('SAVE');
   console.dir(msg);
@@ -64,6 +85,38 @@ ipcMain.on('msg_save', async (event, msg) => {
 
     // forgetLastModifiedTimesIfNeeded(timings, timingsToAdd, namesOfTimingsToDelete);
     forgetLastModifiedTimesIfNeeded(timings, indexDirFilepath);
+
+    let wallpapersDirPath;
+    let wallpapersConfigPath;
+
+    if (appEnv.stage === 'production') {
+      wallpapersDirPath = path.join(homeDirPath, 'pm_app', 'wallpapers');
+      wallpapersConfigPath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'config', 'wallpapers.config.yaml');
+    } else {
+      wallpapersDirPath = path.join(homeDirPath, 'test_pm_app2', 'wallpapers');
+      wallpapersConfigPath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'wallpapers.config.yaml');
+    }
+
+    await Promise.all(
+      namesOfWallpapersToDelete.map(wpToDelete =>
+        fs.promises.rm(path.join(wallpapersDirPath, wpToDelete))));
+
+    await Promise.all(
+      wallpapersToAdd.map(wpToAdd =>
+        fs.promises.cp(wpToAdd.filepath, path.join(wallpapersDirPath, wpToAdd.basename))));
+
+    const wallpapersConfigFd = await fs.promises.open(wallpapersConfigPath, 'w');
+    let indentOfWallpapers = 2;
+    let nonEmptyWallpapersConfigs = wallpapers.filter(wp => {
+      return wp.position !== undefined ||
+        wp.leftSideTextColor !== undefined ||
+        wp.leftSideIconsColor !== undefined ||
+        wp.rightSideTextColor !== undefined ||
+        wp.rightSideIconsColor !== undefined;
+    });
+    let wallpapersConfig = createWallpapersConfigToSave(nonEmptyWallpapersConfigs, namesOfWallpapersToDelete);
+    let dataOfWallpapers = YAML.stringify(wallpapersConfig, indentOfWallpapers);
+    await fs.promises.writeFile(wallpapersConfigFd, dataOfWallpapers, { encoding: 'utf8' });
   } catch (err) {
     event.sender.send('message-from-backend', {
       type: 'save_result',
@@ -87,6 +140,28 @@ function createConfigToSave(configWithNoTimings, timings, namesOfTimingsToDelete
 function copyWithNoAdditionalFields(timingsFileInfos) {
   return timingsFileInfos.map(t => {
     let copy = Object.assign({}, t);
+    delete copy.original;
+    return copy;
+  });
+}
+
+function createWallpapersConfigToSave(wallpapers, namesOfWallpapersToDelete) {
+  namesOfWallpapersToDelete = new Set(namesOfWallpapersToDelete);
+  let filtered = wallpapers.filter(wp => !namesOfWallpapersToDelete.has(wp.name))
+  let lst = copyWallpaperInfosWithNoAdditionalFields(filtered);
+  let obj = {};
+  for (let item of lst) {
+    let copy = Object.assign({}, item);
+    delete copy.basename;
+    obj[item.basename] = copy;
+  }
+  return obj;
+}
+
+function copyWallpaperInfosWithNoAdditionalFields(wallpapers) {
+  return wallpapers.map(wp => {
+    let copy = Object.assign({}, wp);
+    delete copy.filepath;
     delete copy.original;
     return copy;
   });
@@ -118,10 +193,6 @@ function forgetLastModifiedTimesIfNeeded(timings, indexDirFilepath) {
 }
 
 export async function showPreferences(appEnv) {
-
-  ipcMain.on('msg', (_event, msg) => {
-    console.log(`[main.js] message from timing_summary: ${msg}`);
-  });
 
   await createWindow(appEnv);
 
@@ -264,6 +335,83 @@ async function init(appEnv, win) {
 
   await func({
     config: config,
+  });
+
+  let wallpapersDirPath;
+  let wallpapersConfigPath;
+  if (appEnv.stage === 'production') {
+    wallpapersDirPath = path.join(homeDirPath, 'pm_app', 'wallpapers');
+    wallpapersConfigPath = path.join(homeDirPath, 'pm_app', 'files_to_parse', 'config', 'wallpapers.config.yaml');
+  } else {
+    wallpapersDirPath = path.join(homeDirPath, 'test_pm_app2', 'wallpapers');
+    wallpapersConfigPath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'config', 'wallpapers.config.yaml');
+  }
+  console.log(`[preferences.js] wallpapersDirPath: ${wallpapersDirPath}`);
+  console.log(`[preferences.js] wallpapersConfigPath: ${wallpapersConfigPath}`);
+  Promise.allSettled([
+    fs.promises.readdir(wallpapersDirPath, { encoding: 'utf8' }),
+    fs.promises.readFile(wallpapersConfigPath, { encoding: 'utf8' })
+  ]).then(results => {
+    let [wallpapersFilenamesResult, wallpapersConfigResult] = results;
+
+    console.log('[preferences.js] wallpapersFilenamesResult');
+    console.dir(wallpapersFilenamesResult);
+    console.log('[preferences.js] wallpapersConfigResult');
+    console.dir(wallpapersConfigResult);
+
+    if (wallpapersFilenamesResult.status === 'rejected' ||
+        wallpapersConfigResult.status === 'rejected') {
+      let errors = [];
+      if (wallpapersFilenamesResult.status === 'rejected') {
+        errors.push('error while scanning wallpapers directory');
+      }
+      if (wallpapersConfigResult.status === 'rejected') {
+        errors.push('error reading wallpapers config');
+      }
+      func({
+        "type": "wallpapers-errors",
+        "errors": errors,
+      });
+      return;
+    }
+    let wallpapersFilenames = wallpapersFilenamesResult.value;
+    let wallpapersConfigFileContents = wallpapersConfigResult.value;
+    let wallpapersConfig;
+    try {
+      wallpapersConfig = YAML.parse(wallpapersConfigFileContents);
+    } catch (err) {
+      let errors = [];
+      errors.push(`error while parsing wallpapers config: "${err.message}"`);
+      func({
+        "type": "wallpapers-errors",
+        "errors": errors,
+      });
+      return;
+    }
+
+    if (wallpapersConfig === null) {
+      wallpapersConfig = {};
+    }
+
+    console.log(`wallpapersFilenames: ${wallpapersFilenames}`);
+    const pathOfPreferences = path.join('dist-frontend', 'preferences')
+    const relativePathToWallpapersDir = path.relative(pathOfPreferences, wallpapersDirPath);
+    console.log(`relativePathToWallpapersDir: ${relativePathToWallpapersDir}`);
+
+    let msg = {
+      "type": "wallpapers",
+      "wallpapers": wallpapersFilenames.map(n => {
+        let obj = {
+          absolutePath: path.join(wallpapersDirPath, n),
+          relativePath: path.join(relativePathToWallpapersDir, n),
+          basename: n
+        };
+        obj.filepath = obj.absolutePath;
+        return obj;
+      }),
+      "wallpapersConfig": wallpapersConfig,
+    };
+    func(msg);
   });
 
   // let wallpapersDirPath;

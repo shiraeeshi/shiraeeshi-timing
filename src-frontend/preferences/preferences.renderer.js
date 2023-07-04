@@ -7,6 +7,10 @@ let my = {
   timingsToDeleteByName: {},
   currentTimingsFileInfoBeingEdited: undefined,
   timingsFileInfosListView: undefined,
+  wallpapersToAddByName: {},
+  wallpapersToDeleteByName: {},
+  currentWallpaperInfoBeingEdited: undefined,
+  wallpapersListView: undefined,
 };
 
 function handleServerMessage(msg) {
@@ -24,6 +28,24 @@ function handleServerMessage(msg) {
     }
     return;
   }
+  if (msg.type === 'wallpapers-errors') {
+    alert([
+      'error related to wallpapers: ',
+      ...msg.errors
+    ].join('\n'));
+    return;
+  }
+  if (msg.type === 'wallpapers') {
+    console.log(`msg type wallpapers. msg:`);
+    console.dir(msg);
+    my.originalWallpapersWrapper = msg;
+    let wallpapersToShow = createListOfWallpapersToShow(msg);
+    console.log('wallpapersToShow:');
+    console.dir(wallpapersToShow);
+    my.wallpapersListView = new WallpapersListView(wallpapersToShow);
+    my.wallpapersListView.initHtml();
+    return;
+  }
   let originalConfig = msg.config;
   let config = createCopyOfConfig(originalConfig);
   my.originalConfig = originalConfig;
@@ -39,9 +61,11 @@ function handleServerMessage(msg) {
       showingTimingsConfigHeaderWithStar ||
       showingNotebookHeaderWithStar ||
       showingFrequenciesHeaderWithStar ||
-      showingPostTimingDialogHeaderWithStar;
+      showingPostTimingDialogHeaderWithStar ||
+      my.showingWallpapersHeaderWithStar;
     if (!hasUnsavedChanges) {
       my.timingsFileInfosListView.handleSaveSuccess();
+      my.wallpapersListView.handleSaveSuccess();
       return;
     }
     function convertToBackendFormat(timingsFileInfos) {
@@ -55,15 +79,6 @@ function handleServerMessage(msg) {
         return copy;
       });
     }
-    window.webkit.messageHandlers.preferences_msg__save.postMessage({
-      configWithNoTimings: Object.assign({}, config, {timings: []}),
-      timings: convertToBackendFormat(my.timingsFileInfosListView.timingsToShow),
-      timingsToAdd: convertToBackendFormat(Object.values(my.timingsToAddByName)),
-      namesOfTimingsToDelete: Object.keys(my.timingsToDeleteByName),
-      changedTimings: my.showingTimingsHeaderWithStar,
-      changedTimingsConfig: showingTimingsConfigHeaderWithStar,
-      changedNotebook: showingNotebookHeaderWithStar
-    });
     my.save_result_handler = (result, msg) => {
       if (result === 'error') {
         alert(`There was an error while saving a file. Error message: "${msg.error_message}"`);
@@ -71,6 +86,7 @@ function handleServerMessage(msg) {
       }
       if (result === 'success') {
         my.timingsFileInfosListView.handleSaveSuccess();
+        my.wallpapersListView.handleSaveSuccess();
 
         let label = document.getElementById('tab1-label');
         label.innerHTML = 'Timings';
@@ -91,8 +107,24 @@ function handleServerMessage(msg) {
         label = document.getElementById('tab5-label');
         label.innerHTML = 'Post-timing dialog';
         showingPostTimingDialogHeaderWithStar = false;
+
+        label = document.getElementById('tab6-label');
+        label.innerHTML = 'Wallpapers';
+        my.showingWallpapersHeaderWithStar = false;
       }
     };
+    window.webkit.messageHandlers.preferences_msg__save.postMessage({
+      configWithNoTimings: Object.assign({}, config, {timings: []}),
+      timings: convertToBackendFormat(my.timingsFileInfosListView.timingsToShow),
+      timingsToAdd: convertToBackendFormat(Object.values(my.timingsToAddByName)),
+      namesOfTimingsToDelete: Object.keys(my.timingsToDeleteByName),
+      changedTimings: my.showingTimingsHeaderWithStar,
+      changedTimingsConfig: showingTimingsConfigHeaderWithStar,
+      changedNotebook: showingNotebookHeaderWithStar,
+      wallpapers: convertWallpapersListToBackendFormat(my.wallpapersListView.wallpapersToShow),
+      wallpapersToAdd: convertWallpapersListToBackendFormat(Object.values(my.wallpapersToAddByName)),
+      namesOfWallpapersToDelete: Object.keys(my.wallpapersToDeleteByName),
+    });
   });
 
   let btnReset = document.getElementById('btn-reset');
@@ -163,6 +195,11 @@ function handleServerMessage(msg) {
       my.timingsFileInfosListView.reset(createCopyOfTimings(config));
     }
 
+    let hadChangesInWallpapers = my.showingWallpapersHeaderWithStar;
+    if (hadChangesInWallpapers) {
+      my.wallpapersListView.reset(createListOfWallpapersToShow(my.originalWallpapersWrapper));
+    }
+
     let label = document.getElementById('tab1-label');
     label.innerHTML = 'Timings';
     my.showingTimingsHeaderWithStar = false;
@@ -182,6 +219,10 @@ function handleServerMessage(msg) {
     label = document.getElementById('tab5-label');
     label.innerHTML = 'Post-timing dialog';
     showingPostTimingDialogHeaderWithStar = false;
+
+    label = document.getElementById('tab6-label');
+    label.innerHTML = 'Wallpapers';
+    my.showingWallpapersHeaderWithStar = false;
   });
 
   let btnCancel = document.getElementById('btn-cancel');
@@ -189,7 +230,10 @@ function handleServerMessage(msg) {
     let hasUnsavedChanges = 
       my.showingTimingsHeaderWithStar ||
       showingTimingsConfigHeaderWithStar ||
-      showingNotebookHeaderWithStar;
+      showingNotebookHeaderWithStar ||
+      showingFrequenciesHeaderWithStar ||
+      showingPostTimingDialogHeaderWithStar ||
+      my.showingWallpapersHeaderWithStar;
 
     let isToCancel = true;
     if (hasUnsavedChanges) {
@@ -209,6 +253,8 @@ function handleServerMessage(msg) {
   btnNewTimingsFile.addEventListener('click', (eve) => {
     let textareaCategoryPath = document.getElementById('new-timing-category-path');
     textareaCategoryPath.disabled = true;
+
+    my.scrollTopOfListOfTimingsFiles = document.getElementById('tab-contents-of-timings').scrollTop;
 
     let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
     panelOfListOfTimingsFiles.classList.remove('active');
@@ -280,6 +326,10 @@ function handleServerMessage(msg) {
     panelOfListOfTimingsFiles.classList.add('active');
     panelOfListOfTimingsFiles.classList.remove('inactive');
 
+    if (my.scrollTopOfListOfTimingsFiles !== undefined) {
+      document.getElementById('tab-contents-of-timings').scrollTop = my.scrollTopOfListOfTimingsFiles;
+    }
+
     let newTimingsFileForm = document.getElementById('form-to-edit-timings-file-info');
     newTimingsFileForm.classList.add('inactive');
     newTimingsFileForm.classList.remove('active');
@@ -310,6 +360,10 @@ function handleServerMessage(msg) {
     let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
     panelOfListOfTimingsFiles.classList.add('active');
     panelOfListOfTimingsFiles.classList.remove('inactive');
+
+    if (my.scrollTopOfListOfTimingsFiles !== undefined) {
+      document.getElementById('tab-contents-of-timings').scrollTop = my.scrollTopOfListOfTimingsFiles;
+    }
 
     let newTimingsFileForm = document.getElementById('form-to-edit-timings-file-info');
     newTimingsFileForm.classList.add('inactive');
@@ -347,6 +401,169 @@ function handleServerMessage(msg) {
     let event = new Event('change');
     inputFilepath.dispatchEvent(event);
   });
+
+
+
+  my.showingWallpapersHeaderWithStar = false;
+
+  let btnNewWallpaper = document.getElementById('btn-new-wallpaper');
+  btnNewWallpaper.addEventListener('click', (eve) => {
+
+    my.scrollTopOfListOfWallpapers = document.getElementById('tab-contents-of-wallpapers').scrollTop;
+
+    let panelOfListOfWallpapers = document.getElementById('list-of-wallpapers-panel');
+    panelOfListOfWallpapers.classList.remove('active');
+    panelOfListOfWallpapers.classList.add('inactive');
+
+    let newWallpaperForm = document.getElementById('form-to-edit-wallpaper-info');
+    newWallpaperForm.classList.remove('inactive');
+    newWallpaperForm.classList.add('active');
+
+    let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
+    bottomRowOfButtons.classList.add('hidden-behind-dialog');
+  });
+
+  let inputWallpaperFilepath = document.getElementById('new-wallpaper-filepath');
+
+  disableShortcutsOnFocus(inputWallpaperFilepath);
+
+  let btnWallpaperSave = document.getElementById('btn-wallpaper-info-save');
+  btnWallpaperSave.addEventListener('click', (eve) => {
+    let inputFilepath = document.getElementById('new-wallpaper-filepath');
+    let selectorOfPosition = document.getElementById('new-wallpaper-position');
+    let selectorOfLeftSideTextColor = document.getElementById('text-color-of-left-side');
+    let selectorOfLeftSideIconsColor = document.getElementById('icons-color-of-left-side');
+    let selectorOfRightSideTextColor = document.getElementById('text-color-of-right-side');
+    let selectorOfRightSideIconsColor = document.getElementById('icons-color-of-right-side');
+
+    let filepath = inputFilepath.value;
+    let name = my.currentFilepathBasename;
+    let position = selectorOfPosition.value;
+    let leftSideTextColor = selectorOfLeftSideTextColor.value;
+    let leftSideIconsColor = selectorOfLeftSideIconsColor.value;
+    let rightSideTextColor = selectorOfRightSideTextColor.value;
+    let rightSideIconsColor = selectorOfRightSideIconsColor.value;
+
+    let wallpaperInfo = {
+      name,
+      filepath,
+      position,
+      leftSideTextColor,
+      leftSideIconsColor,
+      rightSideTextColor,
+      rightSideIconsColor,
+    }
+
+    if (position === '') {
+      delete wallpaperInfo.position;
+    }
+    if (leftSideTextColor === '') {
+      delete wallpaperInfo.leftSideTextColor;
+    }
+    if (leftSideIconsColor === '') {
+      delete wallpaperInfo.leftSideIconsColor;
+    }
+    if (rightSideTextColor === '') {
+      delete wallpaperInfo.rightSideTextColor;
+    }
+    if (rightSideIconsColor === '') {
+      delete wallpaperInfo.rightSideIconsColor;
+    }
+
+    if (my.currentWallpaperInfoBeingEdited) {
+      Object.assign(my.currentWallpaperInfoBeingEdited, wallpaperInfo);
+      my.currentWallpaperInfoBeingEdited.view.refresh();
+      delete my.currentWallpaperInfoBeingEdited;
+    } else {
+      let newWallpaperInfo = wallpaperInfo;
+
+      my.timingsFileInfosListView.addNewInfo(newWallpaperInfo);
+
+      my.wallpapersToAddByName[name] = newWallpaperInfo;
+    }
+
+    inputFilepath.value = '';
+    selectorOfPosition.value = 'bottom-right';
+    selectorOfLeftSideTextColor.value = 'white'
+    selectorOfLeftSideIconsColor.value = 'white'
+    selectorOfRightSideTextColor.value = 'white'
+    selectorOfRightSideIconsColor.value = 'white'
+
+    let panelOfListOfWallpapers = document.getElementById('list-of-wallpapers-panel');
+    panelOfListOfWallpapers.classList.add('active');
+    panelOfListOfWallpapers.classList.remove('inactive');
+
+    if (my.scrollTopOfListOfWallpapers !== undefined) {
+      document.getElementById('tab-contents-of-wallpapers').scrollTop = my.scrollTopOfListOfWallpapers;
+    }
+
+    let newWallpaperForm = document.getElementById('form-to-edit-wallpaper-info');
+    newWallpaperForm.classList.add('inactive');
+    newWallpaperForm.classList.remove('active');
+
+    let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
+    bottomRowOfButtons.classList.remove('hidden-behind-dialog');
+
+    showOrHideStarInWallpapersHeader();
+  });
+
+  let btnWallpaperInfoEditCancel = document.getElementById('btn-wallpaper-info-cancel');
+  btnWallpaperInfoEditCancel.addEventListener('click', (eve) => {
+
+    delete my.currentWallpaperInfoBeingEdited;
+
+    let inputFilepath = document.getElementById('new-wallpaper-filepath');
+    let selectorOfPosition = document.getElementById('new-wallpaper-position');
+    let selectorOfLeftSideTextColor = document.getElementById('text-color-of-left-side');
+    let selectorOfLeftSideIconsColor = document.getElementById('icons-color-of-left-side');
+    let selectorOfRightSideTextColor = document.getElementById('text-color-of-right-side');
+    let selectorOfRightSideIconsColor = document.getElementById('icons-color-of-right-side');
+
+    inputFilepath.value = '';
+    selectorOfPosition.value = 'bottom-right';
+    selectorOfLeftSideTextColor.value = 'white'
+    selectorOfLeftSideIconsColor.value = 'white'
+    selectorOfRightSideTextColor.value = 'white'
+    selectorOfRightSideIconsColor.value = 'white'
+
+    let panelOfListOfWallpapers = document.getElementById('list-of-wallpapers-panel');
+    panelOfListOfWallpapers.classList.add('active');
+    panelOfListOfWallpapers.classList.remove('inactive');
+
+    if (my.scrollTopOfListOfWallpapers !== undefined) {
+      document.getElementById('tab-contents-of-wallpapers').scrollTop = my.scrollTopOfListOfWallpapers;
+    }
+
+    let newWallpaperForm = document.getElementById('form-to-edit-wallpaper-info');
+    newWallpaperForm.classList.add('inactive');
+    newWallpaperForm.classList.remove('active');
+
+    let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
+    bottomRowOfButtons.classList.remove('hidden-behind-dialog');
+  });
+
+  let wallpapersBtnFilepath = document.getElementById('new-wallpaper-filepath-btn');
+  wallpapersBtnFilepath.addEventListener('click', async (eve) => {
+    let extractBasename = true;
+    let result = await pickFile(extractBasename);
+    if (result.canceled) {
+      return;
+    }
+    if (result.filePaths === undefined || result.filePaths.length === 0) {
+      return;
+    }
+    let filepath = result.filePaths[0].filepath;
+    let basename = result.filePaths[0].basename;
+
+    let inputFilepath = document.getElementById('new-wallpaper-filepath');
+    inputFilepath.value = filepath;
+
+    my.currentFilepathBasename = basename;
+
+    let event = new Event('change');
+    inputFilepath.dispatchEvent(event);
+  });
+
 
   let showingTimingsConfigHeaderWithStar = false;
 
@@ -1029,6 +1246,8 @@ TimingsFileInfoView.prototype.btnHandlerEditTimingsFileInfo = function() {
   }
   selectorOfFormat.value = timingsFileInfo.format;
 
+  my.scrollTopOfListOfTimingsFiles = document.getElementById('tab-contents-of-timings').scrollTop;
+
   let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
   panelOfListOfTimingsFiles.classList.remove('active');
   panelOfListOfTimingsFiles.classList.add('inactive');
@@ -1071,6 +1290,286 @@ TimingsFileInfoView.prototype.btnHandlerUndoDeletionOfTimingsFileInfo = function
   showOrHideStarInTimingsHeader();
 }
 
+
+
+
+
+
+function WallpapersListView(wallpapersToShow) {
+  this.wallpapersToShow = wallpapersToShow;
+  this.wallpaperInfoViews = undefined;
+  this.html = undefined;
+}
+
+WallpapersListView.prototype.initHtml = function() {
+  let that = this;
+
+  that.wallpaperInfoViews = that.wallpapersToShow.map(wallpaperInfo => new WallpaperInfoView(wallpaperInfo));
+  that.wallpaperInfoViews.forEach(v => v.initHtml());
+
+  let containerOfWallpapersList = document.getElementById('list-of-wallpapers');
+  containerOfWallpapersList.innerHTML = '';
+
+  that.html = withChildren(containerOfWallpapersList,
+    ...that.wallpaperInfoViews.map(v => v.html)
+  );
+};
+
+WallpapersListView.prototype.reset = function(wallpapersToShow) {
+  let that = this;
+  that.wallpapersToShow = wallpapersToShow;
+  that.initHtml();
+};
+
+WallpapersListView.prototype.addNewInfo = function(wallpaperInfo) {
+  let that = this;
+  that.wallpapersToShow.push(wallpaperInfo);
+
+  let view = new WallpaperInfoView(wallpaperInfo);
+  that.wallpaperInfoViews.push(view);
+
+  view.initHtml();
+
+  that.html.appendChild(view.html);
+};
+
+WallpapersListView.prototype.dataIsSameAsOriginal = function() {
+  let that = this;
+  if (Object.keys(my.wallpapersToAddByName).length > 0) {
+    return false;
+  }
+  if (Object.keys(my.wallpapersToDeleteByName).length > 0) {
+    return false;
+  }
+  for (let t of that.wallpapersToShow) {
+    if (t.original === undefined) {
+      continue;
+    }
+    if (!wallpaperInfoIsSameAsOriginal(t)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+WallpapersListView.prototype.handleSaveSuccess = function() {
+  let that = this;
+
+
+  let setOfDeletedNames = new Set(Object.keys(my.wallpapersToDeleteByName));
+  for (let t of that.wallpapersToShow) {
+    let wasAddedAndDeleted = t.original === undefined && my.wallpapersToAddByName[t.name] === undefined;
+    let wasDeleted = setOfDeletedNames.has(t.name);
+
+    if (wasAddedAndDeleted || wasDeleted) {
+      t.view.html.parentNode.removeChild(t.view.html);
+    }
+  }
+  that.wallpapersToShow = that.wallpapersToShow.filter(t => !setOfDeletedNames.has(t.name));
+  that.wallpaperInfoViews = that.wallpapersToShow.map(t => t.view);
+
+  my.wallpapersToAddByName = {};
+  my.wallpapersToDeleteByName = {};
+};
+
+function wallpaperInfoIsSameAsOriginal(wallpaperInfo) {
+  let fieldNames = [
+    'filepath',
+    'position',
+    'leftSideTextColor',
+    'leftSideIconsColor',
+    'rightSideTextColor',
+    'rightSideIconsColor'
+  ];
+  let orig = wallpaperInfo.original;
+  for (let fieldName of fieldNames) {
+    let areEqual = wallpaperInfo[fieldName] === orig[fieldName];
+    if (!areEqual) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function WallpaperInfoView(wallpaperInfo) {
+  let that = this;
+  wallpaperInfo.view = that;
+  that.wallpaperInfo = wallpaperInfo;
+  that.html = undefined;
+}
+
+WallpaperInfoView.prototype.initHtml = function() {
+  let that = this;
+  let wallpaperInfo = that.wallpaperInfo;
+  that.imageDiv =
+    withChildren(withClass(document.createElement('div'), 'div-with-image'),
+      (function() {
+        let img = new Image(200);
+        img.src = that.wallpaperInfo.relativePath;
+        return img;
+      })()
+    );
+  that.filepathDiv =
+    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+      document.createTextNode(`filepath: ${wallpaperInfo.filepath}`)
+    );
+  that.positionDiv =
+    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+      document.createTextNode(`attaches to corner: ${wallpaperInfo.position}`)
+    );
+  that.leftSideTextColorDiv =
+    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+      document.createTextNode(`left-side text color: ${wallpaperInfo.leftSideTextColor}`)
+    );
+  that.leftSideIconsColorDiv =
+    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+      document.createTextNode(`left-side icons color: ${wallpaperInfo.leftSideIconsColor}`)
+    );
+  that.rightSideTextColorDiv =
+    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+      document.createTextNode(`right-side text color: ${wallpaperInfo.rightSideTextColor}`)
+    );
+  that.rightSideIconsColorDiv =
+    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+      document.createTextNode(`right-side icons color: ${wallpaperInfo.rightSideIconsColor}`)
+    );
+  that.html = withChildren(withClass(document.createElement('div'), 'wallpaper-info-view'),
+    that.createDivOfWallpaperInfoButtons(),
+    that.imageDiv,
+    that.filepathDiv,
+    that.positionDiv,
+    that.leftSideTextColorDiv,
+    that.leftSideIconsColorDiv,
+    that.rightSideTextColorDiv,
+    that.rightSideIconsColorDiv,
+  );
+}
+
+WallpaperInfoView.prototype.refresh = function() {
+  let that = this;
+  let wallpaperInfo = that.wallpaperInfo;
+
+  that.filepathDiv.innerHTML = `filepath: ${wallpaperInfo.filepath}`;
+  that.positionDiv.innerHTML = `attaches to corner: ${wallpaperInfo.position}`;
+  that.leftSideTextColorDiv.innerHTML = `left-side text color: ${wallpaperInfo.leftSideTextColor}`;
+  that.leftSideIconsColorDiv.innerHTML = `left-side icons color: ${wallpaperInfo.leftSideIconsColor}`;
+  that.rightSideTextColorDiv.innerHTML = `right-side text color: ${wallpaperInfo.rightSideTextColor}`;
+  that.rightSideIconsColorDiv.innerHTML = `right-side icons color: ${wallpaperInfo.rightSideIconsColor}`;
+
+}
+
+WallpaperInfoView.prototype.createDivOfWallpaperInfoButtons = function() {
+  let that = this;
+
+  let btnEdit = 
+    withChildren(withClass(document.createElement('button'), 'btn-edit-wallpaper-info'),
+      document.createTextNode('edit')
+    );
+  btnEdit.addEventListener('click', (eve) => {
+    that.btnHandlerEditWallpaperInfo();
+  });
+
+  let btnDelete =
+    withChildren(withClass(document.createElement('button'), 'btn-delete-wallpaper-info'),
+      document.createTextNode('delete')
+    );
+  btnDelete.addEventListener('click', (eve) => {
+    that.btnHandlerDeleteWallpaperInfo();
+  });
+
+  let btnUndoDelete =
+    withChildren(withClass(document.createElement('button'), 'btn-undo-delete-of-wallpaper-info'),
+      document.createTextNode('undo deletion')
+    );
+  btnUndoDelete.addEventListener('click', (eve) => {
+    that.btnHandlerUndoDeletionOfWallpaperInfo();
+  });
+
+  return withChildren(withClass(document.createElement('div'), 'wallpaper-info-buttons'),
+    btnEdit,
+    btnDelete,
+    btnUndoDelete
+  );
+}
+
+WallpaperInfoView.prototype.btnHandlerEditWallpaperInfo = function() {
+  let that = this;
+  let wallpaperInfo = that.wallpaperInfo;
+
+  my.currentWallpaperInfoBeingEdited = wallpaperInfo;
+
+  let inputFilepath = document.getElementById('new-wallpaper-filepath');
+  let selectorOfPosition = document.getElementById('new-wallpaper-position');
+  let selectorOfLeftSideTextColor = document.getElementById('text-color-of-left-side');
+  let selectorOfLeftSideIconsColor = document.getElementById('icons-color-of-left-side');
+  let selectorOfRightSideTextColor = document.getElementById('text-color-of-right-side');
+  let selectorOfRightSideIconsColor = document.getElementById('icons-color-of-right-side');
+
+  inputFilepath.value = wallpaperInfo.filepath;
+  selectorOfPosition.value = wallpaperInfo.position;
+  selectorOfLeftSideTextColor.value = wallpaperInfo.leftSideTextColor;
+  selectorOfLeftSideIconsColor.value = wallpaperInfo.leftSideIconsColor;
+  selectorOfRightSideTextColor.value = wallpaperInfo.rightSideTextColor;
+  selectorOfRightSideIconsColor.value = wallpaperInfo.rightSideIconsColor;
+
+  my.scrollTopOfListOfWallpapers = document.getElementById('tab-contents-of-wallpapers').scrollTop;
+
+  let panelOfListOfWallpapers = document.getElementById('list-of-wallpapers-panel');
+  panelOfListOfWallpapers.classList.remove('active');
+  panelOfListOfWallpapers.classList.add('inactive');
+
+  let newWallpaperForm = document.getElementById('form-to-edit-wallpaper-info');
+  newWallpaperForm.classList.remove('inactive');
+  newWallpaperForm.classList.add('active');
+
+  let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
+  bottomRowOfButtons.classList.add('hidden-behind-dialog');
+};
+
+
+WallpaperInfoView.prototype.btnHandlerDeleteWallpaperInfo = function() {
+  let that = this;
+  let wallpaperInfo = that.wallpaperInfo;
+
+  if (my.wallpapersToAddByName.hasOwnProperty(wallpaperInfo.name)) {
+    delete my.wallpapersToAddByName[wallpaperInfo.name];
+  } else {
+    my.wallpapersToDeleteByName[wallpaperInfo.name] = true;
+  }
+
+  that.html.classList.add('to-be-deleted');
+  showOrHideStarInWallpapersHeader();
+};
+
+
+WallpaperInfoView.prototype.btnHandlerUndoDeletionOfWallpaperInfo = function() {
+  let that = this;
+  let wallpaperInfo = that.wallpaperInfo;
+
+  if (my.wallpapersToDeleteByName[wallpaperInfo.name]) {
+    delete my.wallpapersToDeleteByName[wallpaperInfo.name];
+  } else {
+    my.wallpapersToAddByName[wallpaperInfo.name] = wallpaperInfo;
+  }
+
+  that.html.classList.remove('to-be-deleted');
+  showOrHideStarInWallpapersHeader();
+}
+
+
+
+
+function showOrHideStarInWallpapersHeader() {
+  let isSame = my.wallpapersListView.dataIsSameAsOriginal();
+  my.showingWallpapersHeaderWithStar = !isSame;
+  let label = document.getElementById('tab6-label');
+  if (isSame) {
+    label.innerHTML = 'Wallpapers';
+  } else {
+    label.innerHTML = 'Wallpapers*';
+  }
+}
+
 function showOrHideStarInTimingsHeader() {
   let isSame = my.timingsFileInfosListView.dataIsSameAsOriginal();
   my.showingTimingsHeaderWithStar = !isSame;
@@ -1103,6 +1602,27 @@ function createCopyOfTiming(t) {
   let copy = Object.assign({}, t);
   copy.original = t;
   return copy;
+}
+
+function createListOfWallpapersToShow(msg) {
+  return msg.wallpapers.map(wp => {
+    let copy = Object.assign({}, wp);
+    if (msg.wallpapersConfig[wp.basename]) {
+      Object.assign(copy, msg.wallpapersConfig[wp.basename]);
+    }
+    copy.original = wp;
+    return copy;
+  });
+}
+
+function convertWallpapersListToBackendFormat(wallpapers) {
+  return wallpapers.map(wp => {
+    let copy = Object.assign({}, wp);
+    delete copy.view;
+    delete copy.absolutePath;
+    delete copy.relativePath;
+    return copy;
+  });
 }
 
 function timingsConfigIsSameAsOriginal(timingsConfig, originalTimingsConfig) {
@@ -1213,9 +1733,9 @@ function parseCategoryPath(textareaContents) {
   return noEmptyStrings;
 }
 
-function pickFile() {
+function pickFile(extractBasename) {
   return new Promise((resolve, reject) => {
-    window.webkit.messageHandlers.preferences_msg__choose_file.postMessage();
+    window.webkit.messageHandlers.preferences_msg__choose_file.postMessage(!!extractBasename);
     my.filepicker_result_handler = (result) => {
       resolve(result);
     }
