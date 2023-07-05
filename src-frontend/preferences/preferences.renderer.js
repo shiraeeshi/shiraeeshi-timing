@@ -76,6 +76,12 @@ function handleServerMessage(msg) {
           copy['category-path'] = copy.categoryPath;
           delete copy.categoryPath;
         }
+        if (copy.competitivenessLevel === undefined) {
+          copy['competitiveness-level'] = 0;
+        } else {
+          copy['competitiveness-level'] = copy.competitivenessLevel;
+          delete copy.competitivenessLevel;
+        }
         return copy;
       });
     }
@@ -254,6 +260,9 @@ function handleServerMessage(msg) {
     let textareaCategoryPath = document.getElementById('new-timing-category-path');
     textareaCategoryPath.disabled = true;
 
+    let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
+    inputCompetitivenessLevel.value = '0';
+
     my.scrollTopOfListOfTimingsFiles = document.getElementById('tab-contents-of-timings').scrollTop;
 
     let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
@@ -271,27 +280,36 @@ function handleServerMessage(msg) {
   let inputName = document.getElementById('new-timing-name');
   let inputFilepath = document.getElementById('new-timing-filepath');
   let textareaCategoryPath = document.getElementById('new-timing-category-path');
+  let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
 
   disableShortcutsOnFocus(inputName);
   disableShortcutsOnFocus(inputFilepath);
   disableShortcutsOnFocus(textareaCategoryPath);
+  disableShortcutsOnFocus(inputCompetitivenessLevel);
 
   let btnTimingsFileInfoSave = document.getElementById('btn-timings-file-info-save');
   btnTimingsFileInfoSave.addEventListener('click', (eve) => {
     let inputName = document.getElementById('new-timing-name');
     let inputFilepath = document.getElementById('new-timing-filepath');
+    let selectorOfFormat = document.getElementById('new-timing-format');
     let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
     let textareaCategoryPath = document.getElementById('new-timing-category-path');
-    let selectorOfFormat = document.getElementById('new-timing-format');
+    let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
 
     let name = inputName.value;
-    let filepath = inputFilepath.value;
     let format = selectorOfFormat.value;
+    let filepath = inputFilepath.value;
+    let competitivenessLevel = parseInt(inputCompetitivenessLevel.value);
+    if (isNaN(competitivenessLevel)) {
+      alert('competitivenessLevel must be int');
+      return;
+    }
 
     let timingsFileInfo = {
-      name: name,
-      format: format,
-      filepath: filepath,
+      name,
+      format,
+      filepath,
+      competitivenessLevel,
     }
     let categoryPathIsSameAsName = checkboxCategoryPathIsSameAsName.checked;
     if (!categoryPathIsSameAsName) {
@@ -315,10 +333,11 @@ function handleServerMessage(msg) {
 
     inputName.value = '';
     inputFilepath.value = '';
+    selectorOfFormat.value = 'yaml';
     checkboxCategoryPathIsSameAsName.checked = true;
     textareaCategoryPath.value = '';
     textareaCategoryPath.disabled = true;
-    selectorOfFormat.value = 'yaml';
+    inputCompetitivenessLevel.value = '0';
 
     // showTimings(my.timingsToShow);
 
@@ -346,16 +365,18 @@ function handleServerMessage(msg) {
 
     let inputName = document.getElementById('new-timing-name');
     let inputFilepath = document.getElementById('new-timing-filepath');
+    let selectorOfFormat = document.getElementById('new-timing-format');
     let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
     let textareaCategoryPath = document.getElementById('new-timing-category-path');
-    let selectorOfFormat = document.getElementById('new-timing-format');
+    let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
 
     inputName.value = '';
     inputFilepath.value = '';
+    selectorOfFormat.value = 'yaml';
     checkboxCategoryPathIsSameAsName.checked = true;
     textareaCategoryPath.value = '';
     textareaCategoryPath.disabled = true;
-    selectorOfFormat.value = 'yaml';
+    inputCompetitivenessLevel.value = '0';
 
     let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
     panelOfListOfTimingsFiles.classList.add('active');
@@ -1127,7 +1148,7 @@ TimingsFileInfosListView.prototype.handleSaveSuccess = function() {
 };
 
 function timingsFileInfoIsSameAsOriginal(timingsFileInfo) {
-  let fieldNames = ['name', 'filepath', 'format', 'categoryPath'];
+  let fieldNames = ['name', 'filepath', 'format', 'categoryPath', 'competitivenessLevel'];
   let orig = timingsFileInfo.original;
   for (let fieldName of fieldNames) {
     let areEqual = timingsFileInfo[fieldName] === orig[fieldName];
@@ -1168,12 +1189,20 @@ TimingsFileInfoView.prototype.initHtml = function() {
   if (categoryPathIsSameAsName) {
     that.categoryPathDiv.classList.add('category-path-is-same-as-name');
   }
+  that.competitivenessLevelDiv = 
+    withChildren(withClass(document.createElement('div'), 'div-with-text'),
+      document.createTextNode(`competitiveness level: ${timingsFileInfo.competitivenessLevel}`)
+    );
+  if (timingsFileInfo.competitivenessLevel === 0) {
+    that.competitivenessLevelDiv.classList.add('default-competitiveness-level');
+  }
   that.html = withChildren(withClass(document.createElement('div'), 'timings-file-info-view'),
     that.createDivOfTimingsFileButtons(),
     that.nameDiv,
     that.formatDiv,
     that.filepathDiv,
-    that.categoryPathDiv
+    that.categoryPathDiv,
+    that.competitivenessLevelDiv,
   );
 }
 
@@ -1185,12 +1214,19 @@ TimingsFileInfoView.prototype.refresh = function() {
   that.formatDiv.innerHTML = `format: ${timingsFileInfo.format}`;
   that.filepathDiv.innerHTML = `filepath: ${timingsFileInfo.filepath}`;
   that.categoryPathDiv.innerHTML = `category path: ${categoryPathToString(timingsFileInfo)}`;
+  that.competitivenessLevelDiv.innerHTML = `competitiveness level: ${timingsFileInfo.competitivenessLevel}`;
 
   let categoryPathIsSameAsName = timingsFileInfo.categoryPath === undefined || (timingsFileInfo.categoryPath.length === 1 && timingsFileInfo.categoryPath[0] === timingsFileInfo.name);
   if (categoryPathIsSameAsName) {
     that.categoryPathDiv.classList.add('category-path-is-same-as-name');
   } else {
     that.categoryPathDiv.classList.remove('category-path-is-same-as-name');
+  }
+
+  if (timingsFileInfo.competitivenessLevel === 0) {
+    that.competitivenessLevelDiv.classList.add('default-competitiveness-level');
+  } else {
+    that.competitivenessLevelDiv.classList.remove('default-competitiveness-level');
   }
 }
 
@@ -1237,19 +1273,21 @@ TimingsFileInfoView.prototype.btnHandlerEditTimingsFileInfo = function() {
 
   let inputName = document.getElementById('new-timing-name');
   let inputFilepath = document.getElementById('new-timing-filepath');
+  let selectorOfFormat = document.getElementById('new-timing-format');
   let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
   let textareaCategoryPath = document.getElementById('new-timing-category-path');
-  let selectorOfFormat = document.getElementById('new-timing-format');
+  let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
 
   inputName.value = timingsFileInfo.name;
   inputFilepath.value = timingsFileInfo.filepath;
+  selectorOfFormat.value = timingsFileInfo.format;
   let categoryPathIsSameAsName = timingsFileInfo.categoryPath === undefined || (timingsFileInfo.categoryPath.length === 1 && timingsFileInfo.categoryPath[0] === timingsFileInfo.name);
   checkboxCategoryPathIsSameAsName.checked = categoryPathIsSameAsName;
   textareaCategoryPath.disabled = categoryPathIsSameAsName;
   if (!categoryPathIsSameAsName) {
     textareaCategoryPath.value = timingsFileInfo.categoryPath.join('\n');
   }
-  selectorOfFormat.value = timingsFileInfo.format;
+  inputCompetitivenessLevel.value = timingsFileInfo.competitivenessLevel;
 
   my.scrollTopOfListOfTimingsFiles = document.getElementById('tab-contents-of-timings').scrollTop;
 

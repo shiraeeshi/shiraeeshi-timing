@@ -948,12 +948,34 @@ PostTimingView.prototype.showPossibleFilepaths = function() {
   let pfLen = possibleFilepaths.length;
   if (pfLen === 0) {
     pfHeader = 'no filepath';
-  } else if (pfLen === 1 && possibleFilepaths[0].filepaths.length == 1) {
+  } else if (pfLen === 1 && possibleFilepaths[0].filepathInfos.length == 1) {
     pfHeader = 'filepath:'
-    my.selectedFilepath = possibleFilepaths[0].filepaths[0];
+    my.selectedFilepath = possibleFilepaths[0].filepathInfos[0].filepath;
     my.selectedCategoryPath = possibleFilepaths[0].categoryPath;
   } else {
     pfHeader = 'select filepath:'
+    let mostCompetitive = (function findMostCompetitiveFilepath() {
+      let maxCompetitivenessLevel = Number.NEGATIVE_INFINITY;
+      let singleMostCompetitive;
+      for (let pf of possibleFilepaths) {
+        for (let fpInfo of pf.filepathInfos) {
+          if (fpInfo.competitivenessLevel > maxCompetitivenessLevel) {
+            maxCompetitivenessLevel = fpInfo.competitivenessLevel;
+            singleMostCompetitive = {
+              categoryPath: pf.categoryPath,
+              filepath: fpInfo.filepath,
+            };
+          } else if (fpInfo.competitivenessLevel === maxCompetitivenessLevel) {
+            singleMostCompetitive = undefined;
+          }
+        }
+      }
+      return singleMostCompetitive;
+    })();
+    if (mostCompetitive !== undefined) {
+      my.selectedFilepath = mostCompetitive.filepath;
+      my.selectedCategoryPath = mostCompetitive.categoryPath;
+    }
   }
 
   let encounteredSelectedFilepath = false;
@@ -967,13 +989,13 @@ PostTimingView.prototype.showPossibleFilepaths = function() {
         withChildren(document.createElement('span'),
           document.createTextNode(`category path: ${pf.categoryPath.join(' - ')}`)
         ),
-        ...pf.filepaths.map(fp => withChildren(document.createElement('div'),
+        ...pf.filepathInfos.map(fpInfo => withChildren(document.createElement('div'),
           withChildren(document.createElement('label'),
             (function() {
               let checkbox = document.createElement('input');
               checkbox.type = "checkbox";
               // if (possibleFilepaths.length === 1 && possibleFilepaths[0].filepaths.length === 1) {
-              if (my.selectedFilepath === fp && arrays_equals(my.selectedCategoryPath, pf.categoryPath)) {
+              if (my.selectedFilepath === fpInfo.filepath && arrays_equals(my.selectedCategoryPath, pf.categoryPath)) {
                 checkbox.checked = true;
                 my.selectedFilepathCheckbox = checkbox;
                 encounteredSelectedFilepath = true;
@@ -984,12 +1006,12 @@ PostTimingView.prototype.showPossibleFilepaths = function() {
                   if (my.selectedFilepathCheckbox !== undefined) {
                     my.selectedFilepathCheckbox.checked = false;
                   }
-                  my.selectedFilepath = fp;
+                  my.selectedFilepath = fpInfo.filepath;
                   my.selectedCategoryPath = pf.categoryPath;
                   my.selectedFilepathCheckbox = checkbox;
                   my.hasManuallySelectedFilepath = true;
                 } else {
-                  if (my.selectedFilepath === fp) {
+                  if (my.selectedFilepath === fpInfo.filepath) {
                     delete my.selectedFilepath;
                     delete my.selectedCategoryPath;
                     delete my.selectedFilepathCheckbox;
@@ -1000,7 +1022,7 @@ PostTimingView.prototype.showPossibleFilepaths = function() {
               });
               return checkbox;
             })(),
-            document.createTextNode(`filepath: ${fp}`)
+            document.createTextNode(`filepath: ${fpInfo.filepath}`)
           )
         )),
         document.createElement('br'),
@@ -1042,10 +1064,10 @@ function getPossibleFilepaths() {
     if (processNode === my.selectedAsInnermostCategoryProcessNode) {
       break;
     }
-    if (cp2fNode.filepaths !== undefined && processNode.children.length <= 1) {
+    if (cp2fNode.filepathInfos !== undefined && processNode.children.length <= 1) {
       cp2fResult.push({
         categoryPath: categoryPath,
-        filepaths: cp2fNode.filepaths
+        filepathInfos: cp2fNode.filepathInfos
       });
     }
     if (processNode.children.length !== 1) {

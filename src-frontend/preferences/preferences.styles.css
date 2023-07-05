@@ -334,6 +334,10 @@ footer a {
   display: none;
 }
 
+#list-of-timings-files > .timings-file-info-view > div.default-competitiveness-level {
+  display: none;
+}
+
 #list-of-timings-files > .timings-file-info-view .btn-undo-delete-of-timings-file-info {
   display: none;
 }

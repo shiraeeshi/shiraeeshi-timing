@@ -156,18 +156,21 @@ function buildTreeFromCategoryPathToFile(config) {
         node = ensureChildWithName(node, cat);
       }
     }
-    if (node.filepaths === undefined) {
-      node.filepaths = [];
+    if (node.filepathInfos === undefined) {
+      node.filepathInfos = [];
     }
-    node.filepaths.push(timingsFileInfo.filepath);
+    node.filepathInfos.push({
+      filepath: timingsFileInfo.filepath,
+      competitivenessLevel: timingsFileInfo.competitivenessLevel,
+    });
   });
   return rootNode;
 }
 
 function buildInitialProcessesTree() {
   function func(cp2fNode, processNode) {
-    if (cp2fNode.filepaths !== undefined &&
-        cp2fNode.filepaths.length > 0) {
+    if (cp2fNode.filepathInfos !== undefined &&
+        cp2fNode.filepathInfos.length > 0) {
       processNode.isAtFilepath = true;
     }
     let childrenAreCoveredByFilepath =

@@ -147,6 +147,9 @@ function copyWithNoAdditionalFields(timingsFileInfos) {
   return timingsFileInfos.map(t => {
     let copy = Object.assign({}, t);
     delete copy.original;
+    if (copy['competitiveness-level'] === 0) {
+      delete copy['competitiveness-level'];
+    }
     return copy;
   });
 }
@@ -445,6 +448,12 @@ function convertConfigFromYamlFormat(config) {
     if (timingsFileInfo['category-path'] !== undefined) {
       timingsFileInfo.categoryPath = timingsFileInfo['category-path'];
       delete timingsFileInfo['category-path'];
+    }
+    if (timingsFileInfo['competitiveness-level'] !== undefined) {
+      timingsFileInfo.competitivenessLevel = timingsFileInfo['competitiveness-level'];
+      delete timingsFileInfo['competitiveness-level'];
+    } else {
+      timingsFileInfo.competitivenessLevel = 0;
     }
   });
   return config;

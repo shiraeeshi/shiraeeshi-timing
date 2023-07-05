@@ -410,6 +410,12 @@ function convertConfigFromYamlFormat(config) {
       timingsFileInfo.categoryPath = timingsFileInfo['category-path'];
       delete timingsFileInfo['category-path'];
     }
+    if (timingsFileInfo['competitiveness-level'] !== undefined) {
+      timingsFileInfo.competitivenessLevel = timingsFileInfo['competitiveness-level'];
+      delete timingsFileInfo['competitiveness-level'];
+    } else {
+      timingsFileInfo.competitivenessLevel = 0;
+    }
   });
   return config;
 }
