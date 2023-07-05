@@ -122,7 +122,7 @@ function handleServerMessage(msg) {
       changedTimingsConfig: showingTimingsConfigHeaderWithStar,
       changedNotebook: showingNotebookHeaderWithStar,
       wallpapers: convertWallpapersListToBackendFormat(my.wallpapersListView.wallpapersToShow),
-      wallpapersToAdd: convertWallpapersListToBackendFormat(Object.values(my.wallpapersToAddByName)),
+      wallpapersToAdd: convertWallpapersToAddListToBackendFormat(Object.values(my.wallpapersToAddByName)),
       namesOfWallpapersToDelete: Object.keys(my.wallpapersToDeleteByName),
     });
   });
@@ -438,6 +438,7 @@ function handleServerMessage(msg) {
 
     let filepath = inputFilepath.value;
     let name = my.currentFilepathBasename;
+    let relativePath = my.currentFilepathRelative;
     let position = selectorOfPosition.value;
     let leftSideTextColor = selectorOfLeftSideTextColor.value;
     let leftSideIconsColor = selectorOfLeftSideIconsColor.value;
@@ -447,6 +448,7 @@ function handleServerMessage(msg) {
     let wallpaperInfo = {
       name,
       filepath,
+      relativePath,
       position,
       leftSideTextColor,
       leftSideIconsColor,
@@ -471,14 +473,14 @@ function handleServerMessage(msg) {
     }
 
     if (my.currentWallpaperInfoBeingEdited) {
+      wallpaperInfo.basename = my.currentWallpaperInfoBeingEdited.basename;
       Object.assign(my.currentWallpaperInfoBeingEdited, wallpaperInfo);
       my.currentWallpaperInfoBeingEdited.view.refresh();
       delete my.currentWallpaperInfoBeingEdited;
     } else {
+      wallpaperInfo.basename = name;
       let newWallpaperInfo = wallpaperInfo;
-
-      my.timingsFileInfosListView.addNewInfo(newWallpaperInfo);
-
+      my.wallpapersListView.addNewInfo(newWallpaperInfo);
       my.wallpapersToAddByName[name] = newWallpaperInfo;
     }
 
@@ -545,7 +547,8 @@ function handleServerMessage(msg) {
   let wallpapersBtnFilepath = document.getElementById('new-wallpaper-filepath-btn');
   wallpapersBtnFilepath.addEventListener('click', async (eve) => {
     let extractBasename = true;
-    let result = await pickFile(extractBasename);
+    let withRelativePath = true;
+    let result = await pickFile(extractBasename, withRelativePath);
     if (result.canceled) {
       return;
     }
@@ -554,11 +557,13 @@ function handleServerMessage(msg) {
     }
     let filepath = result.filePaths[0].filepath;
     let basename = result.filePaths[0].basename;
+    let relativePath = result.filePaths[0].relativePath;
 
     let inputFilepath = document.getElementById('new-wallpaper-filepath');
     inputFilepath.value = filepath;
 
     my.currentFilepathBasename = basename;
+    my.currentFilepathRelative = relativePath;
 
     let event = new Event('change');
     inputFilepath.dispatchEvent(event);
@@ -1606,11 +1611,13 @@ function createCopyOfTiming(t) {
 
 function createListOfWallpapersToShow(msg) {
   return msg.wallpapers.map(wp => {
-    let copy = Object.assign({}, wp);
+    let original = Object.assign({}, wp);
     if (msg.wallpapersConfig[wp.basename]) {
-      Object.assign(copy, msg.wallpapersConfig[wp.basename]);
+      Object.assign(original, msg.wallpapersConfig[wp.basename]);
     }
-    copy.original = wp;
+    let copy = Object.assign({}, original);
+    copy.name = wp.basename;
+    copy.original = original;
     return copy;
   });
 }
@@ -1620,6 +1627,17 @@ function convertWallpapersListToBackendFormat(wallpapers) {
     let copy = Object.assign({}, wp);
     delete copy.view;
     delete copy.absolutePath;
+    delete copy.relativePath;
+    return copy;
+  });
+}
+
+function convertWallpapersToAddListToBackendFormat(wallpapers) {
+  return wallpapers.map(wp => {
+    let copy = Object.assign({}, wp);
+    copy.basename = copy.name;
+    delete copy.name;
+    delete copy.view;
     delete copy.relativePath;
     return copy;
   });
@@ -1733,9 +1751,9 @@ function parseCategoryPath(textareaContents) {
   return noEmptyStrings;
 }
 
-function pickFile(extractBasename) {
+function pickFile(extractBasename, withRelativePath) {
   return new Promise((resolve, reject) => {
-    window.webkit.messageHandlers.preferences_msg__choose_file.postMessage(!!extractBasename);
+    window.webkit.messageHandlers.preferences_msg__choose_file.postMessage(!!extractBasename, !!withRelativePath);
     my.filepicker_result_handler = (result) => {
       resolve(result);
     }

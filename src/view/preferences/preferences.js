@@ -12,7 +12,7 @@ ipcMain.on('msg', (_event, msg) => {
   console.log(`[preferences.js] message from preferences: ${msg}`);
 });
 
-ipcMain.on('msg_choose_file', async (event, extractBasename) => {
+ipcMain.on('msg_choose_file', async (event, extractBasename, withRelativePath) => {
   let result = await dialog.showOpenDialog({properties: ['openFile', 'promptToCreate']});
   if (!extractBasename) {
     event.sender.send('message-from-backend', {
@@ -22,10 +22,16 @@ ipcMain.on('msg_choose_file', async (event, extractBasename) => {
     return;
   }
   result.filePaths = result.filePaths.map(fp => {
+    let basename = path.basename(fp);
+
     let obj = {
       filepath: fp,
-      basename: path.basename(fp)
+      basename,
     };
+    if (withRelativePath) {
+      const pathOfPreferences = path.join('dist-frontend', 'preferences')
+      obj.relativePath = path.relative(pathOfPreferences, fp);
+    }
     return obj;
   });
   event.sender.send('message-from-backend', {
@@ -147,11 +153,12 @@ function copyWithNoAdditionalFields(timingsFileInfos) {
 
 function createWallpapersConfigToSave(wallpapers, namesOfWallpapersToDelete) {
   namesOfWallpapersToDelete = new Set(namesOfWallpapersToDelete);
-  let filtered = wallpapers.filter(wp => !namesOfWallpapersToDelete.has(wp.name))
+  let filtered = wallpapers.filter(wp => !namesOfWallpapersToDelete.has(wp.basename))
   let lst = copyWallpaperInfosWithNoAdditionalFields(filtered);
   let obj = {};
   for (let item of lst) {
     let copy = Object.assign({}, item);
+    delete copy.name;
     delete copy.basename;
     obj[item.basename] = copy;
   }
