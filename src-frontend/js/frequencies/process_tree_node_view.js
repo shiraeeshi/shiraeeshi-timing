@@ -10,6 +10,7 @@ export function ProcessTreeNodeView(processNode, hGraphic, parentNodeView, rootN
   that.hGraphic = hGraphic;
   that.rootNodeView = rootNodeView;
   that.name = processNode.name;
+  that.isHidden = false;
   that.isCollapsed = true;
   that.isUnhighlighted = false;
   that.viewState = TimingsCategoryNodeViewState.HIGHLIGHTED_AS_CHILD;
@@ -111,7 +112,7 @@ ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
   if (lengthBefore > 0) {
     that.sortChildrenByLastTiming();
     that.htmlChildrenContainerUl.innerHTML = "";
-    withChildren(that.htmlChildrenContainerUl, ...that.children.map(ch => ch.html()));
+    withChildren(that.htmlChildrenContainerUl, ...that.children.filter(ch => !ch.isHidden).map(ch => ch.html()));
   }
   let currentLength = that.children.length;
   if (lengthBefore === 0 && currentLength > 0) {
@@ -138,7 +139,7 @@ ProcessTreeNodeView.prototype.mergeWithNewTimings = function(processNode) {
   }
   that.processNode.deleteStashedValues();
   if (that.processNode.isInnermostCategory && that.children.length > 0) {
-    that.mergeSubprocesses();
+    that._mergeSubprocesses();
   }
 };
 
@@ -318,6 +319,9 @@ ProcessTreeNodeView.prototype.moveToBottom = function() {
 
 ProcessTreeNodeView.prototype.hideThisItem = function() {
   let that = this;
+  that.isHidden = true;
+  that.hGraphic.refreshRanges();
+  that.hGraphic.redraw();
   let parent = that.html().parentNode;
   parent.removeChild(that.html());
   if (that.parentNodeView !== undefined) {
@@ -334,8 +338,13 @@ ProcessTreeNodeView.prototype.hideSiblingsBelow = function() {
   if (idx >= 0) {
     for (let i = idx + 1; i < siblings.length; i++) {
       let sibling = siblings[i];
+      if (sibling.nodeView) {
+        sibling.nodeView.isHidden = true;
+      }
       parent.removeChild(sibling);
     }
+    that.hGraphic.refreshRanges();
+    that.hGraphic.redraw();
     if (siblings.length > idx + 1) {
       if (that.parentNodeView !== undefined) {
         that.parentNodeView.html().classList.add('has-hidden-children');
@@ -349,6 +358,11 @@ ProcessTreeNodeView.prototype.unhideHiddenChildren = function() {
   let that = this;
   // that.children.forEach(childNode => childNode.unhide());
   that.refreshOrderOfChildrenOnScreen();
+  that.children.forEach(ch => {
+    ch.isHidden = false;
+  });
+  that.hGraphic.refreshRanges();
+  that.hGraphic.redraw();
   let parent = that.html().parentNode;
   that.html().classList.remove('has-hidden-children');
   that.hasManuallyHiddenChildren = false;
@@ -370,14 +384,19 @@ ProcessTreeNodeView.prototype.html = function() {
 
 ProcessTreeNodeView.prototype.mergeSubprocesses = function() {
   let that = this;
+  that._mergeSubprocesses();
+  if (that.hGraphic) {
+    that.hGraphic.redraw();
+  }
+}
+
+ProcessTreeNodeView.prototype._mergeSubprocesses = function() {
+  let that = this;
   that.processNode.mergeSubprocesses();
   that.hasMergedChildren = true;
   that.children.forEach(child => child.unmarkMergedChildOrMergedChildren());
   that.htmlElement && that.htmlElement.classList.add('merged-children');
   that.children.forEach(child => child.markAsMerged());
-  if (that.hGraphic) {
-    that.hGraphic.redraw();
-  }
 }
 
 ProcessTreeNodeView.prototype.markAsMerged = function() {
@@ -649,14 +668,14 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
     that.htmlChildrenContainerUl.innerHTML = "";
     withChildren(that.htmlChildrenContainerUl, ...that.children.map(ch => ch.htmlElement));
     if (that.processNode.isInnermostCategory && that.children.length > 0) {
-      that.mergeSubprocesses();
+      that._mergeSubprocesses();
       that.collapse();
     }
   } else {
     that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
     that.sortChildrenByLastTiming();
     if (that.processNode.isInnermostCategory && that.children.length > 0) {
-      that.mergeSubprocesses();
+      that._mergeSubprocesses();
     }
     let htmlElement =
       withChildren(
@@ -688,6 +707,7 @@ ProcessTreeNodeView.prototype.buildAsHtmlLiElement = function() {
       htmlElement = withClass(htmlElement, 'merged-children');
     }
     that.htmlElement = htmlElement;
+    htmlElement.nodeView = that;
     if (!that.processNode.isInnermostCategory && that.children.length > 0) {
       that.uncollapseWithoutNotifyingChildren();
     }

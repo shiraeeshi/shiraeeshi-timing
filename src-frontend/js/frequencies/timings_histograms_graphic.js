@@ -4,7 +4,8 @@ const { withChildren } = require('../html_utils.js');
 export function TimingsHistogramsGraphic(processNode) {
   // old comment: processes[n] = {prefix:"...",timings:[], lastTiming:{...}}
   // processNode = {name: "", children: [], childrenByName: {}, timings: []}
-  this.setProcessNode(processNode);
+  this.processNode = processNode;
+  // this.setProcessNode(processNode);
   this.rangeX = {from: 0, to: 100};
   this.rangeY = {from: 0, to: 100};
   this.rangeXpercentage = {from: 0, to: 100};
@@ -675,6 +676,9 @@ TimingsHistogramsGraphic.prototype.redraw = function() {
   // }
 
   function drawTimingsOfProcessNode(processNode, colorRGBA, lastTimingColorRGBA, exceptChildNode, isHighlighted) {
+    if (processNode.nodeView.isHidden) {
+      return;
+    }
     // //function distort(timeDiff, y) {
     // function distort(y) {
     //   // let xa = that.distortionX.a;
@@ -902,6 +906,9 @@ function withinRangeOf(a, b, range) {
 
 function findMaxRecursive(processNode, defaultValue, innerMaxFunc) {
   let localMax = defaultValue;
+  if (processNode.nodeView.isHidden) {
+    return localMax;
+  }
   let timings = [];
   let processNodeTimings = processNode.ownTimingsAsReferences;
   if (processNodeTimings.length > 0) {
@@ -924,6 +931,9 @@ function findMaxRecursive(processNode, defaultValue, innerMaxFunc) {
 
 function findOwnMaxRecursive(processNode, defaultValue, innerMaxFunc) {
   let localMax = defaultValue;
+  if (processNode.nodeView.isHidden) {
+    return localMax;
+  }
   let timings = [];
   let processNodeTimings = processNode.ownTimingsAsReferences;
   if (processNodeTimings.length > 0) {

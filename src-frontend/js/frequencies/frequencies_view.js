@@ -23,6 +23,7 @@ export function FrequenciesView(processNode) {
   that.children.forEach(childView => {
     that.childrenByName[childView.name] = childView;
   });
+  that.hGraphic.setProcessNode(processNode);
   that.htmlChildrenContainerUl = document.createElement('ul');
   that.htmlSecondaryContainerDiv = document.createElement('div');
   that.htmlSecondaryUl = document.createElement('ul');
