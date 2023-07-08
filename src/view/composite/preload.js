@@ -79,5 +79,10 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('composite_main_window_msgs__show_notebook_context_menu', sourceType, options);
       }
     },
+    show_notebook_container_context_menu: {
+      postMessage: (sourceType, options) => {
+        ipcRenderer.send('composite_main_window_msgs__show_notebook_container_context_menu', sourceType, options);
+      }
+    },
   }
 });

@@ -19,11 +19,11 @@ body {
   width: 30%;
 }
 
-#resizer-horizontal {
+#resizer-between-tags-and-notes {
   width: 2px;
 }
 
-#resizer-horizontal:hover {
+#resizer-between-tags-and-notes:hover {
   cursor: ew-resize;
 }
 
@@ -69,8 +69,8 @@ body {
   padding-inline-start: 8px;
 }
 
-#resizer-vertical-left,
-#resizer-vertical-right {
+#resizer-between-top-and-bottom-panels-of-tags,
+#resizer-between-top-and-bottom-panels-of-notes {
   display: none;
 }
 
@@ -104,14 +104,14 @@ body {
 }
 
 #tags-and-links-content-outer-wrapper.as-two-panels >
-#resizer-vertical-left {
+#resizer-between-top-and-bottom-panels-of-tags {
   display: block;
   flex: 0 0 auto;
   height: 4px;
 }
 
 #tags-and-links-content-outer-wrapper.as-two-panels >
-#resizer-vertical-left:hover {
+#resizer-between-top-and-bottom-panels-of-tags:hover {
   cursor: ns-resize;
 }
 
@@ -134,14 +134,14 @@ body {
 }
 
 #notes-content-outer-wrapper.as-two-panels >
-#resizer-vertical-right {
+#resizer-between-top-and-bottom-panels-of-notes {
   display: block;
   flex: 0 0 auto;
   height: 4px;
 }
 
 #notes-content-outer-wrapper.as-two-panels >
-#resizer-vertical-right:hover {
+#resizer-between-top-and-bottom-panels-of-notes:hover {
   cursor: ns-resize;
 }
 
@@ -163,7 +163,7 @@ body {
 }
 
 #notes-content-outer-wrapper.maximized-bottom-panel >
-#resizer-vertical-right {
+#resizer-between-top-and-bottom-panels-of-notes {
   display: none;
 }
 

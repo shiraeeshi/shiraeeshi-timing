@@ -2,12 +2,15 @@ const { parseTagsFromRootForest } = require('../js/notebook/parse_tags.js');
 const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
 const { NotebookNode } = require('../js/notebook/notebook_node.js');
 const { CurrentNotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
+const { showTagsAndLinks, showTagsAndLinksOfBottomPanel } = require('../js/notebook/show_tags.js');
 const {
   addTagNodeLinksToForest,
   appendNotesForestHtml,
   buildTagsAndLinksForest,
   buildCurrentNotesForest,
-  highlightNotesInForest
+  highlightNotesInForest,
+  initResizers,
+  initBottomPanelButtons,
 } = require('../js/notebook/notebook_utils.js');
 
 const {
@@ -52,6 +55,8 @@ let my = {
   notesForest: null,
 
   currentNotesForest: null,
+
+  isHiddenTagsPanel: true,
 
   // timings state
   timings: null,
@@ -238,15 +243,15 @@ function handleServerMessage(msg) {
           }
           leftPanel.classList.add(colorObj.iconsColor + '-icons');
 
-          let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
-          notesContentWrapper.style.color = colorObj.textColor;
-          for (let className of notesContentWrapper.classList) {
+          let notebookContentWrapper = document.getElementById('current-notes-tree-nodes-container');
+          notebookContentWrapper.style.color = colorObj.textColor;
+          for (let className of notebookContentWrapper.classList) {
             if (className.endsWith('-icons')) {
-              notesContentWrapper.classList.remove(className);
+              notebookContentWrapper.classList.remove(className);
               break;
             }
           }
-          notesContentWrapper.classList.add(colorObj.iconsColor + '-icons');
+          notebookContentWrapper.classList.add(colorObj.iconsColor + '-icons');
         }
       } else if (msg.keyval == "m") {
         my.minimalTextForTimings = !my.minimalTextForTimings;
@@ -382,15 +387,15 @@ function handleServerMessage(msg) {
         }
         leftPanel.classList.add(colorObj.iconsColor + '-icons');
 
-        let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
-        notesContentWrapper.style.color = colorObj.textColor;
-        for (let className of notesContentWrapper.classList) {
+        let notebookContentWrapper = document.getElementById('current-notes-tree-nodes-container');
+        notebookContentWrapper.style.color = colorObj.textColor;
+        for (let className of notebookContentWrapper.classList) {
           if (className.endsWith('-icons')) {
-            notesContentWrapper.classList.remove(className);
+            notebookContentWrapper.classList.remove(className);
             break;
           }
         }
-        notesContentWrapper.classList.add(colorObj.iconsColor + '-icons');
+        notebookContentWrapper.classList.add(colorObj.iconsColor + '-icons');
       } else if (msg.keyval == "l") {
         if (my.colors.text.idx_left === undefined) {
           my.colors.text.idx_left = my.colors.text.idx;
@@ -414,15 +419,15 @@ function handleServerMessage(msg) {
         my.colors.text.idx_right = (my.colors.text.idx_right + 1) % my.colors.text.lst.length;
         let colorObj = my.colors.text.lst[my.colors.text.idx_right];
 
-        let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
-        notesContentWrapper.style.color = colorObj.textColor;
-        for (let className of notesContentWrapper.classList) {
+        let notebookContentWrapper = document.getElementById('current-notes-tree-nodes-container');
+        notebookContentWrapper.style.color = colorObj.textColor;
+        for (let className of notebookContentWrapper.classList) {
           if (className.endsWith('-icons')) {
-            notesContentWrapper.classList.remove(className);
+            notebookContentWrapper.classList.remove(className);
             break;
           }
         }
-        notesContentWrapper.classList.add(colorObj.iconsColor + '-icons');
+        notebookContentWrapper.classList.add(colorObj.iconsColor + '-icons');
       } else if (msg.keyval == "g") {
         if (my.currentView === 'timings-summary' || my.currentView === 'history') {
           my.colors.canvas.timings.idx++;
@@ -525,7 +530,34 @@ function handleServerMessage(msg) {
 
       let currentNotesForest = buildCurrentNotesForest(tagsAndLinksForestObj);
       my.currentNotesForest = currentNotesForest;
-      highlightNotesInForest(my.rootNodeViewOfNotes, currentNotesForest);
+      highlightNotesInForest(my.rootNodeViewOfNotes, currentNotesForest, true);
+
+      initResizers();
+      initBottomPanelButtons();
+
+      let notesContentTopWrapper = document.getElementById('notes-content-top-wrapper');
+      notesContentTopWrapper.addEventListener('contextmenu', (eve) => {
+        eve.preventDefault();
+        my.contextMenuHandler = function(commandName) {
+          if (commandName === 'show-tags-panel') {
+            my.isHiddenTagsPanel = false;
+            let currentNotesTreeNodesContainer = document.getElementById('current-notes-tree-nodes-container');
+            currentNotesTreeNodesContainer.classList.remove('hidden-tags-panel');
+            if (my.rootNodeViewOfTags === undefined) {
+              showTagsAndLinks(tagsAndLinksForestObj);
+              showTagsAndLinksOfBottomPanel(tagsAndLinksForestObj);
+            }
+          } else if (commandName === 'hide-tags-panel') {
+            my.isHiddenTagsPanel = true;
+            let currentNotesTreeNodesContainer = document.getElementById('current-notes-tree-nodes-container');
+            currentNotesTreeNodesContainer.classList.add('hidden-tags-panel');
+          }
+        };
+        window.webkit.messageHandlers.show_notebook_container_context_menu.postMessage('notes-top-panel', {
+          isHiddenTagsPanel: my.isHiddenTagsPanel,
+        });
+        return false;
+      });
 
       return;
     }
@@ -850,24 +882,24 @@ function actualizeWallpaperConfig(wallpaperConfig) {
     }
     leftPanel.classList.add(wallpaperConfig.leftSideIconsColor + '-icons');
   }
-  let notesContentWrapper = document.getElementById('notes-content-top-wrapper');
+  let notebookContentWrapper = document.getElementById('current-notes-tree-nodes-container');
   if (wallpaperConfig.rightSideTextColor !== undefined) {
     if (wallpaperConfig.rightSideTextColor === 'light-grey') {
-      notesContentWrapper.style.color = '#707070';
+      notebookContentWrapper.style.color = '#707070';
     } else if (wallpaperConfig.rightSideTextColor === 'dark-grey') {
-      notesContentWrapper.style.color = '#323232';
+      notebookContentWrapper.style.color = '#323232';
     } else {
-      notesContentWrapper.style.color = wallpaperConfig.rightSideTextColor;
+      notebookContentWrapper.style.color = wallpaperConfig.rightSideTextColor;
     }
   }
   if (wallpaperConfig.rightSideIconsColor !== undefined) {
-    for (let className of notesContentWrapper.classList) {
+    for (let className of notebookContentWrapper.classList) {
       if (className.endsWith('-icons')) {
-        notesContentWrapper.classList.remove(className);
+        notebookContentWrapper.classList.remove(className);
         break;
       }
     }
-    notesContentWrapper.classList.add(wallpaperConfig.rightSideIconsColor + '-icons');
+    notebookContentWrapper.classList.add(wallpaperConfig.rightSideIconsColor + '-icons');
   }
 }
 
