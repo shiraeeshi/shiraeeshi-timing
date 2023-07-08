@@ -458,7 +458,7 @@ NotebookTagsTreeNodeView.prototype.edit = function(changeHandler) {
     changeHandler(newTagsTreeNode.nodeView);
     isHandlingChange = false;
     enableKeyboardListener();
-    window.webkit.messageHandlers.notebook_msgs__enable_shortcuts.postMessage();
+    window.webkit.messageHandlers.enable_shortcuts.postMessage();
   });
   inputElem.addEventListener('keypress', (eve) => {
     if (eve.key === 'Enter') {
@@ -482,7 +482,7 @@ NotebookTagsTreeNodeView.prototype.edit = function(changeHandler) {
   });
   inputElem.focus();
   disableKeyboardListener();
-  window.webkit.messageHandlers.notebook_msgs__disable_shortcuts.postMessage();
+  window.webkit.messageHandlers.disable_shortcuts.postMessage();
 };
 
 function disableKeyboardListener() {
@@ -628,7 +628,7 @@ NotebookTagsTreeNodeView.prototype.editFullPath = function(changeHandler) {
 
     isHandlingChange = false;
     enableKeyboardListener();
-    window.webkit.messageHandlers.notebook_msgs__enable_shortcuts.postMessage();
+    window.webkit.messageHandlers.enable_shortcuts.postMessage();
   });
   inputElem.addEventListener('keypress', (eve) => {
     if (eve.key === 'Enter') {
@@ -652,7 +652,7 @@ NotebookTagsTreeNodeView.prototype.editFullPath = function(changeHandler) {
   });
   inputElem.focus();
   disableKeyboardListener();
-  window.webkit.messageHandlers.notebook_msgs__disable_shortcuts.postMessage();
+  window.webkit.messageHandlers.disable_shortcuts.postMessage();
 };
 
 function mergeSubtagsAndLinks(srcNode, dstNode) {

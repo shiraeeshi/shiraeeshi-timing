@@ -290,7 +290,7 @@ NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, ch
     that.uncollapseWithoutNotifyingChildren();
     changeHandler(newNotebookNode);
     enableKeyboardListener();
-    window.webkit.messageHandlers.notebook_msgs__enable_shortcuts.postMessage();
+    window.webkit.messageHandlers.enable_shortcuts.postMessage();
   });
   inputElem.addEventListener('keypress', (eve) => {
     if (eve.key === 'Enter') {
@@ -307,7 +307,7 @@ NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, ch
   });
   inputElem.focus();
   disableKeyboardListener();
-  window.webkit.messageHandlers.notebook_msgs__disable_shortcuts.postMessage();
+  window.webkit.messageHandlers.disable_shortcuts.postMessage();
 };
 
 NotebookNodeView.prototype.edit = function(changeHandler) {
@@ -350,7 +350,7 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
     changeHandler(newNotebookNode.nodeView);
     isHandlingChange = false;
     enableKeyboardListener();
-    window.webkit.messageHandlers.notebook_msgs__enable_shortcuts.postMessage();
+    window.webkit.messageHandlers.enable_shortcuts.postMessage();
   });
   inputElem.addEventListener('keypress', (eve) => {
     if (eve.key === 'Enter') {
@@ -374,7 +374,7 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
   });
   inputElem.focus();
   disableKeyboardListener();
-  window.webkit.messageHandlers.notebook_msgs__disable_shortcuts.postMessage();
+  window.webkit.messageHandlers.disable_shortcuts.postMessage();
 };
 
 NotebookNodeView.prototype.wrapInRectangle = function() {

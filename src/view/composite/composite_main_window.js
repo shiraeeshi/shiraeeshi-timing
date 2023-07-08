@@ -25,6 +25,16 @@ ipcMain.on('msg', (_event, msg) => {
   console.log(`[main.js] message from composite_main_window: ${msg}`);
 });
 
+let isDisabledShortcuts = false;
+
+ipcMain.on('composite_main_window_msgs__disable_shortcuts', async (_event) => {
+  isDisabledShortcuts = true;
+});
+
+ipcMain.on('composite_main_window_msgs__enable_shortcuts', async (_event) => {
+  isDisabledShortcuts = false;
+});
+
 ipcMain.on('composite_main_window_msgs__show_frequencies_context_menu', async (event, options) => {
   showContextMenuOfProcessTreeNode(event, options);
 });
@@ -178,6 +188,9 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         label: 'toggle fullscreen',
         accelerator: process.platform === 'darwin' ? 'f' : 'f',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           isFullScreen = !isFullScreen;
           // let window = electron.remote.getCurrentWindow();
           win.setFullScreen(isFullScreen);
@@ -187,6 +200,9 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         label: 'toggle minimal text mode',
         accelerator: 'm',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           const msg = {
             "type": "key_pressed",
             "keyval": "m"
@@ -209,6 +225,9 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         label: 'previous day (in history)',
         accelerator: 'Left',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           const msg = {
             "type": "key_pressed",
             "keyval": "Left"
@@ -220,6 +239,9 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         label: 'next day (in history)',
         accelerator: 'Right',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           const msg = {
             "type": "key_pressed",
             "keyval": "Right"
@@ -231,6 +253,9 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         label: 'Escape',
         accelerator: 'Escape',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           if (isFullScreen) {
             isFullScreen = false;
             win.setFullScreen(false);
@@ -243,6 +268,9 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         label: 'change wallpaper',
         accelerator: 'w',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           const msg = {
             "type": "key_pressed",
             "keyval": "w"
@@ -254,6 +282,9 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         label: 'change colors on graph',
         accelerator: 'g',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           const msg = {
             "type": "key_pressed",
             "keyval": "g"
@@ -265,6 +296,9 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         label: 'change text color',
         accelerator: 't',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           const msg = {
             "type": "key_pressed",
             "keyval": "t"
@@ -276,6 +310,9 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         label: 'change text color of left-side panel',
         accelerator: 'l',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           const msg = {
             "type": "key_pressed",
             "keyval": "l"
@@ -287,6 +324,9 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         label: 'change text color of right-side panel',
         accelerator: 'r',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           const msg = {
             "type": "key_pressed",
             "keyval": "r"
@@ -305,6 +345,9 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
         role: 'help',
         accelerator: process.platform === 'darwin' ? 'h' : 'h',
         click: () => {
+          if (isDisabledShortcuts) {
+            return;
+          }
           console.log('---===[ menu item clicked ]===---')
         }
       },

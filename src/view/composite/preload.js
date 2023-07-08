@@ -59,6 +59,16 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('msg', msg);
       },
     },
+    disable_shortcuts: {
+      postMessage: () => {
+        ipcRenderer.send('composite_main_window_msgs__disable_shortcuts');
+      }
+    },
+    enable_shortcuts: {
+      postMessage: () => {
+        ipcRenderer.send('composite_main_window_msgs__enable_shortcuts');
+      }
+    },
     show_frequencies_context_menu: {
       postMessage: (options) => {
         ipcRenderer.send('composite_main_window_msgs__show_frequencies_context_menu', options);
