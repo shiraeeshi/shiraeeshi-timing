@@ -186,6 +186,21 @@ NotebookNodeView.prototype.handleTagSegmentNameChange = function() {
   that._rebuildHtmlElement();
 };
 
+NotebookNodeView.prototype.handleRename = function() {
+  let that = this;
+  let oldName = that.name;
+  let newName = that.notebookNode.name;
+  that.name = newName;
+  if (that.parentNodeView !== undefined) {
+    delete that.parentNodeView.childrenByName[oldName];
+    that.parentNodeView.childrenByName[newName] = that;
+  }
+  if (that.htmlElement === undefined) {
+    return;
+  }
+  that._rebuildHtmlElement();
+};
+
 NotebookNodeView.prototype._removeHtmlElementFromTree = function() {
   let that = this;
   if (that.htmlElement === undefined) {
@@ -331,23 +346,28 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
     if (value === '') {
       return;
     }
-    let notebookNodeParent = that.notebookNode.parent;
-    let newNotebookNode = notebookNodeParent.ensureChildWithName(value);
-    newNotebookNode.children = that.notebookNode.children;
-    newNotebookNode.childrenByName = that.notebookNode.childrenByName;
-    let index = notebookNodeParent.children.indexOf(that.notebookNode);
     if (value === that.name) {
+      let parentNodeView = that.parentNodeView;
+      let index = Array.prototype.indexOf.call(parentNodeView.htmlContainerUl.children, that.htmlElement);
       that._removeHtmlElementFromTree();
       that.buildAsHtmlLiElement();
+      parentNodeView.htmlContainerUl.insertBefore(that.htmlElement, parentNodeView.htmlContainerUl.children[index]);
     } else {
-      that.removeFromTree();
-      notebookNodeParent.children.splice(index, 0, newNotebookNode);
-      notebookNodeParent.children.pop();
-      notebookNodeParent.notifyInsertedChild(index);
-      // notebookNodeParent.notifyChange();
-      // // that.parentNodeView.mergeWithNewNodes(notebookNodeParent);
+      that.notebookNode.renameTo(value);
+      changeHandler(that);
+      // let notebookNodeParent = that.notebookNode.parent;
+      // let newNotebookNode = notebookNodeParent.ensureChildWithName(value);
+      // newNotebookNode.children = that.notebookNode.children;
+      // newNotebookNode.childrenByName = that.notebookNode.childrenByName;
+      // let index = notebookNodeParent.children.indexOf(that.notebookNode);
+      // that.removeFromTree();
+      // notebookNodeParent.children.splice(index, 0, newNotebookNode);
+      // notebookNodeParent.children.pop();
+      // notebookNodeParent.notifyInsertedChild(index);
+      // // notebookNodeParent.notifyChange();
+      // // // that.parentNodeView.mergeWithNewNodes(notebookNodeParent);
+      // changeHandler(newNotebookNode.nodeView);
     }
-    changeHandler(newNotebookNode.nodeView);
     isHandlingChange = false;
     enableKeyboardListener();
     window.webkit.messageHandlers.enable_shortcuts.postMessage();

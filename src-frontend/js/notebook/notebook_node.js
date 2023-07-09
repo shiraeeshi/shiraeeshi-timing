@@ -1,3 +1,4 @@
+const { parseTagsFromNodeRecursively } = require('./parse_tags.js');
 
 export function NotebookNode(name, parentNode) {
   this.name = name;
@@ -66,6 +67,23 @@ NotebookNode.prototype.notifyTagPathChange = function() {
 //     that.nodeViewOfBottomPanel.mergeWithNewNodes(that);
 //   }
 // };
+
+NotebookNode.prototype.renameTo = function(newName) {
+  let that = this;
+  let oldName = that.name;
+  that.name = newName;
+  if (that.parent !== null) {
+    delete that.parent.childrenByName[oldName];
+    that.parent.childrenByName[newName] = that;
+  }
+  if (that.nodeView) {
+    that.nodeView.handleRename();
+  }
+  if (that.nodeViewOfBottomPanel) {
+    that.nodeViewOfBottomPanel.handleRename();
+  }
+  parseTagsFromNodeRecursively(that, that.getAncestry());
+};
 
 NotebookNode.prototype.notifyInsertedChild = function(childIndex) {
   let that = this;

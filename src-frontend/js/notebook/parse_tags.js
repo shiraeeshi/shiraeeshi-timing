@@ -34,14 +34,18 @@ export function parseTagFromNodeIfExists(node, ancestry) {
     ancestry: ancestry,
     notebookNode: node,
   };
-  node.tag = tagObj;
-  let parentNode = node.parent;
-  if (parentNode !== null) {
-    parentNode.hasChildrenWithTags = true;
-    if (parentNode.tagsOfChildren === undefined) {
-      parentNode.tagsOfChildren = [];
+  if (node.tag !== undefined) {
+    Object.assign(node.tag, tagObj);
+  } else {
+    node.tag = tagObj;
+    let parentNode = node.parent;
+    if (parentNode !== null) {
+      parentNode.hasChildrenWithTags = true;
+      if (parentNode.tagsOfChildren === undefined) {
+        parentNode.tagsOfChildren = [];
+      }
+      parentNode.tagsOfChildren.push(tagObj);
     }
-    parentNode.tagsOfChildren.push(tagObj);
   }
   return tagObj;
 }

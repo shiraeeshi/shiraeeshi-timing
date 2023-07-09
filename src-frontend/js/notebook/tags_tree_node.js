@@ -26,6 +26,17 @@ TagsTreeNode.prototype.ensureSubtagWithName = function(name) {
   }
 }
 
+TagsTreeNode.prototype.isAncestorOf = function(tagsTreeNode) {
+  let that = this;
+  let parent = that.parent;
+  while (parent !== null) {
+    if (parent === tagsTreeNode) {
+      return true;
+    }
+  }
+  return false;
+}
+
 TagsTreeNode.prototype.removeSubtagCascade = function(subtag, notifyRemoval) {
   let that = this;
   that.removeSubtag(subtag);
