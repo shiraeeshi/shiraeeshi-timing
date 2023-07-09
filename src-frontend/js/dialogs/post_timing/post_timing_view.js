@@ -639,7 +639,7 @@ function save() {
     }
     if (result === 'success') {
       alert('Saved timing successfully');
-      window.webkit.messageHandlers.post_timing_dialog_msgs__close.postMessage();
+      window.webkit.messageHandlers.post_timing_dialog_msgs__close_after_successful_save.postMessage();
       return;
     }
   };

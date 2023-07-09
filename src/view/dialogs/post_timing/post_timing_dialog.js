@@ -56,6 +56,12 @@ ipcMain.on('post_timing_dialog_msgs__close', async (event) => {
   window.close();
 });
 
+ipcMain.on('post_timing_dialog_msgs__close_after_successful_save', async (event) => {
+  let window = BrowserWindow.fromWebContents(event.sender);
+  window.confirmedQuit = true;
+  window.close();
+});
+
 ipcMain.on('post_timing_dialog_msgs__write_to_file', async (event, filepath, value) => {
   try {
     console.log('write to file. filepath: ' + filepath);
