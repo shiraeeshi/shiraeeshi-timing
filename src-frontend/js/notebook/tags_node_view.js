@@ -39,6 +39,7 @@ export function NotebookTagsTreeNodeViewOfBottomPanel(notebookTagsTreeNode, pare
 }
 
 for (let propName in NotebookNodeView.prototype) {
+  console.log(`tags_node_view.js NotebookNodeView.prototype.${propName}`);
   NotebookTagsTreeNodeView.prototype[propName] = NotebookNodeView.prototype[propName];
 }
 

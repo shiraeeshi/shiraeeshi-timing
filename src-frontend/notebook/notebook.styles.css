@@ -7,7 +7,20 @@ body {
   margin: 0;
 }
 
-#notebook-main-container {
+#notebook-main-container.hidden-tags-panel > #tags-and-links-content-outer-wrapper {
+  display: none
+}
+
+#notebook-main-container.hidden-tags-panel > #resizer-between-tags-and-notes {
+  display: none
+}
+
+#notebook-main-container.hidden-tags-panel > #notes-content-outer-wrapper {
+  height: 100%;
+  overflow: hidden;
+}
+
+#notebook-main-container:not(.hidden-tags-panel) {
   display: flex;
   height: 100%;
   overflow: hidden;
@@ -38,6 +51,7 @@ body {
   overflow-x: hidden;
 }
 
+#tags-and-links-content-top-wrapper,
 #tags-and-links-content-bottom-wrapper,
 #notes-content-bottom-wrapper {
   flex: 1 1 1px;
@@ -80,7 +94,11 @@ body {
 }
 
 #tags-and-links-content-outer-wrapper:not(.as-two-panels):not(.maximized-bottom-panel) > 
-#tags-and-links-content-top-wrapper,
+#tags-and-links-content-top-outer-wrapper {
+  height: 100%;
+  overflow: hidden;
+}
+
 #notes-content-outer-wrapper:not(.as-two-panels):not(.maximized-bottom-panel) > 
 #notes-content-top-wrapper {
   height: 100%;
@@ -98,9 +116,11 @@ body {
 
 
 #tags-and-links-content-outer-wrapper.as-two-panels >
-#tags-and-links-content-top-wrapper {
+#tags-and-links-content-top-outer-wrapper {
   height: 30%;
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 #tags-and-links-content-outer-wrapper.as-two-panels >
@@ -331,6 +351,7 @@ li.proc-leaf {
   height: 12px;
 }
 
+#btn-close-panel-of-tags-and-links,
 #btn-close-bottom-panel-of-tags-and-links,
 #btn-close-bottom-panel-of-notes {
   background-image: url('../img/close-32.png');

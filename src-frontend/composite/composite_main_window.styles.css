@@ -58,25 +58,25 @@ body {
   border-left: 1px solid grey;
 }
 
-#current-notes-tree-nodes-container {
+#notebook-main-container {
   flex: 1 1 0%;
   color: white;
 }
 
-#current-notes-tree-nodes-container.hidden-tags-panel > #tags-and-links-content-outer-wrapper {
+#notebook-main-container.hidden-tags-panel > #tags-and-links-content-outer-wrapper {
   display: none
 }
 
-#current-notes-tree-nodes-container.hidden-tags-panel > #resizer-between-tags-and-notes {
+#notebook-main-container.hidden-tags-panel > #resizer-between-tags-and-notes {
   display: none
 }
 
-#current-notes-tree-nodes-container.hidden-tags-panel > #notes-content-outer-wrapper {
+#notebook-main-container.hidden-tags-panel > #notes-content-outer-wrapper {
   height: 100%;
   overflow: hidden;
 }
 
-#current-notes-tree-nodes-container:not(.hidden-tags-panel) {
+#notebook-main-container:not(.hidden-tags-panel) {
   display: flex;
   height: 100%;
   overflow: hidden;
@@ -97,7 +97,7 @@ body {
 }
 
 
-#current-notes-tree-nodes-container:not(.hidden-tags-panel) > #notes-content-outer-wrapper {
+#notebook-main-container:not(.hidden-tags-panel) > #notes-content-outer-wrapper {
   flex: 1 1 0%;
   overflow: hidden;
 }
@@ -386,49 +386,49 @@ li.proc-leaf {
   background-size: contain;
 }
 
-#current-notes-tree-nodes-container.black-icons .proc-node-open .proc-node-icon,
+#notebook-main-container.black-icons .proc-node-open .proc-node-icon,
 #left-panel.black-icons .proc-node-open .proc-node-icon {
   background: url('../img/black-proc-node-minus.png') no-repeat top left;
   background-size: contain;
 }
 
-#current-notes-tree-nodes-container.black-icons .proc-node-closed .proc-node-icon,
+#notebook-main-container.black-icons .proc-node-closed .proc-node-icon,
 #left-panel.black-icons .proc-node-closed .proc-node-icon {
   background: url('../img/black-proc-node-plus.png') no-repeat top left;
   background-size: contain;
 }
 
-#current-notes-tree-nodes-container.dark-grey-icons .proc-node-open .proc-node-icon,
+#notebook-main-container.dark-grey-icons .proc-node-open .proc-node-icon,
 #left-panel.dark-grey-icons .proc-node-open .proc-node-icon {
   background: url('../img/dark-grey-proc-node-minus.png') no-repeat top left;
   background-size: contain;
 }
 
-#current-notes-tree-nodes-container.dark-grey-icons .proc-node-closed .proc-node-icon,
+#notebook-main-container.dark-grey-icons .proc-node-closed .proc-node-icon,
 #left-panel.dark-grey-icons .proc-node-closed .proc-node-icon {
   background: url('../img/dark-grey-proc-node-plus.png') no-repeat top left;
   background-size: contain;
 }
 
-#current-notes-tree-nodes-container.light-grey-icons .proc-node-open .proc-node-icon,
+#notebook-main-container.light-grey-icons .proc-node-open .proc-node-icon,
 #left-panel.light-grey-icons .proc-node-open .proc-node-icon {
   background: url('../img/light-grey-proc-node-minus.png') no-repeat top left;
   background-size: contain;
 }
 
-#current-notes-tree-nodes-container.light-grey-icons .proc-node-closed .proc-node-icon,
+#notebook-main-container.light-grey-icons .proc-node-closed .proc-node-icon,
 #left-panel.light-grey-icons .proc-node-closed .proc-node-icon {
   background: url('../img/light-grey-proc-node-plus.png') no-repeat top left;
   background-size: contain;
 }
 
-#current-notes-tree-nodes-container.white-icons .proc-node-open .proc-node-icon,
+#notebook-main-container.white-icons .proc-node-open .proc-node-icon,
 #left-panel.white-icons .proc-node-open .proc-node-icon {
   background: url('../img/white-proc-node-minus.png') no-repeat top left;
   background-size: contain;
 }
 
-#current-notes-tree-nodes-container.white-icons .proc-node-closed .proc-node-icon,
+#notebook-main-container.white-icons .proc-node-closed .proc-node-icon,
 #left-panel.white-icons .proc-node-closed .proc-node-icon {
   background: url('../img/white-proc-node-plus.png') no-repeat top left;
   background-size: contain;
@@ -604,6 +604,7 @@ li.proc-leaf {
   background-image: url('../img/white-rectangle-32.png');
 }
 
+#btn-close-panel-of-tags-and-links,
 #btn-close-bottom-panel-of-tags-and-links,
 #btn-close-bottom-panel-of-notes {
   background-image: url('../img/white-close-32.png');
@@ -614,12 +615,16 @@ li.proc-leaf {
 }
 
 .black-icons
+#btn-close-panel-of-tags-and-links,
+.black-icons
 #btn-close-bottom-panel-of-tags-and-links,
 .black-icons
 #btn-close-bottom-panel-of-notes {
   background-image: url('../img/black-close-32.png');
 }
 
+.dark-grey-icons
+#btn-close-panel-of-tags-and-links,
 .dark-grey-icons
 #btn-close-bottom-panel-of-tags-and-links,
 .dark-grey-icons
@@ -628,12 +633,16 @@ li.proc-leaf {
 }
 
 .light-grey-icons
+#btn-close-panel-of-tags-and-links,
+.light-grey-icons
 #btn-close-bottom-panel-of-tags-and-links,
 .light-grey-icons
 #btn-close-bottom-panel-of-notes {
   background-image: url('../img/light-grey-close-32.png');
 }
 
+.white-icons
+#btn-close-panel-of-tags-and-links,
 .white-icons
 #btn-close-bottom-panel-of-tags-and-links,
 .white-icons

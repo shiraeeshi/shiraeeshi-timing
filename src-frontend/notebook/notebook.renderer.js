@@ -14,7 +14,8 @@ const {
   openTagsInForest,
   highlightTagsInForest,
   initResizers,
-  initBottomPanelButtons,
+  initPanelButtons,
+  initNotesContentTopWrapperContextMenu,
 } = require('../js/notebook/notebook_utils.js');
 const {
   addSiblingWithInputToTheRightSideNode,
@@ -29,6 +30,7 @@ let my = {
   isCursorOnRightSide: true,
   isKeyboardListenerDisabled: false,
   hasChangesInNotebook: false,
+  isHiddenTagsPanel: false,
 };
 
 window.my = my;
@@ -121,7 +123,8 @@ function handleServerMessage(msg) {
     showTagsAndLinksOfBottomPanel(tagsAndLinksObj);
 
     initResizers();
-    initBottomPanelButtons();
+    initPanelButtons();
+    initNotesContentTopWrapperContextMenu(tagsAndLinksObj);
 
     let configMaximizeNotesBottomPanel = config.notebook['start-with-bottom-panel-of-notes-maximized'];
     if (configMaximizeNotesBottomPanel) {

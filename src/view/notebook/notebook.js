@@ -81,6 +81,12 @@ ipcMain.on('notebook_msgs__show_context_menu', async (event, sourceType, options
   }
 });
 
+ipcMain.on('notebook_msgs__show_notebook_container_context_menu', async (event, sourceType, options) => {
+  if (sourceType === 'notes-top-panel') {
+    showContextMenuOfNotebookNotesTopPanel(event, options);
+  }
+});
+
 
 ipcMain.on('notebook_msgs__copy_full_path_of_tag', async (event, fullPathStr) => {
   clipboard.writeText(fullPathStr);
@@ -515,6 +521,28 @@ function showContextMenuOfTagsTreeNode(event, options) {
       }
     });
   }
+  const menu = Menu.buildFromTemplate(listOfMenuItems);
+  menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
+}
+
+
+function showContextMenuOfNotebookNotesTopPanel(event, options) {
+  let listOfMenuItems = [
+    {
+      label: 'Hide tags panel',
+      enabled: !options.isHiddenTagsPanel,
+      click: () => {
+        sendContextMenuCommand(event, 'hide-tags-panel')
+      }
+    },
+    {
+      label: 'Show tags panel',
+      enabled: options.isHiddenTagsPanel,
+      click: () => {
+        sendContextMenuCommand(event, 'show-tags-panel')
+      }
+    },
+  ];
   const menu = Menu.buildFromTemplate(listOfMenuItems);
   menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
 }

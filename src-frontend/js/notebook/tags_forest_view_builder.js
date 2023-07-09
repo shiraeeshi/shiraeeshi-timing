@@ -1,3 +1,4 @@
+const { NotebookNodeView } = require('./notebook_node_view.js');
 const { NotebookTagsTreeNodeView, NotebookTagsTreeNodeViewOfBottomPanel } = require('./tags_node_view.js');
 
 export function NotebookTagsForestViewBuilder(isTopPanel) {
@@ -16,6 +17,18 @@ NotebookTagsForestViewBuilder.prototype.buildView = function(notebookTagsObj) {
   } else {
     treeView = new NotebookTagsTreeNodeViewOfBottomPanel(notebookTagsObj);
   }
+
+  // <debug>
+  for (let propName in NotebookNodeView.prototype) {
+    console.log(`tags_node_view.js NotebookNodeView.prototype.${propName}`);
+    if (NotebookTagsTreeNodeView.prototype[propName] === undefined) {
+      NotebookTagsTreeNodeView.prototype[propName] = NotebookNodeView.prototype[propName];
+    }
+    if (NotebookTagsTreeNodeViewOfBottomPanel.prototype[propName] === undefined) {
+      NotebookTagsTreeNodeViewOfBottomPanel.prototype[propName] = NotebookNodeView.prototype[propName];
+    }
+  }
+  // </debug>
 
   treeView.buildAsHtmlLiElement();
   treeView.html().classList.add('root-node');

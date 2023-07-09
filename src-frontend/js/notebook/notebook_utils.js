@@ -1,4 +1,5 @@
 const { TagsTreeNode } = require('./tags_tree_node.js')
+const { showTagsAndLinks, showTagsAndLinksOfBottomPanel } = require('./show_tags.js');
 
 export function addTagNodeLinksToForest(tagNode, resultForest) {
   // window.webkit.messageHandlers.foobar.postMessage("js addTagNodeLinksToForest tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
@@ -186,9 +187,46 @@ function findCurrentTags(tagsAndLinksForestObj) {
   }
 }
 
-export function initBottomPanelButtons() {
+export function initNotesContentTopWrapperContextMenu(tagsAndLinksObj) {
+  let notesContentTopWrapper = document.getElementById('notes-content-top-wrapper');
+  notesContentTopWrapper.addEventListener('contextmenu', (eve) => {
+    eve.preventDefault();
+    my.contextMenuHandler = function(commandName) {
+      if (commandName === 'show-tags-panel') {
+        my.isHiddenTagsPanel = false;
+        let notebookContentWrapper = document.getElementById('notebook-main-container');
+        notebookContentWrapper.classList.remove('hidden-tags-panel');
+        if (my.rootNodeViewOfTags === undefined) {
+          showTagsAndLinks(tagsAndLinksObj);
+          showTagsAndLinksOfBottomPanel(tagsAndLinksObj);
+        }
+      } else if (commandName === 'hide-tags-panel') {
+        my.isHiddenTagsPanel = true;
+        let notebookContentWrapper = document.getElementById('notebook-main-container');
+        notebookContentWrapper.classList.add('hidden-tags-panel');
+      }
+    };
+    window.webkit.messageHandlers.show_notebook_container_context_menu.postMessage('notes-top-panel', {
+      isHiddenTagsPanel: my.isHiddenTagsPanel,
+    });
+    return false;
+  });
+}
+
+export function initPanelButtons() {
+  initTopPanelButtonsOfTagsAndLinks();
   initBottomPanelButtonsOfTagsAndLinks();
   initBottomPanelButtonsOfNotes();
+}
+
+function initTopPanelButtonsOfTagsAndLinks() {
+  let btnClose = document.getElementById('btn-close-panel-of-tags-and-links');
+  btnClose.addEventListener('click', (eve) => {
+    window.my.isHiddenTagsPanel = true;
+    let notebookContainer = document.getElementById('notebook-main-container');
+    notebookContainer.classList.add('hidden-tags-panel');
+  });
+
 }
 
 function initBottomPanelButtonsOfTagsAndLinks() {

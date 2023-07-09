@@ -2,7 +2,6 @@ const { parseTagsFromRootForest } = require('../js/notebook/parse_tags.js');
 const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
 const { NotebookNode } = require('../js/notebook/notebook_node.js');
 const { CurrentNotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
-const { showTagsAndLinks, showTagsAndLinksOfBottomPanel } = require('../js/notebook/show_tags.js');
 const {
   addTagNodeLinksToForest,
   appendNotesForestHtml,
@@ -10,7 +9,8 @@ const {
   buildCurrentNotesForest,
   highlightNotesInForest,
   initResizers,
-  initBottomPanelButtons,
+  initPanelButtons,
+  initNotesContentTopWrapperContextMenu,
 } = require('../js/notebook/notebook_utils.js');
 
 const {
@@ -257,7 +257,7 @@ function handleServerMessage(msg) {
           }
           leftPanel.classList.add(colorObj.iconsColor + '-icons');
 
-          let notebookContentWrapper = document.getElementById('current-notes-tree-nodes-container');
+          let notebookContentWrapper = document.getElementById('notebook-main-container');
           notebookContentWrapper.style.color = colorObj.textColor;
           for (let className of notebookContentWrapper.classList) {
             if (className.endsWith('-icons')) {
@@ -401,7 +401,7 @@ function handleServerMessage(msg) {
         }
         leftPanel.classList.add(colorObj.iconsColor + '-icons');
 
-        let notebookContentWrapper = document.getElementById('current-notes-tree-nodes-container');
+        let notebookContentWrapper = document.getElementById('notebook-main-container');
         notebookContentWrapper.style.color = colorObj.textColor;
         for (let className of notebookContentWrapper.classList) {
           if (className.endsWith('-icons')) {
@@ -433,7 +433,7 @@ function handleServerMessage(msg) {
         my.colors.text.idx_right = (my.colors.text.idx_right + 1) % my.colors.text.lst.length;
         let colorObj = my.colors.text.lst[my.colors.text.idx_right];
 
-        let notebookContentWrapper = document.getElementById('current-notes-tree-nodes-container');
+        let notebookContentWrapper = document.getElementById('notebook-main-container');
         notebookContentWrapper.style.color = colorObj.textColor;
         for (let className of notebookContentWrapper.classList) {
           if (className.endsWith('-icons')) {
@@ -547,31 +547,8 @@ function handleServerMessage(msg) {
       highlightNotesInForest(my.rootNodeViewOfNotes, currentNotesForest, true);
 
       initResizers();
-      initBottomPanelButtons();
-
-      let notesContentTopWrapper = document.getElementById('notes-content-top-wrapper');
-      notesContentTopWrapper.addEventListener('contextmenu', (eve) => {
-        eve.preventDefault();
-        my.contextMenuHandler = function(commandName) {
-          if (commandName === 'show-tags-panel') {
-            my.isHiddenTagsPanel = false;
-            let currentNotesTreeNodesContainer = document.getElementById('current-notes-tree-nodes-container');
-            currentNotesTreeNodesContainer.classList.remove('hidden-tags-panel');
-            if (my.rootNodeViewOfTags === undefined) {
-              showTagsAndLinks(tagsAndLinksForestObj);
-              showTagsAndLinksOfBottomPanel(tagsAndLinksForestObj);
-            }
-          } else if (commandName === 'hide-tags-panel') {
-            my.isHiddenTagsPanel = true;
-            let currentNotesTreeNodesContainer = document.getElementById('current-notes-tree-nodes-container');
-            currentNotesTreeNodesContainer.classList.add('hidden-tags-panel');
-          }
-        };
-        window.webkit.messageHandlers.show_notebook_container_context_menu.postMessage('notes-top-panel', {
-          isHiddenTagsPanel: my.isHiddenTagsPanel,
-        });
-        return false;
-      });
+      initPanelButtons();
+      initNotesContentTopWrapperContextMenu(tagsAndLinksForestObj);
 
       return;
     }
@@ -682,7 +659,7 @@ function handleNotebookConfig(config) {
 function initVerticalResizer() {
   let leftHalf = document.getElementById('left-panel');
   let resizer = document.getElementById('resizer-between-timings-and-notes');
-  let rightHalf = document.getElementById('current-notes-tree-nodes-container');
+  let rightHalf = document.getElementById('notebook-main-container');
 
   let resizerX = 0;
   let resizerY = 0;
@@ -896,7 +873,7 @@ function actualizeWallpaperConfig(wallpaperConfig) {
     }
     leftPanel.classList.add(wallpaperConfig.leftSideIconsColor + '-icons');
   }
-  let notebookContentWrapper = document.getElementById('current-notes-tree-nodes-container');
+  let notebookContentWrapper = document.getElementById('notebook-main-container');
   if (wallpaperConfig.rightSideTextColor !== undefined) {
     if (wallpaperConfig.rightSideTextColor === 'light-grey') {
       notebookContentWrapper.style.color = '#707070';

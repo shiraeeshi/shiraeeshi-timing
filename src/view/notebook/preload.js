@@ -29,6 +29,11 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('notebook_msgs__show_context_menu', sourceType, options);
       }
     },
+    show_notebook_container_context_menu: {
+      postMessage: (sourceType, options) => {
+        ipcRenderer.send('notebook_msgs__show_notebook_container_context_menu', sourceType, options);
+      }
+    },
     notebook_msgs__copy_full_path_of_tag: {
       postMessage: (fullPathStr) => {
         ipcRenderer.send('notebook_msgs__copy_full_path_of_tag', fullPathStr);
