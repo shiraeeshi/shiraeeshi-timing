@@ -86,15 +86,34 @@ ipcMain.on('notebook_msgs__copy_full_path_of_tag', async (event, fullPathStr) =>
   clipboard.writeText(fullPathStr);
 });
 
-let isDisabledShortcuts = false;
 
-ipcMain.on('notebook_msgs__disable_shortcuts', async (_event) => {
-  isDisabledShortcuts = true;
+
+
+
+
+ipcMain.on('notebook_msgs__disable_shortcuts', async (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  win.isDisabledShortcuts = true;
 });
 
-ipcMain.on('notebook_msgs__enable_shortcuts', async (_event) => {
-  isDisabledShortcuts = false;
+ipcMain.on('notebook_msgs__enable_shortcuts', async (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  win.isDisabledShortcuts = false;
 });
+
+
+
+
+
+
+ipcMain.on('notebook_msgs__confirm_quit', async (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  win.confirmedQuit = true;
+  win.close();
+});
+
+
+
 
 export async function showNotebook(appEnv) {
 
@@ -114,6 +133,15 @@ const createWindow = async (appEnv) => {
 
   // win.openDevTools();
   win.loadFile('dist-frontend/notebook/notebook.html')
+
+  win.on('close', (event) => {
+    if (!win.confirmedQuit) {
+      event.preventDefault();
+      win.send('message-from-backend', {
+        type: 'confirm_quit',
+      });
+    }
+  });
 
   setMenuAndKeyboardShortcuts(win);
 
@@ -141,7 +169,7 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'toggle fullscreen',
         accelerator: process.platform === 'darwin' ? 'f' : 'f',
         click: () => {
-          if (isDisabledShortcuts) {
+          if (win.isDisabledShortcuts) {
             return;
           }
           isFullScreen = !isFullScreen;
@@ -153,7 +181,7 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'Escape',
         accelerator: 'Escape',
         click: () => {
-          if (isDisabledShortcuts) {
+          if (win.isDisabledShortcuts) {
             return;
           }
           if (isFullScreen) {

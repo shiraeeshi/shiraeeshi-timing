@@ -26,11 +26,22 @@ TagsTreeNode.prototype.ensureSubtagWithName = function(name) {
   }
 }
 
-TagsTreeNode.prototype.isAncestorOf = function(tagsTreeNode) {
+TagsTreeNode.prototype.isAffectedByChangesTo = function(tagObj) {
   let that = this;
-  let parent = that.parent;
-  while (parent !== null) {
-    if (parent === tagsTreeNode) {
+  let tagSplitted = tagObj.tag.split('.');
+  let thisPath = that.tagAncestry.concat([that.name]);
+  thisPath = thisPath.slice(1);
+  let idx1 = 0;
+  let idx2 = 0;
+  let tagSplittedLen = tagSplitted.length;
+  let thisPathLen = thisPath.length;
+  while (true) {
+    if (tagSplitted[idx1] !== thisPath[idx2]) {
+      return false;
+    }
+    idx1++;
+    idx2++;
+    if (idx1 >= tagSplittedLen || idx2 >= thisPathLen) {
       return true;
     }
   }

@@ -39,6 +39,11 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('notebook_msgs__save_notebook', preYamlJson, filepath);
       }
     },
+    notebook_msgs__confirm_quit: {
+      postMessage: () => {
+        ipcRenderer.send('notebook_msgs__confirm_quit');
+      }
+    },
   }
 });
 

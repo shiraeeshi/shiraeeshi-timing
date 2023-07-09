@@ -42,6 +42,11 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('msg_save', msg);
       }
     },
+    preferences_msgs__confirm_quit: {
+      postMessage: () => {
+        ipcRenderer.send('preferences_msgs__confirm_quit');
+      }
+    },
   }
 });
 

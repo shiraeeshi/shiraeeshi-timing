@@ -61,6 +61,11 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('post_timing_dialog_msgs__close');
       }
     },
+    post_timing_dialog_msgs__confirm_quit: {
+      postMessage: () => {
+        ipcRenderer.send('post_timing_dialog_msgs__confirm_quit');
+      }
+    },
   }
 });
 

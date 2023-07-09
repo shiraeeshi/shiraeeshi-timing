@@ -6,8 +6,6 @@ const YAML = require('yaml');
 
 const { forgetLastModifiedTimeOfTimings } = require('../../logic/timing_index_manager.js');
 
-let isDisabledShortcuts = false;
-
 ipcMain.on('msg', (_event, msg) => {
   console.log(`[preferences.js] message from preferences: ${msg}`);
 });
@@ -40,11 +38,23 @@ ipcMain.on('msg_choose_file', async (event, extractBasename, withRelativePath) =
   });
 });
 
-ipcMain.on('msg_enable_shortcuts', (_event) => {
-  isDisabledShortcuts = false;
+
+
+ipcMain.on('msg_enable_shortcuts', (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  win.isDisabledShortcuts = false;
 });
-ipcMain.on('msg_disable_shortcuts', (_event) => {
-  isDisabledShortcuts = true;
+ipcMain.on('msg_disable_shortcuts', (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  win.isDisabledShortcuts = true;
+});
+
+
+
+ipcMain.on('preferences_msgs__confirm_quit', async (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  win.confirmedQuit = true;
+  win.close();
 });
 
 ipcMain.on('msg_cancel', (event) => {
@@ -223,6 +233,15 @@ const createWindow = async (appEnv) => {
 
   win.loadFile('dist-frontend/preferences/preferences.html')
 
+  win.on('close', (event) => {
+    if (!win.confirmedQuit) {
+      event.preventDefault();
+      win.send('message-from-backend', {
+        type: 'confirm_quit',
+      });
+    }
+  });
+
   await init(appEnv, win);
 }
 
@@ -266,7 +285,7 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'toggle fullscreen',
         accelerator: process.platform === 'darwin' ? 'f' : 'f',
         click: () => {
-          if (isDisabledShortcuts) {
+          if (win.isDisabledShortcuts) {
             return;
           }
           isFullScreen = !isFullScreen;
@@ -278,7 +297,7 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'Escape',
         accelerator: 'Escape',
         click: () => {
-          if (isDisabledShortcuts) {
+          if (win.isDisabledShortcuts) {
             return;
           }
           if (isFullScreen) {
@@ -293,7 +312,7 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'open devtools',
         accelerator: 'Ctrl+Shift+J',
         click: () => {
-          if (isDisabledShortcuts) {
+          if (win.isDisabledShortcuts) {
             return;
           }
           win.openDevTools();
@@ -303,7 +322,7 @@ function setMenuAndKeyboardShortcuts(win) {
         role: 'help',
         accelerator: process.platform === 'darwin' ? 'h' : 'h',
         click: () => {
-          if (isDisabledShortcuts) {
+          if (win.isDisabledShortcuts) {
             return;
           }
           console.log('---===[ menu item clicked ]===---')

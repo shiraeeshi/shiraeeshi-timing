@@ -8,7 +8,6 @@ const { readTimingsForRangeOfDates } = require('../../../logic/timing_file_parse
 const { createOrRefreshIndex } = require('../../../logic/timing_index_manager.js');
 const { expanduser } = require('../../../logic/file_utils.js');
 
-let isDisabledShortcuts = false;
 let datetimeKey = '01.01.2023 00:00 - 01:01   (60 m)'
 
 ipcMain.on('msg', (_event, msg) => {
@@ -80,13 +79,30 @@ ipcMain.on('post_timing_dialog_msgs__write_to_file', async (event, filepath, val
   }
 });
 
-ipcMain.on('post_timing_dialog_msgs__disable_shortcuts', async (_event) => {
-  isDisabledShortcuts = true;
+
+
+
+ipcMain.on('post_timing_dialog_msgs__disable_shortcuts', async (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  win.isDisabledShortcuts = true;
 });
 
-ipcMain.on('post_timing_dialog_msgs__enable_shortcuts', async (_event) => {
-  isDisabledShortcuts = false;
+ipcMain.on('post_timing_dialog_msgs__enable_shortcuts', async (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  win.isDisabledShortcuts = false;
 });
+
+
+
+
+ipcMain.on('post_timing_dialog_msgs__confirm_quit', async (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  win.confirmedQuit = true;
+  win.close();
+});
+
+
+
 
 ipcMain.on('post_timing_dialog_msgs__timings_for_period', async (event, periodStr) => {
   let datesWithDots = periodStr.split(' - ');
@@ -172,6 +188,15 @@ const createWindow = async (appEnv) => {
   win.appEnv = appEnv;
   setMenuAndKeyboardShortcuts(win);
 
+  win.on('close', (event) => {
+    if (!win.confirmedQuit) {
+      event.preventDefault();
+      win.send('message-from-backend', {
+        msg_type: 'confirm_quit',
+      });
+    }
+  });
+
   win.loadFile('dist-frontend/dialogs/post_timing/post_timing_dialog.html')
 
   await init(appEnv, win);
@@ -250,7 +275,7 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'toggle fullscreen',
         accelerator: process.platform === 'darwin' ? 'f' : 'f',
         click: () => {
-          if (isDisabledShortcuts) {
+          if (win.isDisabledShortcuts) {
             return;
           }
           isFullScreen = !isFullScreen;
@@ -262,7 +287,7 @@ function setMenuAndKeyboardShortcuts(win) {
         label: 'Escape',
         accelerator: 'Escape',
         click: () => {
-          if (isDisabledShortcuts) {
+          if (win.isDisabledShortcuts) {
             return;
           }
           if (isFullScreen) {
@@ -284,7 +309,7 @@ function setMenuAndKeyboardShortcuts(win) {
         role: 'help',
         accelerator: process.platform === 'darwin' ? 'h' : 'h',
         click: () => {
-          if (isDisabledShortcuts) {
+          if (win.isDisabledShortcuts) {
             return;
           }
           console.log('---===[ menu item clicked ]===---')

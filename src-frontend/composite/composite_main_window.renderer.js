@@ -58,6 +58,8 @@ let my = {
 
   isHiddenTagsPanel: true,
 
+  hasChangesInNotebook: false,
+
   // timings state
   timings: null,
 
@@ -174,6 +176,18 @@ function handleServerMessage(msg) {
       if (my.contextMenuHandler) {
         my.contextMenuHandler(msg.value);
         delete my.contextMenuHandler;
+      }
+      return;
+    }
+
+    if (msg.msg_type === 'confirm_quit') {
+      if (!my.hasChangesInNotebook) {
+        window.webkit.messageHandlers.composite_main_window_msgs__confirm_quit.postMessage();
+        return;
+      }
+      let result = confirm('confirm quit without saving changes to notebook by pressing OK');
+      if (result) {
+        window.webkit.messageHandlers.composite_main_window_msgs__confirm_quit.postMessage();
       }
       return;
     }

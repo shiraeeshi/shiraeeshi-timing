@@ -11,6 +11,12 @@ let my = {
   wallpapersToDeleteByName: {},
   currentWallpaperInfoBeingEdited: undefined,
   wallpapersListView: undefined,
+  showingTimingsHeaderWithStar: false,
+  showingTimingsConfigHeaderWithStar: false,
+  showingNotebookHeaderWithStar: false,
+  showingFrequenciesHeaderWithStar: false,
+  showingPostTimingDialogHeaderWithStar: false,
+  showingWallpapersHeaderWithStar: false,
 };
 
 function handleServerMessage(msg) {
@@ -25,6 +31,24 @@ function handleServerMessage(msg) {
     if (my.save_result_handler) {
       my.save_result_handler(msg.result, msg);
       delete my.save_result_handler;
+    }
+    return;
+  }
+  if (msg.type === 'confirm_quit') {
+    let hasUnsavedChanges = 
+      my.showingTimingsHeaderWithStar ||
+      my.showingTimingsConfigHeaderWithStar ||
+      my.showingNotebookHeaderWithStar ||
+      my.showingFrequenciesHeaderWithStar ||
+      my.showingPostTimingDialogHeaderWithStar ||
+      my.showingWallpapersHeaderWithStar;
+    if (!hasUnsavedChanges) {
+      window.webkit.messageHandlers.preferences_msgs__confirm_quit.postMessage();
+      return;
+    }
+    let result = confirm('confirm quit without saving by pressing OK');
+    if (result) {
+      window.webkit.messageHandlers.preferences_msgs__confirm_quit.postMessage();
     }
     return;
   }
@@ -58,10 +82,10 @@ function handleServerMessage(msg) {
   btnSave.addEventListener('click', (eve) => {
     let hasUnsavedChanges = 
       my.showingTimingsHeaderWithStar ||
-      showingTimingsConfigHeaderWithStar ||
-      showingNotebookHeaderWithStar ||
-      showingFrequenciesHeaderWithStar ||
-      showingPostTimingDialogHeaderWithStar ||
+      my.showingTimingsConfigHeaderWithStar ||
+      my.showingNotebookHeaderWithStar ||
+      my.showingFrequenciesHeaderWithStar ||
+      my.showingPostTimingDialogHeaderWithStar ||
       my.showingWallpapersHeaderWithStar;
     if (!hasUnsavedChanges) {
       my.timingsFileInfosListView.handleSaveSuccess();
@@ -100,19 +124,19 @@ function handleServerMessage(msg) {
 
         label = document.getElementById('tab2-label');
         label.innerHTML = 'Timings Config';
-        showingTimingsConfigHeaderWithStar = false;
+        my.showingTimingsConfigHeaderWithStar = false;
 
         label = document.getElementById('tab3-label');
         label.innerHTML = 'Notebook';
-        showingNotebookHeaderWithStar = false;
+        my.showingNotebookHeaderWithStar = false;
 
         label = document.getElementById('tab4-label');
         label.innerHTML = 'Frequencies';
-        showingFrequenciesHeaderWithStar = false;
+        my.showingFrequenciesHeaderWithStar = false;
 
         label = document.getElementById('tab5-label');
         label.innerHTML = 'Post-timing dialog';
-        showingPostTimingDialogHeaderWithStar = false;
+        my.showingPostTimingDialogHeaderWithStar = false;
 
         label = document.getElementById('tab6-label');
         label.innerHTML = 'Wallpapers';
@@ -125,8 +149,8 @@ function handleServerMessage(msg) {
       timingsToAdd: convertToBackendFormat(Object.values(my.timingsToAddByName)),
       namesOfTimingsToDelete: Object.keys(my.timingsToDeleteByName),
       changedTimings: my.showingTimingsHeaderWithStar,
-      changedTimingsConfig: showingTimingsConfigHeaderWithStar,
-      changedNotebook: showingNotebookHeaderWithStar,
+      changedTimingsConfig: my.showingTimingsConfigHeaderWithStar,
+      changedNotebook: my.showingNotebookHeaderWithStar,
       wallpapers: convertWallpapersListToBackendFormat(my.wallpapersListView.wallpapersToShow),
       wallpapersToAdd: convertWallpapersToAddListToBackendFormat(Object.values(my.wallpapersToAddByName)),
       namesOfWallpapersToDelete: Object.keys(my.wallpapersToDeleteByName),
@@ -212,19 +236,19 @@ function handleServerMessage(msg) {
 
     label = document.getElementById('tab2-label');
     label.innerHTML = 'Timings Config';
-    showingTimingsConfigHeaderWithStar = false;
+    my.showingTimingsConfigHeaderWithStar = false;
 
     label = document.getElementById('tab3-label');
     label.innerHTML = 'Notebook';
-    showingNotebookHeaderWithStar = false;
+    my.showingNotebookHeaderWithStar = false;
 
     label = document.getElementById('tab4-label');
     label.innerHTML = 'Frequencies';
-    showingFrequenciesHeaderWithStar = false;
+    my.showingFrequenciesHeaderWithStar = false;
 
     label = document.getElementById('tab5-label');
     label.innerHTML = 'Post-timing dialog';
-    showingPostTimingDialogHeaderWithStar = false;
+    my.showingPostTimingDialogHeaderWithStar = false;
 
     label = document.getElementById('tab6-label');
     label.innerHTML = 'Wallpapers';
@@ -235,10 +259,10 @@ function handleServerMessage(msg) {
   btnCancel.addEventListener('click', (eve) => {
     let hasUnsavedChanges = 
       my.showingTimingsHeaderWithStar ||
-      showingTimingsConfigHeaderWithStar ||
-      showingNotebookHeaderWithStar ||
-      showingFrequenciesHeaderWithStar ||
-      showingPostTimingDialogHeaderWithStar ||
+      my.showingTimingsConfigHeaderWithStar ||
+      my.showingNotebookHeaderWithStar ||
+      my.showingFrequenciesHeaderWithStar ||
+      my.showingPostTimingDialogHeaderWithStar ||
       my.showingWallpapersHeaderWithStar;
 
     let isToCancel = true;
@@ -249,8 +273,6 @@ function handleServerMessage(msg) {
       window.webkit.messageHandlers.preferences_msg__cancel.postMessage();
     }
   });
-
-  my.showingTimingsHeaderWithStar = false;
 
   // showTimings(my.timingsToShow);
   my.timingsFileInfosListView.initHtml();
@@ -425,8 +447,6 @@ function handleServerMessage(msg) {
 
 
 
-  my.showingWallpapersHeaderWithStar = false;
-
   let btnNewWallpaper = document.getElementById('btn-new-wallpaper');
   btnNewWallpaper.addEventListener('click', (eve) => {
 
@@ -591,8 +611,6 @@ function handleServerMessage(msg) {
   });
 
 
-  let showingTimingsConfigHeaderWithStar = false;
-
   let timingsInputTextualDisplayFormat = document.getElementById('timings-textual-display-format');
   timingsInputTextualDisplayFormat.value = config['timings-config']['display-format'];
   timingsInputTextualDisplayFormat.addEventListener('change', (eve) => {
@@ -601,18 +619,18 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === originalConfig['timings-config']['display-format'];
     let label = document.getElementById('tab2-label');
     if (!sameAsOldValue) {
-      if (!showingTimingsConfigHeaderWithStar) {
+      if (!my.showingTimingsConfigHeaderWithStar) {
         label.innerHTML = 'Timings Config*';
-        showingTimingsConfigHeaderWithStar = true;
+        my.showingTimingsConfigHeaderWithStar = true;
       }
       return;
     }
     if (timingsConfigIsSameAsOriginal(config['timings-config'], originalConfig['timings-config'])) {
       label.innerHTML = 'Timings Config';
-      showingTimingsConfigHeaderWithStar = false;
+      my.showingTimingsConfigHeaderWithStar = false;
     } else {
       label.innerHTML = 'Timings Config*';
-      showingTimingsConfigHeaderWithStar = true;
+      my.showingTimingsConfigHeaderWithStar = true;
     }
   });
 
@@ -624,18 +642,18 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === !!originalConfig['timings-config']['underline-canvas'];
     let label = document.getElementById('tab2-label');
     if (!sameAsOldValue) {
-      if (!showingTimingsConfigHeaderWithStar) {
+      if (!my.showingTimingsConfigHeaderWithStar) {
         label.innerHTML = 'Timings Config*';
-        showingTimingsConfigHeaderWithStar = true;
+        my.showingTimingsConfigHeaderWithStar = true;
       }
       return;
     }
     if (timingsConfigIsSameAsOriginal(config['timings-config'], originalConfig['timings-config'])) {
       label.innerHTML = 'Timings Config';
-      showingTimingsConfigHeaderWithStar = false;
+      my.showingTimingsConfigHeaderWithStar = false;
     } else {
       label.innerHTML = 'Timings Config*';
-      showingTimingsConfigHeaderWithStar = true;
+      my.showingTimingsConfigHeaderWithStar = true;
     }
   });
 
@@ -648,18 +666,18 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === !!originalConfig['timings-config']['canvas-with-flexible-width'];
     let label = document.getElementById('tab2-label');
     if (!sameAsOldValue) {
-      if (!showingTimingsConfigHeaderWithStar) {
+      if (!my.showingTimingsConfigHeaderWithStar) {
         label.innerHTML = 'Timings Config*';
-        showingTimingsConfigHeaderWithStar = true;
+        my.showingTimingsConfigHeaderWithStar = true;
       }
       return;
     }
     if (timingsConfigIsSameAsOriginal(config['timings-config'], originalConfig['timings-config'])) {
       label.innerHTML = 'Timings Config';
-      showingTimingsConfigHeaderWithStar = false;
+      my.showingTimingsConfigHeaderWithStar = false;
     } else {
       label.innerHTML = 'Timings Config*';
-      showingTimingsConfigHeaderWithStar = true;
+      my.showingTimingsConfigHeaderWithStar = true;
     }
   });
 
@@ -677,18 +695,18 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === originalConfig['timings-config']['canvas-width-in-px'];
     let label = document.getElementById('tab2-label');
     if (!sameAsOldValue) {
-      if (!showingTimingsConfigHeaderWithStar) {
+      if (!my.showingTimingsConfigHeaderWithStar) {
         label.innerHTML = 'Timings Config*';
-        showingTimingsConfigHeaderWithStar = true;
+        my.showingTimingsConfigHeaderWithStar = true;
       }
       return;
     }
     if (timingsConfigIsSameAsOriginal(config['timings-config'], originalConfig['timings-config'])) {
       label.innerHTML = 'Timings Config';
-      showingTimingsConfigHeaderWithStar = false;
+      my.showingTimingsConfigHeaderWithStar = false;
     } else {
       label.innerHTML = 'Timings Config*';
-      showingTimingsConfigHeaderWithStar = true;
+      my.showingTimingsConfigHeaderWithStar = true;
     }
   });
 
@@ -700,22 +718,20 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === originalConfig['timings-config']['default-summary'];
     let label = document.getElementById('tab2-label');
     if (!sameAsOldValue) {
-      if (!showingTimingsConfigHeaderWithStar) {
+      if (!my.showingTimingsConfigHeaderWithStar) {
         label.innerHTML = 'Timings Config*';
-        showingTimingsConfigHeaderWithStar = true;
+        my.showingTimingsConfigHeaderWithStar = true;
       }
       return;
     }
     if (timingsConfigIsSameAsOriginal(config['timings-config'], originalConfig['timings-config'])) {
       label.innerHTML = 'Timings Config';
-      showingTimingsConfigHeaderWithStar = false;
+      my.showingTimingsConfigHeaderWithStar = false;
     } else {
       label.innerHTML = 'Timings Config*';
-      showingTimingsConfigHeaderWithStar = true;
+      my.showingTimingsConfigHeaderWithStar = true;
     }
   });
-
-  let showingNotebookHeaderWithStar = false;
 
   let notebookInputFilepath = document.getElementById('notebook-filepath');
   notebookInputFilepath.value = config.notebook.filepath;
@@ -725,18 +741,18 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === originalConfig.notebook.filepath;
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
-      if (!showingNotebookHeaderWithStar) {
+      if (!my.showingNotebookHeaderWithStar) {
         label.innerHTML = 'Notebook*';
-        showingNotebookHeaderWithStar = true;
+        my.showingNotebookHeaderWithStar = true;
       }
       return;
     }
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
-      showingNotebookHeaderWithStar = false;
+      my.showingNotebookHeaderWithStar = false;
     } else {
       label.innerHTML = 'Notebook*';
-      showingNotebookHeaderWithStar = true;
+      my.showingNotebookHeaderWithStar = true;
     }
   });
   disableShortcutsOnFocus(notebookInputFilepath);
@@ -765,18 +781,18 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === originalConfig.notebook['background-color'];
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
-      if (!showingNotebookHeaderWithStar) {
+      if (!my.showingNotebookHeaderWithStar) {
         label.innerHTML = 'Notebook*';
-        showingNotebookHeaderWithStar = true;
+        my.showingNotebookHeaderWithStar = true;
       }
       return;
     }
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
-      showingNotebookHeaderWithStar = false;
+      my.showingNotebookHeaderWithStar = false;
     } else {
       label.innerHTML = 'Notebook*';
-      showingNotebookHeaderWithStar = true;
+      my.showingNotebookHeaderWithStar = true;
     }
   });
   disableShortcutsOnFocus(notebookInputBackgroundColor);
@@ -790,18 +806,18 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === originalConfig.notebook['start-with-bottom-panel-of-notes-maximized'];
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
-      if (!showingNotebookHeaderWithStar) {
+      if (!my.showingNotebookHeaderWithStar) {
         label.innerHTML = 'Notebook*';
-        showingNotebookHeaderWithStar = true;
+        my.showingNotebookHeaderWithStar = true;
       }
       return;
     }
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
-      showingNotebookHeaderWithStar = false;
+      my.showingNotebookHeaderWithStar = false;
     } else {
       label.innerHTML = 'Notebook*';
-      showingNotebookHeaderWithStar = true;
+      my.showingNotebookHeaderWithStar = true;
     }
   });
 
@@ -820,18 +836,18 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === originalConfig.notebook['font-size-in-px-of-top-panel-of-tags'];
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
-      if (!showingNotebookHeaderWithStar) {
+      if (!my.showingNotebookHeaderWithStar) {
         label.innerHTML = 'Notebook*';
-        showingNotebookHeaderWithStar = true;
+        my.showingNotebookHeaderWithStar = true;
       }
       return;
     }
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
-      showingNotebookHeaderWithStar = false;
+      my.showingNotebookHeaderWithStar = false;
     } else {
       label.innerHTML = 'Notebook*';
-      showingNotebookHeaderWithStar = true;
+      my.showingNotebookHeaderWithStar = true;
     }
   });
   disableShortcutsOnFocus(notebookInputFontSizeOfTopPanelOfTags);
@@ -851,18 +867,18 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === originalConfig.notebook['font-size-in-px-of-bottom-panel-of-tags'];
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
-      if (!showingNotebookHeaderWithStar) {
+      if (!my.showingNotebookHeaderWithStar) {
         label.innerHTML = 'Notebook*';
-        showingNotebookHeaderWithStar = true;
+        my.showingNotebookHeaderWithStar = true;
       }
       return;
     }
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
-      showingNotebookHeaderWithStar = false;
+      my.showingNotebookHeaderWithStar = false;
     } else {
       label.innerHTML = 'Notebook*';
-      showingNotebookHeaderWithStar = true;
+      my.showingNotebookHeaderWithStar = true;
     }
   });
   disableShortcutsOnFocus(notebookInputFontSizeOfBottomPanelOfTags);
@@ -882,18 +898,18 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === originalConfig.notebook['font-size-in-px-of-top-panel-of-notes'];
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
-      if (!showingNotebookHeaderWithStar) {
+      if (!my.showingNotebookHeaderWithStar) {
         label.innerHTML = 'Notebook*';
-        showingNotebookHeaderWithStar = true;
+        my.showingNotebookHeaderWithStar = true;
       }
       return;
     }
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
-      showingNotebookHeaderWithStar = false;
+      my.showingNotebookHeaderWithStar = false;
     } else {
       label.innerHTML = 'Notebook*';
-      showingNotebookHeaderWithStar = true;
+      my.showingNotebookHeaderWithStar = true;
     }
   });
   disableShortcutsOnFocus(notebookInputFontSizeOfTopPanelOfNotes);
@@ -913,18 +929,18 @@ function handleServerMessage(msg) {
     let sameAsOldValue = currentValue === originalConfig.notebook['font-size-in-px-of-bottom-panel-of-notes'];
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
-      if (!showingNotebookHeaderWithStar) {
+      if (!my.showingNotebookHeaderWithStar) {
         label.innerHTML = 'Notebook*';
-        showingNotebookHeaderWithStar = true;
+        my.showingNotebookHeaderWithStar = true;
       }
       return;
     }
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
-      showingNotebookHeaderWithStar = false;
+      my.showingNotebookHeaderWithStar = false;
     } else {
       label.innerHTML = 'Notebook*';
-      showingNotebookHeaderWithStar = true;
+      my.showingNotebookHeaderWithStar = true;
     }
   });
   disableShortcutsOnFocus(notebookInputFontSizeOfBottomPanelOfNotes);
@@ -942,18 +958,18 @@ function handleServerMessage(msg) {
       let sameAsOldValue = currentValue === !!originalConfig['notebook'][configName];
       let label = document.getElementById('tab3-label');
       if (!sameAsOldValue) {
-        if (!showingNotebookHeaderWithStar) {
+        if (!my.showingNotebookHeaderWithStar) {
           label.innerHTML = 'Notebook*';
-          showingNotebookHeaderWithStar = true;
+          my.showingNotebookHeaderWithStar = true;
         }
         return;
       }
       if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
         label.innerHTML = 'Notebook';
-        showingNotebookHeaderWithStar = false;
+        my.showingNotebookHeaderWithStar = false;
       } else {
         label.innerHTML = 'Notebook*';
-        showingNotebookHeaderWithStar = true;
+        my.showingNotebookHeaderWithStar = true;
       }
     });
   }
@@ -980,8 +996,6 @@ function handleServerMessage(msg) {
   initNotebookCheckbox('notes-icon-delete');
 
 
-  let showingFrequenciesHeaderWithStar = false;
-
   function initFrequenciesCheckbox(configName, htmlElemId) {
     if (htmlElemId === undefined) {
       htmlElemId = 'frequencies-' + configName;
@@ -995,18 +1009,18 @@ function handleServerMessage(msg) {
       let sameAsOldValue = currentValue === !!originalConfig['frequencies'][configName];
       let label = document.getElementById('tab4-label');
       if (!sameAsOldValue) {
-        if (!showingFrequenciesHeaderWithStar) {
+        if (!my.showingFrequenciesHeaderWithStar) {
           label.innerHTML = 'Frequencies*';
-          showingFrequenciesHeaderWithStar = true;
+          my.showingFrequenciesHeaderWithStar = true;
         }
         return;
       }
       if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
         label.innerHTML = 'Frequencies';
-        showingFrequenciesHeaderWithStar = false;
+        my.showingFrequenciesHeaderWithStar = false;
       } else {
         label.innerHTML = 'Frequencies*';
-        showingFrequenciesHeaderWithStar = true;
+        my.showingFrequenciesHeaderWithStar = true;
       }
     });
   }
@@ -1022,8 +1036,6 @@ function handleServerMessage(msg) {
   initFrequenciesCheckbox('icon-unhide-hidden-children');
 
 
-  let showingPostTimingDialogHeaderWithStar = false;
-
   function initPostTimingDialogCheckbox(configName, htmlElemId) {
     if (htmlElemId === undefined) {
       htmlElemId = configName;
@@ -1037,18 +1049,18 @@ function handleServerMessage(msg) {
       let sameAsOldValue = currentValue === !!originalConfig['post_timing_dialog'][configName];
       let label = document.getElementById('tab5-label');
       if (!sameAsOldValue) {
-        if (!showingPostTimingDialogHeaderWithStar) {
+        if (!my.showingPostTimingDialogHeaderWithStar) {
           label.innerHTML = 'Post-timing dialog*';
-          showingPostTimingDialogHeaderWithStar = true;
+          my.showingPostTimingDialogHeaderWithStar = true;
         }
         return;
       }
       if (postTimingDialogConfigIsSameAsOriginal(config['post_timing_dialog'], originalConfig['post_timing_dialog'])) {
         label.innerHTML = 'Post-timing dialog';
-        showingPostTimingDialogHeaderWithStar = false;
+        my.showingPostTimingDialogHeaderWithStar = false;
       } else {
         label.innerHTML = 'Post-timing dialog*';
-        showingPostTimingDialogHeaderWithStar = true;
+        my.showingPostTimingDialogHeaderWithStar = true;
       }
     });
   }

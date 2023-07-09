@@ -41,6 +41,14 @@ function handleServerMessage(msg) {
       return;
     }
 
+    if (msg.msg_type === 'confirm_quit') {
+      let result = confirm('confirm quit');
+      if (result) {
+        window.webkit.messageHandlers.post_timing_dialog_msgs__confirm_quit.postMessage();
+      }
+      return;
+    }
+
     if (msg.msg_type == "error_message") {
       let wrapper = document.getElementById("post-timing-dialog-main-container");
       let errorMessage = msg.message;

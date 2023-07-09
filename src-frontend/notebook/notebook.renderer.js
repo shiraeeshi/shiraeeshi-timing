@@ -28,6 +28,7 @@ let my = {
   notesForest: null,
   isCursorOnRightSide: true,
   isKeyboardListenerDisabled: false,
+  hasChangesInNotebook: false,
 };
 
 window.my = my;
@@ -79,6 +80,18 @@ function handleServerMessage(msg) {
       if (my.save_result_handler) {
         my.save_result_handler(msg.result, msg);
         delete my.save_result_handler;
+      }
+      return;
+    }
+
+    if (msg.type === 'confirm_quit') {
+      if (!my.hasChangesInNotebook) {
+        window.webkit.messageHandlers.notebook_msgs__confirm_quit.postMessage();
+        return;
+      }
+      let result = confirm('confirm quit without saving by pressing OK');
+      if (result) {
+        window.webkit.messageHandlers.notebook_msgs__confirm_quit.postMessage();
       }
       return;
     }

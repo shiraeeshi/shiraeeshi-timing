@@ -1,4 +1,5 @@
 const { parseTagFromNodeIfExists } = require('./parse_tags.js');
+const { TagsTreeNode } = require('./tags_tree_node.js');
 
 function getTagFromNodeIfExists(notebookNode) {
   if (notebookNode.tag !== undefined) {
@@ -12,6 +13,7 @@ export function addSiblingWithInputToTheRightSideNode(notebookNodeView) {
   let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
 
   notebookNodeView.addHtmlSiblingWithInput(function(newNotebookNode) {
+    my.hasChangesInNotebook = true;
     let tagFromNewNode = getTagFromNodeIfExists(newNotebookNode);
     if (tagFromNewNode !== undefined) {
       let tagPath = tagFromNewNode.tag.split(".");
@@ -38,6 +40,7 @@ export function addSiblingWithInputToTheRightSideNode(notebookNodeView) {
 export function appendChildWithInputToTheRightSideNode(notebookNodeView) {
   let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
   notebookNodeView.appendHtmlChildWithInput(function(newNotebookNode) {
+    my.hasChangesInNotebook = true;
     let tagFromNewNode = getTagFromNodeIfExists(newNotebookNode);
     if (tagFromNewNode !== undefined) {
       let tagPath = tagFromNewNode.tag.split(".");
@@ -69,63 +72,19 @@ export function editRightSideNode(notebookNodeView) {
     oldTagFromNode = Object.assign({}, oldTagFromNode);
   }
   notebookNodeView.edit(function(newNodeView) {
+    my.hasChangesInNotebook = true;
     editedNotebookNode = newNodeView.notebookNode;
     let tagFromNewNode = getTagFromNodeIfExists(editedNotebookNode);
-    let oldTagIsAncestorOfLastOpened = TagsTreeNode.prototype.isAncestorOf.call(oldTagFromNode, window.my.lastOpenedTagsTreeNode);
-    let newTagIsAncestorOfLastOpened = tagFromNewNode.isAncestorOf(window.my.lastOpenedTagsTreeNode);
-    if (oldTagIsAncestorOfLastOpened || newTagIsAncestorOfLastOpened) {
-      window.my.lastOpenedTagsTreeNode.notifyLinksChanged();
+    if (window.my.lastOpenedTagsTreeNode !== undefined) {
+      let oldTagAffectsLastOpened = oldTagFromNode !== undefined && window.my.lastOpenedTagsTreeNode.isAffectedByChangesTo(oldTagFromNode);
+      let newTagAffectsLastOpened = tagFromNewNode !== undefined && window.my.lastOpenedTagsTreeNode.isAffectedByChangesTo(tagFromNewNode);
+      if (oldTagAffectsLastOpened || newTagAffectsLastOpened) {
+        window.my.lastOpenedTagsTreeNode.notifyLinksChanged();
+      }
     }
-    window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
-    // let changedStructureOfTagsTree = false;
-    // if (tagFromNewNode !== undefined) {
-    //   let tagPath = tagFromNewNode.tag.split(".");
-    //   let obj = window.my.rootTagsTreeNode;
-    //   tagPath.forEach(tagPathSegment => {
-    //     obj = obj.ensureSubtagWithName(tagPathSegment);
-    //   });
-    //   obj.links.push(tagFromNewNode);
-    //   tagFromNewNode.tagsTreeNode = obj;
-    //   obj.notifyAddedLink();
-    //   changedStructureOfTagsTree = true;
-    // }
-    // if (oldTagFromNode !== undefined) {
-    //   if (tagFromNewNode === undefined ||
-    //       (oldTagFromNode.tag !== tagFromNewNode.tag)) {
-    //     let oldTagPath = oldTagFromNode.tag.split(".");
-    //     let obj = window.my.rootTagsTreeNode;
-    //     oldTagPath.forEach(tagPathSegment => {
-    //       obj = obj.subTags[tagPathSegment];
-    //     });
-    //     let foundIndex = undefined;
-    //     let foundLink;
-    //     outer: for (let idx = 0; idx < obj.links.length; idx++) {
-    //       let link = obj.links[idx];
-    //       if (link.tag !== oldTagFromNode.tag) continue;
-    //       if (link.name !== oldTagFromNode.name) continue;
-    //       if (link.ancestry.length !== oldTagFromNode.ancestry.length) continue;
-    //       for (let i = 0; i < link.ancestry.length; i++) {
-    //         if (link.ancestry[i] !== oldTagFromNode.ancestry[i]) continue outer;
-    //       }
-    //       foundIndex = idx;
-    //       foundLink = link;
-    //       break;
-    //     }
-    //     if (foundIndex !== undefined) {
-    //       obj.links.splice(foundIndex, 1);
-    //       obj.notifyDeletedLink(foundLink);
-    //     }
-    //     if (obj.links.length === 0 && obj.children.length === 0) {
-    //       if (obj.parent !== null) {
-    //         obj.parent.removeSubtagCascade(obj);
-    //       }
-    //       changedStructureOfTagsTree = true;
-    //     }
-    //   }
-    // }
-    // if (changedStructureOfTagsTree) {
-    //   window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
-    // }
+    if (window.my.rootNodeViewOfTags !== undefined) {
+      window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
+    }
     if (wasInRectangle) {
       newNodeView.wrapInRectangle();
       my.rightSideNodeInRectangle = newNodeView;
@@ -134,6 +93,7 @@ export function editRightSideNode(notebookNodeView) {
 }
 
 export function deleteNodeFromTheRightSide(notebookNodeView) {
+  my.hasChangesInNotebook = true;
 
   let newNodeInRectangle = my.rightSideNodeInRectangle;
   let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
@@ -199,6 +159,8 @@ export function deleteNodeFromTheRightSide(notebookNodeView) {
 }
 
 export function pasteNodeInto(notebookNode) {
+  my.hasChangesInNotebook = true;
+
   let source = my.notebookNodeToCut || my.notebookNodeToCopy;
   if (source === undefined ||
       source === notebookNode) {
