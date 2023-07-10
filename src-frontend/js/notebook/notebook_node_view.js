@@ -342,8 +342,11 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
   titleContainer.innerHTML = '';
   let inputElem = document.createElement('textarea');
   // inputElem.setAttribute('cols', 80);
-  inputElem.setAttribute('rows', 1);
   inputElem.value = that.name;
+  let linesCount = that.name.split('\n').length;
+  let maxRowsCount = 10;
+  let rowsCount = Math.max(linesCount, maxRowsCount);
+  inputElem.setAttribute('rows', rowsCount);
   titleContainer.appendChild(inputElem);
   let isHandlingChange = false;
   inputElem.addEventListener('change', (eve) => {
