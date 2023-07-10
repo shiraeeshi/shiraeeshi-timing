@@ -287,7 +287,8 @@ NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, ch
     }
   }
 
-  let inputElem = document.createElement('input');
+  let inputElem = document.createElement('textarea');
+  inputElem.setAttribute('rows', 1);
   let htmlElem = withChildren(document.createElement('li'), inputElem);
   if (index < that.htmlContainerUl.children.length) {
     that.htmlContainerUl.insertBefore(htmlElem, that.htmlContainerUl.children[index]);
@@ -312,16 +313,19 @@ NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, ch
     window.webkit.messageHandlers.enable_shortcuts.postMessage();
   });
   inputElem.addEventListener('keypress', (eve) => {
-    if (eve.key === 'Enter') {
-      eve.preventDefault();
-    }
-  });
-  inputElem.addEventListener('keyup', (eve) => {
-    if (eve.key === 'Enter') {
+    if (eve.key === 'Enter' && !eve.shiftKey) {
       eve.preventDefault();
       eve.stopPropagation();
       let event = new Event('change');
       inputElem.dispatchEvent(event);
+    }
+  });
+  inputElem.addEventListener('keyup', (eve) => {
+    if (eve.key === 'Enter') {
+      // eve.preventDefault();
+      // eve.stopPropagation();
+      // let event = new Event('change');
+      // inputElem.dispatchEvent(event);
     }
   });
   inputElem.focus();
@@ -336,7 +340,9 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
   }
   let titleContainer = that.htmlElement.querySelector('.notebook-node-title-container');
   titleContainer.innerHTML = '';
-  let inputElem = document.createElement('input');
+  let inputElem = document.createElement('textarea');
+  // inputElem.setAttribute('cols', 80);
+  inputElem.setAttribute('rows', 1);
   inputElem.value = that.name;
   titleContainer.appendChild(inputElem);
   let isHandlingChange = false;
@@ -365,8 +371,11 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
     window.webkit.messageHandlers.enable_shortcuts.postMessage();
   });
   inputElem.addEventListener('keypress', (eve) => {
-    if (eve.key === 'Enter') {
+    if (eve.key === 'Enter' && !eve.shiftKey) {
       eve.preventDefault();
+      eve.stopPropagation();
+      let event = new Event('change');
+      inputElem.dispatchEvent(event);
     }
   });
   inputElem.addEventListener('keyup', (eve) => {
@@ -377,11 +386,11 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
       let event = new Event('change');
       inputElem.dispatchEvent(event);
     }
-    if (eve.key === 'Enter') {
-      eve.preventDefault();
-      eve.stopPropagation();
-      let event = new Event('change');
-      inputElem.dispatchEvent(event);
+    if (eve.key === 'Enter' && !eve.shiftKey) {
+      // eve.preventDefault();
+      // eve.stopPropagation();
+      // let event = new Event('change');
+      // inputElem.dispatchEvent(event);
     }
   });
   inputElem.focus();
