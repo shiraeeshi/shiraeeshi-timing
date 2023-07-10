@@ -1,4 +1,5 @@
 const { TagsTreeNode } = require('./tags_tree_node.js')
+const { NotesForestViewBuilder } = require('./notes_forest_view_builder.js');
 const { showTagsAndLinks, showTagsAndLinksOfBottomPanel } = require('./show_tags.js');
 
 export function addTagNodeLinksToForest(tagNode, resultForest) {
@@ -149,6 +150,53 @@ export function buildInitialNotesForest() {
     };
   });
   return resultForest;
+}
+
+export function searchByTag(tagNode) {
+  // window.webkit.messageHandlers.foobar.postMessage("js searchByTag tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
+  console.log("js searchByTag tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
+  for (let link of tagNode.links) {
+    // window.webkit.messageHandlers.foobar.postMessage("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
+    console.log("  link: " + (link.ancestry.concat([link.name])).join(" -> "));
+  }
+  if (window.my.lastOpenedTagsTreeNode) {
+    delete window.my.lastOpenedTagsTreeNode.handlerLinkAdded;
+    delete window.my.lastOpenedTagsTreeNode.handlerLinkDeleted;
+    delete window.my.lastOpenedTagsTreeNode.handlerLinksChanged;
+  }
+  window.my.lastOpenedTagsTreeNode = tagNode;
+
+  tagNode.handlerLinkAdded = function() {
+    showLinksOfTag(tagNode); // TODO optimize: get the notebookNode from the new link, build its html, unhide it, unhide its ancestors
+  };
+
+  tagNode.handlerLinkDeleted = function() {
+    showLinksOfTag(tagNode); // TODO optimize: get the notebookNode from the deleted link, remove its html, handle visibility of ancestors
+  };
+
+  tagNode.handlerLinksChanged = function() {
+    showLinksOfTag(tagNode);
+  }
+
+  showLinksOfTag(tagNode);
+}
+
+function showLinksOfTag(tagNode) {
+
+  let resultForest = [];
+  addTagNodeLinksToForest(tagNode, resultForest);
+
+  window.my.lastOpenedNodesOfNotes = resultForest;
+
+  if (my.rootNodeViewOfNotesOfBottomPanel === undefined) {
+
+    let viewBuilder = new NotesForestViewBuilder();
+    viewBuilder.buildView(my.notebookTree);
+    my.rootNodeViewOfNotesOfBottomPanel = viewBuilder.getRootNodeViewOfNotes();
+    appendNotesForestHtmlToBottomPanel(viewBuilder.getHtml());
+
+  }
+  highlightNotesInForest(window.my.rootNodeViewOfNotesOfBottomPanel, resultForest);
 }
 
 export function buildCurrentNotesForest(tagsAndLinksForestObj) {

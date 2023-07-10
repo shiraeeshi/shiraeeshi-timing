@@ -1,4 +1,8 @@
-const { buildTagsAndLinksForest, highlightTagsInForest } = require('./notebook_utils.js');
+const {
+  buildTagsAndLinksForest,
+  highlightTagsInForest,
+  searchByTag,
+} = require('./notebook_utils.js');
 const {
   addSiblingWithInputToTheRightSideNode,
   appendChildWithInputToTheRightSideNode,
@@ -355,18 +359,6 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
     } else {
       that.notebookNode.renameTo(value);
       changeHandler(that);
-      // let notebookNodeParent = that.notebookNode.parent;
-      // let newNotebookNode = notebookNodeParent.ensureChildWithName(value);
-      // newNotebookNode.children = that.notebookNode.children;
-      // newNotebookNode.childrenByName = that.notebookNode.childrenByName;
-      // let index = notebookNodeParent.children.indexOf(that.notebookNode);
-      // that.removeFromTree();
-      // notebookNodeParent.children.splice(index, 0, newNotebookNode);
-      // notebookNodeParent.children.pop();
-      // notebookNodeParent.notifyInsertedChild(index);
-      // // notebookNodeParent.notifyChange();
-      // // // that.parentNodeView.mergeWithNewNodes(notebookNodeParent);
-      // changeHandler(newNotebookNode.nodeView);
     }
     isHandlingChange = false;
     enableKeyboardListener();
@@ -463,6 +455,16 @@ NotebookNodeView.prototype.openTagsOfChildrenInTagsTree = function() {
   let tagsAndLinksForestObj = buildTagsAndLinksForest(tagsOfChildren);
   window.my.lastOpenedTags = tagsAndLinksForestObj;
   highlightTagsInForest(window.my.rootNodeViewOfTagsOfBottomPanel, tagsAndLinksForestObj);
+}
+
+NotebookNodeView.prototype.openNotesWithTheSameTagInBottomPanel = function() {
+  let that = this;
+  let tagPath = that.notebookNode.tag.tag.split(".");
+  let tagNode = my.tagsTree;
+  tagPath.forEach(tagPathSegment => {
+    tagNode = tagNode.subTags[tagPathSegment];
+  });
+  searchByTag(tagNode);
 }
 
 NotebookNodeView.prototype.moveToTop = function() {
@@ -636,6 +638,20 @@ NotebookNodeView.prototype._createIconsList = function() {
       });
       return elem;
     })();
+  let iconOpenNotesWithTheSameTagInBottomPanel =
+    (function() {
+      let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-open-notes-with-the-same-tag-in-bottom-panel'),
+        withClass(
+          withChildren(document.createElement('span'),
+            document.createTextNode('open notes with the same tag in bottom panel')
+          ),
+          'tooltip')
+      );
+      elem.addEventListener('click', eve => {
+        that.openNotesWithTheSameTagInBottomPanel();
+      });
+      return elem;
+    })();
   let iconMoveToTop =
     (function() {
       let elem = withChildren(withClass(document.createElement('span'), 'notebook-node-icon', 'icon-move-to-top'),
@@ -782,6 +798,9 @@ NotebookNodeView.prototype._createIconsList = function() {
   }
   if (that._hasTaggedChildren() && my.config.notebook['notes-icon-open-tags-of-children-in-tags-tree']) {
     icons.push(iconOpenTagsOfChildrenInTagsTree);
+  }
+  if (that._isTaggedNode() && my.config.notebook['notes-icon-open-notes-with-the-same-tag-in-bottom-panel']) {
+    icons.push(iconOpenNotesWithTheSameTagInBottomPanel);
   }
   if (that.parentNodeView === undefined) {
     let iconIncreaseFontSize =

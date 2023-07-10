@@ -536,6 +536,7 @@ function handleServerMessage(msg) {
       // showTagsAndLinks(forest);
       let taggedNodes = parseTagsFromRootForest(forest);
       let tagsAndLinksForestObj = buildTagsAndLinksForest(taggedNodes);
+      my.tagsTree = tagsAndLinksForestObj;
 
       let viewBuilder = new CurrentNotesForestViewBuilder();
       viewBuilder.buildView(my.notebookTree);

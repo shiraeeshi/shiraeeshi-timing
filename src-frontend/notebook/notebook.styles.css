@@ -423,6 +423,14 @@ li.proc-leaf {
   height: 10px;
 }
 
+.icon-open-notes-with-the-same-tag-in-bottom-panel {
+  background-image: url('../img/dark-grey-chevrons-down-32.png');
+  background-repeat: no-repeat;
+  background-position: top left;
+  width: 10px;
+  height: 10px;
+}
+
 li:first-child > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top {
   display: none;
 }

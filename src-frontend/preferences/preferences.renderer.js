@@ -189,6 +189,7 @@ function handleServerMessage(msg) {
       'notes-icon-open-in-tree-above',
       'notes-icon-open-tag-in-tags-tree',
       'notes-icon-open-tags-of-children-in-tags-tree',
+      'notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
       'notes-icon-edit',
       'notes-icon-move-to-top',
       'notes-icon-move-to-bottom',
@@ -985,6 +986,7 @@ function handleServerMessage(msg) {
   initNotebookCheckbox('notes-icon-open-in-tree-above');
   initNotebookCheckbox('notes-icon-open-tag-in-tags-tree');
   initNotebookCheckbox('notes-icon-open-tags-of-children-in-tags-tree');
+  initNotebookCheckbox('notes-icon-open-notes-with-the-same-tag-in-bottom-panel'),
   initNotebookCheckbox('notes-icon-edit');
   initNotebookCheckbox('notes-icon-move-to-top');
   initNotebookCheckbox('notes-icon-move-to-bottom');
@@ -1721,6 +1723,7 @@ function notebookConfigIsSameAsOriginal(notebookConfig, originalNotebookConfig) 
             'notes-icon-open-in-tree-above',
             'notes-icon-open-tag-in-tags-tree',
             'notes-icon-open-tags-of-children-in-tags-tree',
+            'notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
             'notes-icon-edit',
             'notes-icon-move-to-top',
             'notes-icon-move-to-bottom',

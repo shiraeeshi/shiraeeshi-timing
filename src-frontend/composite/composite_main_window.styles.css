@@ -862,6 +862,30 @@ li.proc-leaf {
   background-image: url('../img/white-tags-icon-35-32.png');
 }
 
+.icon-open-notes-with-the-same-tag-in-bottom-panel {
+  background-image: url('../img/white-chevrons-down-32.png');
+}
+
+.black-icons
+.icon-open-notes-with-the-same-tag-in-bottom-panel {
+  background-image: url('../img/black-chevrons-down-32.png');
+}
+
+.dark-grey-icons
+.icon-open-notes-with-the-same-tag-in-bottom-panel {
+  background-image: url('../img/dark-grey-chevrons-down-32.png');
+}
+
+.light-grey-icons
+.icon-open-notes-with-the-same-tag-in-bottom-panel {
+  background-image: url('../img/light-grey-chevrons-down-32.png');
+}
+
+.white-icons
+.icon-open-notes-with-the-same-tag-in-bottom-panel {
+  background-image: url('../img/white-chevrons-down-32.png');
+}
+
 li:first-child > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top,
 .root-node       > .notebook-node-title-container > .notebook-node-icons > .icon-move-to-top {
   display: none;
