@@ -299,6 +299,11 @@ PostTimingTreeNodeView.prototype._insertHtmlChildWithInputAtIndex = function(ind
   } else {
     that.htmlChildrenContainerUl.appendChild(htmlElem);
   }
+
+  let xOffset = inputElem.getBoundingClientRect().left;
+  let inputWidth = document.body.clientWidth - xOffset - 20;
+  inputElem.style.width = `${inputWidth}px`;
+
   inputElem.addEventListener('change', (eve) => {
     let value = inputElem.value;
     if (value === '') {
@@ -345,6 +350,11 @@ PostTimingTreeNodeView.prototype.edit = function(changeHandler) {
   let maxRowsCount = 10;
   let rowsCount = Math.max(minRowsCount, Math.min(linesCount, maxRowsCount));
   inputElem.setAttribute('rows', rowsCount);
+
+  let xOffset = titleContainer.getBoundingClientRect().left;
+  let inputWidth = document.body.clientWidth - xOffset - 20;
+  inputElem.style.width = `${inputWidth}px`;
+
   titleContainer.appendChild(inputElem);
   inputElem.addEventListener('change', (eve) => {
     let value = inputElem.value;

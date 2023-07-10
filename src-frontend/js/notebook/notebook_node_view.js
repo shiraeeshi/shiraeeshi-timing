@@ -295,6 +295,11 @@ NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, ch
   } else {
     that.htmlContainerUl.appendChild(htmlElem);
   }
+
+  let xOffset = inputElem.getBoundingClientRect().left;
+  let inputWidth = document.body.clientWidth - xOffset - 20;
+  inputElem.style.width = `${inputWidth}px`;
+
   inputElem.addEventListener('change', (eve) => {
     let value = inputElem.value;
     if (value === '') {
@@ -348,6 +353,11 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
   let maxRowsCount = 10;
   let rowsCount = Math.max(minRowsCount, Math.min(linesCount, maxRowsCount));
   inputElem.setAttribute('rows', rowsCount);
+
+  let xOffset = titleContainer.getBoundingClientRect().left;
+  let inputWidth = document.body.clientWidth - xOffset - 20;
+  inputElem.style.width = `${inputWidth}px`;
+
   titleContainer.appendChild(inputElem);
   let isHandlingChange = false;
   inputElem.addEventListener('change', (eve) => {
