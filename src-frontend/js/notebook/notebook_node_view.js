@@ -854,6 +854,7 @@ NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
   let that = this;
   htmlElem.addEventListener('contextmenu', (eve) => {
     eve.preventDefault();
+    eve.stopPropagation();
     my.contextMenuHandler = function(commandName) {
       if (commandName === 'edit') {
         editRightSideNode(that);

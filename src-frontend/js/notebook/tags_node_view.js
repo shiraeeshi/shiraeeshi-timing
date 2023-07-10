@@ -336,6 +336,7 @@ NotebookTagsTreeNodeView.prototype._addContextMenuListener = function(htmlElem) 
   let that = this;
   htmlElem.addEventListener('contextmenu', (eve) => {
     eve.preventDefault();
+    eve.stopPropagation();
     my.contextMenuHandler = function(commandName) {
       if (commandName === 'copy-full-path') {
         that.copyFullPath();
@@ -364,7 +365,7 @@ NotebookTagsTreeNodeView.prototype._addContextMenuListener = function(htmlElem) 
         openPathInTagsForest(window.my.rootNodeViewOfTags, path);
       }
     }
-    window.webkit.messageHandlers.notebook_msgs__show_context_menu.postMessage('tags-tree-node', {
+    window.webkit.messageHandlers.show_notebook_context_menu.postMessage('tags-tree-node', {
       isTopPanelTree: that.isTopPanelTree,
       hasHiddenChildren: that.html().classList.contains('has-hidden-children'),
     });
