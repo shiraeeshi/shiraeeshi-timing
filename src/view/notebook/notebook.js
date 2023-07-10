@@ -418,6 +418,13 @@ function showContextMenuOfNotebookNode(event, options) {
       }
     },
     {
+      label: 'Open notes with the same tag in bottom panel',
+      enabled: options.isTaggedNode,
+      click: () => {
+        sendContextMenuCommand(event, 'open-notes-with-the-same-tag-in-bottom-panel')
+      }
+    },
+    {
       label: 'Open tags of children in tags tree',
       enabled: options.hasTaggedChildren,
       click: () => {

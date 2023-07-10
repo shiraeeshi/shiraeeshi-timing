@@ -909,6 +909,8 @@ NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
         rootNodeView.decreaseFontSize();
       } else if (commandName === 'open-tag-in-tags-tree') {
         that.openTagInTagsTree();
+      } else if (commandName === 'open-notes-with-the-same-tag-in-bottom-panel') {
+        that.openNotesWithTheSameTagInBottomPanel();
       } else if (commandName === 'open-tags-of-children-in-tags-tree') {
         that.openTagsOfChildrenInTagsTree();
       } else if (commandName === 'open-node-in-top-panel') {
