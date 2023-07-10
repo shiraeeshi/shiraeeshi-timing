@@ -1,6 +1,6 @@
 const { NotebookNode } = require('../js/notebook/notebook_node.js');
 const { turnMultilineTextIntoHtml } = require('../js/html_utils.js');
-const { yamlRootObject2forest, convertNotebookTreeToPreYamlJson } = require('../js/notebook/yaml2forest.js');
+const { yamlNotebook2forest, convertNotebookTreeToPreYamlJson } = require('../js/notebook/yaml2forest.js');
 const { parseTagsFromRootForest } = require('../js/notebook/parse_tags.js');
 const { showTagsAndLinks, showTagsAndLinksOfBottomPanel } = require('../js/notebook/show_tags.js');
 const { NotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
@@ -112,7 +112,7 @@ function handleServerMessage(msg) {
     handleConfig(msg.config);
     let notes_object = msg.notes;
 
-    let forestToConvertToNodes = yamlRootObject2forest(msg.notes);
+    let forestToConvertToNodes = yamlNotebook2forest(msg.notes);
     my.notebookTree = convertToNotebookNodes(forestToConvertToNodes);
     let forest = my.notebookTree.children;
     my.notesForest = forest;

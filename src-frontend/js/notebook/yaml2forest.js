@@ -1,41 +1,22 @@
-export function yamlRootObject2forest(yamlRootObject) {
+export function yamlNotebook2forest(yamlList) {
   try {
-    let keys = Object.keys(yamlRootObject);
-    let result = keys.map(key => {
-      let lst = yamlRootObject[key];
-      if (lst.constructor !== Array) {
-        throw Error("Wrong structure: non-list property in root object. key: '" + key + "' (root object has many list-typed properties, objects have single (list-typed) property, lists contain many strings or one object)");
-      }
-      let nodeChildren = yamlList2SubtreesList(lst);
-      return {
-        name: key,
-        children: nodeChildren
-      };
-    });
-    return result;
+    return yamlList2SubtreesList(yamlList);
   } catch (err) {
-    window.webkit.messageHandlers.foobar.postMessage("js yamlRootObject2forest error msg: " + err.message);
+    window.webkit.messageHandlers.foobar.postMessage("js yamlNotebook2forest error msg: " + err.message);
     throw err;
   }
 }
 
 export function convertNotebookTreeToPreYamlJson(notebookTree) {
   try {
-    let yamlRootObject = {};
-    notebookTree.children.forEach(rootChild => {
-      // yamlRootObject[rootChild.name] = 
-      //   true;
-      yamlRootObject[rootChild.name] = 
-        rootChild.children.map(function ff(childNode) {
-          if (childNode.children.length === 0) {
-            return childNode.name;
-          }
-          let obj = {};
-          obj[childNode.name] = childNode.children.map(ff);
-          return obj;
-        });
+    return notebookTree.children.map(function ff(childNode) {
+      if (childNode.children.length === 0) {
+        return childNode.name;
+      }
+      let obj = {};
+      obj[childNode.name] = childNode.children.map(ff);
+      return obj;
     });
-    return yamlRootObject;
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js convertNotebookTreeToPreYamlJson error msg: " + err.message);
     throw err;
