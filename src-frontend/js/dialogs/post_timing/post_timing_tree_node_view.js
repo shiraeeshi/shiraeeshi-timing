@@ -291,7 +291,8 @@ PostTimingTreeNodeView.prototype._insertHtmlChildWithInputAtIndex = function(ind
     }
   }
 
-  let inputElem = document.createElement('input');
+  let inputElem = document.createElement('textarea');
+  inputElem.setAttribute('rows', 1);
   let htmlElem = withChildren(document.createElement('li'), inputElem);
   if (index < that.htmlChildrenContainerUl.children.length) {
     that.htmlChildrenContainerUl.insertBefore(htmlElem, that.htmlChildrenContainerUl.children[index]);
@@ -337,8 +338,13 @@ PostTimingTreeNodeView.prototype.edit = function(changeHandler) {
   }
   let titleContainer = that.htmlElement.querySelector('.process-node-title-container');
   titleContainer.innerHTML = '';
-  let inputElem = document.createElement('input');
+  let inputElem = document.createElement('textarea');
   inputElem.value = that.name;
+  let linesCount = that.name.split('\n').length;
+  let minRowsCount = 5;
+  let maxRowsCount = 10;
+  let rowsCount = Math.max(minRowsCount, Math.min(linesCount, maxRowsCount));
+  inputElem.setAttribute('rows', rowsCount);
   titleContainer.appendChild(inputElem);
   inputElem.addEventListener('change', (eve) => {
     let value = inputElem.value;
