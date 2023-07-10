@@ -280,7 +280,7 @@ function initTopPanelButtonsOfTagsAndLinks() {
 function initBottomPanelButtonsOfTagsAndLinks() {
   let btnClose = document.getElementById('btn-close-bottom-panel-of-tags-and-links');
   btnClose.addEventListener('click', (eve) => {
-    let topPanel = document.getElementById('tags-and-links-content-top-wrapper');
+    let topPanel = document.getElementById('tags-and-links-content-top-outer-wrapper');
     topPanel.style.removeProperty('height');
     let outerWrapper = document.getElementById('tags-and-links-content-outer-wrapper');
     outerWrapper.classList.remove('as-two-panels');
@@ -348,7 +348,7 @@ function initBottomPanelButtonsOfNotes() {
 
 export function initResizers() {
   initVerticalResizer();
-  initHorizontalResizer('tags-and-links-content-top-wrapper', 'tags-and-links-content-bottom-outer-wrapper', 'resizer-between-top-and-bottom-panels-of-tags');
+  initHorizontalResizer('tags-and-links-content-top-outer-wrapper', 'tags-and-links-content-bottom-outer-wrapper', 'resizer-between-top-and-bottom-panels-of-tags');
   initHorizontalResizer('notes-content-top-wrapper', 'notes-content-bottom-outer-wrapper', 'resizer-between-top-and-bottom-panels-of-notes');
 }
 
