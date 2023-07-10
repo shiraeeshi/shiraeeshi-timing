@@ -344,8 +344,9 @@ NotebookNodeView.prototype.edit = function(changeHandler) {
   // inputElem.setAttribute('cols', 80);
   inputElem.value = that.name;
   let linesCount = that.name.split('\n').length;
+  let minRowsCount = 3;
   let maxRowsCount = 10;
-  let rowsCount = Math.max(linesCount, maxRowsCount);
+  let rowsCount = Math.max(minRowsCount, Math.min(linesCount, maxRowsCount));
   inputElem.setAttribute('rows', rowsCount);
   titleContainer.appendChild(inputElem);
   let isHandlingChange = false;
