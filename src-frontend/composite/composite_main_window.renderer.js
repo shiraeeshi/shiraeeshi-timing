@@ -1,5 +1,5 @@
 const { parseTagsFromRootForest } = require('../js/notebook/parse_tags.js');
-const { yamlRootObject2forest } = require('../js/notebook/yaml2forest.js');
+const { yamlRootObject2forest, convertNotebookTreeToPreYamlJson } = require('../js/notebook/yaml2forest.js');
 const { NotebookNode } = require('../js/notebook/notebook_node.js');
 const { CurrentNotesForestViewBuilder } = require('../js/notebook/notes_forest_view_builder.js');
 const {
@@ -177,6 +177,33 @@ function handleServerMessage(msg) {
         my.contextMenuHandler(msg.value);
         delete my.contextMenuHandler;
       }
+      return;
+    }
+
+    if (msg.msg_type === 'save_result') {
+      if (my.save_result_handler) {
+        my.save_result_handler(msg.result, msg);
+        delete my.save_result_handler;
+      }
+      return;
+    }
+
+    if (msg.msg_type === 'command-save-notebook') {
+
+      let preYamlJson = convertNotebookTreeToPreYamlJson(my.notebookTree);
+
+      my.save_result_handler = (result, msg) => {
+        if (result === 'error') {
+          alert(`There was an error while saving a file. Error message: "${msg.error_message}"`);
+          return;
+        }
+        if (result === 'success') {
+          my.hasChangesInNotebook = false;
+          alert('Saved the notebook successfully');
+          return;
+        }
+      };
+      window.webkit.messageHandlers.composite_main_window_msgs__save_notebook.postMessage(preYamlJson, my.config.notebook.filepath);
       return;
     }
 

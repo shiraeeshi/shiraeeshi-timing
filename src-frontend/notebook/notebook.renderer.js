@@ -70,6 +70,7 @@ function handleServerMessage(msg) {
           return;
         }
         if (result === 'success') {
+          my.hasChangesInNotebook = false;
           alert('Saved the notebook successfully');
           return;
         }

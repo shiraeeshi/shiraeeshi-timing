@@ -6,6 +6,7 @@ const YAML = require('yaml');
 const { readTimingsForRangeOfDates } = require('../../logic/timing_file_parser.js');
 const { createOrRefreshIndex } = require('../../logic/timing_index_manager.js');
 const { parseNotebook } = require('../../logic/notebook_parser.js');
+const { saveNotebook } = require('../../logic/notebook_save.js');
 
 const { showPreferences } = require('../preferences/preferences.js');
 
@@ -50,6 +51,24 @@ ipcMain.on('composite_main_window_msgs__show_notebook_context_menu', async (even
 ipcMain.on('composite_main_window_msgs__show_notebook_container_context_menu', async (event, sourceType, options) => {
   if (sourceType === 'notes-top-panel') {
     showContextMenuOfNotebookNotesTopPanel(event, options);
+  }
+});
+
+ipcMain.on('composite_main_window_msgs__save_notebook', async (event, preYamlJson, filepath) => {
+  try {
+    // console.log(`notebook_msgs__save_notebook filepath: ${filepath}`);
+    console.dir(Object.keys(preYamlJson));
+    await saveNotebook(preYamlJson, filepath);
+    event.sender.send('message-from-backend', {
+      msg_type: 'save_result',
+      result: 'success'
+    });
+  } catch (err) {
+    event.sender.send('message-from-backend', {
+      msg_type: 'save_result',
+      result: 'error',
+      error_message: err.message
+    });
   }
 });
 
@@ -211,6 +230,15 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
   menu.append(new MenuItem({
     label: 'Shiraeeshi',
     submenu: [
+      {
+        label: 'save notebook',
+        click: () => {
+          // let window = electron.remote.getCurrentWindow();
+          win.webContents.send('message-from-backend', {
+            msg_type: 'command-save-notebook'
+          });
+        }
+      },
       {
         label: 'toggle fullscreen',
         accelerator: process.platform === 'darwin' ? 'f' : 'f',
