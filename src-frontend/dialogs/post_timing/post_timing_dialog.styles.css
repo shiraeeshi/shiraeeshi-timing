@@ -54,7 +54,7 @@ body {
 #upper-right-panel,
 #bottom-right-panel {
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   padding-left: 5px;
 }
 
@@ -118,6 +118,7 @@ body {
 #left-side-processes-tree-container-ul {
   flex: 1;
   overflow-y: auto;
+  overflow-x: auto;
   padding-left: 10px;
 }
 

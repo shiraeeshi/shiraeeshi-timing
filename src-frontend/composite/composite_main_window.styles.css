@@ -105,7 +105,7 @@ body {
 #tags-and-links-content-top-wrapper,
 #tags-and-links-content-bottom-wrapper {
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 
 #tags-and-links-content-top-wrapper,
@@ -121,7 +121,7 @@ body {
 #notes-content-top-wrapper,
 #notes-content-bottom-wrapper {
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   padding-left: 5px;
 }
 

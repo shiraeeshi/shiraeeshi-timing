@@ -302,6 +302,8 @@ PostTimingTreeNodeView.prototype._insertHtmlChildWithInputAtIndex = function(ind
 
   let xOffset = inputElem.getBoundingClientRect().left;
   let inputWidth = document.body.clientWidth - xOffset - 20;
+  let minWidth = 20;
+  inputWidth = Math.max(minWidth, inputWidth);
   inputElem.style.width = `${inputWidth}px`;
 
   inputElem.addEventListener('change', (eve) => {
@@ -353,6 +355,8 @@ PostTimingTreeNodeView.prototype.edit = function(changeHandler) {
 
   let xOffset = titleContainer.getBoundingClientRect().left;
   let inputWidth = document.body.clientWidth - xOffset - 20;
+  let minWidth = 20;
+  inputWidth = Math.max(minWidth, inputWidth);
   inputElem.style.width = `${inputWidth}px`;
 
   titleContainer.appendChild(inputElem);
