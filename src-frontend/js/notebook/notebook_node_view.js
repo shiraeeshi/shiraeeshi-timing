@@ -589,6 +589,10 @@ NotebookNodeView.prototype.increaseFontSize = function() {
     window.my.fontSizeOfBottomPanelOfNotes = fontSize;
   }
   that.html().style.fontSize = `${fontSize}px`;
+  // that.html().querySelectorAll(".title-container").forEach(elem => {
+  //   elem.style.fontSize = `${fontSize}px`;
+  // });
+  // that.initTooltipFontSize();
 }
 
 NotebookNodeView.prototype.decreaseFontSize = function() {
@@ -608,6 +612,10 @@ NotebookNodeView.prototype.decreaseFontSize = function() {
     window.my.fontSizeOfBottomPanelOfNotes = fontSize;
   }
   that.html().style.fontSize = `${fontSize}px`;
+  // that.html().querySelectorAll(".title-container").forEach(elem => {
+  //   elem.style.fontSize = `${fontSize}px`;
+  // });
+  // that.initTooltipFontSize();
 }
 
 NotebookNodeView.prototype.html = function() {
@@ -622,14 +630,14 @@ NotebookNodeView.prototype.html = function() {
 NotebookNodeView.prototype.name2html = function() {
   let that = this;
   if (that.name.includes("\n")) {
-    return withChildren(withClass(document.createElement('div'), 'title-container-div'),
+    return withChildren(withClass(document.createElement('div'), 'title-container', 'title-container-div'),
             ...that.name.split("\n")
                         .map(line => document.createTextNode(line))
                         .flatMap(el => [el,document.createElement("br")])
                         .slice(0, -1)
           );
   } else {
-    return withChildren(withClass(document.createElement('span'), 'title-container-span'),
+    return withChildren(withClass(document.createElement('span'), 'title-container', 'title-container-span'),
             document.createTextNode(that.name)
           );
   }
@@ -984,6 +992,8 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
 
   if (that.children.length == 0) {
     let htmlElement = withClass(withChildren(document.createElement('li'), that.createTitleDiv()), 'proc-node', 'proc-leaf');
+    that.initFontSize(htmlElement);
+    that.initTooltipFontSize(htmlElement);
     that.htmlElement = htmlElement;
     return;
   }
@@ -1006,6 +1016,8 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
   if (that.parentNodeView === undefined) {
     that.initFontSize(htmlElement);
   }
+  // that.initFontSize(htmlElement);
+  that.initTooltipFontSize(htmlElement);
   that.htmlElement = htmlElement;
 };
 
@@ -1018,6 +1030,19 @@ NotebookNodeView.prototype.initFontSize = function(htmlElement) {
     fontSize = window.my.fontSizeOfBottomPanelOfNotes;
   }
   htmlElement.style.fontSize = `${fontSize}px`;
+  // htmlElement.querySelectorAll(":scope > .notebook-node-title-container > .title-container").forEach(elem => {
+  //   elem.style.fontSize = `${fontSize}px`;
+  // });
+};
+
+NotebookNodeView.prototype.initTooltipFontSize = function(htmlElement) {
+  let that = this;
+  if (my.notebookTooltipFontSize === undefined) {
+    return;
+  }
+  htmlElement.querySelectorAll(":scope > .notebook-node-title-container > .notebook-node-icons > .notebook-node-icon > .tooltip").forEach(elem => {
+    elem.style.fontSize = `${my.notebookTooltipFontSize}px`;
+  });
 };
 
 NotebookNodeView.prototype.isLeaf = function() {

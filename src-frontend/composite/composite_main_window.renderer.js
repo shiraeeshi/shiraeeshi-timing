@@ -682,6 +682,30 @@ function handleNotebookConfig(config) {
     fontSizeOfTopPanelOfNotes = 16;
   }
   my.fontSizeOfTopPanelOfNotes = fontSizeOfTopPanelOfNotes;
+
+  let fontSizeOfBottomPanelOfNotes = config.notebook['font-size-in-px-of-bottom-panel-of-notes'];
+  if (fontSizeOfBottomPanelOfNotes === undefined) {
+    fontSizeOfBottomPanelOfNotes = 16;
+  }
+  my.fontSizeOfBottomPanelOfNotes = fontSizeOfBottomPanelOfNotes;
+
+  let fontSizeOfTopPanelOfTags = config.notebook['font-size-in-px-of-top-panel-of-tags'];
+  if (fontSizeOfTopPanelOfTags === undefined) {
+    fontSizeOfTopPanelOfTags = 16;
+  }
+  my.fontSizeOfTopPanelOfTags = fontSizeOfTopPanelOfTags;
+
+  let fontSizeOfBottomPanelOfTags = config.notebook['font-size-in-px-of-bottom-panel-of-tags'];
+  if (fontSizeOfBottomPanelOfTags === undefined) {
+    fontSizeOfBottomPanelOfTags = 16;
+  }
+  my.fontSizeOfBottomPanelOfTags = fontSizeOfBottomPanelOfTags;
+
+  let fontSizeOfTooltips = config.notebook['font-size-in-px-of-tooltips'];
+  if (fontSizeOfTooltips === undefined) {
+    fontSizeOfTooltips = 16;
+  }
+  my.notebookTooltipFontSize = fontSizeOfTooltips;
 }
 
 function initVerticalResizer() {

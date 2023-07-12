@@ -303,7 +303,7 @@ li.proc-leaf {
 
 .notebook-node-icon .tooltip,
 .notebook-icon .tooltip {
-  visibility: hidden;
+  display: none;
   background-color: black;
   color: #fff;
   text-align: center;
@@ -317,7 +317,7 @@ li.proc-leaf {
 
 .notebook-node-icon:hover .tooltip,
 .notebook-icon:hover .tooltip {
-  visibility: visible;
+  display: block;
 }
 
 .notebook-node-title-container {

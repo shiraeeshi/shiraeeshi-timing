@@ -555,6 +555,10 @@ footer a {
   border-top: 1px solid #ddd;
 }
 
+#notebook-font-sizes-wrapper > #notebook-font-sizes-left-panel > #notebook-tooltips-font-size-wrapper {
+  padding-left: 0;
+}
+
 #notebook-font-sizes-wrapper > #notebook-font-sizes-right-panel > div {
   border: none;
 }
@@ -562,6 +566,10 @@ footer a {
 #notebook-font-sizes-wrapper > #notebook-font-sizes-right-panel > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
+
+
+
+
 
 
 

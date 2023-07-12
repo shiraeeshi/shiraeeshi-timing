@@ -177,6 +177,8 @@ function handleServerMessage(msg) {
       config.notebook['font-size-in-px-of-top-panel-of-notes'];
     notebookInputFontSizeOfBottomPanelOfNotes.value =
       config.notebook['font-size-in-px-of-bottom-panel-of-notes'];
+    notebookInputFontSizeOfTooltips.value =
+      config.notebook['font-size-in-px-of-tooltips'];
     let notebookIconPropNames = [
       'tag-icon-open-in-tree-above',
       'tag-icon-edit',
@@ -946,6 +948,37 @@ function handleServerMessage(msg) {
   });
   disableShortcutsOnFocus(notebookInputFontSizeOfBottomPanelOfNotes);
 
+  let notebookInputFontSizeOfTooltips = 
+    document.getElementById('font-size-in-px-of-tooltips');
+  notebookInputFontSizeOfTooltips.value =
+    config.notebook['font-size-in-px-of-tooltips'];
+  notebookInputFontSizeOfTooltips.addEventListener('change', (eve) => {
+    let currentValue = parseInt(notebookInputFontSizeOfTooltips.value);
+    if (isNaN(currentValue)) {
+      alert('must be int');
+      return;
+    }
+    notebookInputFontSizeOfTooltips.value = currentValue.toString();
+    config.notebook['font-size-in-px-of-tooltips'] = currentValue;
+    let sameAsOldValue = currentValue === originalConfig.notebook['font-size-in-px-of-tooltips'];
+    let label = document.getElementById('tab3-label');
+    if (!sameAsOldValue) {
+      if (!my.showingNotebookHeaderWithStar) {
+        label.innerHTML = 'Notebook*';
+        my.showingNotebookHeaderWithStar = true;
+      }
+      return;
+    }
+    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+      label.innerHTML = 'Notebook';
+      my.showingNotebookHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Notebook*';
+      my.showingNotebookHeaderWithStar = true;
+    }
+  });
+  disableShortcutsOnFocus(notebookInputFontSizeOfTooltips);
+
   function initNotebookCheckbox(htmlElemId, configName) {
     if (configName === undefined) {
       configName = htmlElemId;
@@ -1710,7 +1743,8 @@ function notebookConfigIsSameAsOriginal(notebookConfig, originalNotebookConfig) 
          notebookConfig['font-size-in-px-of-top-panel-of-tags'] === originalNotebookConfig['font-size-in-px-of-top-panel-of-tags'] &&
          notebookConfig['font-size-in-px-of-bottom-panel-of-tags'] === originalNotebookConfig['font-size-in-px-of-bottom-panel-of-tags'] &&
          notebookConfig['font-size-in-px-of-top-panel-of-notes'] === originalNotebookConfig['font-size-in-px-of-top-panel-of-notes'] &&
-         notebookConfig['font-size-in-px-of-bottom-panel-of-notes'] === originalNotebookConfig['font-size-in-px-of-bottom-panel-of-notes'] && (function() {
+         notebookConfig['font-size-in-px-of-bottom-panel-of-notes'] === originalNotebookConfig['font-size-in-px-of-bottom-panel-of-notes'] &&
+         notebookConfig['font-size-in-px-of-tooltips'] === originalNotebookConfig['font-size-in-px-of-tooltips'] && (function() {
            let iconPropNames = [
             'tag-icon-open-in-tree-above',
             'tag-icon-edit',

@@ -347,6 +347,12 @@ function handleConfig(config) {
     fontSizeOfBottomPanelOfTags = 16;
   }
   my.fontSizeOfBottomPanelOfTags = fontSizeOfBottomPanelOfTags;
+
+  let fontSizeOfTooltips = config.notebook['font-size-in-px-of-tooltips'];
+  if (fontSizeOfTooltips === undefined) {
+    fontSizeOfTooltips = 16;
+  }
+  my.notebookTooltipFontSize = fontSizeOfTooltips;
 }
 
 function convertToNotebookNodes(jsonForest) {
