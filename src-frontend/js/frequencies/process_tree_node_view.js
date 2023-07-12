@@ -63,7 +63,7 @@ ProcessTreeNodeView.prototype.refreshOrderOfChildren = function() {
   that.children = that.processNode.children.map(ch => ch.nodeView);
 }
 
-ProcessTreeNodeView.prototype.sortChildrenByFirstTiming = function(processNode) {
+ProcessTreeNodeView.prototype.sortChildrenByFirstTiming = function() {
   let that = this;
   that.children.sort((a, b) => {
     let ta = a.processNode.getFirstTiming();
@@ -75,7 +75,7 @@ ProcessTreeNodeView.prototype.sortChildrenByFirstTiming = function(processNode) 
   });
 };
 
-ProcessTreeNodeView.prototype.sortChildrenByLastTiming = function(processNode) {
+ProcessTreeNodeView.prototype.sortChildrenByLastTiming = function() {
   let that = this;
   that.processNode.children.sort((a, b) => {
     let ta = a.getLastTimingToHighlight();

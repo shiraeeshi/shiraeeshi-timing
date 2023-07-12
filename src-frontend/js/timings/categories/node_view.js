@@ -39,6 +39,24 @@ TimingsCategoryNodeView.prototype.sortChildrenByFirstTiming = function() {
   });
 };
 
+TimingsCategoryNodeView.prototype.sortChildrenByLastTiming = function() {
+  let that = this;
+  that.children.sort((a, b) => {
+    let ta = a.timingsCategoryNode.getLastTimingToHighlight();
+    let tb = b.timingsCategoryNode.getLastTimingToHighlight();
+    if (ta === undefined) {
+      if (tb === undefined) {
+        return 0;
+      }
+      return -1;
+    }
+    if (tb === undefined) {
+      return 1;
+    }
+    return ta.fromdate.getTime() - tb.fromdate.getTime();
+  });
+};
+
 TimingsCategoryNodeView.prototype.getTimingTextViewsRecursively = function(timingTextView) {
   let that = this;
   function getOwnTimingsRecursively(timingsCategoryNode) {
@@ -313,7 +331,7 @@ TimingsCategoryNodeView.prototype.buildAsHtmlLiElement = function() {
   }
 
   that.children.forEach(childNode => childNode.buildAsHtmlLiElement());
-  that.sortChildrenByFirstTiming();
+  that.sortChildrenByLastTiming();
   let htmlElement =
     withChildren(
       withChildren(withClass(document.createElement('li'), 'proc-node', 'proc-node-closed'),
