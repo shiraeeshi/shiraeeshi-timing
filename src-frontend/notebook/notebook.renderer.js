@@ -28,6 +28,11 @@ const {
 let my = {
   notesForest: null,
   isCursorOnRightSide: true,
+  isCursorOnTopRightPanel: true,
+  isCursorOnBottomRightPanel: false,
+  rightBottomNodeInRectangle: undefined,
+  rightTopNodeInRectangle: undefined,
+  rightSideNodeInRectangle: undefined,
   isKeyboardListenerDisabled: false,
   hasChangesInNotebook: false,
   isHiddenTagsPanel: false,
@@ -135,12 +140,19 @@ function handleServerMessage(msg) {
       my.rootNodeViewOfNotesOfBottomPanel = viewBuilder.getRootNodeViewOfNotes();
       appendNotesForestHtmlToBottomPanel(viewBuilder.getHtml());
 
+      my.rightBottomNodeInRectangle = my.rootNodeViewOfNotesOfBottomPanel;
+      my.rightSideNodeInRectangle = my.rootNodeViewOfNotesOfBottomPanel;
+      my.rightSideNodeInRectangle.wrapInRectangle();
+
       let initialNotesForest = buildInitialNotesForest();
       highlightNotesInForest(window.my.rootNodeViewOfNotesOfBottomPanel, initialNotesForest);
 
       let outerWrapper = document.getElementById('notes-content-outer-wrapper');
       outerWrapper.classList.remove('as-two-panels');
       outerWrapper.classList.add('maximized-bottom-panel');
+
+      my.isCursorOnBottomRightPanel = true;
+      my.isCursorOnTopRightPanel = false;
 
     } else {
 
@@ -149,6 +161,7 @@ function handleServerMessage(msg) {
       my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
       appendNotesForestHtml(viewBuilder.getHtml());
 
+      my.rightTopNodeInRectangle = my.rootNodeViewOfNotes;
       my.rightSideNodeInRectangle = my.rootNodeViewOfNotes;
       my.rightSideNodeInRectangle.wrapInRectangle();
 
@@ -158,6 +171,9 @@ function handleServerMessage(msg) {
       let outerWrapper = document.getElementById('notes-content-outer-wrapper');
       outerWrapper.classList.remove('as-two-panels');
       outerWrapper.classList.remove('maximized-bottom-panel');
+
+      my.isCursorOnBottomRightPanel = false;
+      my.isCursorOnTopRightPanel = true;
     }
   } catch (err) {
     window.webkit.messageHandlers.foobar.postMessage("js handleServerMessage error msg: " + err.message);
@@ -181,6 +197,12 @@ function handleKeyUp(eve) {
         newNodeInRectangle.wrapInRectangle();
 
         my.rightSideNodeInRectangle = newNodeInRectangle;
+
+        if (my.isCursorOnTopRightPanel) {
+          my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+        } else {
+          my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+        }
       }
     } else {
       let nodeInRectangle = that.nodeInRectangle;
@@ -196,37 +218,76 @@ function handleKeyUp(eve) {
   } else if (key === 'ArrowRight') {
     if (my.isCursorOnRightSide) {
       if (my.rightSideNodeInRectangle.children.length > 0) {
-        my.rightSideNodeInRectangle.removeRectangleWrapper();
 
         if (my.rightSideNodeInRectangle.isCollapsed) {
           my.rightSideNodeInRectangle.toggleCollapse();
         }
 
-        let newNodeInRectangle = my.rightSideNodeInRectangle.children[0];
+        let newHtmlNodeInRectangle = my.rightSideNodeInRectangle.htmlContainerUl.children[0];
+
+        if (newHtmlNodeInRectangle === undefined) {
+          my.rightSideNodeInRectangle.unhideHiddenChildren();
+        }
+
+        newHtmlNodeInRectangle = my.rightSideNodeInRectangle.htmlContainerUl.children[0];
+
+        if (newHtmlNodeInRectangle === undefined) {
+          return;
+        }
+
+        my.rightSideNodeInRectangle.removeRectangleWrapper();
+
+        let newNodeInRectangle = newHtmlNodeInRectangle.nodeView;
         newNodeInRectangle.wrapInRectangle();
 
         my.rightSideNodeInRectangle = newNodeInRectangle;
+
+        if (my.isCursorOnTopRightPanel) {
+          my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+        } else {
+          my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+        }
       }
     } else {
       let nodeInRectangle = that.nodeInRectangle;
       if (nodeInRectangle.children.length > 0) {
-        nodeInRectangle.removeRectangleWrapper();
 
         if (nodeInRectangle.isCollapsed) {
           nodeInRectangle.toggleCollapse();
         }
 
-        let newNodeInRectangle = nodeInRectangle.children[0];
+        let newHtmlNodeInRectangle = nodeInRectangle.htmlContainerUl.children[0];
+
+        if (newHtmlNodeInRectangle === undefined) {
+          nodeInRectangle.unhideHiddenChildren();
+        }
+
+        newHtmlNodeInRectangle = nodeInRectangle.htmlContainerUl.children[0];
+
+        if (newHtmlNodeInRectangle === undefined) {
+          return;
+        }
+
+        nodeInRectangle.removeRectangleWrapper();
+
+        let newNodeInRectangle = newHtmlNodeInRectangle.nodeView;
         newNodeInRectangle.wrapInRectangle();
 
         that.nodeInRectangle = newNodeInRectangle;
       }
     }
+  } else if (eve.ctrlKey && key === 'ArrowUp') {
+    if (my.isCursorOnRightSide) {
+      my.isCursorOnTopRightPanel = true;
+      my.isCursorOnBottomRightPanel = false;
+      my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+      my.rightSideNodeInRectangle = my.rightTopNodeInRectangle;
+    }
   } else if (key === 'ArrowUp') {
     if (my.isCursorOnRightSide) {
       if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
 
-        let newNodeInRectangle = my.rightSideNodeInRectangle.findPreviousSibling();
+        let newNodeInRectangle = my.rightSideNodeInRectangle.findPreviousVisibleSibling();
         if (newNodeInRectangle === undefined) {
           return;
         }
@@ -234,12 +295,18 @@ function handleKeyUp(eve) {
         newNodeInRectangle.wrapInRectangle();
 
         my.rightSideNodeInRectangle = newNodeInRectangle;
+
+        if (my.isCursorOnTopRightPanel) {
+          my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+        } else {
+          my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+        }
       }
     } else {
       let nodeInRectangle = that.nodeInRectangle;
       if (nodeInRectangle.parentNodeView !== undefined) {
 
-        let newNodeInRectangle = nodeInRectangle.findPreviousSibling();
+        let newNodeInRectangle = nodeInRectangle.findPreviousVisibleSibling();
         if (newNodeInRectangle === undefined) {
           return;
         }
@@ -249,11 +316,18 @@ function handleKeyUp(eve) {
         that.nodeInRectangle = newNodeInRectangle;
       }
     }
+  } else if (eve.ctrlKey && key === 'ArrowDown') {
+    if (my.isCursorOnRightSide) {
+      my.isCursorOnTopRightPanel = false;
+      my.isCursorOnBottomRightPanel = true;
+      my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+      my.rightSideNodeInRectangle = my.rightBottomNodeInRectangle;
+    }
   } else if (key === 'ArrowDown') {
     if (my.isCursorOnRightSide) {
       if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
 
-        let newNodeInRectangle = my.rightSideNodeInRectangle.findNextSibling();
+        let newNodeInRectangle = my.rightSideNodeInRectangle.findNextVisibleSibling();
         if (newNodeInRectangle === undefined) {
           return;
         }
@@ -261,12 +335,18 @@ function handleKeyUp(eve) {
         newNodeInRectangle.wrapInRectangle();
 
         my.rightSideNodeInRectangle = newNodeInRectangle;
+
+        if (my.isCursorOnTopRightPanel) {
+          my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+        } else {
+          my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+        }
       }
     } else {
       let nodeInRectangle = that.nodeInRectangle;
       if (nodeInRectangle.parentNodeView !== undefined) {
 
-        let newNodeInRectangle = nodeInRectangle.findNextSibling();
+        let newNodeInRectangle = nodeInRectangle.findNextVisibleSibling();
         if (newNodeInRectangle === undefined) {
           return;
         }

@@ -27,12 +27,21 @@ export function addSiblingWithInputToTheRightSideNode(notebookNodeView) {
       window.my.rootNodeViewOfTags.mergeWithNewTags(window.my.rootTagsTreeNode);
     }
     if (wasInRectangle) {
-      my.rightSideNodeInRectangle.removeRectangleWrapper();
 
       let newNodeInRectangle = my.rightSideNodeInRectangle.findNextSibling();
+      if (newNodeInRectangle.isHidden) {
+        return;
+      }
       newNodeInRectangle.wrapInRectangle();
 
+      my.rightSideNodeInRectangle.removeRectangleWrapper();
       my.rightSideNodeInRectangle = newNodeInRectangle;
+
+      if (my.isCursorOnTopRightPanel) {
+        my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+      } else {
+        my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+      }
     }
   });
 }
@@ -60,6 +69,12 @@ export function appendChildWithInputToTheRightSideNode(notebookNodeView) {
       newNodeInRectangle.wrapInRectangle();
 
       my.rightSideNodeInRectangle = newNodeInRectangle;
+
+      if (my.isCursorOnTopRightPanel) {
+        my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+      } else {
+        my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+      }
     }
   });
 }
@@ -98,9 +113,9 @@ export function deleteNodeFromTheRightSide(notebookNodeView) {
   let newNodeInRectangle = my.rightSideNodeInRectangle;
   let wasInRectangle = my.rightSideNodeInRectangle === notebookNodeView;
   if (wasInRectangle) {
-    newNodeInRectangle = notebookNodeView.findNextSibling();
+    newNodeInRectangle = notebookNodeView.findNextVisibleSibling();
     if (newNodeInRectangle === undefined) {
-      newNodeInRectangle = notebookNodeView.findPreviousSibling();
+      newNodeInRectangle = notebookNodeView.findPreviousVisibleSibling();
     }
     if (newNodeInRectangle === undefined) {
       newNodeInRectangle = notebookNodeView.parentNodeView;

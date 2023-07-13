@@ -195,8 +195,21 @@ function showLinksOfTag(tagNode) {
     my.rootNodeViewOfNotesOfBottomPanel = viewBuilder.getRootNodeViewOfNotes();
     appendNotesForestHtmlToBottomPanel(viewBuilder.getHtml());
 
+    my.rightBottomNodeInRectangle = my.rootNodeViewOfNotesOfBottomPanel;
+    my.rightBottomNodeInRectangle.wrapInRectangle();
+
   }
   highlightNotesInForest(window.my.rootNodeViewOfNotesOfBottomPanel, resultForest);
+
+  if (my.rightBottomNodeInRectangle.isHidden) {
+    let prev = my.rightBottomNodeInRectangle;
+    my.rightBottomNodeInRectangle = my.rootNodeViewOfNotesOfBottomPanel;
+    my.rightBottomNodeInRectangle.wrapInRectangle();
+    if (my.isCursorOnBottomRightPanel) {
+      my.rightSideNodeInRectangle = my.rightBottomNodeInRectangle;
+    }
+    prev.removeRectangleWrapper();
+  }
 }
 
 export function buildCurrentNotesForest(tagsAndLinksForestObj) {
@@ -318,6 +331,18 @@ function initBottomPanelButtonsOfNotes() {
   btnOpenAboveExclusively.addEventListener('click', (eve) => {
     let nodesToOpen = window.my.lastOpenedNodesOfNotes;
     highlightNotesInForest(window.my.rootNodeViewOfNotes, nodesToOpen);
+
+    my.isCursorOnTopRightPanel = true;
+    my.isCursorOnBottomRightPanel = false;
+    my.rightSideNodeInRectangle = my.rightTopNodeInRectangle;
+
+    if (my.rightTopNodeInRectangle.isHidden) {
+      let prev = my.rightTopNodeInRectangle;
+      my.rightTopNodeInRectangle = my.rootNodeViewOfNotes;
+      my.rightTopNodeInRectangle.wrapInRectangle();
+      my.rightSideNodeInRectangle = my.rightTopNodeInRectangle;
+      prev.removeRectangleWrapper();
+    }
   });
 
   let btnMaximize = document.getElementById('btn-maximize-bottom-panel-of-notes');

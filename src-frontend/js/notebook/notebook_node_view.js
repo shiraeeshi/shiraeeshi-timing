@@ -18,6 +18,7 @@ export function NotebookNodeView(notebookNode, parentNodeView) {
   notebookNode.nodeView = that;
   that.name = notebookNode.name;
   that.isCollapsed = true;
+  that.isHidden = false;
   that.parentNodeView = parentNodeView;
   that.children = notebookNode.children.map(childNode => new NotebookNodeView(childNode, that));
   that.childrenByName = {};
@@ -35,6 +36,7 @@ export function NotebookNodeViewOfBottomPanel(notebookNode, parentNodeView) {
   notebookNode.nodeViewOfBottomPanel = that;
   that.name = notebookNode.name;
   that.isCollapsed = true;
+  that.isHidden = false;
   that.parentNodeView = parentNodeView;
   that.children = notebookNode.children.map(childNode => new NotebookNodeViewOfBottomPanel(childNode, that));
   that.childrenByName = {};
@@ -64,6 +66,13 @@ NotebookNodeView.prototype.refreshOrderOfChildrenOnScreen = function() {
   that.refreshOrderOfChildren();
   that.htmlContainerUl.innerHTML = "";
   withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
+}
+
+NotebookNodeView.prototype.refreshOrderOfVisibleChildrenOnScreen = function() {
+  let that = this;
+  that.refreshOrderOfChildren();
+  that.htmlContainerUl.innerHTML = "";
+  withChildren(that.htmlContainerUl, ...that.children.filter(ch => !ch.isHidden).map(ch => ch.html()));
 }
 
 NotebookNodeView.prototype.refreshOrderOfChildren = function() {
@@ -99,7 +108,7 @@ NotebookNodeView.prototype.mergeWithNewNodes = function(notebookNode) {
   }
 };
 
-NotebookNodeView.prototype.handleInsertedChild = function(newChildIndex) {
+NotebookNodeView.prototype.handleInsertedChild = function(newChildIndex, nodeThatInsertedChild) {
   let that = this;
 
   let lengthBefore = that.children.length;
@@ -108,16 +117,24 @@ NotebookNodeView.prototype.handleInsertedChild = function(newChildIndex) {
   let newChildView = that.newChildFromNode(newChildNode);
   newChildView.buildAsHtmlLiElement();
 
-  if (lengthBefore > 0 && that.isTopPanelTree) {
-    that.refreshOrderOfChildrenOnScreen();
+  if (lengthBefore > 0) {
+    if (that.isTopPanelTree) {
+      that.refreshOrderOfChildrenOnScreen();
+    } else if (nodeThatInsertedChild === that) {
+      that.refreshOrderOfVisibleChildrenOnScreen();
+    }
   }
   if (lengthBefore === 0) {
     if (that.htmlElement === undefined) {
       return;
     }
     that._rebuildHtmlElement();
-    if (!that.isCollapsed && that.isTopPanelTree) {
-      that.refreshOrderOfChildrenOnScreen();
+    if (!that.isCollapsed) {
+      if (that.isTopPanelTree) {
+        that.refreshOrderOfChildrenOnScreen();
+      } else if (nodeThatInsertedChild === that) {
+        that.refreshOrderOfVisibleChildrenOnScreen();
+      }
     }
   }
 };
@@ -229,8 +246,15 @@ NotebookNodeView.prototype.addHtmlSiblingWithInput = function(changeHandler) {
   if (that.parentNodeView === undefined) {
     return;
   }
-  let idx = that.parentNodeView.children.indexOf(that);
-  that.parentNodeView._insertHtmlChildWithInputAtIndex(idx + 1, changeHandler);
+  let thisHtmlChildIndex;
+  let htmlChildIndex;
+  if (that.htmlElement !== undefined && that.htmlElement.parentNode !== null) {
+    thisHtmlChildIndex = Array.prototype.indexOf.call(that.htmlElement.parentNode.children, that.htmlElement);
+    htmlChildIndex = thisHtmlChildIndex + 1;
+  }
+  let thisNodeViewChildIndex = that.parentNodeView.children.indexOf(that);
+  let nodeViewChildIndex = thisNodeViewChildIndex + 1;
+  that.parentNodeView._insertHtmlChildWithInputAtIndex(htmlChildIndex, nodeViewChildIndex, changeHandler);
 };
 
 NotebookNodeView.prototype.appendHtmlChildWithInput = function(changeHandler) {
@@ -238,11 +262,12 @@ NotebookNodeView.prototype.appendHtmlChildWithInput = function(changeHandler) {
   if (that.isCollapsed) {
     that.toggleCollapse();
   }
-  let idx = that.children.length;
-  that._insertHtmlChildWithInputAtIndex(idx, changeHandler);
+  let htmlChildIndex = that.htmlContainerUl.children.length;
+  let nodeViewChildIndex = that.children.length;
+  that._insertHtmlChildWithInputAtIndex(htmlChildIndex, nodeViewChildIndex, changeHandler);
 };
 
-NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, changeHandler) {
+NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(htmlChildIndex, nodeViewChildIndex, changeHandler) {
   let that = this;
   if (that.children.length === 0) {
     if (that.htmlElement === undefined) {
@@ -252,8 +277,8 @@ NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, ch
     if (parent === undefined) {
       return;
     }
-    let htmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
-    if (htmlChildIndex < 0) {
+    let thisHtmlChildIndex = Array.prototype.indexOf.call(parent.children, that.htmlElement);
+    if (thisHtmlChildIndex < 0) {
       return;
     }
 
@@ -280,18 +305,18 @@ NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, ch
 
     that.uncollapseWithoutNotifyingChildren();
 
-    if (htmlChildIndex === parent.children.length) {
+    if (thisHtmlChildIndex === parent.children.length) {
       parent.appendChild(that.htmlElement);
     } else {
-      parent.insertBefore(that.htmlElement, parent.children[htmlChildIndex]);
+      parent.insertBefore(that.htmlElement, parent.children[thisHtmlChildIndex]);
     }
   }
 
   let inputElem = document.createElement('textarea');
   inputElem.setAttribute('rows', 1);
   let htmlElem = withChildren(document.createElement('li'), inputElem);
-  if (index < that.htmlContainerUl.children.length) {
-    that.htmlContainerUl.insertBefore(htmlElem, that.htmlContainerUl.children[index]);
+  if (htmlChildIndex < that.htmlContainerUl.children.length) {
+    that.htmlContainerUl.insertBefore(htmlElem, that.htmlContainerUl.children[htmlChildIndex]);
   } else {
     that.htmlContainerUl.appendChild(htmlElem);
   }
@@ -309,9 +334,9 @@ NotebookNodeView.prototype._insertHtmlChildWithInputAtIndex = function(index, ch
     }
     that.htmlContainerUl.removeChild(htmlElem);
     let newNotebookNode = that.notebookNode.ensureChildWithName(value);
-    that.notebookNode.children.splice(index, 0, newNotebookNode);
+    that.notebookNode.children.splice(nodeViewChildIndex, 0, newNotebookNode);
     that.notebookNode.children.pop();
-    that.notebookNode.notifyInsertedChild(index);
+    that.notebookNode.notifyInsertedChild(nodeViewChildIndex, that);
     // that.notebookNode.notifyChange();
     // // that.mergeWithNewNodes(that.notebookNode);
     that.uncollapseWithoutNotifyingChildren();
@@ -452,6 +477,48 @@ NotebookNodeView.prototype.findNextSibling = function() {
   return parentChildren[idx + 1];
 };
 
+NotebookNodeView.prototype.findPreviousVisibleSibling = function() {
+  let that = this;
+  if (that.htmlElement === undefined) {
+    return undefined;
+  }
+  let parentHtml = that.htmlElement.parentNode;
+  if (parentHtml === undefined) {
+    return;
+  }
+  let parentChildren = parentHtml.children;
+  let idx = Array.prototype.indexOf.call(parentChildren, that.htmlElement);
+  if (idx <= 0) {
+    return undefined;
+  }
+  let htmlSibling = parentChildren[idx - 1];
+  if (htmlSibling == undefined) {
+    return undefined;
+  }
+  return htmlSibling.nodeView;
+};
+
+NotebookNodeView.prototype.findNextVisibleSibling = function() {
+  let that = this;
+  if (that.htmlElement === undefined) {
+    return undefined;
+  }
+  let parentHtml = that.htmlElement.parentNode;
+  if (parentHtml === undefined) {
+    return;
+  }
+  let parentChildren = parentHtml.children;
+  let idx = Array.prototype.indexOf.call(parentChildren, that.htmlElement);
+  if (idx < 0 || idx == parentChildren.length - 1) {
+    return undefined;
+  }
+  let htmlSibling = parentChildren[idx + 1];
+  if (htmlSibling == undefined) {
+    return undefined;
+  }
+  return htmlSibling.nodeView;
+};
+
 NotebookNodeView.prototype._isTaggedNode = function() {
   let that = this;
   if (that.notebookNode === undefined) {
@@ -538,6 +605,7 @@ NotebookNodeView.prototype.moveToBottom = function() {
 
 NotebookNodeView.prototype.hideThisItem = function() {
   let that = this;
+  that.isHidden = true;
   let parent = that.html().parentNode;
   parent.removeChild(that.html());
   if (that.parentNodeView !== undefined) {
@@ -555,6 +623,9 @@ NotebookNodeView.prototype.hideSiblingsBelow = function() {
     for (let i = idx + 1; i < siblings.length; i++) {
       let sibling = siblings[i];
       parent.removeChild(sibling);
+      if (sibling.nodeView) {
+        sibling.nodeView.isHidden = true;
+      }
     }
     if (siblings.length > idx + 1) {
       if (that.parentNodeView !== undefined) {
@@ -994,6 +1065,7 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
     let htmlElement = withClass(withChildren(document.createElement('li'), that.createTitleDiv()), 'proc-node', 'proc-leaf');
     that.initFontSize(htmlElement);
     that.initTooltipFontSize(htmlElement);
+    htmlElement.nodeView = that;
     that.htmlElement = htmlElement;
     return;
   }
@@ -1018,6 +1090,7 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
   }
   // that.initFontSize(htmlElement);
   that.initTooltipFontSize(htmlElement);
+  htmlElement.nodeView = that;
   that.htmlElement = htmlElement;
 };
 
@@ -1053,7 +1126,11 @@ NotebookNodeView.prototype.toggleCollapse = function() {
   let that = this;
   if (that.isCollapsed) {
     if (!that.hasManuallyHiddenChildren) {
-      that._appendHtmlChildren();
+      if (that.isTopPanelTree) {
+        that._appendHtmlChildren();
+      } else {
+        that._appendVisibleHtmlChildren();
+      }
     }
     that.uncollapse();
   } else {
@@ -1095,6 +1172,13 @@ NotebookNodeView.prototype._appendHtmlChildren = function() {
   )
 };
 
+NotebookNodeView.prototype._appendVisibleHtmlChildren = function() {
+  let that = this;
+  withChildren(that.htmlContainerUl,
+    ...that.children.filter(ch => !ch.isHidden).map(childNode => childNode.html())
+  )
+};
+
 NotebookNodeView.prototype.parentUncollapsed = function() {
   let that = this;
   if (!that.isCollapsed) {
@@ -1108,16 +1192,17 @@ NotebookNodeView.prototype.parentUncollapsed = function() {
 
 NotebookNodeView.prototype.hide = function() {
   let that = this;
+  that.isHidden = true;
   that.collapse();
+  for (let child of that.children) {
+    child.hide();
+  }
   if (!that.htmlElement) {
     return;
   }
   let htmlParent = that.html().parentNode;
   if (htmlParent !== null) {
     htmlParent.removeChild(that.html());
-  }
-  for (let child of that.children) {
-    child.hide();
   }
 };
 
@@ -1134,6 +1219,8 @@ NotebookNodeView.prototype.unhide = function() {
       that.parentNodeView.html().classList.add('has-hidden-children');
     }
   }
+
+  that.isHidden = false;
 
   let htmlParent = that.html().parentNode;
   if (htmlParent === null) {
@@ -1184,6 +1271,10 @@ NotebookNodeView.prototype.highlightTree = function(nodeToHighlight) {
 NotebookNodeView.prototype.parentIsHighlighted = function() {
   let that = this;
   // that.unhide();
+  (function ff(nodeView) {
+    nodeView.isHidden = false;
+    nodeView.children.forEach(ff);
+  })(that);
   if (!that.isCollapsed) {
     that.collapse();
   }

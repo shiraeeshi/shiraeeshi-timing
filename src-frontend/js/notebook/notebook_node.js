@@ -85,13 +85,13 @@ NotebookNode.prototype.renameTo = function(newName) {
   parseTagsFromNodeRecursively(that, that.getAncestry());
 };
 
-NotebookNode.prototype.notifyInsertedChild = function(childIndex) {
+NotebookNode.prototype.notifyInsertedChild = function(childIndex, nodeThatInsertedChild) {
   let that = this;
   if (that.nodeView) {
-    that.nodeView.handleInsertedChild(childIndex);
+    that.nodeView.handleInsertedChild(childIndex, nodeThatInsertedChild);
   }
   if (that.nodeViewOfBottomPanel) {
-    that.nodeViewOfBottomPanel.handleInsertedChild(childIndex);
+    that.nodeViewOfBottomPanel.handleInsertedChild(childIndex, nodeThatInsertedChild);
   }
 };
 
