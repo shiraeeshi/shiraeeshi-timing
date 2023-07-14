@@ -1,5 +1,4 @@
 const { app, nativeImage, Menu, MenuItem, BrowserWindow } = require('electron');
-const path = require('path');
 const { showTimingsSummary } = require('./timings_summary/summary.js');
 const { showHistoryLatest } = require('./timings_history/history_latest.js');
 const { showFrequencies } = require('./timings_reports/timings_frequencies/timings_frequencies.js');
@@ -7,15 +6,8 @@ const { showNotebook } = require('./notebook/notebook.js');
 const { showCompositeMainWindow } = require('./composite/composite_main_window.js');
 const { showPreferences } = require('./preferences/preferences.js');
 const { showPostTimingDialog } = require('./dialogs/post_timing/post_timing_dialog.js');
-const { TimingTimerManager } = require('../logic/timing_timer_manager.js');
 
-export function createMenu(appEnv, tray) {
-
-  let homeDirPath = app.getPath('home');
-  let timingStartFilepath = path.join(homeDirPath, 'timing_start');
-  let timingFilepath = path.join(homeDirPath, 'testtiming');
-
-  let timerManager = new TimingTimerManager(timingStartFilepath, timingFilepath);
+export function createMenu(appEnv, tray, timerManager) {
 
   let menu;
   menu = Menu.buildFromTemplate([
