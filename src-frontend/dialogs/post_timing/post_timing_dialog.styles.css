@@ -51,7 +51,7 @@ body {
   height: 100%;
 }
 
-#upper-right-panel,
+#upper-right-panel > #right-side-processes-tree-container-div,
 #bottom-right-panel {
   overflow-y: auto;
   overflow-x: auto;
@@ -67,6 +67,21 @@ body {
 #upper-right-panel {
   height: 80%;
   flex: 0 0 auto;
+}
+
+#upper-right-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+#upper-right-panel > #timing-datetime-main-wrapper {
+  flex: none;
+  padding-left: 5px;
+  border-bottom: 1px solid grey;
+}
+
+#upper-right-panel > #right-side-processes-tree-container-div {
+  flex: 1 1 1px;
 }
 
 #right-panel.as-two-panels >

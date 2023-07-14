@@ -86,6 +86,8 @@ function handleServerMessage(msg) {
 
     my.config = msg.config;
 
+    my.datetimeKey = msg.datetimeKey;
+
     my.categoryPath2File = buildTreeFromCategoryPathToFile(config);
 
     my.now = new Date();
@@ -122,11 +124,18 @@ function handleServerMessage(msg) {
       throw err;
     });
 
+    showDatetimeOfTiming();
+
     window.webkit.messageHandlers.post_timing_dialog_msgs.postMessage("handleServerMessage end ");
   } catch (err) {
     window.webkit.messageHandlers.post_timing_dialog_msgs.postMessage("handleServerMessage. error: " + err.message);
     throw err;
   }
+}
+
+function showDatetimeOfTiming() {
+  let wrapper = document.getElementById('timing-datetime-main-wrapper');
+  wrapper.innerHTML = my.datetimeKey;
 }
 
 

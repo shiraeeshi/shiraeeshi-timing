@@ -264,7 +264,8 @@ async function init(appEnv, win) {
   let config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
 
   await func({
-    config: config,
+    config,
+    datetimeKey,
   });
 
 }
