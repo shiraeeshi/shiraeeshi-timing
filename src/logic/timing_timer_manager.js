@@ -17,29 +17,36 @@ TimingTimerManager.prototype.init = function() {
       console.log(`error reading ${whichFile}: ${err.message}`);
     });
   }
-  Promise.all([
+  return Promise.all([
     readOrUndefined('last_timing_start_datetime', that.lastTimingStartFilepath),
     readOrUndefined('last_timing', that.lastTimingFilepath),
   ]).then(results => {
-    let [lastTimingStartFileContents, lastTimingFileContents] = results;
-    let lastTimingInfo = parseLastTiming(lastTimingFileContents);
-    let lastTimingStartInfo = parseLastTimingStart(lastTimingStartFileContents);
-    if (lastTimingInfo === undefined) {
+    try {
+      let [lastTimingStartFileContents, lastTimingFileContents] = results;
+      // console.log(`[TimingTimerManager.init 1] lastTimingStartFileContents: ${lastTimingStartFileContents}`);
+      // console.log(`[TimingTimerManager.init 2] lastTimingFileContents: ${lastTimingFileContents}`);
+      let lastTimingInfo = parseLastTiming(lastTimingFileContents);
+      // console.log(`[TimingTimerManager.init 3] parsed lastTimingInfo: ${JSON.stringify(lastTimingInfo)}`);
+      let lastTimingStartInfo = parseLastTimingStart(lastTimingStartFileContents);
+      // console.log(`[TimingTimerManager.init 4] parsed lastTimingStartInfo: ${JSON.stringify(lastTimingStartInfo)}`);
+      if (lastTimingInfo === undefined) {
+        if (lastTimingStartInfo === undefined) {
+          return;
+        } else {
+          that.currentTimingInfo = TimingTimerInfo.createFromLastTimingStart(lastTimingStartInfo);
+          return;
+        }
+      }
       if (lastTimingStartInfo === undefined) {
         return;
-      } else {
-        that.currentTimingInfo = TimingTimerInfo.createFromLastTimingStart(lastTimingStartInfo);
       }
+      if (areReferringToSameStartTime(lastTimingInfo, lastTimingStartInfo)) {
+        return;
+      }
+      that.currentTimingInfo = TimingTimerInfo.createFromLastTimingStart(lastTimingStartInfo);
+    } catch (err) {
+      console.log(`[timing_timer_manager.js] error while initializing: ${err.message}`);
     }
-    if (lastTimingStartInfo === undefined) {
-      return;
-    }
-    if (areReferringToSameStartTime(lastTimingInfo, lastTimingStartInfo)) {
-      return;
-    }
-    that.currentTimingInfo = TimingTimerInfo.createFromLastTimingStart(lastTimingStartInfo);
-  }).catch(err => {
-    console.log(`[timing_timer_manager.js] error while initializing: ${err.message}`);
   });
 };
 

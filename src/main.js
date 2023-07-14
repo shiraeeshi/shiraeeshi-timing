@@ -9,7 +9,7 @@ const { TimingTimerManager } = require('./logic/timing_timer_manager.js');
   });
 })();
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
 
   const appEnv = {
     stage: 'production'
@@ -21,8 +21,8 @@ app.whenReady().then(() => {
     appEnv.stage = 'development';
   }
 
-  const timerManager = createTimingTimerManager();
-  timerManager.init();
+  const timerManager = createTimingTimerManager(appEnv);
+  await timerManager.init();
   const icon = createIconAccordingToTimerManager(timerManager);
   const tray = new Tray(icon);
 
@@ -42,7 +42,7 @@ function createIconAccordingToTimerManager(timerManager) {
   }
 }
 
-function createTimingTimerManager() {
+function createTimingTimerManager(appEnv) {
 
   let homeDirPath = app.getPath('home');
 

@@ -10,6 +10,19 @@ const { showPostTimingDialog } = require('./dialogs/post_timing/post_timing_dial
 export function createMenu(appEnv, tray, timerManager) {
 
   let menu;
+
+  let firstMenu = createFirstMenu(appEnv, tray, timerManager);
+
+  if (!timerManager.hasTiming()) {
+    return firstMenu;
+  }
+
+  let secondMenu = createSecondMenu(appEnv, firstMenu, tray, timerManager);
+  return secondMenu;
+}
+
+function createFirstMenu(appEnv, tray, timerManager) {
+  let menu;
   menu = Menu.buildFromTemplate([
     {
       label: 'Start Timing',
