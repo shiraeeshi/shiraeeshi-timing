@@ -1,5 +1,3 @@
-
-
 export function turnMultilineTextIntoHtml(text) {
   return withChildren(document.createElement('div'),
     ...text.split("\n")

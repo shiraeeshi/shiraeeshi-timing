@@ -297,3 +297,36 @@ export function pasteNodeInto(notebookNode) {
   }
 }
 
+
+export function isNotebookNodeInViewport(notebookNode) {
+  let elem = notebookNode.htmlElement;
+  // let rect = elem.getBoundingClientRect();
+  let container;
+
+  if (my.isCursorOnTopRightPanel) {
+    container = document.getElementById('notes-content-top-wrapper');
+  } else {
+    container = document.getElementById('notes-content-bottom-wrapper');
+  }
+  return (
+            elem.offsetTop >= container.scrollTop &&
+            // elem.offsetLeft <= container.scrollLeft &&
+            elem.offsetTop <= container.scrollTop + Math.round(container.clientHeight * 0.95)
+        );
+}
+
+
+export function bringNotebookNodeToViewport(htmlElem) {
+  let offset = htmlElem.offsetTop;
+  let container;
+  if (my.isCursorOnTopRightPanel) {
+    container = document.getElementById('notes-content-top-wrapper');
+  } else {
+    container = document.getElementById('notes-content-bottom-wrapper');
+  }
+  if (offset < container.scrollTop) {
+    container.scrollTop = offset;
+  } else {
+    container.scrollTop = offset - Math.round(container.clientHeight * 0.9);
+  }
+}

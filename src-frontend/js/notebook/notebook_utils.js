@@ -1,6 +1,7 @@
 const { TagsTreeNode } = require('./tags_tree_node.js')
 const { NotesForestViewBuilder } = require('./notes_forest_view_builder.js');
 const { showTagsAndLinks, showTagsAndLinksOfBottomPanel } = require('./show_tags.js');
+const { isNotebookNodeInViewport, bringNotebookNodeToViewport } = require('./notebook_node_view_utils.js');
 
 export function addTagNodeLinksToForest(tagNode, resultForest) {
   // window.webkit.messageHandlers.foobar.postMessage("js addTagNodeLinksToForest tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
@@ -188,6 +189,9 @@ function showLinksOfTag(tagNode) {
 
   window.my.lastOpenedNodesOfNotes = resultForest;
 
+  my.isCursorOnTopRightPanel = false;
+  my.isCursorOnBottomRightPanel = true;
+
   if (my.rootNodeViewOfNotesOfBottomPanel === undefined) {
 
     let viewBuilder = new NotesForestViewBuilder();
@@ -197,7 +201,6 @@ function showLinksOfTag(tagNode) {
 
     my.rightBottomNodeInRectangle = my.rootNodeViewOfNotesOfBottomPanel;
     my.rightBottomNodeInRectangle.wrapInRectangle();
-
   }
   highlightNotesInForest(window.my.rootNodeViewOfNotesOfBottomPanel, resultForest);
 
@@ -205,11 +208,10 @@ function showLinksOfTag(tagNode) {
     let prev = my.rightBottomNodeInRectangle;
     my.rightBottomNodeInRectangle = my.rootNodeViewOfNotesOfBottomPanel;
     my.rightBottomNodeInRectangle.wrapInRectangle();
-    if (my.isCursorOnBottomRightPanel) {
-      my.rightSideNodeInRectangle = my.rightBottomNodeInRectangle;
-    }
     prev.removeRectangleWrapper();
   }
+
+  my.rightSideNodeInRectangle = my.rightBottomNodeInRectangle;
 }
 
 export function buildCurrentNotesForest(tagsAndLinksForestObj) {
@@ -319,6 +321,14 @@ function initBottomPanelButtonsOfNotes() {
     topPanel.style.removeProperty('height');
     let outerWrapper = document.getElementById('notes-content-outer-wrapper');
     outerWrapper.classList.remove('as-two-panels');
+
+    my.isCursorOnTopRightPanel = true;
+    my.isCursorOnBottomRightPanel = false;
+    my.rightSideNodeInRectangle = my.rightTopNodeInRectangle;
+
+    if (!isNotebookNodeInViewport(my.rightSideNodeInRectangle)) {
+      bringNotebookNodeToViewport(my.rightSideNodeInRectangle.htmlElement);
+    }
   });
 
   let btnOpenAbove = document.getElementById('btn-open-notes-in-above-panel');

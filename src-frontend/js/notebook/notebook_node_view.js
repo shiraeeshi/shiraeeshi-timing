@@ -1052,9 +1052,17 @@ function openNodeInTopPanel(nodeView) {
     }
   }
   topPanelNodeView.unhide();
+
   let wrapper = document.getElementById('notes-content-top-wrapper');
   let offsetTop = topPanelNodeView.htmlElement.offsetTop;
   wrapper.scrollTo({top: offsetTop, behavior: 'smooth'});
+
+  my.isCursorOnTopRightPanel = true;
+  my.isCursorOnBottomRightPanel = false;
+  my.rightTopNodeInRectangle.removeRectangleWrapper();
+  my.rightTopNodeInRectangle = topPanelNodeView;
+  my.rightSideNodeInRectangle = my.rightTopNodeInRectangle;
+  my.rightSideNodeInRectangle.wrapInRectangle();
 }
 
 NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
@@ -1063,7 +1071,7 @@ NotebookNodeView.prototype.buildAsHtmlLiElement = function() {
 
   if (that.children.length == 0) {
     let htmlElement = withClass(withChildren(document.createElement('li'), that.createTitleDiv()), 'proc-node', 'proc-leaf');
-    that.initFontSize(htmlElement);
+    // that.initFontSize(htmlElement);
     that.initTooltipFontSize(htmlElement);
     htmlElement.nodeView = that;
     that.htmlElement = htmlElement;

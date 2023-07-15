@@ -23,6 +23,8 @@ const {
   editRightSideNode,
   deleteNodeFromTheRightSide,
   pasteNodeInto,
+  isNotebookNodeInViewport,
+  bringNotebookNodeToViewport,
 } = require('../js/notebook/notebook_node_view_utils.js');
 
 let my = {
@@ -105,9 +107,12 @@ function handleServerMessage(msg) {
     }
 
     if (!my.addedKeyupListener) {
-      document.body.addEventListener('keyup', (eve) => {
-        handleKeyUp(eve);
-      });
+      // let options = { capture: true, };
+      let options = false;
+      // document.body.addEventListener('keyup', (eve) => {
+      window.addEventListener('keydown', (eve) => {
+        handleKeyDown(eve);
+      }, options);
 
       my.addedKeyupListener = true;
     }
@@ -180,7 +185,7 @@ function handleServerMessage(msg) {
   }
 }
 
-function handleKeyUp(eve) {
+function handleKeyDown(eve) {
 
   if (my.isKeyboardListenerDisabled) {
     return;
@@ -197,6 +202,10 @@ function handleKeyUp(eve) {
         newNodeInRectangle.wrapInRectangle();
 
         my.rightSideNodeInRectangle = newNodeInRectangle;
+
+        if (!isNotebookNodeInViewport(newNodeInRectangle)) {
+          bringNotebookNodeToViewport(newNodeInRectangle.htmlElement);
+        }
 
         if (my.isCursorOnTopRightPanel) {
           my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
@@ -239,6 +248,10 @@ function handleKeyUp(eve) {
 
         let newNodeInRectangle = newHtmlNodeInRectangle.nodeView;
         newNodeInRectangle.wrapInRectangle();
+
+        if (!isNotebookNodeInViewport(newNodeInRectangle)) {
+          bringNotebookNodeToViewport(newNodeInRectangle.htmlElement);
+        }
 
         my.rightSideNodeInRectangle = newNodeInRectangle;
 
@@ -284,6 +297,7 @@ function handleKeyUp(eve) {
       my.rightSideNodeInRectangle = my.rightTopNodeInRectangle;
     }
   } else if (key === 'ArrowUp') {
+    eve.preventDefault();
     if (my.isCursorOnRightSide) {
       if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
 
@@ -293,6 +307,10 @@ function handleKeyUp(eve) {
         }
         my.rightSideNodeInRectangle.removeRectangleWrapper();
         newNodeInRectangle.wrapInRectangle();
+
+        if (!isNotebookNodeInViewport(newNodeInRectangle)) {
+          bringNotebookNodeToViewport(newNodeInRectangle.htmlElement);
+        }
 
         my.rightSideNodeInRectangle = newNodeInRectangle;
 
@@ -324,6 +342,7 @@ function handleKeyUp(eve) {
       my.rightSideNodeInRectangle = my.rightBottomNodeInRectangle;
     }
   } else if (key === 'ArrowDown') {
+    eve.preventDefault();
     if (my.isCursorOnRightSide) {
       if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
 
@@ -333,6 +352,10 @@ function handleKeyUp(eve) {
         }
         my.rightSideNodeInRectangle.removeRectangleWrapper();
         newNodeInRectangle.wrapInRectangle();
+
+        if (!isNotebookNodeInViewport(newNodeInRectangle)) {
+          bringNotebookNodeToViewport(newNodeInRectangle.htmlElement);
+        }
 
         my.rightSideNodeInRectangle = newNodeInRectangle;
 
@@ -357,6 +380,7 @@ function handleKeyUp(eve) {
       }
     }
   } else if (key === ' ') {
+    eve.preventDefault();
     if (my.isCursorOnRightSide) {
       my.rightSideNodeInRectangle.toggleCollapse();
     } else {
