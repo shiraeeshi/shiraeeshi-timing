@@ -9,6 +9,7 @@ let my = {
   timingsFileInfosListView: undefined,
   wallpapersToAddByName: {},
   wallpapersToDeleteByName: {},
+  newNamesOfWallpapersToRenameByOldName: {},
   currentWallpaperInfoBeingEdited: undefined,
   wallpapersListView: undefined,
   showingTimingsHeaderWithStar: false,
@@ -24,6 +25,13 @@ function handleServerMessage(msg) {
     if (my.filepicker_result_handler) {
       my.filepicker_result_handler(msg.result);
       delete my.filepicker_result_handler;
+    }
+    return;
+  }
+  if (msg.type === 'result_filename_exists_in_wallpapers_dir') {
+    if (my.result_handler_filename_exists_in_wallpapers_dir) {
+      my.result_handler_filename_exists_in_wallpapers_dir(msg.filename, msg.exists);
+      delete my.result_handler_filename_exists_in_wallpapers_dir;
     }
     return;
   }
@@ -153,6 +161,7 @@ function handleServerMessage(msg) {
       changedNotebook: my.showingNotebookHeaderWithStar,
       wallpapers: convertWallpapersListToBackendFormat(my.wallpapersListView.wallpapersToShow),
       wallpapersToAdd: convertWallpapersToAddListToBackendFormat(Object.values(my.wallpapersToAddByName)),
+      newNamesOfWallpapersToRenameByOldName: my.newNamesOfWallpapersToRenameByOldName,
       namesOfWallpapersToDelete: Object.keys(my.wallpapersToDeleteByName),
     });
   });
@@ -465,15 +474,30 @@ function handleServerMessage(msg) {
 
     let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
     bottomRowOfButtons.classList.add('hidden-behind-dialog');
+
+    let selectorOfPosition = document.getElementById('new-wallpaper-position');
+    let selectorOfLeftSideTextColor = document.getElementById('text-color-of-left-side');
+    let selectorOfLeftSideIconsColor = document.getElementById('icons-color-of-left-side');
+    let selectorOfRightSideTextColor = document.getElementById('text-color-of-right-side');
+    let selectorOfRightSideIconsColor = document.getElementById('icons-color-of-right-side');
+
+    selectorOfPosition.value = undefined;
+    selectorOfLeftSideTextColor.value = undefined;
+    selectorOfLeftSideIconsColor.value = undefined;
+    selectorOfRightSideTextColor.value = undefined;
+    selectorOfRightSideIconsColor.value = undefined;
   });
 
   let inputWallpaperFilepath = document.getElementById('new-wallpaper-filepath');
-
   disableShortcutsOnFocus(inputWallpaperFilepath);
 
+  let inputWallpaperFilename = document.getElementById('new-wallpaper-filename');
+  disableShortcutsOnFocus(inputWallpaperFilename);
+
   let btnWallpaperSave = document.getElementById('btn-wallpaper-info-save');
-  btnWallpaperSave.addEventListener('click', (eve) => {
+  btnWallpaperSave.addEventListener('click', async (eve) => {
     let inputFilepath = document.getElementById('new-wallpaper-filepath');
+    let inputFilename = document.getElementById('new-wallpaper-filename');
     let selectorOfPosition = document.getElementById('new-wallpaper-position');
     let selectorOfLeftSideTextColor = document.getElementById('text-color-of-left-side');
     let selectorOfLeftSideIconsColor = document.getElementById('icons-color-of-left-side');
@@ -481,7 +505,8 @@ function handleServerMessage(msg) {
     let selectorOfRightSideIconsColor = document.getElementById('icons-color-of-right-side');
 
     let filepath = inputFilepath.value;
-    let name = my.currentFilepathBasename;
+    let filename = inputFilename.value;
+    // let name = my.currentFilepathBasename;
     let relativePath = my.currentFilepathRelative;
     let position = selectorOfPosition.value;
     let leftSideTextColor = selectorOfLeftSideTextColor.value;
@@ -490,14 +515,29 @@ function handleServerMessage(msg) {
     let rightSideIconsColor = selectorOfRightSideIconsColor.value;
 
     let wallpaperInfo = {
-      name,
+      // name,
       filepath,
+      basename: filename,
       relativePath,
       position,
       leftSideTextColor,
       leftSideIconsColor,
       rightSideTextColor,
       rightSideIconsColor,
+    }
+
+    if (my.wallpapersListView.hasInfoWithFilename(filename)) {
+      alert(`filename '${filename}' is already taken.\ntry different filename`);
+      return;
+    }
+
+    let filenameExistsInDir = await filenameExistsInWallpapersDir(filename);
+
+    if (filenameExistsInDir) {
+      alert(`a file named '${filename}' already exists in the wallpapers folder.\n` +
+        'try different filename or rename the file in the wallpapers folder.'
+      );
+      return;
     }
 
     if (position === '') {
@@ -517,23 +557,34 @@ function handleServerMessage(msg) {
     }
 
     if (my.currentWallpaperInfoBeingEdited) {
-      wallpaperInfo.basename = my.currentWallpaperInfoBeingEdited.basename;
+      if (my.currentWallpaperInfoBeingEdited.basename !== wallpaperInfo.basename &&
+        my.currentWallpaperInfoBeingEdited.original !== undefined) {
+        my.newNamesOfWallpapersToRenameByOldName[my.currentWallpaperInfoBeingEdited.original.basename] = wallpaperInfo.basename;
+        let wallpapersDirPathLen = my.currentWallpaperInfoBeingEdited.filepath.length - my.currentWallpaperInfoBeingEdited.basename.length;
+        let wallpapersDirPath = my.currentWallpaperInfoBeingEdited.filepath.slice(0, wallpapersDirPathLen);
+        wallpaperInfo.filepath = wallpapersDirPath + wallpaperInfo.basename;
+      }
       Object.assign(my.currentWallpaperInfoBeingEdited, wallpaperInfo);
       my.currentWallpaperInfoBeingEdited.view.refresh();
       delete my.currentWallpaperInfoBeingEdited;
     } else {
-      wallpaperInfo.basename = name;
       let newWallpaperInfo = wallpaperInfo;
       my.wallpapersListView.addNewInfo(newWallpaperInfo);
-      my.wallpapersToAddByName[name] = newWallpaperInfo;
+      my.wallpapersToAddByName[filename] = newWallpaperInfo;
     }
 
+    let filepathFieldContainer = document.getElementById('new-wallpaper-filepath-field-container');
+
+    filepathFieldContainer.classList.remove('disabled-filepath-field');
+    inputFilepath.disabled = false;
+
     inputFilepath.value = '';
-    selectorOfPosition.value = 'bottom-right';
-    selectorOfLeftSideTextColor.value = 'white'
-    selectorOfLeftSideIconsColor.value = 'white'
-    selectorOfRightSideTextColor.value = 'white'
-    selectorOfRightSideIconsColor.value = 'white'
+    inputFilename.value = '';
+    selectorOfPosition.value = undefined;
+    selectorOfLeftSideTextColor.value = undefined;
+    selectorOfLeftSideIconsColor.value = undefined;
+    selectorOfRightSideTextColor.value = undefined;
+    selectorOfRightSideIconsColor.value = undefined;
 
     let panelOfListOfWallpapers = document.getElementById('list-of-wallpapers-panel');
     panelOfListOfWallpapers.classList.add('active');
@@ -559,18 +610,25 @@ function handleServerMessage(msg) {
     delete my.currentWallpaperInfoBeingEdited;
 
     let inputFilepath = document.getElementById('new-wallpaper-filepath');
+    let inputFilename = document.getElementById('new-wallpaper-filename');
     let selectorOfPosition = document.getElementById('new-wallpaper-position');
     let selectorOfLeftSideTextColor = document.getElementById('text-color-of-left-side');
     let selectorOfLeftSideIconsColor = document.getElementById('icons-color-of-left-side');
     let selectorOfRightSideTextColor = document.getElementById('text-color-of-right-side');
     let selectorOfRightSideIconsColor = document.getElementById('icons-color-of-right-side');
 
+    let filepathFieldContainer = document.getElementById('new-wallpaper-filepath-field-container');
+
+    filepathFieldContainer.classList.remove('disabled-filepath-field');
+    inputFilepath.disabled = false;
+
     inputFilepath.value = '';
-    selectorOfPosition.value = 'bottom-right';
-    selectorOfLeftSideTextColor.value = 'white'
-    selectorOfLeftSideIconsColor.value = 'white'
-    selectorOfRightSideTextColor.value = 'white'
-    selectorOfRightSideIconsColor.value = 'white'
+    inputFilename.value = '';
+    selectorOfPosition.value = undefined;
+    selectorOfLeftSideTextColor.value = undefined;
+    selectorOfLeftSideIconsColor.value = undefined;
+    selectorOfRightSideTextColor.value = undefined;
+    selectorOfRightSideIconsColor.value = undefined;
 
     let panelOfListOfWallpapers = document.getElementById('list-of-wallpapers-panel');
     panelOfListOfWallpapers.classList.add('active');
@@ -605,6 +663,9 @@ function handleServerMessage(msg) {
 
     let inputFilepath = document.getElementById('new-wallpaper-filepath');
     inputFilepath.value = filepath;
+
+    let inputFilename = document.getElementById('new-wallpaper-filename');
+    inputFilename.value = basename;
 
     my.currentFilepathBasename = basename;
     my.currentFilepathRelative = relativePath;
@@ -1423,6 +1484,11 @@ WallpapersListView.prototype.addNewInfo = function(wallpaperInfo) {
   that.html.appendChild(view.html);
 };
 
+WallpapersListView.prototype.hasInfoWithFilename = function(filename) {
+  let that = this;
+  return that.wallpapersToShow.find(wpInfo => wpInfo.basename === filename) !== undefined;
+};
+
 WallpapersListView.prototype.dataIsSameAsOriginal = function() {
   let that = this;
   if (Object.keys(my.wallpapersToAddByName).length > 0) {
@@ -1460,11 +1526,13 @@ WallpapersListView.prototype.handleSaveSuccess = function() {
 
   my.wallpapersToAddByName = {};
   my.wallpapersToDeleteByName = {};
+  my.newNamesOfWallpapersToRenameByOldName = {};
 };
 
 function wallpaperInfoIsSameAsOriginal(wallpaperInfo) {
   let fieldNames = [
     'filepath',
+    'basename',
     'position',
     'leftSideTextColor',
     'leftSideIconsColor',
@@ -1588,14 +1656,21 @@ WallpaperInfoView.prototype.btnHandlerEditWallpaperInfo = function() {
 
   my.currentWallpaperInfoBeingEdited = wallpaperInfo;
 
+  let filepathFieldContainer = document.getElementById('new-wallpaper-filepath-field-container');
+
   let inputFilepath = document.getElementById('new-wallpaper-filepath');
+  let inputFilename = document.getElementById('new-wallpaper-filename');
   let selectorOfPosition = document.getElementById('new-wallpaper-position');
   let selectorOfLeftSideTextColor = document.getElementById('text-color-of-left-side');
   let selectorOfLeftSideIconsColor = document.getElementById('icons-color-of-left-side');
   let selectorOfRightSideTextColor = document.getElementById('text-color-of-right-side');
   let selectorOfRightSideIconsColor = document.getElementById('icons-color-of-right-side');
 
+  filepathFieldContainer.classList.add('disabled-filepath-field');
+  inputFilepath.disabled = true;
+
   inputFilepath.value = wallpaperInfo.filepath;
+  inputFilename.value = wallpaperInfo.basename;
   selectorOfPosition.value = wallpaperInfo.position;
   selectorOfLeftSideTextColor.value = wallpaperInfo.leftSideTextColor;
   selectorOfLeftSideIconsColor.value = wallpaperInfo.leftSideIconsColor;
@@ -1842,6 +1917,15 @@ function pickFile(extractBasename, withRelativePath) {
   return new Promise((resolve, reject) => {
     window.webkit.messageHandlers.preferences_msg__choose_file.postMessage(!!extractBasename, !!withRelativePath);
     my.filepicker_result_handler = (result) => {
+      resolve(result);
+    }
+  });
+}
+
+function filenameExistsInWallpapersDir(filename) {
+  return new Promise((resolve, reject) => {
+    window.webkit.messageHandlers.preferences_msg__filename_exists_in_wallpapers_dir.postMessage(filename);
+    my.result_handler_filename_exists_in_wallpapers_dir = (filename, result) => {
       resolve(result);
     }
   });

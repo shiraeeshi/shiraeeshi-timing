@@ -10,7 +10,7 @@ ipcMain.on('msg', (_event, msg) => {
   console.log(`[preferences.js] message from preferences: ${msg}`);
 });
 
-ipcMain.on('msg_choose_file', async (event, extractBasename, withRelativePath) => {
+ipcMain.on('preferences_msg_choose_file', async (event, extractBasename, withRelativePath) => {
   let result = await dialog.showOpenDialog({properties: ['openFile', 'promptToCreate']});
   if (!extractBasename) {
     event.sender.send('message-from-backend', {
@@ -35,6 +35,32 @@ ipcMain.on('msg_choose_file', async (event, extractBasename, withRelativePath) =
   event.sender.send('message-from-backend', {
     type: 'filepicker_result',
     result: result
+  });
+});
+
+ipcMain.on('preferences_msg_filename_exists_in_wallpapers_dir', async (event, filename) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  let appEnv = win.appEnv;
+
+  const homeDirPath = app.getPath('home');
+
+  let wallpapersDirPath;
+  let wallpapersConfigPath;
+
+  if (appEnv.stage === 'production') {
+    wallpapersDirPath = path.join(homeDirPath, 'pm_app', 'wallpapers');
+  } else {
+    wallpapersDirPath = path.join(homeDirPath, 'test_pm_app2', 'wallpapers');
+  }
+
+  let filepathToCheck = path.join(wallpapersDirPath, filename);
+
+  let exists = await fs.promises.access(filepathToCheck, fs.constants.F_OK).then(() => true).catch(() => false);
+
+  event.sender.send('message-from-backend', {
+    type: 'result_filename_exists_in_wallpapers_dir',
+    filename,
+    exists,
   });
 });
 
@@ -73,6 +99,7 @@ ipcMain.on('msg_save', async (event, msg) => {
     changedNotebook,
     wallpapers,
     wallpapersToAdd,
+    newNamesOfWallpapersToRenameByOldName,
     namesOfWallpapersToDelete,
   } = msg;
   console.log('SAVE');
@@ -121,6 +148,14 @@ ipcMain.on('msg_save', async (event, msg) => {
       wallpapersToAdd.map(wpToAdd =>
         fs.promises.cp(wpToAdd.filepath, path.join(wallpapersDirPath, wpToAdd.basename))));
 
+    await Promise.all(
+      Object.entries(newNamesOfWallpapersToRenameByOldName).map(([oldName, newName]) => {
+        let oldFilepath = path.join(wallpapersDirPath, oldName);
+        let newFilepath = path.join(wallpapersDirPath, newName);
+        return fs.promises.rename(oldFilepath, newFilepath);
+      })
+    );
+
     const wallpapersConfigFd = await fs.promises.open(wallpapersConfigPath, 'w');
     let indentOfWallpapers = 2;
     let nonEmptyWallpapersConfigs = wallpapers.filter(wp => {
@@ -133,6 +168,10 @@ ipcMain.on('msg_save', async (event, msg) => {
     let wallpapersConfig = createWallpapersConfigToSave(nonEmptyWallpapersConfigs, namesOfWallpapersToDelete);
     let dataOfWallpapers = YAML.stringify(wallpapersConfig, indentOfWallpapers);
     await fs.promises.writeFile(wallpapersConfigFd, dataOfWallpapers, { encoding: 'utf8' });
+    event.sender.send('message-from-backend', {
+      type: 'save_result',
+      result: 'success'
+    });
   } catch (err) {
     event.sender.send('message-from-backend', {
       type: 'save_result',
@@ -141,10 +180,6 @@ ipcMain.on('msg_save', async (event, msg) => {
     });
     return;
   }
-  event.sender.send('message-from-backend', {
-    type: 'save_result',
-    result: 'success'
-  });
 });
 
 function createConfigToSave(configWithNoTimings, timings, namesOfTimingsToDelete) {

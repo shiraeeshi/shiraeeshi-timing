@@ -17,8 +17,13 @@ contextBridge.exposeInMainWorld('webkit', {
     preferences_msg__choose_file: {
       postMessage: (extractBasename, withRelativePath) => {
         console.log('[preload.js] webkit.messageHandlers.preferences_msg__choose_file.postMessage');
-        ipcRenderer.send('msg_choose_file', extractBasename, withRelativePath);
+        ipcRenderer.send('preferences_msg_choose_file', extractBasename, withRelativePath);
       },
+    },
+    preferences_msg__filename_exists_in_wallpapers_dir: {
+      postMessage: (filename) => {
+        ipcRenderer.send('preferences_msg_filename_exists_in_wallpapers_dir', filename);
+      }
     },
     preferences_msg__enable_shortcuts: {
       postMessage: () => {

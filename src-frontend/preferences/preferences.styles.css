@@ -432,6 +432,10 @@ footer a {
   flex: none;
 }
 
+#form-to-edit-wallpaper-info > #fields-of-wallpaper-info-form > #new-wallpaper-filepath-field-container.disabled-filepath-field > button {
+  display: none;
+}
+
 #btns-in-form-to-edit-wallpaper-info {
   display: flex;
   justify-content: flex-end;
