@@ -11,7 +11,13 @@ ipcMain.on('msg', (_event, msg) => {
 });
 
 ipcMain.on('preferences_msg_choose_file', async (event, extractBasename, withRelativePath) => {
-  let result = await dialog.showOpenDialog({properties: ['openFile', 'promptToCreate']});
+  let result = await dialog.showOpenDialog({properties: [
+    'openFile',
+    'openDirectory',
+    'createDirectory', // MacOS only
+    'noResolveAliases', // MacOS only
+    'promptToCreate', // Windows only
+  ]});
   if (!extractBasename) {
     event.sender.send('message-from-backend', {
       type: 'filepicker_result',

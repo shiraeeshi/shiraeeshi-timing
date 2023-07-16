@@ -313,11 +313,13 @@ function handleServerMessage(msg) {
 
   let inputName = document.getElementById('new-timing-name');
   let inputFilepath = document.getElementById('new-timing-filepath');
+  let inputFilename = document.getElementById('new-timing-filename');
   let textareaCategoryPath = document.getElementById('new-timing-category-path');
   let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
 
   disableShortcutsOnFocus(inputName);
   disableShortcutsOnFocus(inputFilepath);
+  disableShortcutsOnFocus(inputFilename);
   disableShortcutsOnFocus(textareaCategoryPath);
   disableShortcutsOnFocus(inputCompetitivenessLevel);
 
@@ -325,6 +327,7 @@ function handleServerMessage(msg) {
   btnTimingsFileInfoSave.addEventListener('click', (eve) => {
     let inputName = document.getElementById('new-timing-name');
     let inputFilepath = document.getElementById('new-timing-filepath');
+    let inputFilename = document.getElementById('new-timing-filename');
     let selectorOfFormat = document.getElementById('new-timing-format');
     let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
     let textareaCategoryPath = document.getElementById('new-timing-category-path');
@@ -333,6 +336,7 @@ function handleServerMessage(msg) {
     let name = inputName.value;
     let format = selectorOfFormat.value;
     let filepath = inputFilepath.value;
+    let filename = inputFilename.value;
     let competitivenessLevel = parseInt(inputCompetitivenessLevel.value);
     if (isNaN(competitivenessLevel)) {
       alert('competitivenessLevel must be int');
@@ -343,8 +347,32 @@ function handleServerMessage(msg) {
       name,
       format,
       filepath,
+      filename,
       competitivenessLevel,
     }
+
+    if (my.timingsFileInfosListView.hasInfoWithName(name)) {
+      alert(`name '${name}' is already taken.\ntry different name`);
+      return;
+    }
+
+    if (my.lastPickedFilepathWasDirectory && filename === '') {
+      alert('cannot create a file with an empty filename.\neither pick an existing file or pick a directory to create a file in and provide a non-empty filename.');
+      return;
+    }
+
+    let filepathToCheck;
+    if (my.lastPickedFilepathWasDirectory) {
+      filepathToCheck = filepath + filename;
+    } else {
+      filepathToCheck = filepath;
+    }
+
+    if (my.timingsFileInfosListView.findInfoWithFilepath(filepathToCheck) !== undefined) {
+      alert(`filepath is already taken.\ntry different file`);
+      return;
+    }
+
     let categoryPathIsSameAsName = checkboxCategoryPathIsSameAsName.checked;
     if (!categoryPathIsSameAsName) {
       let categoryPath = parseCategoryPath(textareaCategoryPath.value);
@@ -352,10 +380,25 @@ function handleServerMessage(msg) {
     }
 
     if (my.currentTimingsFileInfoBeingEdited) {
+      // TODO possibilities:
+      //  - move file to a new location
+      //  - file is already at a new location
+      //  - the user is going to move the file later (using file manager in the operating system)
+      //
+      //  old file exists, new file doesn't exist - move file to a new location
+      //  old file exists, new file exists - ask or show error message
+      //  old file doesn't exist, new file doesn't exist - create empty file at a new location
+      //
+      //  or
+      //
+      //  do nothing with the file, only change configs
       Object.assign(my.currentTimingsFileInfoBeingEdited, timingsFileInfo, {categoryPath: timingsFileInfo.categoryPath});
       my.currentTimingsFileInfoBeingEdited.view.refresh();
       delete my.currentTimingsFileInfoBeingEdited;
     } else {
+      // TODO possibilities
+      // file exists - do nothing with the file
+      // file doesn't exist - create empty file at filepath
       let newTimingsFileInfo = timingsFileInfo;
 
       // config.timings.push(newTimingsFileInfo);
@@ -367,6 +410,7 @@ function handleServerMessage(msg) {
 
     inputName.value = '';
     inputFilepath.value = '';
+    inputFilename.value = '';
     selectorOfFormat.value = 'yaml';
     checkboxCategoryPathIsSameAsName.checked = true;
     textareaCategoryPath.value = '';
@@ -399,6 +443,7 @@ function handleServerMessage(msg) {
 
     let inputName = document.getElementById('new-timing-name');
     let inputFilepath = document.getElementById('new-timing-filepath');
+    let inputFilename = document.getElementById('new-timing-filename');
     let selectorOfFormat = document.getElementById('new-timing-format');
     let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
     let textareaCategoryPath = document.getElementById('new-timing-category-path');
@@ -406,6 +451,7 @@ function handleServerMessage(msg) {
 
     inputName.value = '';
     inputFilepath.value = '';
+    inputFilename.value = '';
     selectorOfFormat.value = 'yaml';
     checkboxCategoryPathIsSameAsName.checked = true;
     textareaCategoryPath.value = '';
@@ -442,16 +488,24 @@ function handleServerMessage(msg) {
 
   let timingsBtnFilepath = document.getElementById('new-timing-filepath-btn');
   timingsBtnFilepath.addEventListener('click', async (eve) => {
-    let result = await pickFile();
+    let extractBasename = true;
+    let result = await pickFile(extractBasename);
     if (result.canceled) {
       return;
     }
     if (result.filePaths === undefined || result.filePaths.length === 0) {
       return;
     }
-    let filepath = result.filePaths[0];
+    let filepath = result.filePaths[0].filepath;
+    let basename = result.filePaths[0].basename; // TODO check if directory or file (basename should be undefined when directory)
+
+    my.lastPickedFilepathWasDirectory = basename === undefined;
+
     let inputFilepath = document.getElementById('new-timing-filepath');
     inputFilepath.value = filepath;
+
+    let inputFilename = document.getElementById('new-timing-filename');
+    inputFilename.value = basename;
 
     let event = new Event('change');
     inputFilepath.dispatchEvent(event);
@@ -1214,6 +1268,16 @@ TimingsFileInfosListView.prototype.addNewInfo = function(timingsFileInfo) {
   view.initHtml();
 
   that.html.appendChild(view.html);
+};
+
+TimingsFileInfosListView.prototype.hasInfoWithName = function(name) {
+  let that = this;
+  return that.timingsToShow.find(timingsFileInfo => timingsFileInfo.name === name) !== undefined;
+};
+
+TimingsFileInfosListView.prototype.findInfoWithFilepath = function(filepath) {
+  let that = this;
+  return that.timingsToShow.find(timingsFileInfo => timingsFileInfo.filepath === filepath);
 };
 
 TimingsFileInfosListView.prototype.dataIsSameAsOriginal = function() {
