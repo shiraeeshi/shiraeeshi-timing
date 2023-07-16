@@ -345,6 +345,17 @@ function handleServerMessage(msg) {
       filepath,
       competitivenessLevel,
     }
+
+    if (my.timingsFileInfosListView.hasInfoWithName(name)) {
+      alert(`name '${name}' is already taken.\ntry different name`);
+      return;
+    }
+
+    if (my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined) {
+      alert(`filepath is already in use.\ntry different file`);
+      return;
+    }
+
     let categoryPathIsSameAsName = checkboxCategoryPathIsSameAsName.checked;
     if (!categoryPathIsSameAsName) {
       let categoryPath = parseCategoryPath(textareaCategoryPath.value);
@@ -1214,6 +1225,16 @@ TimingsFileInfosListView.prototype.addNewInfo = function(timingsFileInfo) {
   view.initHtml();
 
   that.html.appendChild(view.html);
+};
+
+TimingsFileInfosListView.prototype.hasInfoWithName = function(name) {
+  let that = this;
+  return that.timingsToShow.find(timingsFileInfo => timingsFileInfo.name === name) !== undefined;
+};
+
+TimingsFileInfosListView.prototype.findInfoWithFilepath = function(filepath) {
+  let that = this;
+  return that.timingsToShow.find(timingsFileInfo => timingsFileInfo.filepath === filepath);
 };
 
 TimingsFileInfosListView.prototype.dataIsSameAsOriginal = function() {
