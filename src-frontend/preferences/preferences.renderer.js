@@ -352,7 +352,7 @@ function handleServerMessage(msg) {
     }
 
     if (my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined) {
-      alert(`filepath is already in use.\ntry different file`);
+      alert('filepath is already in use.');
       return;
     }
 
