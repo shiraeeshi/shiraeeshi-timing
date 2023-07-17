@@ -309,6 +309,10 @@ FrequenciesView.prototype.showThisProcessOnly = function(processViewNode) {
   that.htmlSecondaryContainerDiv.classList.remove('inactive');
   that.solelyDisplayedProcessViewNode = processViewNode;
   if (that.hGraphic) {
+    my.mainRangeX = Object.assign({}, that.hGraphic.rangeX);
+    my.mainRangeY = Object.assign({}, that.hGraphic.rangeY);
+    that.hGraphic.setMaxRangeX();
+    that.hGraphic.setMaxRangeY();
     that.hGraphic.setProcessNode(processViewNode.processNode);
     that.hGraphic.redraw();
   }
@@ -318,6 +322,16 @@ FrequenciesView.prototype.goBackToAllProcesses = function() {
   let that = this;
   that._goBackToAllProcessesNoRedraw();
   if (that.hGraphic) {
+    if (my.mainRangeX !== undefined) {
+      that.hGraphic.setRangeXFrom(my.mainRangeX.from);
+      that.hGraphic.setRangeXTo(my.mainRangeX.to);
+      delete my.mainRangeX;
+    }
+    if (my.mainRangeY !== undefined) {
+      that.hGraphic.setRangeYFrom(my.mainRangeY.from);
+      that.hGraphic.setRangeYTo(my.mainRangeY.to);
+      delete my.mainRangeY;
+    }
     that.hGraphic.redraw();
   }
 };

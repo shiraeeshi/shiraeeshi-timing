@@ -45,6 +45,18 @@ TimingsHistogramsGraphic.prototype.setProcessNode = function(processNode) {
   that.maxWavelength = maxWavelength;
 }
 
+TimingsHistogramsGraphic.prototype.setMaxRangeX = function() {
+  let that = this;
+  that.setRangeXFrom(0);
+  that.setRangeXTo(that.canvas.width - that.scrollbarBreadth);
+};
+
+TimingsHistogramsGraphic.prototype.setMaxRangeY = function() {
+  let that = this;
+  that.setRangeYFrom(0);
+  that.setRangeYTo(that.canvas.height - that.scrollbarBreadth);
+};
+
 TimingsHistogramsGraphic.prototype.setRangeXFrom = function(from) {
   if (from < 0) {
     this.rangeX.from = 0;
