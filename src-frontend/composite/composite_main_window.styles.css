@@ -106,6 +106,7 @@ body {
 #tags-and-links-content-bottom-wrapper {
   overflow-y: auto;
   overflow-x: auto;
+  position: relative;
 }
 
 #tags-and-links-content-top-wrapper,
@@ -123,6 +124,7 @@ body {
   overflow-y: auto;
   overflow-x: auto;
   padding-left: 5px;
+  position: relative;
 }
 
 #notes-content-top-wrapper > li,
@@ -1094,6 +1096,40 @@ li:last-child > .notebook-node-title-container > .notebook-node-icons > .icon-hi
 
 .notebook-node-title-container:hover .notebook-node-icons {
   visibility: visible;
+}
+
+
+.proc-node.in-rectangle > .notebook-node-title-container div.title-container-div,
+.proc-node.in-rectangle > .notebook-node-title-container span.title-container-span {
+  border: 1px solid white;
+}
+
+.black-icons
+.proc-node.in-rectangle > .notebook-node-title-container div.title-container-div,
+.black-icons
+.proc-node.in-rectangle > .notebook-node-title-container span.title-container-span {
+  border: 1px solid black;
+}
+
+.dark-grey-icons
+.proc-node.in-rectangle > .notebook-node-title-container div.title-container-div,
+.dark-grey-icons
+.proc-node.in-rectangle > .notebook-node-title-container span.title-container-span {
+  border: 1px solid #32323a;
+}
+
+.light-grey-icons
+.proc-node.in-rectangle > .notebook-node-title-container div.title-container-div,
+.light-grey-icons
+.proc-node.in-rectangle > .notebook-node-title-container span.title-container-span {
+  border: 1px solid #ddd;
+}
+
+.white-icons
+.proc-node.in-rectangle > .notebook-node-title-container div.title-container-div,
+.white-icons
+.proc-node.in-rectangle > .notebook-node-title-container span.title-container-span {
+  border: 1px solid white;
 }
 
 

@@ -1,7 +1,15 @@
 const { TagsTreeNode } = require('./tags_tree_node.js')
 const { NotesForestViewBuilder } = require('./notes_forest_view_builder.js');
 const { showTagsAndLinks, showTagsAndLinksOfBottomPanel } = require('./show_tags.js');
-const { isNotebookNodeInViewport, bringNotebookNodeToViewport } = require('./notebook_node_view_utils.js');
+const {
+  addSiblingWithInputToTheRightSideNode,
+  appendChildWithInputToTheRightSideNode,
+  editRightSideNode,
+  deleteNodeFromTheRightSide,
+  pasteNodeInto,
+  isNotebookNodeInViewport,
+  bringNotebookNodeToViewport
+} = require('./notebook_node_view_utils.js');
 
 export function addTagNodeLinksToForest(tagNode, resultForest) {
   // window.webkit.messageHandlers.foobar.postMessage("js addTagNodeLinksToForest tag: " + (tagNode.tagAncestry.concat([tagNode.name]).join(".")));
@@ -520,6 +528,252 @@ function initVerticalResizer() {
 
     document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
     document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
+  }
+}
+
+export function handleKeyDown(eve) {
+
+  if (my.isKeyboardListenerDisabled) {
+    return;
+  }
+
+  let key = eve.key;
+
+  if (key === 'ArrowLeft') {
+    if (my.isCursorOnRightSide) {
+      if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
+        my.rightSideNodeInRectangle.removeRectangleWrapper();
+
+        let newNodeInRectangle = my.rightSideNodeInRectangle.parentNodeView;
+        newNodeInRectangle.wrapInRectangle();
+
+        my.rightSideNodeInRectangle = newNodeInRectangle;
+
+        if (!isNotebookNodeInViewport(newNodeInRectangle)) {
+          bringNotebookNodeToViewport(newNodeInRectangle.htmlElement);
+        }
+
+        if (my.isCursorOnTopRightPanel) {
+          my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+        } else {
+          my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+        }
+      }
+    } else {
+      let nodeInRectangle = that.nodeInRectangle;
+      if (nodeInRectangle.parentNodeView !== undefined) {
+        nodeInRectangle.removeRectangleWrapper();
+
+        let newNodeInRectangle = nodeInRectangle.parentNodeView;
+        newNodeInRectangle.wrapInRectangle();
+
+        that.nodeInRectangle = newNodeInRectangle;
+      }
+    }
+  } else if (key === 'ArrowRight') {
+    if (my.isCursorOnRightSide) {
+      if (my.rightSideNodeInRectangle.children.length > 0) {
+
+        if (my.rightSideNodeInRectangle.isCollapsed) {
+          my.rightSideNodeInRectangle.toggleCollapse();
+        }
+
+        let newHtmlNodeInRectangle = my.rightSideNodeInRectangle.htmlContainerUl.children[0];
+
+        if (newHtmlNodeInRectangle === undefined) {
+          my.rightSideNodeInRectangle.unhideHiddenChildren();
+        }
+
+        newHtmlNodeInRectangle = my.rightSideNodeInRectangle.htmlContainerUl.children[0];
+
+        if (newHtmlNodeInRectangle === undefined) {
+          return;
+        }
+
+        my.rightSideNodeInRectangle.removeRectangleWrapper();
+
+        let newNodeInRectangle = newHtmlNodeInRectangle.nodeView;
+        newNodeInRectangle.wrapInRectangle();
+
+        if (!isNotebookNodeInViewport(newNodeInRectangle)) {
+          bringNotebookNodeToViewport(newNodeInRectangle.htmlElement);
+        }
+
+        my.rightSideNodeInRectangle = newNodeInRectangle;
+
+        if (my.isCursorOnTopRightPanel) {
+          my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+        } else {
+          my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+        }
+      }
+    } else {
+      let nodeInRectangle = that.nodeInRectangle;
+      if (nodeInRectangle.children.length > 0) {
+
+        if (nodeInRectangle.isCollapsed) {
+          nodeInRectangle.toggleCollapse();
+        }
+
+        let newHtmlNodeInRectangle = nodeInRectangle.htmlContainerUl.children[0];
+
+        if (newHtmlNodeInRectangle === undefined) {
+          nodeInRectangle.unhideHiddenChildren();
+        }
+
+        newHtmlNodeInRectangle = nodeInRectangle.htmlContainerUl.children[0];
+
+        if (newHtmlNodeInRectangle === undefined) {
+          return;
+        }
+
+        nodeInRectangle.removeRectangleWrapper();
+
+        let newNodeInRectangle = newHtmlNodeInRectangle.nodeView;
+        newNodeInRectangle.wrapInRectangle();
+
+        that.nodeInRectangle = newNodeInRectangle;
+      }
+    }
+  } else if (eve.ctrlKey && key === 'ArrowUp') {
+    if (my.isCursorOnRightSide) {
+      my.isCursorOnTopRightPanel = true;
+      my.isCursorOnBottomRightPanel = false;
+      my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+      my.rightSideNodeInRectangle = my.rightTopNodeInRectangle;
+    }
+  } else if (key === 'ArrowUp') {
+    eve.preventDefault();
+    if (my.isCursorOnRightSide) {
+      if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
+
+        let newNodeInRectangle = my.rightSideNodeInRectangle.findPreviousVisibleSibling();
+        if (newNodeInRectangle === undefined) {
+          return;
+        }
+        my.rightSideNodeInRectangle.removeRectangleWrapper();
+        newNodeInRectangle.wrapInRectangle();
+
+        if (!isNotebookNodeInViewport(newNodeInRectangle)) {
+          bringNotebookNodeToViewport(newNodeInRectangle.htmlElement);
+        }
+
+        my.rightSideNodeInRectangle = newNodeInRectangle;
+
+        if (my.isCursorOnTopRightPanel) {
+          my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+        } else {
+          my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+        }
+      }
+    } else {
+      let nodeInRectangle = that.nodeInRectangle;
+      if (nodeInRectangle.parentNodeView !== undefined) {
+
+        let newNodeInRectangle = nodeInRectangle.findPreviousVisibleSibling();
+        if (newNodeInRectangle === undefined) {
+          return;
+        }
+        nodeInRectangle.removeRectangleWrapper();
+        newNodeInRectangle.wrapInRectangle();
+
+        that.nodeInRectangle = newNodeInRectangle;
+      }
+    }
+  } else if (eve.ctrlKey && key === 'ArrowDown') {
+    if (my.isCursorOnRightSide) {
+      my.isCursorOnTopRightPanel = false;
+      my.isCursorOnBottomRightPanel = true;
+      my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+      my.rightSideNodeInRectangle = my.rightBottomNodeInRectangle;
+    }
+  } else if (key === 'ArrowDown') {
+    eve.preventDefault();
+    if (my.isCursorOnRightSide) {
+      if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
+
+        let newNodeInRectangle = my.rightSideNodeInRectangle.findNextVisibleSibling();
+        if (newNodeInRectangle === undefined) {
+          return;
+        }
+        my.rightSideNodeInRectangle.removeRectangleWrapper();
+        newNodeInRectangle.wrapInRectangle();
+
+        if (!isNotebookNodeInViewport(newNodeInRectangle)) {
+          bringNotebookNodeToViewport(newNodeInRectangle.htmlElement);
+        }
+
+        my.rightSideNodeInRectangle = newNodeInRectangle;
+
+        if (my.isCursorOnTopRightPanel) {
+          my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
+        } else {
+          my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
+        }
+      }
+    } else {
+      let nodeInRectangle = that.nodeInRectangle;
+      if (nodeInRectangle.parentNodeView !== undefined) {
+
+        let newNodeInRectangle = nodeInRectangle.findNextVisibleSibling();
+        if (newNodeInRectangle === undefined) {
+          return;
+        }
+        nodeInRectangle.removeRectangleWrapper();
+        newNodeInRectangle.wrapInRectangle();
+
+        that.nodeInRectangle = newNodeInRectangle;
+      }
+    }
+  } else if (key === ' ') {
+    eve.preventDefault();
+    if (my.isCursorOnRightSide) {
+      my.rightSideNodeInRectangle.toggleCollapse();
+    } else {
+      that.nodeInRectangle.toggleCollapse();
+    }
+  } else if (eve.ctrlKey && key === 'x') {
+    delete my.notebookNodeToCopy;
+    my.notebookNodeToCut = my.rightSideNodeInRectangle.notebookNode;
+  } else if (eve.ctrlKey && key === 'c') {
+    delete my.notebookNodeToCut;
+    my.notebookNodeToCopy = my.rightSideNodeInRectangle.notebookNode;
+  } else if (key === 'Delete') {
+    if (my.isCursorOnRightSide) {
+      deleteNodeFromTheRightSide(my.rightSideNodeInRectangle);
+    } else {
+      that.deleteCorrespondingNodeFromTheRightSide(that.nodeInRectangle)
+    }
+  } else if (eve.ctrlKey && key === 's') {
+    save();
+  }
+}
+
+export function handleKeyUp(eve) {
+
+  if (my.isKeyboardListenerDisabled) {
+    return;
+  }
+
+  let key = eve.key;
+
+  if (key === 'o') {
+    if (!my.isCursorOnRightSide) {
+      return;
+    }
+    addSiblingWithInputToTheRightSideNode(my.rightSideNodeInRectangle);
+  } else if (key === 'a') {
+    if (!my.isCursorOnRightSide) {
+      return;
+    }
+    appendChildWithInputToTheRightSideNode(my.rightSideNodeInRectangle);
+  } else if (key === 'F2') {
+    if (!my.isCursorOnRightSide) {
+      return;
+    }
+    editRightSideNode(my.rightSideNodeInRectangle);
+  } else if (eve.ctrlKey && key === 'v') {
+    pasteNodeInto(my.rightSideNodeInRectangle.notebookNode);
   }
 }
 

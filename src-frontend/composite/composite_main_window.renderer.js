@@ -11,6 +11,8 @@ const {
   initResizers,
   initPanelButtons,
   initNotesContentTopWrapperContextMenu,
+  handleKeyDown,
+  handleKeyUp
 } = require('../js/notebook/notebook_utils.js');
 
 const {
@@ -59,6 +61,9 @@ let my = {
   isHiddenTagsPanel: true,
 
   hasChangesInNotebook: false,
+
+  isCursorOnRightSide: true,
+  isCursorOnTopRightPanel: true,
 
   // timings state
   timings: null,
@@ -256,6 +261,22 @@ function handleServerMessage(msg) {
       }
       return;
     }
+
+    if (!my.addedKeyListeners) {
+      // let options = { capture: true, };
+      let options = false;
+      // document.body.addEventListener('keyup', (eve) => {
+      window.addEventListener('keydown', (eve) => {
+        handleKeyDown(eve);
+      }, options);
+
+      window.addEventListener('keyup', (eve) => {
+        handleKeyUp(eve);
+      }, options);
+
+      my.addedKeyListeners = true;
+    }
+
     if (msg.type == "key_pressed") {
       if (msg.keyval == "w") {
         my.wallpapers.idx++;
@@ -301,7 +322,7 @@ function handleServerMessage(msg) {
         } else {
           makeTimingsTextElementsUnminimized();
         }
-      } else if (msg.keyval == "Left") {
+      } else if (msg.keyval == "Ctrl+Left") {
         my.dayOffset++;
 
         delete my.highlightedCategory;
@@ -319,7 +340,7 @@ function handleServerMessage(msg) {
           }
         }
         showTimings();
-      } else if (msg.keyval == "Right") {
+      } else if (msg.keyval == "Ctrl+Right") {
         if (my.dayOffset > 0) {
           my.dayOffset--;
         }
@@ -569,6 +590,10 @@ function handleServerMessage(msg) {
       viewBuilder.buildView(my.notebookTree);
       my.rootNodeViewOfNotes = viewBuilder.getRootNodeViewOfNotes();
       appendNotesForestHtml(viewBuilder.getHtml());
+
+      my.rightTopNodeInRectangle = my.rootNodeViewOfNotes;
+      my.rightSideNodeInRectangle = my.rootNodeViewOfNotes;
+      my.rightSideNodeInRectangle.wrapInRectangle();
 
       let currentNotesForest = buildCurrentNotesForest(tagsAndLinksForestObj);
       my.currentNotesForest = currentNotesForest;

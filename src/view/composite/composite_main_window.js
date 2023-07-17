@@ -278,28 +278,28 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
       },
       {
         label: 'previous day (in history)',
-        accelerator: 'Left',
+        accelerator: 'Ctrl+Left',
         click: () => {
           if (win.isDisabledShortcuts) {
             return;
           }
           const msg = {
             "type": "key_pressed",
-            "keyval": "Left"
+            "keyval": "Ctrl+Left"
           };
           win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'next day (in history)',
-        accelerator: 'Right',
+        accelerator: 'Ctrl+Right',
         click: () => {
           if (win.isDisabledShortcuts) {
             return;
           }
           const msg = {
             "type": "key_pressed",
-            "keyval": "Right"
+            "keyval": "Ctrl+Right"
           };
           win.webContents.send('message-from-backend', msg);
         }

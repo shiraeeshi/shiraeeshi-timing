@@ -987,8 +987,36 @@ NotebookNodeView.prototype.createTitleDiv = function() {
     nameHtml,
     iconsDiv
   );
+  that._addMouseClickListener(nameHtml);
   that._addContextMenuListener(nameHtml);
   return titleDiv;
+}
+
+NotebookNodeView.prototype._addMouseClickListener = function(htmlElem) {
+  let that = this;
+  htmlElem.addEventListener('click', (eve) => {
+    if (that.isTopPanelTree) {
+      my.isCursorOnTopRightPanel = true;
+      my.isCursorOnBottomRightPanel = false;
+
+      if (my.rightTopNodeInRectangle) {
+        my.rightTopNodeInRectangle.removeRectangleWrapper();
+      }
+      my.rightTopNodeInRectangle = that;
+      my.rightTopNodeInRectangle.wrapInRectangle();
+      my.rightSideNodeInRectangle = my.rightTopNodeInRectangle;
+    } else {
+      my.isCursorOnTopRightPanel = false;
+      my.isCursorOnBottomRightPanel = true;
+
+      if (my.rightBottomNodeInRectangle) {
+        my.rightBottomNodeInRectangle.removeRectangleWrapper();
+      }
+      my.rightBottomNodeInRectangle = that;
+      my.rightBottomNodeInRectangle.wrapInRectangle();
+      my.rightSideNodeInRectangle = my.rightBottomNodeInRectangle;
+    }
+  });
 }
 
 NotebookNodeView.prototype._addContextMenuListener = function(htmlElem) {
