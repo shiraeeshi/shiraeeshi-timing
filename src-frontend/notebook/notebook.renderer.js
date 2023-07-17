@@ -106,7 +106,7 @@ function handleServerMessage(msg) {
       return;
     }
 
-    if (!my.addedKeyupListener) {
+    if (!my.addedKeyListeners) {
       // let options = { capture: true, };
       let options = false;
       // document.body.addEventListener('keyup', (eve) => {
@@ -114,7 +114,11 @@ function handleServerMessage(msg) {
         handleKeyDown(eve);
       }, options);
 
-      my.addedKeyupListener = true;
+      window.addEventListener('keyup', (eve) => {
+        handleKeyUp(eve);
+      }, options);
+
+      my.addedKeyListeners = true;
     }
 
     let config = msg.config;
@@ -386,7 +390,32 @@ function handleKeyDown(eve) {
     } else {
       that.nodeInRectangle.toggleCollapse();
     }
-  } else if (key === 'o') {
+  } else if (eve.ctrlKey && key === 'x') {
+    delete my.notebookNodeToCopy;
+    my.notebookNodeToCut = my.rightSideNodeInRectangle.notebookNode;
+  } else if (eve.ctrlKey && key === 'c') {
+    delete my.notebookNodeToCut;
+    my.notebookNodeToCopy = my.rightSideNodeInRectangle.notebookNode;
+  } else if (key === 'Delete') {
+    if (my.isCursorOnRightSide) {
+      deleteNodeFromTheRightSide(my.rightSideNodeInRectangle);
+    } else {
+      that.deleteCorrespondingNodeFromTheRightSide(that.nodeInRectangle)
+    }
+  } else if (eve.ctrlKey && key === 's') {
+    save();
+  }
+}
+
+function handleKeyUp(eve) {
+
+  if (my.isKeyboardListenerDisabled) {
+    return;
+  }
+
+  let key = eve.key;
+
+  if (key === 'o') {
     if (!my.isCursorOnRightSide) {
       return;
     }
@@ -396,27 +425,13 @@ function handleKeyDown(eve) {
       return;
     }
     appendChildWithInputToTheRightSideNode(my.rightSideNodeInRectangle);
-  } else if (eve.ctrlKey && key === 'x') {
-    delete my.notebookNodeToCopy;
-    my.notebookNodeToCut = my.rightSideNodeInRectangle.notebookNode;
-  } else if (eve.ctrlKey && key === 'c') {
-    delete my.notebookNodeToCut;
-    my.notebookNodeToCopy = my.rightSideNodeInRectangle.notebookNode;
-  } else if (eve.ctrlKey && key === 'v') {
-    pasteNodeInto(my.rightSideNodeInRectangle.notebookNode);
   } else if (key === 'F2') {
     if (!my.isCursorOnRightSide) {
       return;
     }
     editRightSideNode(my.rightSideNodeInRectangle);
-  } else if (key === 'Delete') {
-    if (my.isCursorOnRightSide) {
-      deleteNodeFromTheRightSide(my.rightSideNodeInRectangle);
-    } else {
-      that.deleteCorrespondingNodeFromTheRightSide(that.nodeInRectangle)
-    }
-  } else if (eve.ctrlKey && key === 's') {
-    save();
+  } else if (eve.ctrlKey && key === 'v') {
+    pasteNodeInto(my.rightSideNodeInRectangle.notebookNode);
   }
 }
 

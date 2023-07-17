@@ -46,6 +46,9 @@ export function NotebookNodeViewOfBottomPanel(notebookNode, parentNodeView) {
   that.hasManuallyHiddenChildren = false;
   that.htmlContainerUl = document.createElement('ul');
   that.isTopPanelTree = false;
+  // that.isManuallyAddedToHighlightedBottomPanelTree = undefined;
+  // that.isPartOfHighlightedBottomPanelTree = undefined;
+  // that.isLeafOfHighlightedBottomPanelTree = undefined;
 }
 
 NotebookNodeView.prototype.newChildFromNode = function(node) {
@@ -68,11 +71,22 @@ NotebookNodeView.prototype.refreshOrderOfChildrenOnScreen = function() {
   withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
 }
 
-NotebookNodeView.prototype.refreshOrderOfVisibleChildrenOnScreen = function() {
+NotebookNodeView.prototype.refreshOrderOfVisibleChildrenOfBottomPanelNode = function() {
   let that = this;
   that.refreshOrderOfChildren();
   that.htmlContainerUl.innerHTML = "";
-  withChildren(that.htmlContainerUl, ...that.children.filter(ch => !ch.isHidden).map(ch => ch.html()));
+
+  let visibleChildren;
+  if (that.isPartOfHighlightedBottomPanelTree) {
+    if (that.isLeafOfHighlightedBottomPanelTree) {
+      visibleChildren = that.children.filter(ch => !ch.isHidden); // TODO maybe use ch.isPartOfHighlightedBottomPanelTree and ch.isManuallyAddedToHighlightedBottomPanelTree
+    } else {
+      visibleChildren = that.children.filter(ch => !ch.isHidden); // TODO maybe use ch.isPartOfHighlightedBottomPanelTree and ch.isManuallyAddedToHighlightedBottomPanelTree
+    }
+  } else {
+    visibleChildren = that.children.filter(ch => !ch.isHidden);
+  }
+  withChildren(that.htmlContainerUl, ...visibleChildren.map(ch => ch.html()));
 }
 
 NotebookNodeView.prototype.refreshOrderOfChildren = function() {
@@ -121,7 +135,8 @@ NotebookNodeView.prototype.handleInsertedChild = function(newChildIndex, nodeTha
     if (that.isTopPanelTree) {
       that.refreshOrderOfChildrenOnScreen();
     } else if (nodeThatInsertedChild === that) {
-      that.refreshOrderOfVisibleChildrenOnScreen();
+      newChildView.isManuallyAddedToHighlightedBottomPanelTree = true;
+      that.refreshOrderOfVisibleChildrenOfBottomPanelNode();
     }
   }
   if (lengthBefore === 0) {
@@ -133,7 +148,8 @@ NotebookNodeView.prototype.handleInsertedChild = function(newChildIndex, nodeTha
       if (that.isTopPanelTree) {
         that.refreshOrderOfChildrenOnScreen();
       } else if (nodeThatInsertedChild === that) {
-        that.refreshOrderOfVisibleChildrenOnScreen();
+        newChildView.isManuallyAddedToHighlightedBottomPanelTree = true;
+        that.refreshOrderOfVisibleChildrenOfBottomPanelNode();
       }
     }
   }
@@ -1137,7 +1153,7 @@ NotebookNodeView.prototype.toggleCollapse = function() {
       if (that.isTopPanelTree) {
         that._appendHtmlChildren();
       } else {
-        that._appendVisibleHtmlChildren();
+        that._appendVisibleHtmlChildrenOfBottomPanelNode();
       }
     }
     that.uncollapse();
@@ -1180,10 +1196,20 @@ NotebookNodeView.prototype._appendHtmlChildren = function() {
   )
 };
 
-NotebookNodeView.prototype._appendVisibleHtmlChildren = function() {
+NotebookNodeView.prototype._appendVisibleHtmlChildrenOfBottomPanelNode = function() {
   let that = this;
+  let visibleChildren;
+  if (that.isPartOfHighlightedBottomPanelTree) {
+    if (that.isLeafOfHighlightedBottomPanelTree) {
+      visibleChildren = that.children;
+    } else {
+      visibleChildren = that.children.filter(ch => ch.isPartOfHighlightedBottomPanelTree || ch.isManuallyAddedToHighlightedBottomPanelTree);
+    }
+  } else {
+    visibleChildren = that.children;
+  }
   withChildren(that.htmlContainerUl,
-    ...that.children.filter(ch => !ch.isHidden).map(childNode => childNode.html())
+    ...visibleChildren.map(childNode => childNode.html())
   )
 };
 
@@ -1214,6 +1240,25 @@ NotebookNodeView.prototype.hide = function() {
   }
 };
 
+NotebookNodeView.prototype.hideAsPartOfBottomPanelClearOperation = function() {
+  let that = this;
+  that.isHidden = true;
+  delete that.isManuallyAddedToHighlightedBottomPanelTree;
+  delete that.isPartOfHighlightedBottomPanelTree;
+  delete that.isLeafOfHighlightedBottomPanelTree;
+  that.collapse();
+  for (let child of that.children) {
+    child.hideAsPartOfBottomPanelClearOperation();
+  }
+  if (!that.htmlElement) {
+    return;
+  }
+  let htmlParent = that.html().parentNode;
+  if (htmlParent !== null) {
+    htmlParent.removeChild(that.html());
+  }
+};
+
 NotebookNodeView.prototype.unhide = function() {
   let that = this;
 
@@ -1229,6 +1274,14 @@ NotebookNodeView.prototype.unhide = function() {
   }
 
   that.isHidden = false;
+
+  // if (!that.isTopPanelTree) {
+  //   if (that.children.find(ch => ch.isHidden) !== undefined) {
+  //     that.html().classList.add('has-hidden-children');
+  //   } else {
+  //     that.html().classList.remove('has-hidden-children');
+  //   }
+  // }
 
   let htmlParent = that.html().parentNode;
   if (htmlParent === null) {
@@ -1270,6 +1323,37 @@ NotebookNodeView.prototype.highlightTree = function(nodeToHighlight) {
       nodeToHighlight.children.forEach(childNodeToHighlight => {
         if (that.childrenByName.hasOwnProperty(childNodeToHighlight.name)) {
           that.childrenByName[childNodeToHighlight.name].highlightTree(childNodeToHighlight);
+        }
+      });
+    }
+  }
+};
+
+NotebookNodeView.prototype.highlightTreeInBottomPanel = function(nodeToHighlight) {
+  let that = this;
+
+  that.isPartOfHighlightedBottomPanelTree = true;
+  that.isLeafOfHighlightedBottomPanelTree = nodeToHighlight.children.length === 0;
+
+  that.unhide();
+
+  if (nodeToHighlight.children.length == 0) {
+    that.html().classList.remove('has-hidden-children');
+    if (!that.isLeaf()) {
+      if (!that.isCollapsed) {
+        that.collapse();
+      }
+      that.hasManuallyHiddenChildren = false;
+      that.children.forEach(childView => childView.parentIsHighlighted());
+    }
+  } else {
+    if (!that.isLeaf()) {
+      if (that.isCollapsed) {
+        that.uncollapse();
+      }
+      nodeToHighlight.children.forEach(childNodeToHighlight => {
+        if (that.childrenByName.hasOwnProperty(childNodeToHighlight.name)) {
+          that.childrenByName[childNodeToHighlight.name].highlightTreeInBottomPanel(childNodeToHighlight);
         }
       });
     }

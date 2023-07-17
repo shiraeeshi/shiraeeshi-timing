@@ -66,6 +66,35 @@ export function openNotesInForest(rootNodeViewOfNotes, forestToHighlight, isTopP
   }
 }
 
+function highlightNotesInForestInBottomPanel(forestToHighlight) {
+  try {
+    let rootNodeViewOfNotes = window.my.rootNodeViewOfNotesOfBottomPanel;
+    rootNodeViewOfNotes.children.forEach(treeView => treeView.hideAsPartOfBottomPanelClearOperation());
+    openNotesInForestInBottomPanel(forestToHighlight);
+  } catch (err) {
+    window.webkit.messageHandlers.foobar.postMessage("js highlightNotesInForestInBottomPanel error msg: " + err.message);
+    throw err;
+  }
+}
+
+function openNotesInForestInBottomPanel(forestToHighlight) {
+  try {
+    let rootNodeViewOfNotes = window.my.rootNodeViewOfNotesOfBottomPanel;
+    forestToHighlight.forEach(nodeToHighlight => {
+      if (!rootNodeViewOfNotes.childrenByName.hasOwnProperty(nodeToHighlight.name)) {
+        return;
+      }
+      let node = rootNodeViewOfNotes.childrenByName[nodeToHighlight.name];
+      node.highlightTreeInBottomPanel(nodeToHighlight);
+    });
+    let notesOuterWrapper = document.getElementById('notes-content-outer-wrapper');
+    notesOuterWrapper.classList.add('as-two-panels');
+  } catch (err) {
+    window.webkit.messageHandlers.foobar.postMessage("js openNotesInForestInBottomPanel error msg: " + err.message);
+    throw err;
+  }
+}
+
 export function highlightTagsInForest(rootNodeViewOfTags, forestToHighlight) {
   try {
     rootNodeViewOfTags.children.forEach(treeView => treeView.hide());
@@ -187,6 +216,11 @@ function showLinksOfTag(tagNode) {
   let resultForest = [];
   addTagNodeLinksToForest(tagNode, resultForest);
 
+  // TODO for each node in window.my.lastOpenedNodesOfNotes, delete values (instead of doing it in hideAsPartOfBottomPanelClearOperation method):
+  //   node.isPartOfHighlightedBottomPanelTree,
+  //   node.isLeafOfHighlightedBottomPanelTree,
+  //   node.isManuallyAddedToHighlightedBottomPanelTree
+
   window.my.lastOpenedNodesOfNotes = resultForest;
 
   my.isCursorOnTopRightPanel = false;
@@ -202,7 +236,7 @@ function showLinksOfTag(tagNode) {
     my.rightBottomNodeInRectangle = my.rootNodeViewOfNotesOfBottomPanel;
     my.rightBottomNodeInRectangle.wrapInRectangle();
   }
-  highlightNotesInForest(window.my.rootNodeViewOfNotesOfBottomPanel, resultForest);
+  highlightNotesInForestInBottomPanel(resultForest);
 
   if (my.rightBottomNodeInRectangle.isHidden) {
     let prev = my.rightBottomNodeInRectangle;
