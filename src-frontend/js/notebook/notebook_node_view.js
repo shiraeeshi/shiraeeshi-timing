@@ -71,6 +71,13 @@ NotebookNodeView.prototype.refreshOrderOfChildrenOnScreen = function() {
   withChildren(that.htmlContainerUl, ...that.children.map(ch => ch.html()));
 }
 
+NotebookNodeView.prototype.refreshOrderOfVisibleChildrenOnScreen = function() {
+  let that = this;
+  that.refreshOrderOfChildren();
+  that.htmlContainerUl.innerHTML = "";
+  withChildren(that.htmlContainerUl, ...that.children.filter(ch => !ch.isHidden).map(ch => ch.html()));
+}
+
 NotebookNodeView.prototype.refreshOrderOfVisibleChildrenOfBottomPanelNode = function() {
   let that = this;
   that.refreshOrderOfChildren();
@@ -133,7 +140,7 @@ NotebookNodeView.prototype.handleInsertedChild = function(newChildIndex, nodeTha
 
   if (lengthBefore > 0) {
     if (that.isTopPanelTree) {
-      that.refreshOrderOfChildrenOnScreen();
+      that.refreshOrderOfVisibleChildrenOnScreen();
     } else if (nodeThatInsertedChild === that) {
       newChildView.isManuallyAddedToHighlightedBottomPanelTree = true;
       that.refreshOrderOfVisibleChildrenOfBottomPanelNode();
@@ -146,7 +153,7 @@ NotebookNodeView.prototype.handleInsertedChild = function(newChildIndex, nodeTha
     that._rebuildHtmlElement();
     if (!that.isCollapsed) {
       if (that.isTopPanelTree) {
-        that.refreshOrderOfChildrenOnScreen();
+        that.refreshOrderOfVisibleChildrenOnScreen();
       } else if (nodeThatInsertedChild === that) {
         newChildView.isManuallyAddedToHighlightedBottomPanelTree = true;
         that.refreshOrderOfVisibleChildrenOfBottomPanelNode();
