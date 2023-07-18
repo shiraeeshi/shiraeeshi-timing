@@ -220,6 +220,23 @@ footer a {
   border-top: 1px solid #ddd;
 }
 
+div.icons-list-item {
+  display: flex;
+}
+
+div.icons-list-item > div.input-with-label-div {
+  flex: 1;
+  border: none;
+  padding: 0;
+}
+
+div.icons-list-item > div.right-side-buttons-of-icons-list-item {
+  border: none;
+  padding: 0;
+  margin-left: 10px;
+  width: unset;
+}
+
 #tab-contents-of-frequencies > div > #div-field-node-icons-in-main-window > div {
   border: none;
   padding: 0;
@@ -665,7 +682,16 @@ footer a {
   border: none;
 }
 
-#notebook-node-icons-wrapper > #notebook-node-icons-left-panel > div:not(:first-child) {
+#notebook-node-icons-wrapper > #notebook-node-icons-left-panel > div.icons-list-container {
+  border-top: 1px solid #ddd;
+  padding: 0;
+}
+
+#notebook-node-icons-wrapper > #notebook-node-icons-left-panel > div.icons-list-container > div {
+  border: none;
+}
+
+#notebook-node-icons-wrapper > #notebook-node-icons-left-panel > div.icons-list-container > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
@@ -673,7 +699,16 @@ footer a {
   border: none;
 }
 
-#notebook-node-icons-wrapper > #notebook-node-icons-right-panel > div:not(:first-child) {
+#notebook-node-icons-wrapper > #notebook-node-icons-right-panel > div.icons-list-container {
+  border-top: 1px solid #ddd;
+  padding: 0;
+}
+
+#notebook-node-icons-wrapper > #notebook-node-icons-right-panel > div.icons-list-container > div {
+  border: none;
+}
+
+#notebook-node-icons-wrapper > #notebook-node-icons-right-panel > div.icons-list-container > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
@@ -706,7 +741,16 @@ footer a {
   border: none;
 }
 
-#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-left-panel > div:not(:first-child) {
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-left-panel > div.icons-list-container {
+  border-top: 1px solid #ddd;
+  padding: 0;
+}
+
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-left-panel > div.icons-list-container > div {
+  border: none;
+}
+
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-left-panel > div.icons-list-container > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
@@ -714,7 +758,16 @@ footer a {
   border: none;
 }
 
-#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-right-panel > div:not(:first-child) {
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-right-panel > div.icons-list-container {
+  border-top: 1px solid #ddd;
+  padding: 0;
+}
+
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-right-panel > div.icons-list-container > div {
+  border: none;
+}
+
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-right-panel > div.icons-list-container > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 

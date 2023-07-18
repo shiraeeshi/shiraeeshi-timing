@@ -169,6 +169,7 @@ function handleServerMessage(msg) {
   let btnReset = document.getElementById('btn-reset');
   btnReset.addEventListener('click', (eve) => {
     config = createCopyOfConfig(originalConfig);
+    my.config = config;
     timingsInputTextualDisplayFormat.value = config['timings-config']['display-format'];
     timingsRadioBtnUnderlineCanvas.checked = !!config['timings-config']['underline-canvas'];
     timingsRadioBtnFlexibleWidth.checked = !!config['timings-config']['canvas-with-flexible-width'];
@@ -246,10 +247,27 @@ function handleServerMessage(msg) {
       'main-window-notes-icon-append-child-node',
       'main-window-notes-icon-delete',
     ];
-    for (let iconPropName of notebookIconPropNames) {
-      let checkbox = document.getElementById(iconPropName);
-      checkbox.checked = !!config.notebook[iconPropName];
+    // for (let iconPropName of notebookIconPropNames) {
+    //   let checkbox = document.getElementById(iconPropName);
+    //   checkbox.checked = !!config.notebook[iconPropName];
+    // }
+
+    if (!my.notebookTagsIconsListView.iconsDataIsSameAsOriginal()) {
+      my.notebookTagsIconsListView.reset();
     }
+
+    if (!my.notebookNotesIconsListView.iconsDataIsSameAsOriginal()) {
+      my.notebookNotesIconsListView.reset();
+    }
+
+    if (!my.notebookTagsIconsOfMainWindowListView.iconsDataIsSameAsOriginal()) {
+      my.notebookTagsIconsOfMainWindowListView.reset();
+    }
+
+    if (!my.notebookNotesIconsOfMainWindowListView.iconsDataIsSameAsOriginal()) {
+      my.notebookNotesIconsOfMainWindowListView.reset();
+    }
+
 
     let frequenciesIconPropNames = [
       'icon-show-this-only',
@@ -1017,49 +1035,365 @@ function handleServerMessage(msg) {
     });
   }
 
-  initNotebookCheckbox('tag-icon-open-in-tree-above');
-  initNotebookCheckbox('tag-icon-edit');
-  initNotebookCheckbox('tag-icon-move-to-top');
-  initNotebookCheckbox('tag-icon-move-to-bottom');
-  initNotebookCheckbox('tag-icon-hide');
-  initNotebookCheckbox('tag-icon-hide-siblings-below');
-  initNotebookCheckbox('tag-icon-unhide-hidden-children');
+  // initNotebookCheckbox('tag-icon-open-in-tree-above');
+  // initNotebookCheckbox('tag-icon-edit');
+  // initNotebookCheckbox('tag-icon-move-to-top');
+  // initNotebookCheckbox('tag-icon-move-to-bottom');
+  // initNotebookCheckbox('tag-icon-hide');
+  // initNotebookCheckbox('tag-icon-hide-siblings-below');
+  // initNotebookCheckbox('tag-icon-unhide-hidden-children');
 
-  initNotebookCheckbox('notes-icon-open-in-tree-above');
-  initNotebookCheckbox('notes-icon-open-tag-in-tags-tree');
-  initNotebookCheckbox('notes-icon-open-tags-of-children-in-tags-tree');
-  initNotebookCheckbox('notes-icon-open-notes-with-the-same-tag-in-bottom-panel'),
-  initNotebookCheckbox('notes-icon-edit');
-  initNotebookCheckbox('notes-icon-move-to-top');
-  initNotebookCheckbox('notes-icon-move-to-bottom');
-  initNotebookCheckbox('notes-icon-hide');
-  initNotebookCheckbox('notes-icon-hide-siblings-below');
-  initNotebookCheckbox('notes-icon-unhide-hidden-children');
-  initNotebookCheckbox('notes-icon-add-sibling-node');
-  initNotebookCheckbox('notes-icon-append-child-node');
-  initNotebookCheckbox('notes-icon-delete');
+  let notebookIconNamesOfTags = [
+    {
+      iconName: 'tag-icon-open-in-tree-above',
+      iconTitle: 'Open in tree above',
+    },
+    {
+      iconName: 'tag-icon-edit',
+      iconTitle: 'Edit',
+    },
+    {
+      iconName: 'tag-icon-move-to-top',
+      iconTitle: 'Move to top',
+    },
+    {
+      iconName: 'tag-icon-move-to-bottom',
+      iconTitle: 'Move to bottom',
+    },
+    {
+      iconName: 'tag-icon-hide',
+      iconTitle: 'Hide',
+    },
+    {
+      iconName: 'tag-icon-hide-siblings-below',
+      iconTitle: 'Hide siblings below',
+    },
+    {
+      iconName: 'tag-icon-unhide-hidden-children',
+      iconTitle: 'Unhide hidden children',
+    },
+  ];
 
-  initNotebookCheckbox('main-window-tag-icon-open-in-tree-above');
-  initNotebookCheckbox('main-window-tag-icon-edit');
-  initNotebookCheckbox('main-window-tag-icon-move-to-top');
-  initNotebookCheckbox('main-window-tag-icon-move-to-bottom');
-  initNotebookCheckbox('main-window-tag-icon-hide');
-  initNotebookCheckbox('main-window-tag-icon-hide-siblings-below');
-  initNotebookCheckbox('main-window-tag-icon-unhide-hidden-children');
+  let orderOfTagsIcons = config['notebook']['order-of-tags-icons'];
 
-  initNotebookCheckbox('main-window-notes-icon-open-in-tree-above');
-  initNotebookCheckbox('main-window-notes-icon-open-tag-in-tags-tree');
-  initNotebookCheckbox('main-window-notes-icon-open-tags-of-children-in-tags-tree');
-  initNotebookCheckbox('main-window-notes-icon-open-notes-with-the-same-tag-in-bottom-panel'),
-  initNotebookCheckbox('main-window-notes-icon-edit');
-  initNotebookCheckbox('main-window-notes-icon-move-to-top');
-  initNotebookCheckbox('main-window-notes-icon-move-to-bottom');
-  initNotebookCheckbox('main-window-notes-icon-hide');
-  initNotebookCheckbox('main-window-notes-icon-hide-siblings-below');
-  initNotebookCheckbox('main-window-notes-icon-unhide-hidden-children');
-  initNotebookCheckbox('main-window-notes-icon-add-sibling-node');
-  initNotebookCheckbox('main-window-notes-icon-append-child-node');
-  initNotebookCheckbox('main-window-notes-icon-delete');
+  notebookIconNamesOfTags.forEach(obj => {
+    obj.checked = !!config['notebook'][obj.iconName];
+    let idx;
+    if (orderOfTagsIcons === undefined) {
+      idx = -1;
+    } else {
+      idx = orderOfTagsIcons.indexOf(obj.iconName);
+    }
+    obj.indexInOrder = idx;
+  });
+
+  my.notebookTagsIconsListView = new IconsListView(notebookIconNamesOfTags);
+  my.notebookTagsIconsListView.initHtml('notebook-node-icons-list-of-tags-tree');
+  my.notebookTagsIconsListView.setChangeListener((iconView) => {
+    let currentValue = iconView.checked;
+    config['notebook'][iconView.iconName] = currentValue;
+    let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    let label = document.getElementById('tab3-label');
+    if (!sameAsOldValue) {
+      if (!my.showingNotebookHeaderWithStar) {
+        label.innerHTML = 'Notebook*';
+        my.showingNotebookHeaderWithStar = true;
+      }
+      return;
+    }
+    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+      label.innerHTML = 'Notebook';
+      my.showingNotebookHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Notebook*';
+      my.showingNotebookHeaderWithStar = true;
+    }
+  });
+
+  // initNotebookCheckbox('notes-icon-open-in-tree-above');
+  // initNotebookCheckbox('notes-icon-open-tag-in-tags-tree');
+  // initNotebookCheckbox('notes-icon-open-tags-of-children-in-tags-tree');
+  // initNotebookCheckbox('notes-icon-open-notes-with-the-same-tag-in-bottom-panel'),
+  // initNotebookCheckbox('notes-icon-edit');
+  // initNotebookCheckbox('notes-icon-move-to-top');
+  // initNotebookCheckbox('notes-icon-move-to-bottom');
+  // initNotebookCheckbox('notes-icon-hide');
+  // initNotebookCheckbox('notes-icon-hide-siblings-below');
+  // initNotebookCheckbox('notes-icon-unhide-hidden-children');
+  // initNotebookCheckbox('notes-icon-add-sibling-node');
+  // initNotebookCheckbox('notes-icon-append-child-node');
+  // initNotebookCheckbox('notes-icon-delete');
+
+  let notebookIconNamesOfNotes = [
+    {
+      iconName: 'notes-icon-open-in-tree-above',
+      iconTitle: 'Open in tree above',
+    },
+    {
+      iconName: 'notes-icon-open-tag-in-tags-tree',
+      iconTitle: 'Open tag in tags tree',
+    },
+    {
+      iconName: 'notes-icon-open-tags-of-children-in-tags-tree',
+      iconTitle: 'Open tags of children in tags tree',
+    },
+    {
+      iconName: 'notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
+      iconTitle: 'Open notes with the same tag in bottom panel',
+    },
+    {
+      iconName: 'notes-icon-edit',
+      iconTitle: 'Edit',
+    },
+    {
+      iconName: 'notes-icon-move-to-top',
+      iconTitle: 'Move to top',
+    },
+    {
+      iconName: 'notes-icon-move-to-bottom',
+      iconTitle: 'Move to bottom',
+    },
+    {
+      iconName: 'notes-icon-hide',
+      iconTitle: 'Hide',
+    },
+    {
+      iconName: 'notes-icon-hide-siblings-below',
+      iconTitle: 'Hide siblings below',
+    },
+    {
+      iconName: 'notes-icon-unhide-hidden-children',
+      iconTitle: 'Unhide hidden children',
+    },
+    {
+      iconName: 'notes-icon-add-sibling-node',
+      iconTitle: 'Add sibling node',
+    },
+    {
+      iconName: 'notes-icon-append-child-node',
+      iconTitle: 'Append child node',
+    },
+    {
+      iconName: 'notes-icon-delete',
+      iconTitle: 'Delete',
+    },
+  ];
+
+  let orderOfNotesIcons = config['notebook']['order-of-notes-icons'];
+
+  notebookIconNamesOfNotes.forEach(obj => {
+    obj.checked = !!config['notebook'][obj.iconName];
+    let idx;
+    if (orderOfNotesIcons === undefined) {
+      idx = -1;
+    } else {
+      idx = orderOfNotesIcons.indexOf(obj.iconName);
+    }
+    obj.indexInOrder = idx;
+  });
+
+  my.notebookNotesIconsListView = new IconsListView(notebookIconNamesOfNotes);
+  my.notebookNotesIconsListView.initHtml('notebook-node-icons-list-of-notes-tree');
+  my.notebookNotesIconsListView.setChangeListener((iconView) => {
+    let currentValue = iconView.checked;
+    config['notebook'][iconView.iconName] = currentValue;
+    let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    let label = document.getElementById('tab3-label');
+    if (!sameAsOldValue) {
+      if (!my.showingNotebookHeaderWithStar) {
+        label.innerHTML = 'Notebook*';
+        my.showingNotebookHeaderWithStar = true;
+      }
+      return;
+    }
+    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+      label.innerHTML = 'Notebook';
+      my.showingNotebookHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Notebook*';
+      my.showingNotebookHeaderWithStar = true;
+    }
+  });
+
+  // initNotebookCheckbox('main-window-tag-icon-open-in-tree-above');
+  // initNotebookCheckbox('main-window-tag-icon-edit');
+  // initNotebookCheckbox('main-window-tag-icon-move-to-top');
+  // initNotebookCheckbox('main-window-tag-icon-move-to-bottom');
+  // initNotebookCheckbox('main-window-tag-icon-hide');
+  // initNotebookCheckbox('main-window-tag-icon-hide-siblings-below');
+  // initNotebookCheckbox('main-window-tag-icon-unhide-hidden-children');
+
+  let notebookIconNamesOfTagsInMainWindow = [
+    {
+      iconName: 'main-window-tag-icon-open-in-tree-above',
+      iconTitle: 'Open in tree above',
+    },
+    {
+      iconName: 'main-window-tag-icon-edit',
+      iconTitle: 'Edit',
+    },
+    {
+      iconName: 'main-window-tag-icon-move-to-top',
+      iconTitle: 'Move to top',
+    },
+    {
+      iconName: 'main-window-tag-icon-move-to-bottom',
+      iconTitle: 'Move to bottom',
+    },
+    {
+      iconName: 'main-window-tag-icon-hide',
+      iconTitle: 'Hide',
+    },
+    {
+      iconName: 'main-window-tag-icon-hide-siblings-below',
+      iconTitle: 'Hide siblings below',
+    },
+    {
+      iconName: 'main-window-tag-icon-unhide-hidden-children',
+      iconTitle: 'Unhide hidden children',
+    },
+  ];
+
+  let orderOfTagsIconsInMainWindow = config['notebook']['order-of-tags-icons-in-main-window'];
+
+  notebookIconNamesOfTagsInMainWindow.forEach(obj => {
+    obj.checked = !!config['notebook'][obj.iconName];
+    let idx;
+    if (orderOfTagsIconsInMainWindow === undefined) {
+      idx = -1;
+    } else {
+      idx = orderOfTagsIconsInMainWindow.indexOf(obj.iconName);
+    }
+    obj.indexInOrder = idx;
+  });
+
+  my.notebookTagsIconsOfMainWindowListView = new IconsListView(notebookIconNamesOfTagsInMainWindow);
+  my.notebookTagsIconsOfMainWindowListView.initHtml('notebook-node-icons-list-of-tags-tree-in-main-window');
+  my.notebookTagsIconsOfMainWindowListView.setChangeListener((iconView) => {
+    let currentValue = iconView.checked;
+    config['notebook'][iconView.iconName] = currentValue;
+    let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    let label = document.getElementById('tab3-label');
+    if (!sameAsOldValue) {
+      if (!my.showingNotebookHeaderWithStar) {
+        label.innerHTML = 'Notebook*';
+        my.showingNotebookHeaderWithStar = true;
+      }
+      return;
+    }
+    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+      label.innerHTML = 'Notebook';
+      my.showingNotebookHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Notebook*';
+      my.showingNotebookHeaderWithStar = true;
+    }
+  });
+
+  // initNotebookCheckbox('main-window-notes-icon-open-in-tree-above');
+  // initNotebookCheckbox('main-window-notes-icon-open-tag-in-tags-tree');
+  // initNotebookCheckbox('main-window-notes-icon-open-tags-of-children-in-tags-tree');
+  // initNotebookCheckbox('main-window-notes-icon-open-notes-with-the-same-tag-in-bottom-panel'),
+  // initNotebookCheckbox('main-window-notes-icon-edit');
+  // initNotebookCheckbox('main-window-notes-icon-move-to-top');
+  // initNotebookCheckbox('main-window-notes-icon-move-to-bottom');
+  // initNotebookCheckbox('main-window-notes-icon-hide');
+  // initNotebookCheckbox('main-window-notes-icon-hide-siblings-below');
+  // initNotebookCheckbox('main-window-notes-icon-unhide-hidden-children');
+  // initNotebookCheckbox('main-window-notes-icon-add-sibling-node');
+  // initNotebookCheckbox('main-window-notes-icon-append-child-node');
+  // initNotebookCheckbox('main-window-notes-icon-delete');
+
+  let notebookIconNamesOfNotesInMainWindow = [
+    {
+      iconName: 'main-window-notes-icon-open-in-tree-above',
+      iconTitle: 'Open in tree above',
+    },
+    {
+      iconName: 'main-window-notes-icon-open-tag-in-tags-tree',
+      iconTitle: 'Open tag in tags tree',
+    },
+    {
+      iconName: 'main-window-notes-icon-open-tags-of-children-in-tags-tree',
+      iconTitle: 'Open tags of children in tags tree',
+    },
+    {
+      iconName: 'main-window-notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
+      iconTitle: 'Open notes with the same tag in bottom panel',
+    },
+    {
+      iconName: 'main-window-notes-icon-edit',
+      iconTitle: 'Edit',
+    },
+    {
+      iconName: 'main-window-notes-icon-move-to-top',
+      iconTitle: 'Move to top',
+    },
+    {
+      iconName: 'main-window-notes-icon-move-to-bottom',
+      iconTitle: 'Move to bottom',
+    },
+    {
+      iconName: 'main-window-notes-icon-hide',
+      iconTitle: 'Hide',
+    },
+    {
+      iconName: 'main-window-notes-icon-hide-siblings-below',
+      iconTitle: 'Hide siblings below',
+    },
+    {
+      iconName: 'main-window-notes-icon-unhide-hidden-children',
+      iconTitle: 'Unhide hidden children',
+    },
+    {
+      iconName: 'main-window-notes-icon-add-sibling-node',
+      iconTitle: 'Add sibling node',
+    },
+    {
+      iconName: 'main-window-notes-icon-append-child-node',
+      iconTitle: 'Append child node',
+    },
+    {
+      iconName: 'main-window-notes-icon-delete',
+      iconTitle: 'Delete',
+    },
+  ];
+
+  let orderOfNotesIconsInMainWindow = config['notebook']['order-of-notes-icons-in-main-window'];
+
+  notebookIconNamesOfNotesInMainWindow.forEach(obj => {
+    obj.checked = !!config['notebook'][obj.iconName];
+    let idx;
+    if (orderOfNotesIconsInMainWindow === undefined) {
+      idx = -1;
+    } else {
+      idx = orderOfNotesIconsInMainWindow.indexOf(obj.iconName);
+    }
+    obj.indexInOrder = idx;
+  });
+
+  my.notebookNotesIconsOfMainWindowListView = new IconsListView(notebookIconNamesOfNotesInMainWindow);
+  my.notebookNotesIconsOfMainWindowListView.initHtml('notebook-node-icons-list-of-notes-tree-in-main-window');
+  my.notebookNotesIconsOfMainWindowListView.setChangeListener((iconView) => {
+    let currentValue = iconView.checked;
+    config['notebook'][iconView.iconName] = currentValue;
+    let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    let label = document.getElementById('tab3-label');
+    if (!sameAsOldValue) {
+      if (!my.showingNotebookHeaderWithStar) {
+        label.innerHTML = 'Notebook*';
+        my.showingNotebookHeaderWithStar = true;
+      }
+      return;
+    }
+    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+      label.innerHTML = 'Notebook';
+      my.showingNotebookHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Notebook*';
+      my.showingNotebookHeaderWithStar = true;
+    }
+  });
 
 
   function initFrequenciesCheckbox(configName, htmlElemId) {
@@ -1714,6 +2048,143 @@ WallpaperInfoView.prototype.btnHandlerUndoDeletionOfWallpaperInfo = function() {
   that.html.classList.remove('to-be-deleted');
   showOrHideStarInWallpapersHeader();
 }
+
+
+
+
+
+function IconsListView(iconNamesAndTitles) {
+  sortIconInfosListByCheckedAndIndexInOrder(iconNamesAndTitles);
+  this.items = iconNamesAndTitles.map(({iconName, iconTitle, checked, indexInOrder}) => {
+    return new IconsListItemView(iconName, iconTitle, checked, indexInOrder);
+  });
+}
+
+function sortIconInfosListByCheckedAndIndexInOrder(iconInfosList) {
+  iconInfosList.sort((a, b) => {
+    if (a.checked) {
+      if (b.checked) {
+        if (a.indexInOrder === -1) {
+          if (b.indexInOrder === -1) {
+            return 0;
+          } else {
+            return -1;
+          }
+        } else {
+          if (b.indexInOrder === -1) {
+            return 1;
+          } else {
+            return a.indexInOrder - b.indexInOrder;
+          }
+        }
+      } else {
+        return -1;
+      }
+    } else {
+      if (b.checked) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+  });
+}
+
+IconsListView.prototype.initHtml = function(htmlId) {
+  let that = this;
+  that.htmlId;
+  withChildren(document.getElementById(htmlId),
+    ...that.items.map(item => item.initHtml()));
+}
+
+IconsListView.prototype.iconsDataIsSameAsOriginal = function() {
+  let that = this;
+  for (let iconView of that.items) {
+    if (iconView.checkbox.checked !== iconView.originalChecked ||
+        (iconView.checkbox.checked && iconView.indexInOrder !== iconView.originalIndexInOrder)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+IconsListView.prototype.setChangeListener = function(callback) {
+  let that = this;
+  that.items.forEach(item => item.setChangeListener(callback));
+}
+
+IconsListView.prototype.reset = function() {
+  let that = this;
+  that.items.forEach(item => item.reset());
+  sortIconInfosListByCheckedAndIndexInOrder(that.items);
+  withChildren(document.getElementById(that.htmlId),
+    ...that.items.map(item => item.htmlElement));
+}
+
+function IconsListItemView(iconName, iconTitle, checked, indexInOrder) {
+  this.iconName = iconName;
+  this.iconTitle = iconTitle;
+  this.originalChecked = checked;
+  this.originalIndexInOrder = indexInOrder;
+  this.checked = checked;
+  this.indexInOrder = indexInOrder;
+}
+
+IconsListItemView.prototype.setChangeListener = function(callback) {
+  let that = this;
+  that.changeListenerCallback = callback;
+}
+
+IconsListItemView.prototype.initHtml = function() {
+  let that = this;
+
+  let checkbox = document.createElement('input');
+  checkbox.setAttribute('type', 'checkbox');
+  checkbox.checked = that.checked;
+  that.checkbox = checkbox;
+
+  checkbox.addEventListener('change', (eve) => {
+    that.checked = checkbox.checked;
+    if (that.changeListenerCallback !== undefined) {
+      that.changeListenerCallback(that);
+    }
+  });
+
+  let btnUp = withChildren(document.createElement('button'),
+    document.createTextNode('^')
+  );
+  that.btnUp = btnUp;
+
+  let btnDown = withChildren(document.createElement('button'),
+    document.createTextNode('v')
+  );
+  that.btnDown = btnDown;
+
+  let result =
+  withChildren(withClass(document.createElement('div'), 'icons-list-item'),
+    withChildren(withClass(document.createElement('div'), 'input-with-label-div'),
+      checkbox,
+      withChildren(document.createElement('label'),
+        document.createTextNode(that.iconTitle)
+      ),
+    ),
+    withChildren(withClass(document.createElement('div'), 'right-side-buttons-of-icons-list-item'),
+      btnUp,
+      btnDown
+    ),
+  );
+  that.htmlElement = result;
+  return result;
+}
+
+IconsListItemView.prototype.reset = function() {
+  let that = this;
+  that.checked = that.originalChecked;
+  that.indexInOrder = that.originalIndexInOrder;
+  that.checkbox.checked = that.checked;
+}
+
+
 
 
 
