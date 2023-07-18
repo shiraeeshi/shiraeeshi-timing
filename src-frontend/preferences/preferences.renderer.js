@@ -623,14 +623,34 @@ function handleServerMessage(msg) {
       rightSideIconsColor,
     }
 
-    if (my.wallpapersListView.hasInfoWithFilename(filename)) {
+    let isConflictingFilename;
+    if (my.currentWallpaperInfoBeingEdited === undefined) {
+      isConflictingFilename = my.wallpapersListView.hasInfoWithFilename(filename);
+    } else {
+      if (filename === my.currentWallpaperInfoBeingEdited.basename) {
+        isConflictingFilename = false;
+      } else {
+        isConflictingFilename = my.wallpapersListView.hasInfoWithFilename(filename);
+      }
+    }
+
+    if (isConflictingFilename) {
       alert(`filename '${filename}' is already taken.\ntry different filename`);
       return;
     }
 
-    let filenameExistsInDir = await filenameExistsInWallpapersDir(filename);
+    let conflictingFilenameExistsInDir;
+    if (my.currentWallpaperInfoBeingEdited === undefined) {
+      conflictingFilenameExistsInDir = await filenameExistsInWallpapersDir(filename);
+    } else {
+      if (filename === my.currentWallpaperInfoBeingEdited.basename) {
+        conflictingFilenameExistsInDir = false;
+      } else {
+        conflictingFilenameExistsInDir = await filenameExistsInWallpapersDir(filename);
+      }
+    }
 
-    if (filenameExistsInDir) {
+    if (conflictingFilenameExistsInDir) {
       alert(`a file named '${filename}' already exists in the wallpapers folder.\n` +
         'try different filename or rename the file in the wallpapers folder.'
       );
