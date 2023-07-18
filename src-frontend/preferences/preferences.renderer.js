@@ -1,3 +1,9 @@
+const { TimingsFileInfosListView } = require('../js/preferences/timings_file_infos_list_view.js');
+const { WallpapersListView } = require('../js/preferences/wallpapers_list_view.js');
+const { IconsListView } = require('../js/preferences/icons_list_view.js');
+
+const { showOrHideStarInTimingsHeader, showOrHideStarInWallpapersHeader } = require('../js/preferences/header_utils.js');
+
 const { withChildren, withClass } = require('../js/html_utils.js');
 
 window.webkit.messageHandlers.preferences_msgs.onMessage(handleServerMessage);
@@ -19,6 +25,8 @@ let my = {
   showingPostTimingDialogHeaderWithStar: false,
   showingWallpapersHeaderWithStar: false,
 };
+
+window.my = my;
 
 function handleServerMessage(msg) {
   if (msg.type === 'filepicker_result') {
@@ -402,12 +410,34 @@ function handleServerMessage(msg) {
       competitivenessLevel,
     }
 
-    if (my.timingsFileInfosListView.hasInfoWithName(name)) {
+    let isConflictingName;
+    if (my.currentTimingsFileInfoBeingEdited === undefined) {
+      isConflictingName = my.timingsFileInfosListView.hasInfoWithName(name);
+    } else {
+      if (name === my.currentTimingsFileInfoBeingEdited.name) {
+        isConflictingName = false;
+      } else {
+        isConflictingName = my.timingsFileInfosListView.hasInfoWithName(name);
+      }
+    }
+
+    if (isConflictingName) {
       alert(`name '${name}' is already taken.\ntry different name`);
       return;
     }
 
-    if (my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined) {
+    let isConflictingFilepath;
+    if (my.currentTimingsFileInfoBeingEdited === undefined) {
+      isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined;
+    } else {
+      if (filepath === my.currentTimingsFileInfoBeingEdited.filepath) {
+        isConflictingFilepath = false;
+      } else {
+        isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined;
+      }
+    }
+
+    if (isConflictingFilepath) {
       alert('filepath is already in use.');
       return;
     }
@@ -1496,720 +1526,19 @@ function handleServerMessage(msg) {
 }
 
 
-function TimingsFileInfosListView(timingsToShow) {
-  this.timingsToShow = timingsToShow;
-  this.timingsFileInfoViews = undefined;
-  this.html = undefined;
-}
 
-TimingsFileInfosListView.prototype.initHtml = function() {
-  let that = this;
 
-  that.timingsFileInfoViews = that.timingsToShow.map(timingsFileInfo => new TimingsFileInfoView(timingsFileInfo));
-  that.timingsFileInfoViews.forEach(v => v.initHtml());
 
-  let tabContentsOfTimings = document.getElementById('list-of-timings-files');
-  tabContentsOfTimings.innerHTML = '';
 
-  that.html = withChildren(tabContentsOfTimings,
-    ...that.timingsFileInfoViews.map(v => v.html)
-  );
-};
 
-TimingsFileInfosListView.prototype.reset = function(timingsToShow) {
-  let that = this;
-  that.timingsToShow = timingsToShow;
-  that.initHtml();
-};
 
-TimingsFileInfosListView.prototype.addNewInfo = function(timingsFileInfo) {
-  let that = this;
-  that.timingsToShow.push(timingsFileInfo);
 
-  let view = new TimingsFileInfoView(timingsFileInfo);
-  that.timingsFileInfoViews.push(view);
 
-  view.initHtml();
 
-  that.html.appendChild(view.html);
-};
 
-TimingsFileInfosListView.prototype.hasInfoWithName = function(name) {
-  let that = this;
-  return that.timingsToShow.find(timingsFileInfo => timingsFileInfo.name === name) !== undefined;
-};
 
-TimingsFileInfosListView.prototype.findInfoWithFilepath = function(filepath) {
-  let that = this;
-  return that.timingsToShow.find(timingsFileInfo => timingsFileInfo.filepath === filepath);
-};
 
-TimingsFileInfosListView.prototype.dataIsSameAsOriginal = function() {
-  let that = this;
-  if (Object.keys(my.timingsToAddByName).length > 0) {
-    return false;
-  }
-  if (Object.keys(my.timingsToDeleteByName).length > 0) {
-    return false;
-  }
-  for (let t of that.timingsToShow) {
-    if (t.original === undefined) {
-      continue;
-    }
-    if (!timingsFileInfoIsSameAsOriginal(t)) {
-      return false;
-    }
-  }
-  return true;
-};
 
-TimingsFileInfosListView.prototype.handleSaveSuccess = function() {
-  let that = this;
-
-
-  let setOfDeletedNames = new Set(Object.keys(my.timingsToDeleteByName));
-  for (let t of that.timingsToShow) {
-    let wasAddedAndDeleted = t.original === undefined && my.timingsToAddByName[t.name] === undefined;
-    let wasDeleted = setOfDeletedNames.has(t.name);
-
-    if (wasAddedAndDeleted || wasDeleted) {
-      t.view.html.parentNode.removeChild(t.view.html);
-    }
-  }
-  that.timingsToShow = that.timingsToShow.filter(t => !setOfDeletedNames.has(t.name));
-  that.timingsFileInfoViews = that.timingsToShow.map(t => t.view);
-
-  my.timingsToAddByName = {};
-  my.timingsToDeleteByName = {};
-};
-
-function timingsFileInfoIsSameAsOriginal(timingsFileInfo) {
-  let fieldNames = ['name', 'filepath', 'format', 'categoryPath', 'competitivenessLevel'];
-  let orig = timingsFileInfo.original;
-  for (let fieldName of fieldNames) {
-    let areEqual = timingsFileInfo[fieldName] === orig[fieldName];
-    if (!areEqual) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function TimingsFileInfoView(timingsFileInfo) {
-  let that = this;
-  timingsFileInfo.view = that;
-  that.timingsFileInfo = timingsFileInfo;
-  that.html = undefined;
-}
-
-TimingsFileInfoView.prototype.initHtml = function() {
-  let that = this;
-  let timingsFileInfo = that.timingsFileInfo;
-  that.nameDiv = 
-    withChildren(withClass(document.createElement('div'), 'div-with-text'),
-      document.createTextNode(`name: ${timingsFileInfo.name}`)
-    );
-  that.formatDiv =
-    withChildren(withClass(document.createElement('div'), 'div-with-text'),
-      document.createTextNode(`format: ${timingsFileInfo.format}`)
-    );
-  that.filepathDiv =
-    withChildren(withClass(document.createElement('div'), 'div-with-text'),
-      document.createTextNode(`filepath: ${timingsFileInfo.filepath}`)
-    );
-  that.categoryPathDiv =
-    withChildren(withClass(document.createElement('div'), 'div-with-text', 'category-path-div'),
-      document.createTextNode(`category path: ${categoryPathToString(timingsFileInfo)}`)
-    );
-  let categoryPathIsSameAsName = timingsFileInfo.categoryPath === undefined || (timingsFileInfo.categoryPath.length === 1 && timingsFileInfo.categoryPath[0] === timingsFileInfo.name);
-  if (categoryPathIsSameAsName) {
-    that.categoryPathDiv.classList.add('category-path-is-same-as-name');
-  }
-  that.competitivenessLevelDiv = 
-    withChildren(withClass(document.createElement('div'), 'div-with-text'),
-      document.createTextNode(`competitiveness level: ${timingsFileInfo.competitivenessLevel}`)
-    );
-  if (timingsFileInfo.competitivenessLevel === 0) {
-    that.competitivenessLevelDiv.classList.add('default-competitiveness-level');
-  }
-  that.html = withChildren(withClass(document.createElement('div'), 'timings-file-info-view'),
-    that.createDivOfTimingsFileButtons(),
-    that.nameDiv,
-    that.formatDiv,
-    that.filepathDiv,
-    that.categoryPathDiv,
-    that.competitivenessLevelDiv,
-  );
-}
-
-TimingsFileInfoView.prototype.refresh = function() {
-  let that = this;
-  let timingsFileInfo = that.timingsFileInfo;
-
-  that.nameDiv.innerHTML = `name: ${timingsFileInfo.name}`;
-  that.formatDiv.innerHTML = `format: ${timingsFileInfo.format}`;
-  that.filepathDiv.innerHTML = `filepath: ${timingsFileInfo.filepath}`;
-  that.categoryPathDiv.innerHTML = `category path: ${categoryPathToString(timingsFileInfo)}`;
-  that.competitivenessLevelDiv.innerHTML = `competitiveness level: ${timingsFileInfo.competitivenessLevel}`;
-
-  let categoryPathIsSameAsName = timingsFileInfo.categoryPath === undefined || (timingsFileInfo.categoryPath.length === 1 && timingsFileInfo.categoryPath[0] === timingsFileInfo.name);
-  if (categoryPathIsSameAsName) {
-    that.categoryPathDiv.classList.add('category-path-is-same-as-name');
-  } else {
-    that.categoryPathDiv.classList.remove('category-path-is-same-as-name');
-  }
-
-  if (timingsFileInfo.competitivenessLevel === 0) {
-    that.competitivenessLevelDiv.classList.add('default-competitiveness-level');
-  } else {
-    that.competitivenessLevelDiv.classList.remove('default-competitiveness-level');
-  }
-}
-
-TimingsFileInfoView.prototype.createDivOfTimingsFileButtons = function() {
-  let that = this;
-  let timingsFileInfo = that.timingsFileInfo;
-
-  let btnEdit = 
-    withChildren(withClass(document.createElement('button'), 'btn-edit-timings-file-info'),
-      document.createTextNode('edit')
-    );
-  btnEdit.addEventListener('click', (eve) => {
-    that.btnHandlerEditTimingsFileInfo();
-  });
-
-  let btnDelete =
-    withChildren(withClass(document.createElement('button'), 'btn-delete-timings-file-info'),
-      document.createTextNode('delete')
-    );
-  btnDelete.addEventListener('click', (eve) => {
-    that.btnHandlerDeleteTimingsFileInfo();
-  });
-
-  let btnUndoDelete =
-    withChildren(withClass(document.createElement('button'), 'btn-undo-delete-of-timings-file-info'),
-      document.createTextNode('undo deletion')
-    );
-  btnUndoDelete.addEventListener('click', (eve) => {
-    that.btnHandlerUndoDeletionOfTimingsFileInfo();
-  });
-
-  return withChildren(withClass(document.createElement('div'), 'timings-file-info-buttons'),
-    btnEdit,
-    btnDelete,
-    btnUndoDelete
-  );
-}
-
-TimingsFileInfoView.prototype.btnHandlerEditTimingsFileInfo = function() {
-  let that = this;
-  let timingsFileInfo = that.timingsFileInfo;
-
-  my.currentTimingsFileInfoBeingEdited = timingsFileInfo;
-
-  let inputName = document.getElementById('new-timing-name');
-  let inputFilepath = document.getElementById('new-timing-filepath');
-  let selectorOfFormat = document.getElementById('new-timing-format');
-  let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
-  let textareaCategoryPath = document.getElementById('new-timing-category-path');
-  let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
-
-  inputName.value = timingsFileInfo.name;
-  inputFilepath.value = timingsFileInfo.filepath;
-  selectorOfFormat.value = timingsFileInfo.format;
-  let categoryPathIsSameAsName = timingsFileInfo.categoryPath === undefined || (timingsFileInfo.categoryPath.length === 1 && timingsFileInfo.categoryPath[0] === timingsFileInfo.name);
-  checkboxCategoryPathIsSameAsName.checked = categoryPathIsSameAsName;
-  textareaCategoryPath.disabled = categoryPathIsSameAsName;
-  if (!categoryPathIsSameAsName) {
-    textareaCategoryPath.value = timingsFileInfo.categoryPath.join('\n');
-  }
-  inputCompetitivenessLevel.value = timingsFileInfo.competitivenessLevel;
-
-  my.scrollTopOfListOfTimingsFiles = document.getElementById('tab-contents-of-timings').scrollTop;
-
-  let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
-  panelOfListOfTimingsFiles.classList.remove('active');
-  panelOfListOfTimingsFiles.classList.add('inactive');
-
-  let newTimingsFileForm = document.getElementById('form-to-edit-timings-file-info');
-  newTimingsFileForm.classList.remove('inactive');
-  newTimingsFileForm.classList.add('active');
-
-  let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
-  bottomRowOfButtons.classList.add('hidden-behind-dialog');
-};
-
-
-TimingsFileInfoView.prototype.btnHandlerDeleteTimingsFileInfo = function() {
-  let that = this;
-  let timingsFileInfo = that.timingsFileInfo;
-
-  if (my.timingsToAddByName.hasOwnProperty(timingsFileInfo.name)) {
-    delete my.timingsToAddByName[timingsFileInfo.name];
-  } else {
-    my.timingsToDeleteByName[timingsFileInfo.name] = true;
-  }
-
-  that.html.classList.add('to-be-deleted');
-  showOrHideStarInTimingsHeader();
-};
-
-
-TimingsFileInfoView.prototype.btnHandlerUndoDeletionOfTimingsFileInfo = function() {
-  let that = this;
-  let timingsFileInfo = that.timingsFileInfo;
-
-  if (my.timingsToDeleteByName[timingsFileInfo.name]) {
-    delete my.timingsToDeleteByName[timingsFileInfo.name];
-  } else {
-    my.timingsToAddByName[timingsFileInfo.name] = timingsFileInfo;
-  }
-
-  that.html.classList.remove('to-be-deleted');
-  showOrHideStarInTimingsHeader();
-}
-
-
-
-
-
-
-function WallpapersListView(wallpapersToShow) {
-  this.wallpapersToShow = wallpapersToShow;
-  this.wallpaperInfoViews = undefined;
-  this.html = undefined;
-}
-
-WallpapersListView.prototype.initHtml = function() {
-  let that = this;
-
-  that.wallpaperInfoViews = that.wallpapersToShow.map(wallpaperInfo => new WallpaperInfoView(wallpaperInfo));
-  that.wallpaperInfoViews.forEach(v => v.initHtml());
-
-  let containerOfWallpapersList = document.getElementById('list-of-wallpapers');
-  containerOfWallpapersList.innerHTML = '';
-
-  that.html = withChildren(containerOfWallpapersList,
-    ...that.wallpaperInfoViews.map(v => v.html)
-  );
-};
-
-WallpapersListView.prototype.reset = function(wallpapersToShow) {
-  let that = this;
-  that.wallpapersToShow = wallpapersToShow;
-  that.initHtml();
-};
-
-WallpapersListView.prototype.addNewInfo = function(wallpaperInfo) {
-  let that = this;
-  that.wallpapersToShow.push(wallpaperInfo);
-
-  let view = new WallpaperInfoView(wallpaperInfo);
-  that.wallpaperInfoViews.push(view);
-
-  view.initHtml();
-
-  that.html.appendChild(view.html);
-};
-
-WallpapersListView.prototype.hasInfoWithFilename = function(filename) {
-  let that = this;
-  return that.wallpapersToShow.find(wpInfo => wpInfo.basename === filename) !== undefined;
-};
-
-WallpapersListView.prototype.dataIsSameAsOriginal = function() {
-  let that = this;
-  if (Object.keys(my.wallpapersToAddByName).length > 0) {
-    return false;
-  }
-  if (Object.keys(my.wallpapersToDeleteByName).length > 0) {
-    return false;
-  }
-  for (let t of that.wallpapersToShow) {
-    if (t.original === undefined) {
-      continue;
-    }
-    if (!wallpaperInfoIsSameAsOriginal(t)) {
-      return false;
-    }
-  }
-  return true;
-};
-
-WallpapersListView.prototype.handleSaveSuccess = function() {
-  let that = this;
-
-
-  let setOfDeletedNames = new Set(Object.keys(my.wallpapersToDeleteByName));
-  for (let t of that.wallpapersToShow) {
-    let wasAddedAndDeleted = t.original === undefined && my.wallpapersToAddByName[t.name] === undefined;
-    let wasDeleted = setOfDeletedNames.has(t.name);
-
-    if (wasAddedAndDeleted || wasDeleted) {
-      t.view.html.parentNode.removeChild(t.view.html);
-    }
-  }
-  that.wallpapersToShow = that.wallpapersToShow.filter(t => !setOfDeletedNames.has(t.name));
-  that.wallpaperInfoViews = that.wallpapersToShow.map(t => t.view);
-
-  my.wallpapersToAddByName = {};
-  my.wallpapersToDeleteByName = {};
-  my.newNamesOfWallpapersToRenameByOldName = {};
-};
-
-function wallpaperInfoIsSameAsOriginal(wallpaperInfo) {
-  let fieldNames = [
-    'filepath',
-    'basename',
-    'position',
-    'leftSideTextColor',
-    'leftSideIconsColor',
-    'rightSideTextColor',
-    'rightSideIconsColor'
-  ];
-  let orig = wallpaperInfo.original;
-  for (let fieldName of fieldNames) {
-    let areEqual = wallpaperInfo[fieldName] === orig[fieldName];
-    if (!areEqual) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function WallpaperInfoView(wallpaperInfo) {
-  let that = this;
-  wallpaperInfo.view = that;
-  that.wallpaperInfo = wallpaperInfo;
-  that.html = undefined;
-}
-
-WallpaperInfoView.prototype.initHtml = function() {
-  let that = this;
-  let wallpaperInfo = that.wallpaperInfo;
-  that.imageDiv =
-    withChildren(withClass(document.createElement('div'), 'div-with-image'),
-      (function() {
-        let img = new Image(200);
-        img.src = that.wallpaperInfo.relativePath;
-        return img;
-      })()
-    );
-  that.filepathDiv =
-    withChildren(withClass(document.createElement('div'), 'div-with-text'),
-      document.createTextNode(`filepath: ${wallpaperInfo.filepath}`)
-    );
-  that.positionDiv =
-    withChildren(withClass(document.createElement('div'), 'div-with-text'),
-      document.createTextNode(`attaches to corner: ${wallpaperInfo.position}`)
-    );
-  that.leftSideTextColorDiv =
-    withChildren(withClass(document.createElement('div'), 'div-with-text'),
-      document.createTextNode(`left-side text color: ${wallpaperInfo.leftSideTextColor}`)
-    );
-  that.leftSideIconsColorDiv =
-    withChildren(withClass(document.createElement('div'), 'div-with-text'),
-      document.createTextNode(`left-side icons color: ${wallpaperInfo.leftSideIconsColor}`)
-    );
-  that.rightSideTextColorDiv =
-    withChildren(withClass(document.createElement('div'), 'div-with-text'),
-      document.createTextNode(`right-side text color: ${wallpaperInfo.rightSideTextColor}`)
-    );
-  that.rightSideIconsColorDiv =
-    withChildren(withClass(document.createElement('div'), 'div-with-text'),
-      document.createTextNode(`right-side icons color: ${wallpaperInfo.rightSideIconsColor}`)
-    );
-  that.html = withChildren(withClass(document.createElement('div'), 'wallpaper-info-view'),
-    that.createDivOfWallpaperInfoButtons(),
-    that.imageDiv,
-    that.filepathDiv,
-    that.positionDiv,
-    that.leftSideTextColorDiv,
-    that.leftSideIconsColorDiv,
-    that.rightSideTextColorDiv,
-    that.rightSideIconsColorDiv,
-  );
-}
-
-WallpaperInfoView.prototype.refresh = function() {
-  let that = this;
-  let wallpaperInfo = that.wallpaperInfo;
-
-  that.filepathDiv.innerHTML = `filepath: ${wallpaperInfo.filepath}`;
-  that.positionDiv.innerHTML = `attaches to corner: ${wallpaperInfo.position}`;
-  that.leftSideTextColorDiv.innerHTML = `left-side text color: ${wallpaperInfo.leftSideTextColor}`;
-  that.leftSideIconsColorDiv.innerHTML = `left-side icons color: ${wallpaperInfo.leftSideIconsColor}`;
-  that.rightSideTextColorDiv.innerHTML = `right-side text color: ${wallpaperInfo.rightSideTextColor}`;
-  that.rightSideIconsColorDiv.innerHTML = `right-side icons color: ${wallpaperInfo.rightSideIconsColor}`;
-
-}
-
-WallpaperInfoView.prototype.createDivOfWallpaperInfoButtons = function() {
-  let that = this;
-
-  let btnEdit = 
-    withChildren(withClass(document.createElement('button'), 'btn-edit-wallpaper-info'),
-      document.createTextNode('edit')
-    );
-  btnEdit.addEventListener('click', (eve) => {
-    that.btnHandlerEditWallpaperInfo();
-  });
-
-  let btnDelete =
-    withChildren(withClass(document.createElement('button'), 'btn-delete-wallpaper-info'),
-      document.createTextNode('delete')
-    );
-  btnDelete.addEventListener('click', (eve) => {
-    that.btnHandlerDeleteWallpaperInfo();
-  });
-
-  let btnUndoDelete =
-    withChildren(withClass(document.createElement('button'), 'btn-undo-delete-of-wallpaper-info'),
-      document.createTextNode('undo deletion')
-    );
-  btnUndoDelete.addEventListener('click', (eve) => {
-    that.btnHandlerUndoDeletionOfWallpaperInfo();
-  });
-
-  return withChildren(withClass(document.createElement('div'), 'wallpaper-info-buttons'),
-    btnEdit,
-    btnDelete,
-    btnUndoDelete
-  );
-}
-
-WallpaperInfoView.prototype.btnHandlerEditWallpaperInfo = function() {
-  let that = this;
-  let wallpaperInfo = that.wallpaperInfo;
-
-  my.currentWallpaperInfoBeingEdited = wallpaperInfo;
-
-  let filepathFieldContainer = document.getElementById('new-wallpaper-filepath-field-container');
-
-  let inputFilepath = document.getElementById('new-wallpaper-filepath');
-  let inputFilename = document.getElementById('new-wallpaper-filename');
-  let selectorOfPosition = document.getElementById('new-wallpaper-position');
-  let selectorOfLeftSideTextColor = document.getElementById('text-color-of-left-side');
-  let selectorOfLeftSideIconsColor = document.getElementById('icons-color-of-left-side');
-  let selectorOfRightSideTextColor = document.getElementById('text-color-of-right-side');
-  let selectorOfRightSideIconsColor = document.getElementById('icons-color-of-right-side');
-
-  filepathFieldContainer.classList.add('disabled-filepath-field');
-  inputFilepath.disabled = true;
-
-  inputFilepath.value = wallpaperInfo.filepath;
-  inputFilename.value = wallpaperInfo.basename;
-  selectorOfPosition.value = wallpaperInfo.position;
-  selectorOfLeftSideTextColor.value = wallpaperInfo.leftSideTextColor;
-  selectorOfLeftSideIconsColor.value = wallpaperInfo.leftSideIconsColor;
-  selectorOfRightSideTextColor.value = wallpaperInfo.rightSideTextColor;
-  selectorOfRightSideIconsColor.value = wallpaperInfo.rightSideIconsColor;
-
-  my.scrollTopOfListOfWallpapers = document.getElementById('tab-contents-of-wallpapers').scrollTop;
-
-  let panelOfListOfWallpapers = document.getElementById('list-of-wallpapers-panel');
-  panelOfListOfWallpapers.classList.remove('active');
-  panelOfListOfWallpapers.classList.add('inactive');
-
-  let newWallpaperForm = document.getElementById('form-to-edit-wallpaper-info');
-  newWallpaperForm.classList.remove('inactive');
-  newWallpaperForm.classList.add('active');
-
-  let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
-  bottomRowOfButtons.classList.add('hidden-behind-dialog');
-};
-
-
-WallpaperInfoView.prototype.btnHandlerDeleteWallpaperInfo = function() {
-  let that = this;
-  let wallpaperInfo = that.wallpaperInfo;
-
-  if (my.wallpapersToAddByName.hasOwnProperty(wallpaperInfo.name)) {
-    delete my.wallpapersToAddByName[wallpaperInfo.name];
-  } else {
-    my.wallpapersToDeleteByName[wallpaperInfo.name] = true;
-  }
-
-  that.html.classList.add('to-be-deleted');
-  showOrHideStarInWallpapersHeader();
-};
-
-
-WallpaperInfoView.prototype.btnHandlerUndoDeletionOfWallpaperInfo = function() {
-  let that = this;
-  let wallpaperInfo = that.wallpaperInfo;
-
-  if (my.wallpapersToDeleteByName[wallpaperInfo.name]) {
-    delete my.wallpapersToDeleteByName[wallpaperInfo.name];
-  } else {
-    my.wallpapersToAddByName[wallpaperInfo.name] = wallpaperInfo;
-  }
-
-  that.html.classList.remove('to-be-deleted');
-  showOrHideStarInWallpapersHeader();
-}
-
-
-
-
-
-function IconsListView(iconNamesAndTitles) {
-  sortIconInfosListByCheckedAndIndexInOrder(iconNamesAndTitles);
-  this.items = iconNamesAndTitles.map(({iconName, iconTitle, checked, indexInOrder}) => {
-    return new IconsListItemView(iconName, iconTitle, checked, indexInOrder);
-  });
-}
-
-function sortIconInfosListByCheckedAndIndexInOrder(iconInfosList) {
-  iconInfosList.sort((a, b) => {
-    if (a.checked) {
-      if (b.checked) {
-        if (a.indexInOrder === -1) {
-          if (b.indexInOrder === -1) {
-            return 0;
-          } else {
-            return -1;
-          }
-        } else {
-          if (b.indexInOrder === -1) {
-            return 1;
-          } else {
-            return a.indexInOrder - b.indexInOrder;
-          }
-        }
-      } else {
-        return -1;
-      }
-    } else {
-      if (b.checked) {
-        return 1;
-      } else {
-        return 0;
-      }
-    }
-  });
-}
-
-IconsListView.prototype.initHtml = function(htmlId) {
-  let that = this;
-  that.htmlId;
-  withChildren(document.getElementById(htmlId),
-    ...that.items.map(item => item.initHtml()));
-}
-
-IconsListView.prototype.iconsDataIsSameAsOriginal = function() {
-  let that = this;
-  for (let iconView of that.items) {
-    if (iconView.checkbox.checked !== iconView.originalChecked ||
-        (iconView.checkbox.checked && iconView.indexInOrder !== iconView.originalIndexInOrder)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-IconsListView.prototype.setChangeListener = function(callback) {
-  let that = this;
-  that.items.forEach(item => item.setChangeListener(callback));
-}
-
-IconsListView.prototype.reset = function() {
-  let that = this;
-  that.items.forEach(item => item.reset());
-  sortIconInfosListByCheckedAndIndexInOrder(that.items);
-  withChildren(document.getElementById(that.htmlId),
-    ...that.items.map(item => item.htmlElement));
-}
-
-function IconsListItemView(iconName, iconTitle, checked, indexInOrder) {
-  this.iconName = iconName;
-  this.iconTitle = iconTitle;
-  this.originalChecked = checked;
-  this.originalIndexInOrder = indexInOrder;
-  this.checked = checked;
-  this.indexInOrder = indexInOrder;
-}
-
-IconsListItemView.prototype.setChangeListener = function(callback) {
-  let that = this;
-  that.changeListenerCallback = callback;
-}
-
-IconsListItemView.prototype.initHtml = function() {
-  let that = this;
-
-  let checkbox = document.createElement('input');
-  checkbox.setAttribute('type', 'checkbox');
-  checkbox.checked = that.checked;
-  that.checkbox = checkbox;
-
-  checkbox.addEventListener('change', (eve) => {
-    that.checked = checkbox.checked;
-    if (that.changeListenerCallback !== undefined) {
-      that.changeListenerCallback(that);
-    }
-  });
-
-  let btnUp = withChildren(document.createElement('button'),
-    document.createTextNode('^')
-  );
-  that.btnUp = btnUp;
-
-  let btnDown = withChildren(document.createElement('button'),
-    document.createTextNode('v')
-  );
-  that.btnDown = btnDown;
-
-  let result =
-  withChildren(withClass(document.createElement('div'), 'icons-list-item'),
-    withChildren(withClass(document.createElement('div'), 'input-with-label-div'),
-      checkbox,
-      withChildren(document.createElement('label'),
-        document.createTextNode(that.iconTitle)
-      ),
-    ),
-    withChildren(withClass(document.createElement('div'), 'right-side-buttons-of-icons-list-item'),
-      btnUp,
-      btnDown
-    ),
-  );
-  that.htmlElement = result;
-  return result;
-}
-
-IconsListItemView.prototype.reset = function() {
-  let that = this;
-  that.checked = that.originalChecked;
-  that.indexInOrder = that.originalIndexInOrder;
-  that.checkbox.checked = that.checked;
-}
-
-
-
-
-
-
-function showOrHideStarInWallpapersHeader() {
-  let isSame = my.wallpapersListView.dataIsSameAsOriginal();
-  my.showingWallpapersHeaderWithStar = !isSame;
-  let label = document.getElementById('tab6-label');
-  if (isSame) {
-    label.innerHTML = 'Wallpapers';
-  } else {
-    label.innerHTML = 'Wallpapers*';
-  }
-}
-
-function showOrHideStarInTimingsHeader() {
-  let isSame = my.timingsFileInfosListView.dataIsSameAsOriginal();
-  my.showingTimingsHeaderWithStar = !isSame;
-  let label = document.getElementById('tab1-label');
-  if (isSame) {
-    label.innerHTML = 'Timings';
-  } else {
-    label.innerHTML = 'Timings*';
-  }
-}
 
 function createCopyOfConfig(config) {
   let result = {};
@@ -2392,16 +1721,6 @@ function postTimingDialogConfigIsSameAsOriginal(postTimingDialogConfig, original
     }
   }
   return true;
-}
-
-function categoryPathToString(timing) {
-  let categoryPath;
-  if (timing.categoryPath !== undefined) {
-    categoryPath = timing.categoryPath;
-  } else {
-    categoryPath = [timing.name];
-  }
-  return categoryPath.join(' - ');
 }
 
 function parseCategoryPath(textareaContents) {
