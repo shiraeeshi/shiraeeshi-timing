@@ -214,6 +214,14 @@ footer a {
   border-top: 1px solid #ddd;
 }
 
+#tab-contents-of-frequencies > div > #div-field-node-icons-in-main-window > div {
+  border: none;
+}
+
+#tab-contents-of-frequencies > div > #div-field-node-icons-in-main-window > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
 #tab-contents-of-post-timing-dialog > div > div {
   border: none;
 }

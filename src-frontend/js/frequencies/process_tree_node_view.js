@@ -579,16 +579,22 @@ ProcessTreeNodeView.prototype._createIconsList = function() {
     }
   }
   let icons = [];
+  let prefix;
+  if (my.frequenciesIconNamePrefix === undefined) {
+    prefix = '';
+  } else {
+    prefix = my.frequenciesIconNamePrefix;
+  }
 
-  addIconIfConfigAllows(iconShowThisOnly, 'icon-show-this-only');
-  addIconIfConfigAllows(iconMergeSubprocesses, 'icon-merge-subprocesses');
-  addIconIfConfigAllows(iconUnmergeSubprocessesAsParent, 'icon-unmerge-subprocesses-as-parent');
-  addIconIfConfigAllows(iconUnmergeSubprocessesAsSubprocess, 'icon-unmerge-subprocesses-as-subprocess');
-  addIconIfConfigAllows(iconMoveToTop, 'icon-move-to-top');
-  addIconIfConfigAllows(iconMoveToBottom, 'icon-move-to-bottom');
-  addIconIfConfigAllows(iconHide, 'icon-hide');
-  addIconIfConfigAllows(iconHideSiblingsBelow, 'icon-hide-siblings-below');
-  addIconIfConfigAllows(iconUnhideHiddenChildren, 'icon-unhide-hidden-children');
+  addIconIfConfigAllows(iconShowThisOnly, prefix + 'icon-show-this-only');
+  addIconIfConfigAllows(iconMergeSubprocesses, prefix + 'icon-merge-subprocesses');
+  addIconIfConfigAllows(iconUnmergeSubprocessesAsParent, prefix + 'icon-unmerge-subprocesses-as-parent');
+  addIconIfConfigAllows(iconUnmergeSubprocessesAsSubprocess, prefix + 'icon-unmerge-subprocesses-as-subprocess');
+  addIconIfConfigAllows(iconMoveToTop, prefix + 'icon-move-to-top');
+  addIconIfConfigAllows(iconMoveToBottom, prefix + 'icon-move-to-bottom');
+  addIconIfConfigAllows(iconHide, prefix + 'icon-hide');
+  addIconIfConfigAllows(iconHideSiblingsBelow, prefix + 'icon-hide-siblings-below');
+  addIconIfConfigAllows(iconUnhideHiddenChildren, prefix + 'icon-unhide-hidden-children');
 
   return icons;
 };

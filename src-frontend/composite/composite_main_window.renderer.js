@@ -67,6 +67,10 @@ let my = {
 
   notebookIconNamePrefix: 'main-window-',
 
+  // frequencies state
+
+  frequenciesIconNamePrefix: 'main-window-',
+
   // timings state
   timings: null,
 

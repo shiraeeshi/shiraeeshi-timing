@@ -265,6 +265,9 @@ function handleServerMessage(msg) {
     for (let iconPropName of frequenciesIconPropNames) {
       let checkbox = document.getElementById('frequencies-' + iconPropName);
       checkbox.checked = !!config.frequencies[iconPropName];
+
+      let mainWindowCheckbox = document.getElementById('main-window-frequencies-' + iconPropName);
+      mainWindowCheckbox.checked = !!config.frequencies['main-window-' + iconPropName];
     }
 
     let hadChangesInTimings = my.showingTimingsHeaderWithStar;
@@ -1098,6 +1101,20 @@ function handleServerMessage(msg) {
   initFrequenciesCheckbox('icon-hide-siblings-below');
   initFrequenciesCheckbox('icon-unhide-hidden-children');
 
+  function initMainWindowFrequenciesCheckbox(name) {
+    initFrequenciesCheckbox('main-window-' + name, 'main-window-frequencies-' + name);
+  }
+
+  initMainWindowFrequenciesCheckbox('icon-show-this-only');
+  initMainWindowFrequenciesCheckbox('icon-merge-subprocesses');
+  initMainWindowFrequenciesCheckbox('icon-unmerge-subprocesses-as-parent');
+  initMainWindowFrequenciesCheckbox('icon-unmerge-subprocesses-as-subprocess');
+  initMainWindowFrequenciesCheckbox('icon-move-to-top');
+  initMainWindowFrequenciesCheckbox('icon-move-to-bottom');
+  initMainWindowFrequenciesCheckbox('icon-hide');
+  initMainWindowFrequenciesCheckbox('icon-hide-siblings-below');
+  initMainWindowFrequenciesCheckbox('icon-unhide-hidden-children');
+
 
   function initPostTimingDialogCheckbox(configName, htmlElemId) {
     if (htmlElemId === undefined) {
@@ -1870,6 +1887,11 @@ function frequenciesConfigIsSameAsOriginal(frequenciesConfig, originalFrequencie
   ];
   for (let iconPropName of iconPropNames) {
     if (frequenciesConfig[iconPropName] !== originalFrequenciesConfig[iconPropName]) {
+      return false;
+    }
+  }
+  for (let iconPropName of iconPropNames) {
+    if (frequenciesConfig['main-window-' + iconPropName] !== originalFrequenciesConfig['main-window-' + iconPropName]) {
       return false;
     }
   }
