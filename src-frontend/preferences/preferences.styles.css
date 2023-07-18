@@ -208,17 +208,29 @@ footer a {
 
 #tab-contents-of-frequencies > div > #div-field-node-icons > div {
   border: none;
+  padding: 0;
+  padding-left: 10%;
 }
 
-#tab-contents-of-frequencies > div > #div-field-node-icons > div:not(:first-child) {
+#tab-contents-of-frequencies > div > #div-field-node-icons > div > div {
+  border: none;
+}
+
+#tab-contents-of-frequencies > div > #div-field-node-icons > div > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
 #tab-contents-of-frequencies > div > #div-field-node-icons-in-main-window > div {
   border: none;
+  padding: 0;
+  padding-left: 10%;
 }
 
-#tab-contents-of-frequencies > div > #div-field-node-icons-in-main-window > div:not(:first-child) {
+#tab-contents-of-frequencies > div > #div-field-node-icons-in-main-window > div > div {
+  border: none;
+}
+
+#tab-contents-of-frequencies > div > #div-field-node-icons-in-main-window > div > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
