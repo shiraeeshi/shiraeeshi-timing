@@ -178,6 +178,7 @@ function handleServerMessage(msg) {
     notebookInputFilepath.value = config.notebook.filepath;
     notebookInputBackgroundColor.value = config.notebook['background-color'];
     notebookRadioBtnStartWithBottomPanelOfNotesMaximized.checked = !!config.notebook['start-with-bottom-panel-of-notes-maximized'];
+
     notebookInputFontSizeOfTopPanelOfTags.value =
       config.notebook['font-size-in-px-of-top-panel-of-tags'];
     notebookInputFontSizeOfBottomPanelOfTags.value =
@@ -188,6 +189,18 @@ function handleServerMessage(msg) {
       config.notebook['font-size-in-px-of-bottom-panel-of-notes'];
     notebookInputFontSizeOfTooltips.value =
       config.notebook['font-size-in-px-of-tooltips'];
+
+    notebookInputFontSizeOfTopPanelOfTagsOnMainWindow.value =
+      config.notebook['font-size-in-px-of-top-panel-of-tags-on-main-window'];
+    notebookInputFontSizeOfBottomPanelOfTagsOnMainWindow.value =
+      config.notebook['font-size-in-px-of-bottom-panel-of-tags-on-main-window'];
+    notebookInputFontSizeOfTopPanelOfNotesOnMainWindow.value =
+      config.notebook['font-size-in-px-of-top-panel-of-notes-on-main-window'];
+    notebookInputFontSizeOfBottomPanelOfNotesOnMainWindow.value =
+      config.notebook['font-size-in-px-of-bottom-panel-of-notes-on-main-window'];
+    notebookInputFontSizeOfTooltipsOnMainWindow.value =
+      config.notebook['font-size-in-px-of-tooltips-on-main-window'];
+
     let notebookIconPropNames = [
       'tag-icon-open-in-tree-above',
       'tag-icon-edit',
@@ -210,6 +223,28 @@ function handleServerMessage(msg) {
       'notes-icon-add-sibling-node',
       'notes-icon-append-child-node',
       'notes-icon-delete',
+
+      'main-window-tag-icon-open-in-tree-above',
+      'main-window-tag-icon-edit',
+      'main-window-tag-icon-move-to-top',
+      'main-window-tag-icon-move-to-bottom',
+      'main-window-tag-icon-hide',
+      'main-window-tag-icon-hide-siblings-below',
+      'main-window-tag-icon-unhide-hidden-children',
+
+      'main-window-notes-icon-open-in-tree-above',
+      'main-window-notes-icon-open-tag-in-tags-tree',
+      'main-window-notes-icon-open-tags-of-children-in-tags-tree',
+      'main-window-notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
+      'main-window-notes-icon-edit',
+      'main-window-notes-icon-move-to-top',
+      'main-window-notes-icon-move-to-bottom',
+      'main-window-notes-icon-hide',
+      'main-window-notes-icon-hide-siblings-below',
+      'main-window-notes-icon-unhide-hidden-children',
+      'main-window-notes-icon-add-sibling-node',
+      'main-window-notes-icon-append-child-node',
+      'main-window-notes-icon-delete',
     ];
     for (let iconPropName of notebookIconPropNames) {
       let checkbox = document.getElementById(iconPropName);
@@ -896,160 +931,59 @@ function handleServerMessage(msg) {
     }
   });
 
+  function initNotebookInput(name) {
+    let inputElem = document.getElementById(name);
+    inputElem.value =
+      config.notebook[name];
+    inputElem.addEventListener('change', (eve) => {
+      let currentValue = parseInt(inputElem.value);
+      if (isNaN(currentValue)) {
+        alert('must be int');
+        return;
+      }
+      inputElem.value = currentValue.toString();
+      config.notebook[name] = currentValue;
+      let sameAsOldValue = currentValue === originalConfig.notebook[name];
+      let label = document.getElementById('tab3-label');
+      if (!sameAsOldValue) {
+        if (!my.showingNotebookHeaderWithStar) {
+          label.innerHTML = 'Notebook*';
+          my.showingNotebookHeaderWithStar = true;
+        }
+        return;
+      }
+      if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+        label.innerHTML = 'Notebook';
+        my.showingNotebookHeaderWithStar = false;
+      } else {
+        label.innerHTML = 'Notebook*';
+        my.showingNotebookHeaderWithStar = true;
+      }
+    });
+    disableShortcutsOnFocus(inputElem);
+    return inputElem;
+  }
   let notebookInputFontSizeOfTopPanelOfTags = 
-    document.getElementById('font-size-in-px-of-top-panel-of-tags');
-  notebookInputFontSizeOfTopPanelOfTags.value =
-    config.notebook['font-size-in-px-of-top-panel-of-tags'];
-  notebookInputFontSizeOfTopPanelOfTags.addEventListener('change', (eve) => {
-    let currentValue = parseInt(notebookInputFontSizeOfTopPanelOfTags.value);
-    if (isNaN(currentValue)) {
-      alert('must be int');
-      return;
-    }
-    notebookInputFontSizeOfTopPanelOfTags.value = currentValue.toString();
-    config.notebook['font-size-in-px-of-top-panel-of-tags'] = currentValue;
-    let sameAsOldValue = currentValue === originalConfig.notebook['font-size-in-px-of-top-panel-of-tags'];
-    let label = document.getElementById('tab3-label');
-    if (!sameAsOldValue) {
-      if (!my.showingNotebookHeaderWithStar) {
-        label.innerHTML = 'Notebook*';
-        my.showingNotebookHeaderWithStar = true;
-      }
-      return;
-    }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
-      label.innerHTML = 'Notebook';
-      my.showingNotebookHeaderWithStar = false;
-    } else {
-      label.innerHTML = 'Notebook*';
-      my.showingNotebookHeaderWithStar = true;
-    }
-  });
-  disableShortcutsOnFocus(notebookInputFontSizeOfTopPanelOfTags);
-
+    initNotebookInput('font-size-in-px-of-top-panel-of-tags');
   let notebookInputFontSizeOfBottomPanelOfTags = 
-    document.getElementById('font-size-in-px-of-bottom-panel-of-tags');
-  notebookInputFontSizeOfBottomPanelOfTags.value =
-    config.notebook['font-size-in-px-of-bottom-panel-of-tags'];
-  notebookInputFontSizeOfBottomPanelOfTags.addEventListener('change', (eve) => {
-    let currentValue = parseInt(notebookInputFontSizeOfBottomPanelOfTags.value);
-    if (isNaN(currentValue)) {
-      alert('must be int');
-      return;
-    }
-    notebookInputFontSizeOfBottomPanelOfTags.value = currentValue.toString();
-    config.notebook['font-size-in-px-of-bottom-panel-of-tags'] = currentValue;
-    let sameAsOldValue = currentValue === originalConfig.notebook['font-size-in-px-of-bottom-panel-of-tags'];
-    let label = document.getElementById('tab3-label');
-    if (!sameAsOldValue) {
-      if (!my.showingNotebookHeaderWithStar) {
-        label.innerHTML = 'Notebook*';
-        my.showingNotebookHeaderWithStar = true;
-      }
-      return;
-    }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
-      label.innerHTML = 'Notebook';
-      my.showingNotebookHeaderWithStar = false;
-    } else {
-      label.innerHTML = 'Notebook*';
-      my.showingNotebookHeaderWithStar = true;
-    }
-  });
-  disableShortcutsOnFocus(notebookInputFontSizeOfBottomPanelOfTags);
-
+    initNotebookInput('font-size-in-px-of-bottom-panel-of-tags');
   let notebookInputFontSizeOfTopPanelOfNotes = 
-    document.getElementById('font-size-in-px-of-top-panel-of-notes');
-  notebookInputFontSizeOfTopPanelOfNotes.value =
-    config.notebook['font-size-in-px-of-top-panel-of-notes'];
-  notebookInputFontSizeOfTopPanelOfNotes.addEventListener('change', (eve) => {
-    let currentValue = parseInt(notebookInputFontSizeOfTopPanelOfNotes.value);
-    if (isNaN(currentValue)) {
-      alert('must be int');
-      return;
-    }
-    notebookInputFontSizeOfTopPanelOfNotes.value = currentValue.toString();
-    config.notebook['font-size-in-px-of-top-panel-of-notes'] = currentValue;
-    let sameAsOldValue = currentValue === originalConfig.notebook['font-size-in-px-of-top-panel-of-notes'];
-    let label = document.getElementById('tab3-label');
-    if (!sameAsOldValue) {
-      if (!my.showingNotebookHeaderWithStar) {
-        label.innerHTML = 'Notebook*';
-        my.showingNotebookHeaderWithStar = true;
-      }
-      return;
-    }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
-      label.innerHTML = 'Notebook';
-      my.showingNotebookHeaderWithStar = false;
-    } else {
-      label.innerHTML = 'Notebook*';
-      my.showingNotebookHeaderWithStar = true;
-    }
-  });
-  disableShortcutsOnFocus(notebookInputFontSizeOfTopPanelOfNotes);
-
+    initNotebookInput('font-size-in-px-of-top-panel-of-notes');
   let notebookInputFontSizeOfBottomPanelOfNotes = 
-    document.getElementById('font-size-in-px-of-bottom-panel-of-notes');
-  notebookInputFontSizeOfBottomPanelOfNotes.value =
-    config.notebook['font-size-in-px-of-bottom-panel-of-notes'];
-  notebookInputFontSizeOfBottomPanelOfNotes.addEventListener('change', (eve) => {
-    let currentValue = parseInt(notebookInputFontSizeOfBottomPanelOfNotes.value);
-    if (isNaN(currentValue)) {
-      alert('must be int');
-      return;
-    }
-    notebookInputFontSizeOfBottomPanelOfNotes.value = currentValue.toString();
-    config.notebook['font-size-in-px-of-bottom-panel-of-notes'] = currentValue;
-    let sameAsOldValue = currentValue === originalConfig.notebook['font-size-in-px-of-bottom-panel-of-notes'];
-    let label = document.getElementById('tab3-label');
-    if (!sameAsOldValue) {
-      if (!my.showingNotebookHeaderWithStar) {
-        label.innerHTML = 'Notebook*';
-        my.showingNotebookHeaderWithStar = true;
-      }
-      return;
-    }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
-      label.innerHTML = 'Notebook';
-      my.showingNotebookHeaderWithStar = false;
-    } else {
-      label.innerHTML = 'Notebook*';
-      my.showingNotebookHeaderWithStar = true;
-    }
-  });
-  disableShortcutsOnFocus(notebookInputFontSizeOfBottomPanelOfNotes);
-
+    initNotebookInput('font-size-in-px-of-bottom-panel-of-notes');
   let notebookInputFontSizeOfTooltips = 
-    document.getElementById('font-size-in-px-of-tooltips');
-  notebookInputFontSizeOfTooltips.value =
-    config.notebook['font-size-in-px-of-tooltips'];
-  notebookInputFontSizeOfTooltips.addEventListener('change', (eve) => {
-    let currentValue = parseInt(notebookInputFontSizeOfTooltips.value);
-    if (isNaN(currentValue)) {
-      alert('must be int');
-      return;
-    }
-    notebookInputFontSizeOfTooltips.value = currentValue.toString();
-    config.notebook['font-size-in-px-of-tooltips'] = currentValue;
-    let sameAsOldValue = currentValue === originalConfig.notebook['font-size-in-px-of-tooltips'];
-    let label = document.getElementById('tab3-label');
-    if (!sameAsOldValue) {
-      if (!my.showingNotebookHeaderWithStar) {
-        label.innerHTML = 'Notebook*';
-        my.showingNotebookHeaderWithStar = true;
-      }
-      return;
-    }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
-      label.innerHTML = 'Notebook';
-      my.showingNotebookHeaderWithStar = false;
-    } else {
-      label.innerHTML = 'Notebook*';
-      my.showingNotebookHeaderWithStar = true;
-    }
-  });
-  disableShortcutsOnFocus(notebookInputFontSizeOfTooltips);
+    initNotebookInput('font-size-in-px-of-tooltips');
+
+  let notebookInputFontSizeOfTopPanelOfTagsOnMainWindow = 
+    initNotebookInput('font-size-in-px-of-top-panel-of-tags-on-main-window');
+  let notebookInputFontSizeOfBottomPanelOfTagsOnMainWindow = 
+    initNotebookInput('font-size-in-px-of-bottom-panel-of-tags-on-main-window');
+  let notebookInputFontSizeOfTopPanelOfNotesOnMainWindow = 
+    initNotebookInput('font-size-in-px-of-top-panel-of-notes-on-main-window');
+  let notebookInputFontSizeOfBottomPanelOfNotesOnMainWindow = 
+    initNotebookInput('font-size-in-px-of-bottom-panel-of-notes-on-main-window');
+  let notebookInputFontSizeOfTooltipsOnMainWindow = 
+    initNotebookInput('font-size-in-px-of-tooltips-on-main-window');
 
   function initNotebookCheckbox(htmlElemId, configName) {
     if (configName === undefined) {
@@ -1101,6 +1035,28 @@ function handleServerMessage(msg) {
   initNotebookCheckbox('notes-icon-add-sibling-node');
   initNotebookCheckbox('notes-icon-append-child-node');
   initNotebookCheckbox('notes-icon-delete');
+
+  initNotebookCheckbox('main-window-tag-icon-open-in-tree-above');
+  initNotebookCheckbox('main-window-tag-icon-edit');
+  initNotebookCheckbox('main-window-tag-icon-move-to-top');
+  initNotebookCheckbox('main-window-tag-icon-move-to-bottom');
+  initNotebookCheckbox('main-window-tag-icon-hide');
+  initNotebookCheckbox('main-window-tag-icon-hide-siblings-below');
+  initNotebookCheckbox('main-window-tag-icon-unhide-hidden-children');
+
+  initNotebookCheckbox('main-window-notes-icon-open-in-tree-above');
+  initNotebookCheckbox('main-window-notes-icon-open-tag-in-tags-tree');
+  initNotebookCheckbox('main-window-notes-icon-open-tags-of-children-in-tags-tree');
+  initNotebookCheckbox('main-window-notes-icon-open-notes-with-the-same-tag-in-bottom-panel'),
+  initNotebookCheckbox('main-window-notes-icon-edit');
+  initNotebookCheckbox('main-window-notes-icon-move-to-top');
+  initNotebookCheckbox('main-window-notes-icon-move-to-bottom');
+  initNotebookCheckbox('main-window-notes-icon-hide');
+  initNotebookCheckbox('main-window-notes-icon-hide-siblings-below');
+  initNotebookCheckbox('main-window-notes-icon-unhide-hidden-children');
+  initNotebookCheckbox('main-window-notes-icon-add-sibling-node');
+  initNotebookCheckbox('main-window-notes-icon-append-child-node');
+  initNotebookCheckbox('main-window-notes-icon-delete');
 
 
   function initFrequenciesCheckbox(configName, htmlElemId) {
@@ -1840,7 +1796,12 @@ function notebookConfigIsSameAsOriginal(notebookConfig, originalNotebookConfig) 
          notebookConfig['font-size-in-px-of-bottom-panel-of-tags'] === originalNotebookConfig['font-size-in-px-of-bottom-panel-of-tags'] &&
          notebookConfig['font-size-in-px-of-top-panel-of-notes'] === originalNotebookConfig['font-size-in-px-of-top-panel-of-notes'] &&
          notebookConfig['font-size-in-px-of-bottom-panel-of-notes'] === originalNotebookConfig['font-size-in-px-of-bottom-panel-of-notes'] &&
-         notebookConfig['font-size-in-px-of-tooltips'] === originalNotebookConfig['font-size-in-px-of-tooltips'] && (function() {
+         notebookConfig['font-size-in-px-of-tooltips'] === originalNotebookConfig['font-size-in-px-of-tooltips'] &&
+         notebookConfig['font-size-in-px-of-top-panel-of-tags-on-main-window'] === originalNotebookConfig['font-size-in-px-of-top-panel-of-tags-on-main-window'] &&
+         notebookConfig['font-size-in-px-of-bottom-panel-of-tags-on-main-window'] === originalNotebookConfig['font-size-in-px-of-bottom-panel-of-tags-on-main-window'] &&
+         notebookConfig['font-size-in-px-of-top-panel-of-notes-on-main-window'] === originalNotebookConfig['font-size-in-px-of-top-panel-of-notes-on-main-window'] &&
+         notebookConfig['font-size-in-px-of-bottom-panel-of-notes-on-main-window'] === originalNotebookConfig['font-size-in-px-of-bottom-panel-of-notes-on-main-window'] &&
+         notebookConfig['font-size-in-px-of-tooltips-on-main-window'] === originalNotebookConfig['font-size-in-px-of-tooltips-on-main-window'] && (function() {
            let iconPropNames = [
             'tag-icon-open-in-tree-above',
             'tag-icon-edit',
@@ -1863,9 +1824,31 @@ function notebookConfigIsSameAsOriginal(notebookConfig, originalNotebookConfig) 
             'notes-icon-add-sibling-node',
             'notes-icon-append-child-node',
             'notes-icon-delete',
+
+            'main-window-tag-icon-open-in-tree-above',
+            'main-window-tag-icon-edit',
+            'main-window-tag-icon-move-to-top',
+            'main-window-tag-icon-move-to-bottom',
+            'main-window-tag-icon-hide',
+            'main-window-tag-icon-hide-siblings-below',
+            'main-window-tag-icon-unhide-hidden-children',
+
+            'main-window-notes-icon-open-in-tree-above',
+            'main-window-notes-icon-open-tag-in-tags-tree',
+            'main-window-notes-icon-open-tags-of-children-in-tags-tree',
+            'main-window-notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
+            'main-window-notes-icon-edit',
+            'main-window-notes-icon-move-to-top',
+            'main-window-notes-icon-move-to-bottom',
+            'main-window-notes-icon-hide',
+            'main-window-notes-icon-hide-siblings-below',
+            'main-window-notes-icon-unhide-hidden-children',
+            'main-window-notes-icon-add-sibling-node',
+            'main-window-notes-icon-append-child-node',
+            'main-window-notes-icon-delete',
            ];
            for (let iconPropName of iconPropNames) {
-             if (notebookConfig[iconPropName] !== originalNotebookConfig[iconPropName]) {
+             if (!!notebookConfig[iconPropName] !== !!originalNotebookConfig[iconPropName]) {
                return false;
              }
            }

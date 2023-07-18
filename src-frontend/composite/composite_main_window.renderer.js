@@ -65,6 +65,8 @@ let my = {
   isCursorOnRightSide: true,
   isCursorOnTopRightPanel: true,
 
+  notebookIconNamePrefix: 'main-window-',
+
   // timings state
   timings: null,
 
@@ -702,31 +704,31 @@ function handleNotebookConfig(config) {
     config.notebook = {};
   }
 
-  let fontSizeOfTopPanelOfNotes = config.notebook['font-size-in-px-of-top-panel-of-notes'];
+  let fontSizeOfTopPanelOfNotes = config.notebook['font-size-in-px-of-top-panel-of-notes-on-main-window'];
   if (fontSizeOfTopPanelOfNotes === undefined) {
     fontSizeOfTopPanelOfNotes = 16;
   }
   my.fontSizeOfTopPanelOfNotes = fontSizeOfTopPanelOfNotes;
 
-  let fontSizeOfBottomPanelOfNotes = config.notebook['font-size-in-px-of-bottom-panel-of-notes'];
+  let fontSizeOfBottomPanelOfNotes = config.notebook['font-size-in-px-of-bottom-panel-of-notes-on-main-window'];
   if (fontSizeOfBottomPanelOfNotes === undefined) {
     fontSizeOfBottomPanelOfNotes = 16;
   }
   my.fontSizeOfBottomPanelOfNotes = fontSizeOfBottomPanelOfNotes;
 
-  let fontSizeOfTopPanelOfTags = config.notebook['font-size-in-px-of-top-panel-of-tags'];
+  let fontSizeOfTopPanelOfTags = config.notebook['font-size-in-px-of-top-panel-of-tags-on-main-window'];
   if (fontSizeOfTopPanelOfTags === undefined) {
     fontSizeOfTopPanelOfTags = 16;
   }
   my.fontSizeOfTopPanelOfTags = fontSizeOfTopPanelOfTags;
 
-  let fontSizeOfBottomPanelOfTags = config.notebook['font-size-in-px-of-bottom-panel-of-tags'];
+  let fontSizeOfBottomPanelOfTags = config.notebook['font-size-in-px-of-bottom-panel-of-tags-on-main-window'];
   if (fontSizeOfBottomPanelOfTags === undefined) {
     fontSizeOfBottomPanelOfTags = 16;
   }
   my.fontSizeOfBottomPanelOfTags = fontSizeOfBottomPanelOfTags;
 
-  let fontSizeOfTooltips = config.notebook['font-size-in-px-of-tooltips'];
+  let fontSizeOfTooltips = config.notebook['font-size-in-px-of-tooltips-on-main-window'];
   if (fontSizeOfTooltips === undefined) {
     fontSizeOfTooltips = 16;
   }

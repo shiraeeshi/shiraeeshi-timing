@@ -573,6 +573,49 @@ footer a {
 
 
 
+#notebook-font-sizes-on-main-window-wrapper {
+  display: flex;
+  padding: 0;
+  border: none;
+  padding-left: 10%;
+}
+
+#notebook-font-sizes-on-main-window-wrapper > #notebook-font-sizes-on-main-window-left-panel {
+  flex: 0 0 auto;
+  width: 35%;
+  padding: 0;
+  border: none;
+}
+
+#notebook-font-sizes-on-main-window-wrapper > #notebook-font-sizes-on-main-window-right-panel {
+  flex: 1 1 1px;
+  padding: 0;
+  border: none;
+  border-left: 1px solid #ddd;
+}
+
+#notebook-font-sizes-on-main-window-wrapper > #notebook-font-sizes-on-main-window-left-panel > div {
+  border: none;
+}
+
+#notebook-font-sizes-on-main-window-wrapper > #notebook-font-sizes-on-main-window-left-panel > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+#notebook-font-sizes-on-main-window-wrapper > #notebook-font-sizes-on-main-window-left-panel > #notebook-tooltips-font-size-wrapper {
+  padding-left: 0;
+}
+
+#notebook-font-sizes-on-main-window-wrapper > #notebook-font-sizes-on-main-window-right-panel > div {
+  border: none;
+}
+
+#notebook-font-sizes-on-main-window-wrapper > #notebook-font-sizes-on-main-window-right-panel > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+
+
 
 
 
@@ -611,6 +654,47 @@ footer a {
 }
 
 #notebook-node-icons-wrapper > #notebook-node-icons-right-panel > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+
+
+
+
+#notebook-node-icons-in-main-window-wrapper {
+  display: flex;
+  padding: 0;
+  border: none;
+  padding-left: 10%;
+}
+
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-left-panel {
+  flex: 0 0 auto;
+  width: 35%;
+  padding: 0;
+  border: none;
+}
+
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-right-panel {
+  flex: 1 1 1px;
+  padding: 0;
+  border: none;
+  border-left: 1px solid #ddd;
+}
+
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-left-panel > div {
+  border: none;
+}
+
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-left-panel > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-right-panel > div {
+  border: none;
+}
+
+#notebook-node-icons-in-main-window-wrapper > #notebook-node-icons-in-main-window-right-panel > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 

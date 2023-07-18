@@ -288,6 +288,12 @@ NotebookTagsTreeNodeView.prototype._createIconsList = function() {
       return elem;
     })();
   let icons = [];
+  let prefix;
+  if (my.notebookIconNamePrefix === undefined) {
+    prefix = '';
+  } else {
+    prefix = my.notebookIconNamePrefix;
+  }
   if (that.parentNodeView === undefined) {
     let iconIncreaseFontSize =
       (function() {
@@ -326,14 +332,14 @@ NotebookTagsTreeNodeView.prototype._createIconsList = function() {
     }
   }
   if (!that.isTopPanelTree) {
-    addIconIfConfigAllows(iconOpenNodeInTopPanel, 'tag-icon-open-in-tree-above');
+    addIconIfConfigAllows(iconOpenNodeInTopPanel, prefix + 'tag-icon-open-in-tree-above');
   }
-  addIconIfConfigAllows(iconEdit, 'tag-icon-edit');
-  addIconIfConfigAllows(iconMoveToTop, 'tag-icon-move-to-top');
-  addIconIfConfigAllows(iconMoveToBottom, 'tag-icon-move-to-bottom');
-  addIconIfConfigAllows(iconHide, 'tag-icon-hide');
-  addIconIfConfigAllows(iconHideSiblingsBelow, 'tag-icon-hide-siblings-below');
-  addIconIfConfigAllows(iconUnhideHiddenChildren, 'tag-icon-unhide-hidden-children');
+  addIconIfConfigAllows(iconEdit, prefix + 'tag-icon-edit');
+  addIconIfConfigAllows(iconMoveToTop, prefix + 'tag-icon-move-to-top');
+  addIconIfConfigAllows(iconMoveToBottom, prefix + 'tag-icon-move-to-bottom');
+  addIconIfConfigAllows(iconHide, prefix + 'tag-icon-hide');
+  addIconIfConfigAllows(iconHideSiblingsBelow, prefix + 'tag-icon-hide-siblings-below');
+  addIconIfConfigAllows(iconUnhideHiddenChildren, prefix + 'tag-icon-unhide-hidden-children');
   return icons;
 };
 

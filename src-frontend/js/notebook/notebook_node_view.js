@@ -922,13 +922,19 @@ NotebookNodeView.prototype._createIconsList = function() {
       return elem;
     })();
   let icons = [];
-  if (that._isTaggedNode() && my.config.notebook['notes-icon-open-tag-in-tags-tree']) {
+  let prefix;
+  if (my.notebookIconNamePrefix === undefined) {
+    prefix = '';
+  } else {
+    prefix = my.notebookIconNamePrefix;
+  }
+  if (that._isTaggedNode() && my.config.notebook[prefix + 'notes-icon-open-tag-in-tags-tree']) {
     icons.push(iconOpenTagInTagsTree);
   }
-  if (that._hasTaggedChildren() && my.config.notebook['notes-icon-open-tags-of-children-in-tags-tree']) {
+  if (that._hasTaggedChildren() && my.config.notebook[prefix + 'notes-icon-open-tags-of-children-in-tags-tree']) {
     icons.push(iconOpenTagsOfChildrenInTagsTree);
   }
-  if (that._isTaggedNode() && my.config.notebook['notes-icon-open-notes-with-the-same-tag-in-bottom-panel']) {
+  if (that._isTaggedNode() && my.config.notebook[prefix + 'notes-icon-open-notes-with-the-same-tag-in-bottom-panel']) {
     icons.push(iconOpenNotesWithTheSameTagInBottomPanel);
   }
   if (that.parentNodeView === undefined) {
@@ -968,18 +974,18 @@ NotebookNodeView.prototype._createIconsList = function() {
       icons.push(icon);
     }
   }
-  addIconIfConfigAllows(iconMoveToTop, 'notes-icon-move-to-top');
-  addIconIfConfigAllows(iconMoveToBottom, 'notes-icon-move-to-bottom');
-  addIconIfConfigAllows(iconHide, 'notes-icon-hide');
-  addIconIfConfigAllows(iconHideSiblingsBelow, 'notes-icon-hide-siblings-below');
-  addIconIfConfigAllows(iconUnhideHiddenChildren, 'notes-icon-unhide-hidden-children');
+  addIconIfConfigAllows(iconMoveToTop, prefix + 'notes-icon-move-to-top');
+  addIconIfConfigAllows(iconMoveToBottom, prefix + 'notes-icon-move-to-bottom');
+  addIconIfConfigAllows(iconHide, prefix + 'notes-icon-hide');
+  addIconIfConfigAllows(iconHideSiblingsBelow, prefix + 'notes-icon-hide-siblings-below');
+  addIconIfConfigAllows(iconUnhideHiddenChildren, prefix + 'notes-icon-unhide-hidden-children');
   if (!that.isTopPanelTree) {
-    addIconIfConfigAllows(iconOpenNodeInTopPanel, 'notes-icon-open-in-tree-above');
+    addIconIfConfigAllows(iconOpenNodeInTopPanel, prefix + 'notes-icon-open-in-tree-above');
   }
-  addIconIfConfigAllows(iconEdit, 'notes-icon-edit');
-  addIconIfConfigAllows(iconAddSiblingWithInput, 'notes-icon-add-sibling-node');
-  addIconIfConfigAllows(iconAppendChildWithInput, 'notes-icon-append-child-node');
-  addIconIfConfigAllows(iconDeleteFromTheRightSide, 'notes-icon-delete');
+  addIconIfConfigAllows(iconEdit, prefix + 'notes-icon-edit');
+  addIconIfConfigAllows(iconAddSiblingWithInput, prefix + 'notes-icon-add-sibling-node');
+  addIconIfConfigAllows(iconAppendChildWithInput, prefix + 'notes-icon-append-child-node');
+  addIconIfConfigAllows(iconDeleteFromTheRightSide, prefix + 'notes-icon-delete');
   return icons;
 }
 
