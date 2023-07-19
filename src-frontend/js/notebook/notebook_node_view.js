@@ -922,21 +922,6 @@ NotebookNodeView.prototype._createIconsList = function() {
       return elem;
     })();
   let icons = [];
-  let prefix;
-  if (my.notebookIconNamePrefix === undefined) {
-    prefix = '';
-  } else {
-    prefix = my.notebookIconNamePrefix;
-  }
-  if (that._isTaggedNode() && my.config.notebook[prefix + 'notes-icon-open-tag-in-tags-tree']) {
-    icons.push(iconOpenTagInTagsTree);
-  }
-  if (that._hasTaggedChildren() && my.config.notebook[prefix + 'notes-icon-open-tags-of-children-in-tags-tree']) {
-    icons.push(iconOpenTagsOfChildrenInTagsTree);
-  }
-  if (that._isTaggedNode() && my.config.notebook[prefix + 'notes-icon-open-notes-with-the-same-tag-in-bottom-panel']) {
-    icons.push(iconOpenNotesWithTheSameTagInBottomPanel);
-  }
   if (that.parentNodeView === undefined) {
     let iconIncreaseFontSize =
       (function() {
@@ -969,23 +954,79 @@ NotebookNodeView.prototype._createIconsList = function() {
     icons.push(iconIncreaseFontSize);
     icons.push(iconDecreaseFontSize);
   }
-  function addIconIfConfigAllows(icon, configName) {
-    if (my.config.notebook[configName]) {
-      icons.push(icon);
+  let prefix;
+  if (my.notebookIconNamePrefix === undefined) {
+    prefix = '';
+  } else {
+    prefix = my.notebookIconNamePrefix;
+  }
+  // if (that._isTaggedNode() && my.config.notebook[prefix + 'notes-icon-open-tag-in-tags-tree']) {
+  //   icons.push(iconOpenTagInTagsTree);
+  // }
+  // if (that._hasTaggedChildren() && my.config.notebook[prefix + 'notes-icon-open-tags-of-children-in-tags-tree']) {
+  //   icons.push(iconOpenTagsOfChildrenInTagsTree);
+  // }
+  // if (that._isTaggedNode() && my.config.notebook[prefix + 'notes-icon-open-notes-with-the-same-tag-in-bottom-panel']) {
+  //   icons.push(iconOpenNotesWithTheSameTagInBottomPanel);
+  // }
+  // function addIconIfConfigAllows(icon, configName) {
+  //   if (my.config.notebook[configName]) {
+  //     icons.push(icon);
+  //   }
+  // }
+  // addIconIfConfigAllows(iconMoveToTop, prefix + 'notes-icon-move-to-top');
+  // addIconIfConfigAllows(iconMoveToBottom, prefix + 'notes-icon-move-to-bottom');
+  // addIconIfConfigAllows(iconHide, prefix + 'notes-icon-hide');
+  // addIconIfConfigAllows(iconHideSiblingsBelow, prefix + 'notes-icon-hide-siblings-below');
+  // addIconIfConfigAllows(iconUnhideHiddenChildren, prefix + 'notes-icon-unhide-hidden-children');
+  // if (!that.isTopPanelTree) {
+  //   addIconIfConfigAllows(iconOpenNodeInTopPanel, prefix + 'notes-icon-open-in-tree-above');
+  // }
+  // addIconIfConfigAllows(iconEdit, prefix + 'notes-icon-edit');
+  // addIconIfConfigAllows(iconAddSiblingWithInput, prefix + 'notes-icon-add-sibling-node');
+  // addIconIfConfigAllows(iconAppendChildWithInput, prefix + 'notes-icon-append-child-node');
+  // addIconIfConfigAllows(iconDeleteFromTheRightSide, prefix + 'notes-icon-delete');
+
+  let orderOfIcons = my.config.notebook[prefix + 'notes-icons'];
+  if (orderOfIcons !== undefined) {
+    for (let iconName of orderOfIcons) {
+      if (iconName === prefix + 'notes-icon-open-tag-in-tags-tree') {
+        if (that._isTaggedNode()) {
+          icons.push(iconOpenTagInTagsTree);
+        }
+      } else if (iconName === prefix + 'notes-icon-open-tags-of-children-in-tags-tree') {
+        if (that._hasTaggedChildren()) {
+          icons.push(iconOpenTagsOfChildrenInTagsTree);
+        }
+      } else if (iconName === prefix + 'notes-icon-open-notes-with-the-same-tag-in-bottom-panel') {
+        if (that._isTaggedNode()) {
+          icons.push(iconOpenNotesWithTheSameTagInBottomPanel);
+        }
+      } else if (iconName === prefix + 'notes-icon-move-to-top') {
+        icons.push(iconMoveToTop);
+      } else if (iconName === prefix + 'notes-icon-move-to-bottom') {
+        icons.push(iconMoveToBottom);
+      } else if (iconName === prefix + 'notes-icon-hide') {
+        icons.push(iconHide);
+      } else if (iconName === prefix + 'notes-icon-hide-siblings-below') {
+        icons.push(iconHideSiblingsBelow);
+      } else if (iconName === prefix + 'notes-icon-unhide-hidden-children') {
+        icons.push(iconUnhideHiddenChildren);
+      } else if (iconName === prefix + 'notes-icon-open-in-tree-above') {
+        if (!that.isTopPanelTree) {
+          icons.push(iconOpenNodeInTopPanel);
+        }
+      } else if (iconName === prefix + 'notes-icon-edit') {
+        icons.push(iconEdit);
+      } else if (iconName === prefix + 'notes-icon-add-sibling-node') {
+        icons.push(iconAddSiblingWithInput);
+      } else if (iconName === prefix + 'notes-icon-append-child-node') {
+        icons.push(iconAppendChildWithInput);
+      } else if (iconName === prefix + 'notes-icon-delete') {
+        icons.push(iconDeleteFromTheRightSide);
+      }
     }
   }
-  addIconIfConfigAllows(iconMoveToTop, prefix + 'notes-icon-move-to-top');
-  addIconIfConfigAllows(iconMoveToBottom, prefix + 'notes-icon-move-to-bottom');
-  addIconIfConfigAllows(iconHide, prefix + 'notes-icon-hide');
-  addIconIfConfigAllows(iconHideSiblingsBelow, prefix + 'notes-icon-hide-siblings-below');
-  addIconIfConfigAllows(iconUnhideHiddenChildren, prefix + 'notes-icon-unhide-hidden-children');
-  if (!that.isTopPanelTree) {
-    addIconIfConfigAllows(iconOpenNodeInTopPanel, prefix + 'notes-icon-open-in-tree-above');
-  }
-  addIconIfConfigAllows(iconEdit, prefix + 'notes-icon-edit');
-  addIconIfConfigAllows(iconAddSiblingWithInput, prefix + 'notes-icon-add-sibling-node');
-  addIconIfConfigAllows(iconAppendChildWithInput, prefix + 'notes-icon-append-child-node');
-  addIconIfConfigAllows(iconDeleteFromTheRightSide, prefix + 'notes-icon-delete');
   return icons;
 }
 

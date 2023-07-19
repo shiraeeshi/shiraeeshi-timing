@@ -288,12 +288,6 @@ NotebookTagsTreeNodeView.prototype._createIconsList = function() {
       return elem;
     })();
   let icons = [];
-  let prefix;
-  if (my.notebookIconNamePrefix === undefined) {
-    prefix = '';
-  } else {
-    prefix = my.notebookIconNamePrefix;
-  }
   if (that.parentNodeView === undefined) {
     let iconIncreaseFontSize =
       (function() {
@@ -326,20 +320,48 @@ NotebookTagsTreeNodeView.prototype._createIconsList = function() {
     icons.push(iconIncreaseFontSize);
     icons.push(iconDecreaseFontSize);
   }
-  function addIconIfConfigAllows(icon, configName) {
-    if (my.config.notebook[configName]) {
-      icons.push(icon);
+  let prefix;
+  if (my.notebookIconNamePrefix === undefined) {
+    prefix = '';
+  } else {
+    prefix = my.notebookIconNamePrefix;
+  }
+  // function addIconIfConfigAllows(icon, configName) {
+  //   if (my.config.notebook[configName]) {
+  //     icons.push(icon);
+  //   }
+  // }
+  // if (!that.isTopPanelTree) {
+  //   addIconIfConfigAllows(iconOpenNodeInTopPanel, prefix + 'tag-icon-open-in-tree-above');
+  // }
+  // addIconIfConfigAllows(iconEdit, prefix + 'tag-icon-edit');
+  // addIconIfConfigAllows(iconMoveToTop, prefix + 'tag-icon-move-to-top');
+  // addIconIfConfigAllows(iconMoveToBottom, prefix + 'tag-icon-move-to-bottom');
+  // addIconIfConfigAllows(iconHide, prefix + 'tag-icon-hide');
+  // addIconIfConfigAllows(iconHideSiblingsBelow, prefix + 'tag-icon-hide-siblings-below');
+  // addIconIfConfigAllows(iconUnhideHiddenChildren, prefix + 'tag-icon-unhide-hidden-children');
+  let orderOfIcons = my.config.notebook[prefix + 'tags-icons'];
+  if (orderOfIcons !== undefined) {
+    for (let iconName of orderOfIcons) {
+      if (iconName === prefix + 'tag-icon-open-in-tree-above') {
+        if (!that.isTopPanelTree) {
+          icons.push(iconOpenNodeInTopPanel);
+        }
+      } else if (iconName === prefix + 'tag-icon-edit') {
+        icons.push(iconEdit);
+      } else if (iconName === prefix + 'tag-icon-move-to-top') {
+        icons.push(iconMoveToTop);
+      } else if (iconName === prefix + 'tag-icon-move-to-bottom') {
+        icons.push(iconMoveToBottom);
+      } else if (iconName === prefix + 'tag-icon-hide') {
+        icons.push(iconHide);
+      } else if (iconName === prefix + 'tag-icon-hide-siblings-below') {
+        icons.push(iconHideSiblingsBelow);
+      } else if (iconName === prefix + 'tag-icon-unhide-hidden-children') {
+        icons.push(iconUnhideHiddenChildren);
+      }
     }
   }
-  if (!that.isTopPanelTree) {
-    addIconIfConfigAllows(iconOpenNodeInTopPanel, prefix + 'tag-icon-open-in-tree-above');
-  }
-  addIconIfConfigAllows(iconEdit, prefix + 'tag-icon-edit');
-  addIconIfConfigAllows(iconMoveToTop, prefix + 'tag-icon-move-to-top');
-  addIconIfConfigAllows(iconMoveToBottom, prefix + 'tag-icon-move-to-bottom');
-  addIconIfConfigAllows(iconHide, prefix + 'tag-icon-hide');
-  addIconIfConfigAllows(iconHideSiblingsBelow, prefix + 'tag-icon-hide-siblings-below');
-  addIconIfConfigAllows(iconUnhideHiddenChildren, prefix + 'tag-icon-unhide-hidden-children');
   return icons;
 };
 

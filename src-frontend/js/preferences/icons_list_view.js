@@ -2,10 +2,13 @@ const { IconInfoView } = require('./icon_info_view.js');
 
 const { withChildren } = require('../html_utils.js');
 
-export function IconsListView(iconNamesAndTitles) {
+export function IconsListView(htmlId, orderPropName, iconNamesAndTitles) {
+  let that = this;
+  that.htmlId = htmlId;
+  that.orderPropName = orderPropName;
   sortIconInfosListByCheckedAndIndexInOrder(iconNamesAndTitles);
-  this.items = iconNamesAndTitles.map(({iconName, iconTitle, checked, indexInOrder}) => {
-    return new IconInfoView(iconName, iconTitle, checked, indexInOrder);
+  that.items = iconNamesAndTitles.map(({iconName, iconTitle, checked, indexInOrder}) => {
+    return new IconInfoView(that, iconName, iconTitle, checked, indexInOrder);
   });
 }
 
@@ -39,11 +42,33 @@ function sortIconInfosListByCheckedAndIndexInOrder(iconInfosList) {
   });
 }
 
-IconsListView.prototype.initHtml = function(htmlId) {
+IconsListView.prototype.initHtml = function() {
   let that = this;
-  that.htmlId;
-  withChildren(document.getElementById(htmlId),
+  withChildren(document.getElementById(that.htmlId),
     ...that.items.map(item => item.initHtml()));
+}
+
+IconsListView.prototype.notifyOrderChanged = function() {
+  let that = this;
+  that.refreshOrderInConfig();
+  that.refreshOrderOnScreen();
+  if (that.orderChangeListener) {
+    that.orderChangeListener();
+  }
+}
+
+IconsListView.prototype.refreshOrderInConfig = function() {
+  let that = this;
+  window.my.config.notebook[that.orderPropName] =
+    that.items.filter(item => item.checked).map(item => item.iconName);
+}
+
+IconsListView.prototype.refreshOrderOnScreen = function() {
+  let that = this;
+  let listWrapper = document.getElementById(that.htmlId)
+  listWrapper.innerHTML = '';
+  withChildren(listWrapper,
+    ...that.items.map(item => item.htmlElement));
 }
 
 IconsListView.prototype.iconsDataIsSameAsOriginal = function() {
@@ -60,6 +85,11 @@ IconsListView.prototype.iconsDataIsSameAsOriginal = function() {
 IconsListView.prototype.setChangeListener = function(callback) {
   let that = this;
   that.items.forEach(item => item.setChangeListener(callback));
+}
+
+IconsListView.prototype.setOrderChangeListener = function(callback) {
+  let that = this;
+  that.orderChangeListener = callback;
 }
 
 IconsListView.prototype.reset = function() {

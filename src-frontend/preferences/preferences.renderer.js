@@ -5,6 +5,7 @@ const { IconsListView } = require('../js/preferences/icons_list_view.js');
 const { showOrHideStarInTimingsHeader, showOrHideStarInWallpapersHeader } = require('../js/preferences/header_utils.js');
 
 const { withChildren, withClass } = require('../js/html_utils.js');
+const { listEqOrBothUndefined } = require('../js/utils.js');
 
 window.webkit.messageHandlers.preferences_msgs.onMessage(handleServerMessage);
 
@@ -1056,34 +1057,34 @@ function handleServerMessage(msg) {
   let notebookInputFontSizeOfTooltipsOnMainWindow = 
     initNotebookInput('font-size-in-px-of-tooltips-on-main-window');
 
-  function initNotebookCheckbox(htmlElemId, configName) {
-    if (configName === undefined) {
-      configName = htmlElemId;
-    }
+  // function initNotebookCheckbox(htmlElemId, configName) {
+  //   if (configName === undefined) {
+  //     configName = htmlElemId;
+  //   }
 
-    let notebookCheckbox = document.getElementById(htmlElemId);
-    notebookCheckbox.checked = !!config['notebook'][configName];
-    notebookCheckbox.addEventListener('change', (eve) => {
-      let currentValue = notebookCheckbox.checked;
-      config['notebook'][configName] = currentValue;
-      let sameAsOldValue = currentValue === !!originalConfig['notebook'][configName];
-      let label = document.getElementById('tab3-label');
-      if (!sameAsOldValue) {
-        if (!my.showingNotebookHeaderWithStar) {
-          label.innerHTML = 'Notebook*';
-          my.showingNotebookHeaderWithStar = true;
-        }
-        return;
-      }
-      if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
-        label.innerHTML = 'Notebook';
-        my.showingNotebookHeaderWithStar = false;
-      } else {
-        label.innerHTML = 'Notebook*';
-        my.showingNotebookHeaderWithStar = true;
-      }
-    });
-  }
+  //   let notebookCheckbox = document.getElementById(htmlElemId);
+  //   notebookCheckbox.checked = !!config['notebook'][configName];
+  //   notebookCheckbox.addEventListener('change', (eve) => {
+  //     let currentValue = notebookCheckbox.checked;
+  //     config['notebook'][configName] = currentValue;
+  //     let sameAsOldValue = currentValue === !!originalConfig['notebook'][configName];
+  //     let label = document.getElementById('tab3-label');
+  //     if (!sameAsOldValue) {
+  //       if (!my.showingNotebookHeaderWithStar) {
+  //         label.innerHTML = 'Notebook*';
+  //         my.showingNotebookHeaderWithStar = true;
+  //       }
+  //       return;
+  //     }
+  //     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+  //       label.innerHTML = 'Notebook';
+  //       my.showingNotebookHeaderWithStar = false;
+  //     } else {
+  //       label.innerHTML = 'Notebook*';
+  //       my.showingNotebookHeaderWithStar = true;
+  //     }
+  //   });
+  // }
 
   // initNotebookCheckbox('tag-icon-open-in-tree-above');
   // initNotebookCheckbox('tag-icon-edit');
@@ -1124,10 +1125,9 @@ function handleServerMessage(msg) {
     },
   ];
 
-  let orderOfTagsIcons = config['notebook']['order-of-tags-icons'];
+  let orderOfTagsIcons = config['notebook']['tags-icons'];
 
   notebookIconNamesOfTags.forEach(obj => {
-    obj.checked = !!config['notebook'][obj.iconName];
     let idx;
     if (orderOfTagsIcons === undefined) {
       idx = -1;
@@ -1135,14 +1135,17 @@ function handleServerMessage(msg) {
       idx = orderOfTagsIcons.indexOf(obj.iconName);
     }
     obj.indexInOrder = idx;
+    obj.checked = idx !== -1;
   });
 
-  my.notebookTagsIconsListView = new IconsListView(notebookIconNamesOfTags);
-  my.notebookTagsIconsListView.initHtml('notebook-node-icons-list-of-tags-tree');
+  my.notebookTagsIconsListView = new IconsListView('notebook-node-icons-list-of-tags-tree', 'tags-icons', notebookIconNamesOfTags);
+  my.notebookTagsIconsListView.initHtml();
   my.notebookTagsIconsListView.setChangeListener((iconView) => {
-    let currentValue = iconView.checked;
-    config['notebook'][iconView.iconName] = currentValue;
-    let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    my.notebookTagsIconsListView.refreshOrderInConfig();
+    // let currentValue = iconView.checked;
+    // config['notebook'][iconView.iconName] = currentValue;
+    // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    let sameAsOldValue = iconView.checked === iconView.originalChecked;
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
       if (!my.showingNotebookHeaderWithStar) {
@@ -1151,6 +1154,16 @@ function handleServerMessage(msg) {
       }
       return;
     }
+    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+      label.innerHTML = 'Notebook';
+      my.showingNotebookHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Notebook*';
+      my.showingNotebookHeaderWithStar = true;
+    }
+  });
+  my.notebookTagsIconsListView.setOrderChangeListener(() => {
+    let label = document.getElementById('tab3-label');
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
@@ -1229,10 +1242,9 @@ function handleServerMessage(msg) {
     },
   ];
 
-  let orderOfNotesIcons = config['notebook']['order-of-notes-icons'];
+  let orderOfNotesIcons = config['notebook']['notes-icons'];
 
   notebookIconNamesOfNotes.forEach(obj => {
-    obj.checked = !!config['notebook'][obj.iconName];
     let idx;
     if (orderOfNotesIcons === undefined) {
       idx = -1;
@@ -1240,14 +1252,17 @@ function handleServerMessage(msg) {
       idx = orderOfNotesIcons.indexOf(obj.iconName);
     }
     obj.indexInOrder = idx;
+    obj.checked = idx !== -1;
   });
 
-  my.notebookNotesIconsListView = new IconsListView(notebookIconNamesOfNotes);
-  my.notebookNotesIconsListView.initHtml('notebook-node-icons-list-of-notes-tree');
+  my.notebookNotesIconsListView = new IconsListView('notebook-node-icons-list-of-notes-tree', 'notes-icons', notebookIconNamesOfNotes);
+  my.notebookNotesIconsListView.initHtml();
   my.notebookNotesIconsListView.setChangeListener((iconView) => {
-    let currentValue = iconView.checked;
-    config['notebook'][iconView.iconName] = currentValue;
-    let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    my.notebookNotesIconsListView.refreshOrderInConfig();
+    // let currentValue = iconView.checked;
+    // config['notebook'][iconView.iconName] = currentValue;
+    // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    let sameAsOldValue = iconView.checked === iconView.originalChecked;
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
       if (!my.showingNotebookHeaderWithStar) {
@@ -1256,6 +1271,16 @@ function handleServerMessage(msg) {
       }
       return;
     }
+    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+      label.innerHTML = 'Notebook';
+      my.showingNotebookHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Notebook*';
+      my.showingNotebookHeaderWithStar = true;
+    }
+  });
+  my.notebookNotesIconsListView.setOrderChangeListener(() => {
+    let label = document.getElementById('tab3-label');
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
@@ -1304,10 +1329,9 @@ function handleServerMessage(msg) {
     },
   ];
 
-  let orderOfTagsIconsInMainWindow = config['notebook']['order-of-tags-icons-in-main-window'];
+  let orderOfTagsIconsInMainWindow = config['notebook']['main-window-tags-icons'];
 
   notebookIconNamesOfTagsInMainWindow.forEach(obj => {
-    obj.checked = !!config['notebook'][obj.iconName];
     let idx;
     if (orderOfTagsIconsInMainWindow === undefined) {
       idx = -1;
@@ -1315,14 +1339,17 @@ function handleServerMessage(msg) {
       idx = orderOfTagsIconsInMainWindow.indexOf(obj.iconName);
     }
     obj.indexInOrder = idx;
+    obj.checked = idx !== -1;
   });
 
-  my.notebookTagsIconsOfMainWindowListView = new IconsListView(notebookIconNamesOfTagsInMainWindow);
-  my.notebookTagsIconsOfMainWindowListView.initHtml('notebook-node-icons-list-of-tags-tree-in-main-window');
+  my.notebookTagsIconsOfMainWindowListView = new IconsListView('notebook-node-icons-list-of-tags-tree-in-main-window', 'main-window-tags-icons', notebookIconNamesOfTagsInMainWindow);
+  my.notebookTagsIconsOfMainWindowListView.initHtml();
   my.notebookTagsIconsOfMainWindowListView.setChangeListener((iconView) => {
-    let currentValue = iconView.checked;
-    config['notebook'][iconView.iconName] = currentValue;
-    let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    my.notebookTagsIconsOfMainWindowListView.refreshOrderInConfig();
+    // let currentValue = iconView.checked;
+    // config['notebook'][iconView.iconName] = currentValue;
+    // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    let sameAsOldValue = iconView.checked === iconView.originalChecked;
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
       if (!my.showingNotebookHeaderWithStar) {
@@ -1331,6 +1358,16 @@ function handleServerMessage(msg) {
       }
       return;
     }
+    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+      label.innerHTML = 'Notebook';
+      my.showingNotebookHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Notebook*';
+      my.showingNotebookHeaderWithStar = true;
+    }
+  });
+  my.notebookTagsIconsOfMainWindowListView.setOrderChangeListener(() => {
+    let label = document.getElementById('tab3-label');
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
@@ -1409,10 +1446,9 @@ function handleServerMessage(msg) {
     },
   ];
 
-  let orderOfNotesIconsInMainWindow = config['notebook']['order-of-notes-icons-in-main-window'];
+  let orderOfNotesIconsInMainWindow = config['notebook']['main-window-notes-icons'];
 
   notebookIconNamesOfNotesInMainWindow.forEach(obj => {
-    obj.checked = !!config['notebook'][obj.iconName];
     let idx;
     if (orderOfNotesIconsInMainWindow === undefined) {
       idx = -1;
@@ -1420,14 +1456,17 @@ function handleServerMessage(msg) {
       idx = orderOfNotesIconsInMainWindow.indexOf(obj.iconName);
     }
     obj.indexInOrder = idx;
+    obj.checked = idx !== -1;
   });
 
-  my.notebookNotesIconsOfMainWindowListView = new IconsListView(notebookIconNamesOfNotesInMainWindow);
-  my.notebookNotesIconsOfMainWindowListView.initHtml('notebook-node-icons-list-of-notes-tree-in-main-window');
+  my.notebookNotesIconsOfMainWindowListView = new IconsListView('notebook-node-icons-list-of-notes-tree-in-main-window', 'main-window-notes-icons', notebookIconNamesOfNotesInMainWindow);
+  my.notebookNotesIconsOfMainWindowListView.initHtml();
   my.notebookNotesIconsOfMainWindowListView.setChangeListener((iconView) => {
-    let currentValue = iconView.checked;
-    config['notebook'][iconView.iconName] = currentValue;
-    let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    my.notebookNotesIconsOfMainWindowListView.refreshOrderInConfig();
+    // let currentValue = iconView.checked;
+    // config['notebook'][iconView.iconName] = currentValue;
+    // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
+    let sameAsOldValue = iconView.checked === iconView.originalChecked;
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
       if (!my.showingNotebookHeaderWithStar) {
@@ -1436,6 +1475,16 @@ function handleServerMessage(msg) {
       }
       return;
     }
+    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+      label.innerHTML = 'Notebook';
+      my.showingNotebookHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Notebook*';
+      my.showingNotebookHeaderWithStar = true;
+    }
+  });
+  my.notebookNotesIconsOfMainWindowListView.setOrderChangeListener(() => {
+    let label = document.getElementById('tab3-label');
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
@@ -1639,55 +1688,16 @@ function notebookConfigIsSameAsOriginal(notebookConfig, originalNotebookConfig) 
          notebookConfig['font-size-in-px-of-top-panel-of-notes-on-main-window'] === originalNotebookConfig['font-size-in-px-of-top-panel-of-notes-on-main-window'] &&
          notebookConfig['font-size-in-px-of-bottom-panel-of-notes-on-main-window'] === originalNotebookConfig['font-size-in-px-of-bottom-panel-of-notes-on-main-window'] &&
          notebookConfig['font-size-in-px-of-tooltips-on-main-window'] === originalNotebookConfig['font-size-in-px-of-tooltips-on-main-window'] && (function() {
-           let iconPropNames = [
-            'tag-icon-open-in-tree-above',
-            'tag-icon-edit',
-            'tag-icon-move-to-top',
-            'tag-icon-move-to-bottom',
-            'tag-icon-hide',
-            'tag-icon-hide-siblings-below',
-            'tag-icon-unhide-hidden-children',
-
-            'notes-icon-open-in-tree-above',
-            'notes-icon-open-tag-in-tags-tree',
-            'notes-icon-open-tags-of-children-in-tags-tree',
-            'notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
-            'notes-icon-edit',
-            'notes-icon-move-to-top',
-            'notes-icon-move-to-bottom',
-            'notes-icon-hide',
-            'notes-icon-hide-siblings-below',
-            'notes-icon-unhide-hidden-children',
-            'notes-icon-add-sibling-node',
-            'notes-icon-append-child-node',
-            'notes-icon-delete',
-
-            'main-window-tag-icon-open-in-tree-above',
-            'main-window-tag-icon-edit',
-            'main-window-tag-icon-move-to-top',
-            'main-window-tag-icon-move-to-bottom',
-            'main-window-tag-icon-hide',
-            'main-window-tag-icon-hide-siblings-below',
-            'main-window-tag-icon-unhide-hidden-children',
-
-            'main-window-notes-icon-open-in-tree-above',
-            'main-window-notes-icon-open-tag-in-tags-tree',
-            'main-window-notes-icon-open-tags-of-children-in-tags-tree',
-            'main-window-notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
-            'main-window-notes-icon-edit',
-            'main-window-notes-icon-move-to-top',
-            'main-window-notes-icon-move-to-bottom',
-            'main-window-notes-icon-hide',
-            'main-window-notes-icon-hide-siblings-below',
-            'main-window-notes-icon-unhide-hidden-children',
-            'main-window-notes-icon-add-sibling-node',
-            'main-window-notes-icon-append-child-node',
-            'main-window-notes-icon-delete',
+           let orderPropNames = [
+             'tags-icons',
+             'notes-icons',
+             'main-window-tags-icons',
+             'main-window-notes-icons',
            ];
-           for (let iconPropName of iconPropNames) {
-             if (!!notebookConfig[iconPropName] !== !!originalNotebookConfig[iconPropName]) {
-               return false;
-             }
+           for (let orderPropName of orderPropNames) {
+            if (!listEqOrBothUndefined(notebookConfig[orderPropName], originalNotebookConfig[orderPropName])) {
+              return false;
+            }
            }
            return true;
          })();

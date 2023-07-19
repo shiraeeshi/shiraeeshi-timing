@@ -1,6 +1,7 @@
 const { withChildren, withClass } = require('../html_utils.js');
 
-export function IconInfoView(iconName, iconTitle, checked, indexInOrder) {
+export function IconInfoView(listView, iconName, iconTitle, checked, indexInOrder) {
+  this.listView = listView;
   this.iconName = iconName;
   this.iconTitle = iconTitle;
   this.originalChecked = checked;
@@ -33,11 +34,50 @@ IconInfoView.prototype.initHtml = function() {
     document.createTextNode('^')
   );
   that.btnUp = btnUp;
+  btnUp.addEventListener('click', (eve) => {
+    if (!that.checked) {
+      return;
+    }
+    let idx = that.listView.items.indexOf(that);
+    if (idx > 0) {
+      let prev = that.listView.items[idx - 1];
+      while (true) {
+        that.listView.items[idx - 1] = that;
+        that.listView.items[idx] = prev;
+        that.indexInOrder = idx - 1;
+        prev.indexInOrder = idx;
+        idx--;
+        if (idx < 1) {
+          break;
+        }
+        prev = that.listView.items[idx - 1];
+        if (prev.checked) {
+          break;
+        }
+      }
+      that.listView.notifyOrderChanged();
+    }
+  });
 
   let btnDown = withChildren(document.createElement('button'),
     document.createTextNode('v')
   );
   that.btnDown = btnDown;
+  btnDown.addEventListener('click', (eve) => {
+    let idx = that.listView.items.indexOf(that);
+    let len = that.listView.items.length;
+    if (idx < len - 1) {
+      let next = that.listView.items[idx + 1];
+      if (!next.checked) {
+        return;
+      }
+      that.listView.items[idx] = next;
+      that.listView.items[idx + 1] = that;
+      next.indexInOrder = idx;
+      that.indexInOrder = idx + 1;
+      that.listView.notifyOrderChanged();
+    }
+  });
 
   let result =
   withChildren(withClass(document.createElement('div'), 'icons-list-item'),
