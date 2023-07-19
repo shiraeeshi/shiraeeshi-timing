@@ -798,7 +798,16 @@ div.icons-list-item > div.right-side-buttons-of-icons-list-item {
   border: none;
 }
 
-#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-left-panel > div:not(:first-child) {
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-left-panel > div.icons-list-container {
+  border-top: 1px solid #ddd;
+  padding: 0;
+}
+
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-left-panel > div.icons-list-container > div {
+  border: none;
+}
+
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-left-panel > div.icons-list-container > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
@@ -806,7 +815,16 @@ div.icons-list-item > div.right-side-buttons-of-icons-list-item {
   border: none;
 }
 
-#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-right-panel > div:not(:first-child) {
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-right-panel > div.icons-list-container {
+  border-top: 1px solid #ddd;
+  padding: 0;
+}
+
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-right-panel > div.icons-list-container > div {
+  border: none;
+}
+
+#post-timing-dialog-node-icons-wrapper > #post-timing-dialog-node-icons-right-panel > div.icons-list-container > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 

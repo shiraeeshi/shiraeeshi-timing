@@ -837,27 +837,70 @@ PostTimingTreeNodeView.prototype._createIconsList = function() {
       });
       return elem;
     })();
+  // let icons = [];
+  // function addIconIfConfigAllows(icon, configName) {
+  //   if (my.config.post_timing_dialog[configName]) {
+  //     icons.push(icon);
+  //   }
+  // }
+  // if (that.isRightSideTreeNode) {
+  //   addIconIfConfigAllows(iconMoveToTop, 'icon-right-side-node-move-to-top');
+  //   addIconIfConfigAllows(iconMoveToBottom, 'icon-right-side-node-move-to-bottom');
+  //   addIconIfConfigAllows(iconEdit, 'icon-right-side-node-edit');
+  //   addIconIfConfigAllows(iconAddSiblingWithInput, 'icon-right-side-node-add-sibling');
+  //   addIconIfConfigAllows(iconAppendChildWithInput, 'icon-right-side-node-append-child');
+  //   addIconIfConfigAllows(iconDeleteFromTheRightSide, 'icon-right-side-node-delete');
+  // } else {
+  //   addIconIfConfigAllows(iconMoveToTop, 'icon-left-side-node-move-to-top');
+  //   addIconIfConfigAllows(iconMoveToBottom, 'icon-left-side-node-move-to-bottom');
+  //   addIconIfConfigAllows(iconHide, 'icon-left-side-node-hide');
+  //   addIconIfConfigAllows(iconHideSiblingsBelow, 'icon-left-side-node-hide-siblings-below');
+  //   addIconIfConfigAllows(iconUnhideHiddenChildren, 'icon-left-side-node-unhide-hidden-children');
+  //   addIconIfConfigAllows(iconCopyToTheRightSide, 'icon-left-side-node-copy-to-the-right-side');
+  //   addIconIfConfigAllows(iconDeleteCorrespondingNodeFromTheRightSide, 'icon-left-side-node-delete-corresponding-node-from-the-right-side');
+  // }
   let icons = [];
-  function addIconIfConfigAllows(icon, configName) {
-    if (my.config.post_timing_dialog[configName]) {
-      icons.push(icon);
-    }
-  }
+  let orderOfIcons;
   if (that.isRightSideTreeNode) {
-    addIconIfConfigAllows(iconMoveToTop, 'icon-right-side-node-move-to-top');
-    addIconIfConfigAllows(iconMoveToBottom, 'icon-right-side-node-move-to-bottom');
-    addIconIfConfigAllows(iconEdit, 'icon-right-side-node-edit');
-    addIconIfConfigAllows(iconAddSiblingWithInput, 'icon-right-side-node-add-sibling');
-    addIconIfConfigAllows(iconAppendChildWithInput, 'icon-right-side-node-append-child');
-    addIconIfConfigAllows(iconDeleteFromTheRightSide, 'icon-right-side-node-delete');
+    orderOfIcons = my.config.post_timing_dialog['right-side-icons'];
+    if (orderOfIcons !== undefined) {
+      for (let iconName of orderOfIcons) {
+        if (iconName === 'icon-right-side-node-move-to-top') {
+          icons.push(iconMoveToTop);
+        } else if (iconName === 'icon-right-side-node-move-to-bottom') {
+          icons.push(iconMoveToBottom);
+        } else if (iconName === 'icon-right-side-node-edit') {
+          icons.push(iconEdit);
+        } else if (iconName === 'icon-right-side-node-add-sibling') {
+          icons.push(iconAddSiblingWithInput);
+        } else if (iconName === 'icon-right-side-node-append-child') {
+          icons.push(iconAppendChildWithInput);
+        } else if (iconName === 'icon-right-side-node-delete') {
+          icons.push(iconDeleteFromTheRightSide);
+        }
+      }
+    }
   } else {
-    addIconIfConfigAllows(iconMoveToTop, 'icon-left-side-node-move-to-top');
-    addIconIfConfigAllows(iconMoveToBottom, 'icon-left-side-node-move-to-bottom');
-    addIconIfConfigAllows(iconHide, 'icon-left-side-node-hide');
-    addIconIfConfigAllows(iconHideSiblingsBelow, 'icon-left-side-node-hide-siblings-below');
-    addIconIfConfigAllows(iconUnhideHiddenChildren, 'icon-left-side-node-unhide-hidden-children');
-    addIconIfConfigAllows(iconCopyToTheRightSide, 'icon-left-side-node-copy-to-the-right-side');
-    addIconIfConfigAllows(iconDeleteCorrespondingNodeFromTheRightSide, 'icon-left-side-node-delete-corresponding-node-from-the-right-side');
+    orderOfIcons = my.config.post_timing_dialog['left-side-icons'];
+    if (orderOfIcons !== undefined) {
+      for (let iconName of orderOfIcons) {
+        if (iconName === 'icon-left-side-node-move-to-top') {
+          icons.push(iconMoveToTop);
+        } else if (iconName === 'icon-left-side-node-move-to-bottom') {
+          icons.push(iconMoveToBottom);
+        } else if (iconName === 'icon-left-side-node-hide') {
+          icons.push(iconHide);
+        } else if (iconName === 'icon-left-side-node-hide-siblings-below') {
+          icons.push(iconHideSiblingsBelow);
+        } else if (iconName === 'icon-left-side-node-unhide-hidden-children') {
+          icons.push(iconUnhideHiddenChildren);
+        } else if (iconName === 'icon-left-side-node-copy-to-the-right-side') {
+          icons.push(iconCopyToTheRightSide);
+        } else if (iconName === 'icon-left-side-node-delete-corresponding-node-from-the-right-side') {
+          icons.push(iconDeleteCorrespondingNodeFromTheRightSide);
+        }
+      }
+    }
   }
   return icons;
 };

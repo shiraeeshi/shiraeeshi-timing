@@ -305,10 +305,24 @@ function handleServerMessage(msg) {
       my.frequenciesIconsOfMainWindowListView.reset();
     }
 
+    // post-timing dialog icons:
+
+    if (!my.postTimingDialogLeftSideIconsListView.iconsDataIsSameAsOriginal()) {
+      my.postTimingDialogLeftSideIconsListView.reset();
+    }
+
+    if (!my.postTimingDialogRightSideIconsListView.iconsDataIsSameAsOriginal()) {
+      my.postTimingDialogRightSideIconsListView.reset();
+    }
+
+    // timings:
+
     let hadChangesInTimings = my.showingTimingsHeaderWithStar;
     if (hadChangesInTimings) {
       my.timingsFileInfosListView.reset(createCopyOfTimings(config));
     }
+
+    // wallpapers:
 
     let hadChangesInWallpapers = my.showingWallpapersHeaderWithStar;
     if (hadChangesInWallpapers) {
@@ -1700,49 +1714,203 @@ function handleServerMessage(msg) {
   });
 
 
-  function initPostTimingDialogCheckbox(configName, htmlElemId) {
-    if (htmlElemId === undefined) {
-      htmlElemId = configName;
-    }
+  // function initPostTimingDialogCheckbox(configName, htmlElemId) {
+  //   if (htmlElemId === undefined) {
+  //     htmlElemId = configName;
+  //   }
 
-    let checkbox = document.getElementById(htmlElemId);
-    checkbox.checked = !!config['post_timing_dialog'][configName];
-    checkbox.addEventListener('change', (eve) => {
-      let currentValue = checkbox.checked;
-      config['post_timing_dialog'][configName] = currentValue;
-      let sameAsOldValue = currentValue === !!originalConfig['post_timing_dialog'][configName];
-      let label = document.getElementById('tab5-label');
-      if (!sameAsOldValue) {
-        if (!my.showingPostTimingDialogHeaderWithStar) {
-          label.innerHTML = 'Post-timing dialog*';
-          my.showingPostTimingDialogHeaderWithStar = true;
-        }
-        return;
-      }
-      if (postTimingDialogConfigIsSameAsOriginal(config['post_timing_dialog'], originalConfig['post_timing_dialog'])) {
-        label.innerHTML = 'Post-timing dialog';
-        my.showingPostTimingDialogHeaderWithStar = false;
-      } else {
+  //   let checkbox = document.getElementById(htmlElemId);
+  //   checkbox.checked = !!config['post_timing_dialog'][configName];
+  //   checkbox.addEventListener('change', (eve) => {
+  //     let currentValue = checkbox.checked;
+  //     config['post_timing_dialog'][configName] = currentValue;
+  //     let sameAsOldValue = currentValue === !!originalConfig['post_timing_dialog'][configName];
+  //     let label = document.getElementById('tab5-label');
+  //     if (!sameAsOldValue) {
+  //       if (!my.showingPostTimingDialogHeaderWithStar) {
+  //         label.innerHTML = 'Post-timing dialog*';
+  //         my.showingPostTimingDialogHeaderWithStar = true;
+  //       }
+  //       return;
+  //     }
+  //     if (postTimingDialogConfigIsSameAsOriginal(config['post_timing_dialog'], originalConfig['post_timing_dialog'])) {
+  //       label.innerHTML = 'Post-timing dialog';
+  //       my.showingPostTimingDialogHeaderWithStar = false;
+  //     } else {
+  //       label.innerHTML = 'Post-timing dialog*';
+  //       my.showingPostTimingDialogHeaderWithStar = true;
+  //     }
+  //   });
+  // }
+
+  // initPostTimingDialogCheckbox('icon-right-side-node-move-to-top');
+  // initPostTimingDialogCheckbox('icon-right-side-node-move-to-bottom');
+  // initPostTimingDialogCheckbox('icon-right-side-node-edit');
+  // initPostTimingDialogCheckbox('icon-right-side-node-add-sibling');
+  // initPostTimingDialogCheckbox('icon-right-side-node-append-child');
+  // initPostTimingDialogCheckbox('icon-right-side-node-delete');
+
+  // initPostTimingDialogCheckbox('icon-left-side-node-move-to-top');
+  // initPostTimingDialogCheckbox('icon-left-side-node-move-to-bottom');
+  // initPostTimingDialogCheckbox('icon-left-side-node-hide');
+  // initPostTimingDialogCheckbox('icon-left-side-node-hide-siblings-below');
+  // initPostTimingDialogCheckbox('icon-left-side-node-unhide-hidden-children');
+  // initPostTimingDialogCheckbox('icon-left-side-node-copy-to-the-right-side');
+  // initPostTimingDialogCheckbox('icon-left-side-node-delete-corresponding-node-from-the-right-side');
+
+  let postTimingDialogLeftSideIconNames = [
+    {
+      iconName: 'icon-left-side-node-move-to-top',
+      iconTitle: 'Move to top',
+    },
+    {
+      iconName: 'icon-left-side-node-move-to-bottom',
+      iconTitle: 'Move to bottom',
+    },
+    {
+      iconName: 'icon-left-side-node-hide',
+      iconTitle: 'Hide',
+    },
+    {
+      iconName: 'icon-left-side-node-hide-siblings-below',
+      iconTitle: 'Hide siblings below',
+    },
+    {
+      iconName: 'icon-left-side-node-unhide-hidden-children',
+      iconTitle: 'Unhide hidden children',
+    },
+    {
+      iconName: 'icon-left-side-node-copy-to-the-right-side',
+      iconTitle: 'Copy to the right side',
+    },
+    {
+      iconName: 'icon-left-side-node-delete-corresponding-node-from-the-right-side',
+      iconTitle: 'Delete corresponding node from the right side',
+    },
+  ];
+
+  let orderOfPostTimingDialogLeftSideIcons = config.post_timing_dialog['left-side-icons'];
+
+  postTimingDialogLeftSideIconNames.forEach(obj => {
+    let idx;
+    if (orderOfPostTimingDialogLeftSideIcons === undefined) {
+      idx = -1;
+    } else {
+      idx = orderOfPostTimingDialogLeftSideIcons.indexOf(obj.iconName);
+    }
+    obj.indexInOrder = idx;
+    obj.checked = idx !== -1;
+  });
+
+  my.postTimingDialogLeftSideIconsListView = new IconsListView('post-timing-dialog-left-side-icons-list', postTimingDialogLeftSideIconNames);
+  my.postTimingDialogLeftSideIconsListView.initHtml();
+  my.postTimingDialogLeftSideIconsListView.setChangeListener((iconView) => {
+    my.postTimingDialogLeftSideIconsListView.refreshOrderInConfig(config.post_timing_dialog, 'left-side-icons');
+    let sameAsOldValue = iconView.checked === iconView.originalChecked;
+    let label = document.getElementById('tab5-label');
+    if (!sameAsOldValue) {
+      if (!my.showingPostTimingDialogHeaderWithStar) {
         label.innerHTML = 'Post-timing dialog*';
         my.showingPostTimingDialogHeaderWithStar = true;
       }
-    });
-  }
+      return;
+    }
+    if (postTimingDialogConfigIsSameAsOriginal(config.post_timing_dialog, originalConfig.post_timing_dialog)) {
+      label.innerHTML = 'Post-timing dialog';
+      my.showingPostTimingDialogHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Post-timing dialog*';
+      my.showingPostTimingDialogHeaderWithStar = true;
+    }
+  });
+  my.postTimingDialogLeftSideIconsListView.setOrderChangeListener(() => {
+    my.postTimingDialogLeftSideIconsListView.refreshOrderInConfig(config.post_timing_dialog, 'left-side-icons');
+    my.postTimingDialogLeftSideIconsListView.refreshOrderOnScreen();
+    let label = document.getElementById('tab5-label');
+    if (postTimingDialogConfigIsSameAsOriginal(config.post_timing_dialog, originalConfig.post_timing_dialog)) {
+      label.innerHTML = 'Post-timing dialog';
+      my.showingPostTimingDialogHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Post-timing dialog*';
+      my.showingPostTimingDialogHeaderWithStar = true;
+    }
+  });
 
-  initPostTimingDialogCheckbox('icon-right-side-node-move-to-top');
-  initPostTimingDialogCheckbox('icon-right-side-node-move-to-bottom');
-  initPostTimingDialogCheckbox('icon-right-side-node-edit');
-  initPostTimingDialogCheckbox('icon-right-side-node-add-sibling');
-  initPostTimingDialogCheckbox('icon-right-side-node-append-child');
-  initPostTimingDialogCheckbox('icon-right-side-node-delete');
 
-  initPostTimingDialogCheckbox('icon-left-side-node-move-to-top');
-  initPostTimingDialogCheckbox('icon-left-side-node-move-to-bottom');
-  initPostTimingDialogCheckbox('icon-left-side-node-hide');
-  initPostTimingDialogCheckbox('icon-left-side-node-hide-siblings-below');
-  initPostTimingDialogCheckbox('icon-left-side-node-unhide-hidden-children');
-  initPostTimingDialogCheckbox('icon-left-side-node-copy-to-the-right-side');
-  initPostTimingDialogCheckbox('icon-left-side-node-delete-corresponding-node-from-the-right-side');
+
+  let postTimingDialogRightSideIconNames = [
+    {
+      iconName: 'icon-right-side-node-move-to-top',
+      iconTitle: 'Move to top',
+    },
+    {
+      iconName: 'icon-right-side-node-move-to-bottom',
+      iconTitle: 'Move to bottom',
+    },
+    {
+      iconName: 'icon-right-side-node-edit',
+      iconTitle: 'Edit',
+    },
+    {
+      iconName: 'icon-right-side-node-add-sibling',
+      iconTitle: 'Add sibling node',
+    },
+    {
+      iconName: 'icon-right-side-node-append-child',
+      iconTitle: 'Append child node',
+    },
+    {
+      iconName: 'icon-right-side-node-delete',
+      iconTitle: 'Delete',
+    },
+  ];
+
+  let orderOfPostTimingDialogRightSideIcons = config.post_timing_dialog['right-side-icons'];
+
+  postTimingDialogRightSideIconNames.forEach(obj => {
+    let idx;
+    if (orderOfPostTimingDialogRightSideIcons === undefined) {
+      idx = -1;
+    } else {
+      idx = orderOfPostTimingDialogRightSideIcons.indexOf(obj.iconName);
+    }
+    obj.indexInOrder = idx;
+    obj.checked = idx !== -1;
+  });
+
+  my.postTimingDialogRightSideIconsListView = new IconsListView('post-timing-dialog-right-side-icons-list', postTimingDialogRightSideIconNames);
+  my.postTimingDialogRightSideIconsListView.initHtml();
+  my.postTimingDialogRightSideIconsListView.setChangeListener((iconView) => {
+    my.postTimingDialogRightSideIconsListView.refreshOrderInConfig(config.post_timing_dialog, 'right-side-icons');
+    let sameAsOldValue = iconView.checked === iconView.originalChecked;
+    let label = document.getElementById('tab5-label');
+    if (!sameAsOldValue) {
+      if (!my.showingPostTimingDialogHeaderWithStar) {
+        label.innerHTML = 'Post-timing dialog*';
+        my.showingPostTimingDialogHeaderWithStar = true;
+      }
+      return;
+    }
+    if (postTimingDialogConfigIsSameAsOriginal(config.post_timing_dialog, originalConfig.post_timing_dialog)) {
+      label.innerHTML = 'Post-timing dialog';
+      my.showingPostTimingDialogHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Post-timing dialog*';
+      my.showingPostTimingDialogHeaderWithStar = true;
+    }
+  });
+  my.postTimingDialogRightSideIconsListView.setOrderChangeListener(() => {
+    my.postTimingDialogRightSideIconsListView.refreshOrderInConfig(config.post_timing_dialog, 'right-side-icons');
+    my.postTimingDialogRightSideIconsListView.refreshOrderOnScreen();
+    let label = document.getElementById('tab5-label');
+    if (postTimingDialogConfigIsSameAsOriginal(config.post_timing_dialog, originalConfig.post_timing_dialog)) {
+      label.innerHTML = 'Post-timing dialog';
+      my.showingPostTimingDialogHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Post-timing dialog*';
+      my.showingPostTimingDialogHeaderWithStar = true;
+    }
+  });
 }
 
 
@@ -1890,26 +2058,36 @@ function frequenciesConfigIsSameAsOriginal(frequenciesConfig, originalFrequencie
 }
 
 function postTimingDialogConfigIsSameAsOriginal(postTimingDialogConfig, originalPostTimingDialogConfig) {
-  let iconPropNames = [
-    'icon-right-side-node-move-to-top',
-    'icon-right-side-node-move-to-bottom',
-    'icon-right-side-node-edit',
-    'icon-right-side-node-add-sibling',
-    'icon-right-side-node-append-child',
-    'icon-right-side-node-delete',
+  // let iconPropNames = [
+  //   'icon-right-side-node-move-to-top',
+  //   'icon-right-side-node-move-to-bottom',
+  //   'icon-right-side-node-edit',
+  //   'icon-right-side-node-add-sibling',
+  //   'icon-right-side-node-append-child',
+  //   'icon-right-side-node-delete',
 
-    'icon-left-side-node-move-to-top',
-    'icon-left-side-node-move-to-bottom',
-    'icon-left-side-node-hide',
-    'icon-left-side-node-hide-siblings-below',
-    'icon-left-side-node-unhide-hidden-children',
-    'icon-left-side-node-copy-to-the-right-side',
-    'icon-left-side-node-delete-corresponding-node-from-the-right-side',
+  //   'icon-left-side-node-move-to-top',
+  //   'icon-left-side-node-move-to-bottom',
+  //   'icon-left-side-node-hide',
+  //   'icon-left-side-node-hide-siblings-below',
+  //   'icon-left-side-node-unhide-hidden-children',
+  //   'icon-left-side-node-copy-to-the-right-side',
+  //   'icon-left-side-node-delete-corresponding-node-from-the-right-side',
+  // ];
+  // for (let iconPropName of iconPropNames) {
+  //   if (postTimingDialogConfig[iconPropName] !== originalPostTimingDialogConfig[iconPropName]) {
+  //     return false;
+  //   }
+  // }
+  // return true;
+  let orderPropNames = [
+    'left-side-icons',
+    'right-side-icons',
   ];
-  for (let iconPropName of iconPropNames) {
-    if (postTimingDialogConfig[iconPropName] !== originalPostTimingDialogConfig[iconPropName]) {
-      return false;
-    }
+  for (let orderPropName of orderPropNames) {
+  if (!listEqOrBothUndefined(postTimingDialogConfig[orderPropName], originalPostTimingDialogConfig[orderPropName])) {
+    return false;
+  }
   }
   return true;
 }
