@@ -573,11 +573,6 @@ ProcessTreeNodeView.prototype._createIconsList = function() {
       });
       return elem;
     })();
-  function addIconIfConfigAllows(icon, configName) {
-    if (my.config.frequencies[configName]) {
-      icons.push(icon);
-    }
-  }
   let icons = [];
   let prefix;
   if (my.frequenciesIconNamePrefix === undefined) {
@@ -586,15 +581,46 @@ ProcessTreeNodeView.prototype._createIconsList = function() {
     prefix = my.frequenciesIconNamePrefix;
   }
 
-  addIconIfConfigAllows(iconShowThisOnly, prefix + 'icon-show-this-only');
-  addIconIfConfigAllows(iconMergeSubprocesses, prefix + 'icon-merge-subprocesses');
-  addIconIfConfigAllows(iconUnmergeSubprocessesAsParent, prefix + 'icon-unmerge-subprocesses-as-parent');
-  addIconIfConfigAllows(iconUnmergeSubprocessesAsSubprocess, prefix + 'icon-unmerge-subprocesses-as-subprocess');
-  addIconIfConfigAllows(iconMoveToTop, prefix + 'icon-move-to-top');
-  addIconIfConfigAllows(iconMoveToBottom, prefix + 'icon-move-to-bottom');
-  addIconIfConfigAllows(iconHide, prefix + 'icon-hide');
-  addIconIfConfigAllows(iconHideSiblingsBelow, prefix + 'icon-hide-siblings-below');
-  addIconIfConfigAllows(iconUnhideHiddenChildren, prefix + 'icon-unhide-hidden-children');
+  // function addIconIfConfigAllows(icon, configName) {
+  //   if (my.config.frequencies[configName]) {
+  //     icons.push(icon);
+  //   }
+  // }
+
+  // addIconIfConfigAllows(iconShowThisOnly, prefix + 'icon-show-this-only');
+  // addIconIfConfigAllows(iconMergeSubprocesses, prefix + 'icon-merge-subprocesses');
+  // addIconIfConfigAllows(iconUnmergeSubprocessesAsParent, prefix + 'icon-unmerge-subprocesses-as-parent');
+  // addIconIfConfigAllows(iconUnmergeSubprocessesAsSubprocess, prefix + 'icon-unmerge-subprocesses-as-subprocess');
+  // addIconIfConfigAllows(iconMoveToTop, prefix + 'icon-move-to-top');
+  // addIconIfConfigAllows(iconMoveToBottom, prefix + 'icon-move-to-bottom');
+  // addIconIfConfigAllows(iconHide, prefix + 'icon-hide');
+  // addIconIfConfigAllows(iconHideSiblingsBelow, prefix + 'icon-hide-siblings-below');
+  // addIconIfConfigAllows(iconUnhideHiddenChildren, prefix + 'icon-unhide-hidden-children');
+
+  let orderOfIcons = my.config.frequencies[prefix + 'icons'];
+  if (orderOfIcons !== undefined) {
+    for (let iconName of orderOfIcons) {
+      if (iconName === 'icon-show-this-only') {
+        icons.push(iconShowThisOnly);
+      } else if (iconName === 'icon-merge-subprocesses') {
+        icons.push(iconMergeSubprocesses);
+      } else if (iconName === 'icon-unmerge-subprocesses-as-parent') {
+        icons.push(iconUnmergeSubprocessesAsParent);
+      } else if (iconName === 'icon-unmerge-subprocesses-as-subprocess') {
+        icons.push(iconUnmergeSubprocessesAsSubprocess);
+      } else if (iconName === 'icon-move-to-top') {
+        icons.push(iconMoveToTop);
+      } else if (iconName === 'icon-move-to-bottom') {
+        icons.push(iconMoveToBottom);
+      } else if (iconName === 'icon-hide') {
+        icons.push(iconHide);
+      } else if (iconName === 'icon-hide-siblings-below') {
+        icons.push(iconHideSiblingsBelow);
+      } else if (iconName === 'icon-unhide-hidden-children') {
+        icons.push(iconUnhideHiddenChildren);
+      }
+    }
+  }
 
   return icons;
 };

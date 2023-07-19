@@ -2,10 +2,9 @@ const { IconInfoView } = require('./icon_info_view.js');
 
 const { withChildren } = require('../html_utils.js');
 
-export function IconsListView(htmlId, orderPropName, iconNamesAndTitles) {
+export function IconsListView(htmlId, iconNamesAndTitles) {
   let that = this;
   that.htmlId = htmlId;
-  that.orderPropName = orderPropName;
   sortIconInfosListByCheckedAndIndexInOrder(iconNamesAndTitles);
   that.items = iconNamesAndTitles.map(({iconName, iconTitle, checked, indexInOrder}) => {
     return new IconInfoView(that, iconName, iconTitle, checked, indexInOrder);
@@ -50,16 +49,14 @@ IconsListView.prototype.initHtml = function() {
 
 IconsListView.prototype.notifyOrderChanged = function() {
   let that = this;
-  that.refreshOrderInConfig();
-  that.refreshOrderOnScreen();
   if (that.orderChangeListener) {
     that.orderChangeListener();
   }
 }
 
-IconsListView.prototype.refreshOrderInConfig = function() {
+IconsListView.prototype.refreshOrderInConfig = function(configObj, propName) {
   let that = this;
-  window.my.config.notebook[that.orderPropName] =
+  configObj[propName] =
     that.items.filter(item => item.checked).map(item => item.iconName);
 }
 

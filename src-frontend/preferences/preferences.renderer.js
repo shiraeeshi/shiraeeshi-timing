@@ -211,51 +211,51 @@ function handleServerMessage(msg) {
     notebookInputFontSizeOfTooltipsOnMainWindow.value =
       config.notebook['font-size-in-px-of-tooltips-on-main-window'];
 
-    let notebookIconPropNames = [
-      'tag-icon-open-in-tree-above',
-      'tag-icon-edit',
-      'tag-icon-move-to-top',
-      'tag-icon-move-to-bottom',
-      'tag-icon-hide',
-      'tag-icon-hide-siblings-below',
-      'tag-icon-unhide-hidden-children',
+    // let notebookIconPropNames = [
+    //   'tag-icon-open-in-tree-above',
+    //   'tag-icon-edit',
+    //   'tag-icon-move-to-top',
+    //   'tag-icon-move-to-bottom',
+    //   'tag-icon-hide',
+    //   'tag-icon-hide-siblings-below',
+    //   'tag-icon-unhide-hidden-children',
 
-      'notes-icon-open-in-tree-above',
-      'notes-icon-open-tag-in-tags-tree',
-      'notes-icon-open-tags-of-children-in-tags-tree',
-      'notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
-      'notes-icon-edit',
-      'notes-icon-move-to-top',
-      'notes-icon-move-to-bottom',
-      'notes-icon-hide',
-      'notes-icon-hide-siblings-below',
-      'notes-icon-unhide-hidden-children',
-      'notes-icon-add-sibling-node',
-      'notes-icon-append-child-node',
-      'notes-icon-delete',
+    //   'notes-icon-open-in-tree-above',
+    //   'notes-icon-open-tag-in-tags-tree',
+    //   'notes-icon-open-tags-of-children-in-tags-tree',
+    //   'notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
+    //   'notes-icon-edit',
+    //   'notes-icon-move-to-top',
+    //   'notes-icon-move-to-bottom',
+    //   'notes-icon-hide',
+    //   'notes-icon-hide-siblings-below',
+    //   'notes-icon-unhide-hidden-children',
+    //   'notes-icon-add-sibling-node',
+    //   'notes-icon-append-child-node',
+    //   'notes-icon-delete',
 
-      'main-window-tag-icon-open-in-tree-above',
-      'main-window-tag-icon-edit',
-      'main-window-tag-icon-move-to-top',
-      'main-window-tag-icon-move-to-bottom',
-      'main-window-tag-icon-hide',
-      'main-window-tag-icon-hide-siblings-below',
-      'main-window-tag-icon-unhide-hidden-children',
+    //   'main-window-tag-icon-open-in-tree-above',
+    //   'main-window-tag-icon-edit',
+    //   'main-window-tag-icon-move-to-top',
+    //   'main-window-tag-icon-move-to-bottom',
+    //   'main-window-tag-icon-hide',
+    //   'main-window-tag-icon-hide-siblings-below',
+    //   'main-window-tag-icon-unhide-hidden-children',
 
-      'main-window-notes-icon-open-in-tree-above',
-      'main-window-notes-icon-open-tag-in-tags-tree',
-      'main-window-notes-icon-open-tags-of-children-in-tags-tree',
-      'main-window-notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
-      'main-window-notes-icon-edit',
-      'main-window-notes-icon-move-to-top',
-      'main-window-notes-icon-move-to-bottom',
-      'main-window-notes-icon-hide',
-      'main-window-notes-icon-hide-siblings-below',
-      'main-window-notes-icon-unhide-hidden-children',
-      'main-window-notes-icon-add-sibling-node',
-      'main-window-notes-icon-append-child-node',
-      'main-window-notes-icon-delete',
-    ];
+    //   'main-window-notes-icon-open-in-tree-above',
+    //   'main-window-notes-icon-open-tag-in-tags-tree',
+    //   'main-window-notes-icon-open-tags-of-children-in-tags-tree',
+    //   'main-window-notes-icon-open-notes-with-the-same-tag-in-bottom-panel',
+    //   'main-window-notes-icon-edit',
+    //   'main-window-notes-icon-move-to-top',
+    //   'main-window-notes-icon-move-to-bottom',
+    //   'main-window-notes-icon-hide',
+    //   'main-window-notes-icon-hide-siblings-below',
+    //   'main-window-notes-icon-unhide-hidden-children',
+    //   'main-window-notes-icon-add-sibling-node',
+    //   'main-window-notes-icon-append-child-node',
+    //   'main-window-notes-icon-delete',
+    // ];
     // for (let iconPropName of notebookIconPropNames) {
     //   let checkbox = document.getElementById(iconPropName);
     //   checkbox.checked = !!config.notebook[iconPropName];
@@ -278,23 +278,31 @@ function handleServerMessage(msg) {
     }
 
 
-    let frequenciesIconPropNames = [
-      'icon-show-this-only',
-      'icon-merge-subprocesses',
-      'icon-unmerge-subprocesses-as-parent',
-      'icon-unmerge-subprocesses-as-subprocess',
-      'icon-move-to-top',
-      'icon-move-to-bottom',
-      'icon-hide',
-      'icon-hide-siblings-below',
-      'icon-unhide-hidden-children',
-    ];
-    for (let iconPropName of frequenciesIconPropNames) {
-      let checkbox = document.getElementById('frequencies-' + iconPropName);
-      checkbox.checked = !!config.frequencies[iconPropName];
+    // let frequenciesIconPropNames = [
+    //   'icon-show-this-only',
+    //   'icon-merge-subprocesses',
+    //   'icon-unmerge-subprocesses-as-parent',
+    //   'icon-unmerge-subprocesses-as-subprocess',
+    //   'icon-move-to-top',
+    //   'icon-move-to-bottom',
+    //   'icon-hide',
+    //   'icon-hide-siblings-below',
+    //   'icon-unhide-hidden-children',
+    // ];
+    // for (let iconPropName of frequenciesIconPropNames) {
+    //   let checkbox = document.getElementById('frequencies-' + iconPropName);
+    //   checkbox.checked = !!config.frequencies[iconPropName];
 
-      let mainWindowCheckbox = document.getElementById('main-window-frequencies-' + iconPropName);
-      mainWindowCheckbox.checked = !!config.frequencies['main-window-' + iconPropName];
+    //   let mainWindowCheckbox = document.getElementById('main-window-frequencies-' + iconPropName);
+    //   mainWindowCheckbox.checked = !!config.frequencies['main-window-' + iconPropName];
+    // }
+
+    if (!my.frequenciesIconsListView.iconsDataIsSameAsOriginal()) {
+      my.frequenciesIconsListView.reset();
+    }
+
+    if (!my.frequenciesIconsOfMainWindowListView.iconsDataIsSameAsOriginal()) {
+      my.frequenciesIconsOfMainWindowListView.reset();
     }
 
     let hadChangesInTimings = my.showingTimingsHeaderWithStar;
@@ -1138,10 +1146,10 @@ function handleServerMessage(msg) {
     obj.checked = idx !== -1;
   });
 
-  my.notebookTagsIconsListView = new IconsListView('notebook-node-icons-list-of-tags-tree', 'tags-icons', notebookIconNamesOfTags);
+  my.notebookTagsIconsListView = new IconsListView('notebook-node-icons-list-of-tags-tree', notebookIconNamesOfTags);
   my.notebookTagsIconsListView.initHtml();
   my.notebookTagsIconsListView.setChangeListener((iconView) => {
-    my.notebookTagsIconsListView.refreshOrderInConfig();
+    my.notebookTagsIconsListView.refreshOrderInConfig(config.notebook, 'tags-icons');
     // let currentValue = iconView.checked;
     // config['notebook'][iconView.iconName] = currentValue;
     // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
@@ -1163,6 +1171,8 @@ function handleServerMessage(msg) {
     }
   });
   my.notebookTagsIconsListView.setOrderChangeListener(() => {
+    my.notebookTagsIconsListView.refreshOrderInConfig(config.notebook, 'tags-icons');
+    my.notebookTagsIconsListView.refreshOrderOnScreen();
     let label = document.getElementById('tab3-label');
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
@@ -1255,10 +1265,10 @@ function handleServerMessage(msg) {
     obj.checked = idx !== -1;
   });
 
-  my.notebookNotesIconsListView = new IconsListView('notebook-node-icons-list-of-notes-tree', 'notes-icons', notebookIconNamesOfNotes);
+  my.notebookNotesIconsListView = new IconsListView('notebook-node-icons-list-of-notes-tree', notebookIconNamesOfNotes);
   my.notebookNotesIconsListView.initHtml();
   my.notebookNotesIconsListView.setChangeListener((iconView) => {
-    my.notebookNotesIconsListView.refreshOrderInConfig();
+    my.notebookNotesIconsListView.refreshOrderInConfig(config.notebook, 'notes-icons');
     // let currentValue = iconView.checked;
     // config['notebook'][iconView.iconName] = currentValue;
     // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
@@ -1280,6 +1290,8 @@ function handleServerMessage(msg) {
     }
   });
   my.notebookNotesIconsListView.setOrderChangeListener(() => {
+    my.notebookNotesIconsListView.refreshOrderInConfig(config.notebook, 'notes-icons');
+    my.notebookNotesIconsListView.refreshOrderOnScreen();
     let label = document.getElementById('tab3-label');
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
@@ -1342,10 +1354,10 @@ function handleServerMessage(msg) {
     obj.checked = idx !== -1;
   });
 
-  my.notebookTagsIconsOfMainWindowListView = new IconsListView('notebook-node-icons-list-of-tags-tree-in-main-window', 'main-window-tags-icons', notebookIconNamesOfTagsInMainWindow);
+  my.notebookTagsIconsOfMainWindowListView = new IconsListView('notebook-node-icons-list-of-tags-tree-in-main-window', notebookIconNamesOfTagsInMainWindow);
   my.notebookTagsIconsOfMainWindowListView.initHtml();
   my.notebookTagsIconsOfMainWindowListView.setChangeListener((iconView) => {
-    my.notebookTagsIconsOfMainWindowListView.refreshOrderInConfig();
+    my.notebookTagsIconsOfMainWindowListView.refreshOrderInConfig(config.notebook, 'main-window-tags-icons');
     // let currentValue = iconView.checked;
     // config['notebook'][iconView.iconName] = currentValue;
     // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
@@ -1367,6 +1379,8 @@ function handleServerMessage(msg) {
     }
   });
   my.notebookTagsIconsOfMainWindowListView.setOrderChangeListener(() => {
+    my.notebookTagsIconsOfMainWindowListView.refreshOrderInConfig(config.notebook, 'main-window-tags-icons');
+    my.notebookTagsIconsOfMainWindowListView.refreshOrderOnScreen();
     let label = document.getElementById('tab3-label');
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
@@ -1459,10 +1473,10 @@ function handleServerMessage(msg) {
     obj.checked = idx !== -1;
   });
 
-  my.notebookNotesIconsOfMainWindowListView = new IconsListView('notebook-node-icons-list-of-notes-tree-in-main-window', 'main-window-notes-icons', notebookIconNamesOfNotesInMainWindow);
+  my.notebookNotesIconsOfMainWindowListView = new IconsListView('notebook-node-icons-list-of-notes-tree-in-main-window', notebookIconNamesOfNotesInMainWindow);
   my.notebookNotesIconsOfMainWindowListView.initHtml();
   my.notebookNotesIconsOfMainWindowListView.setChangeListener((iconView) => {
-    my.notebookNotesIconsOfMainWindowListView.refreshOrderInConfig();
+    my.notebookNotesIconsOfMainWindowListView.refreshOrderInConfig(config.notebook, 'main-window-notes-icons');
     // let currentValue = iconView.checked;
     // config['notebook'][iconView.iconName] = currentValue;
     // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
@@ -1484,6 +1498,8 @@ function handleServerMessage(msg) {
     }
   });
   my.notebookNotesIconsOfMainWindowListView.setOrderChangeListener(() => {
+    my.notebookNotesIconsOfMainWindowListView.refreshOrderInConfig(config.notebook, 'main-window-notes-icons');
+    my.notebookNotesIconsOfMainWindowListView.refreshOrderOnScreen();
     let label = document.getElementById('tab3-label');
     if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
@@ -1495,58 +1511,193 @@ function handleServerMessage(msg) {
   });
 
 
-  function initFrequenciesCheckbox(configName, htmlElemId) {
-    if (htmlElemId === undefined) {
-      htmlElemId = 'frequencies-' + configName;
-    }
+  // function initFrequenciesCheckbox(configName, htmlElemId) {
+  //   if (htmlElemId === undefined) {
+  //     htmlElemId = 'frequencies-' + configName;
+  //   }
 
-    let checkbox = document.getElementById(htmlElemId);
-    checkbox.checked = !!config['frequencies'][configName];
-    checkbox.addEventListener('change', (eve) => {
-      let currentValue = checkbox.checked;
-      config['frequencies'][configName] = currentValue;
-      let sameAsOldValue = currentValue === !!originalConfig['frequencies'][configName];
-      let label = document.getElementById('tab4-label');
-      if (!sameAsOldValue) {
-        if (!my.showingFrequenciesHeaderWithStar) {
-          label.innerHTML = 'Frequencies*';
-          my.showingFrequenciesHeaderWithStar = true;
-        }
-        return;
-      }
-      if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
-        label.innerHTML = 'Frequencies';
-        my.showingFrequenciesHeaderWithStar = false;
-      } else {
+  //   let checkbox = document.getElementById(htmlElemId);
+  //   checkbox.checked = !!config['frequencies'][configName];
+  //   checkbox.addEventListener('change', (eve) => {
+  //     let currentValue = checkbox.checked;
+  //     config['frequencies'][configName] = currentValue;
+  //     let sameAsOldValue = currentValue === !!originalConfig['frequencies'][configName];
+  //     let label = document.getElementById('tab4-label');
+  //     if (!sameAsOldValue) {
+  //       if (!my.showingFrequenciesHeaderWithStar) {
+  //         label.innerHTML = 'Frequencies*';
+  //         my.showingFrequenciesHeaderWithStar = true;
+  //       }
+  //       return;
+  //     }
+  //     if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
+  //       label.innerHTML = 'Frequencies';
+  //       my.showingFrequenciesHeaderWithStar = false;
+  //     } else {
+  //       label.innerHTML = 'Frequencies*';
+  //       my.showingFrequenciesHeaderWithStar = true;
+  //     }
+  //   });
+  // }
+
+  // initFrequenciesCheckbox('icon-show-this-only');
+  // initFrequenciesCheckbox('icon-merge-subprocesses');
+  // initFrequenciesCheckbox('icon-unmerge-subprocesses-as-parent');
+  // initFrequenciesCheckbox('icon-unmerge-subprocesses-as-subprocess');
+  // initFrequenciesCheckbox('icon-move-to-top');
+  // initFrequenciesCheckbox('icon-move-to-bottom');
+  // initFrequenciesCheckbox('icon-hide');
+  // initFrequenciesCheckbox('icon-hide-siblings-below');
+  // initFrequenciesCheckbox('icon-unhide-hidden-children');
+
+  let frequenciesIconNames = [
+    {
+      iconName: 'icon-show-this-only',
+      iconTitle: 'Show this process only',
+    },
+    {
+      iconName: 'icon-merge-subprocesses',
+      iconTitle: 'Merge subprocesses',
+    },
+    {
+      iconName: 'icon-unmerge-subprocesses-as-parent',
+      iconTitle: 'Unmerge subprocesses',
+    },
+    {
+      iconName: 'icon-unmerge-subprocesses-as-subprocess',
+      iconTitle: 'Unmerge subprocesses of ancestor',
+    },
+    {
+      iconName: 'icon-move-to-top',
+      iconTitle: 'Move to top',
+    },
+    {
+      iconName: 'icon-move-to-bottom',
+      iconTitle: 'Move to bottom',
+    },
+    {
+      iconName: 'icon-hide',
+      iconTitle: 'Hide',
+    },
+    {
+      iconName: 'icon-hide-siblings-below',
+      iconTitle: 'Hide siblings below',
+    },
+    {
+      iconName: 'icon-unhide-hidden-children',
+      iconTitle: 'Unhide hidden children',
+    },
+  ];
+
+  let mainWindowFrequenciesIconNames = frequenciesIconNames.map(obj => Object.assign({}, obj));
+
+  let orderOfFrequenciesIcons = config.frequencies.icons;
+
+  frequenciesIconNames.forEach(obj => {
+    let idx;
+    if (orderOfFrequenciesIcons === undefined) {
+      idx = -1;
+    } else {
+      idx = orderOfFrequenciesIcons.indexOf(obj.iconName);
+    }
+    obj.indexInOrder = idx;
+    obj.checked = idx !== -1;
+  });
+
+  my.frequenciesIconsListView = new IconsListView('frequencies-icons-list', frequenciesIconNames);
+  my.frequenciesIconsListView.initHtml();
+  my.frequenciesIconsListView.setChangeListener((iconView) => {
+    my.frequenciesIconsListView.refreshOrderInConfig(config.frequencies, 'icons');
+    let sameAsOldValue = iconView.checked === iconView.originalChecked;
+    let label = document.getElementById('tab4-label');
+    if (!sameAsOldValue) {
+      if (!my.showingFrequenciesHeaderWithStar) {
         label.innerHTML = 'Frequencies*';
         my.showingFrequenciesHeaderWithStar = true;
       }
-    });
-  }
+      return;
+    }
+    if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
+      label.innerHTML = 'Frequencies';
+      my.showingFrequenciesHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Frequencies*';
+      my.showingFrequenciesHeaderWithStar = true;
+    }
+  });
+  my.frequenciesIconsListView.setOrderChangeListener(() => {
+    my.frequenciesIconsListView.refreshOrderInConfig(config.frequencies, 'icons');
+    my.frequenciesIconsListView.refreshOrderOnScreen();
+    let label = document.getElementById('tab4-label');
+    if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
+      label.innerHTML = 'Frequencies';
+      my.showingFrequenciesHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Frequencies*';
+      my.showingFrequenciesHeaderWithStar = true;
+    }
+  });
 
-  initFrequenciesCheckbox('icon-show-this-only');
-  initFrequenciesCheckbox('icon-merge-subprocesses');
-  initFrequenciesCheckbox('icon-unmerge-subprocesses-as-parent');
-  initFrequenciesCheckbox('icon-unmerge-subprocesses-as-subprocess');
-  initFrequenciesCheckbox('icon-move-to-top');
-  initFrequenciesCheckbox('icon-move-to-bottom');
-  initFrequenciesCheckbox('icon-hide');
-  initFrequenciesCheckbox('icon-hide-siblings-below');
-  initFrequenciesCheckbox('icon-unhide-hidden-children');
+  // function initMainWindowFrequenciesCheckbox(name) {
+  //   initFrequenciesCheckbox('main-window-' + name, 'main-window-frequencies-' + name);
+  // }
 
-  function initMainWindowFrequenciesCheckbox(name) {
-    initFrequenciesCheckbox('main-window-' + name, 'main-window-frequencies-' + name);
-  }
+  // initMainWindowFrequenciesCheckbox('icon-show-this-only');
+  // initMainWindowFrequenciesCheckbox('icon-merge-subprocesses');
+  // initMainWindowFrequenciesCheckbox('icon-unmerge-subprocesses-as-parent');
+  // initMainWindowFrequenciesCheckbox('icon-unmerge-subprocesses-as-subprocess');
+  // initMainWindowFrequenciesCheckbox('icon-move-to-top');
+  // initMainWindowFrequenciesCheckbox('icon-move-to-bottom');
+  // initMainWindowFrequenciesCheckbox('icon-hide');
+  // initMainWindowFrequenciesCheckbox('icon-hide-siblings-below');
+  // initMainWindowFrequenciesCheckbox('icon-unhide-hidden-children');
 
-  initMainWindowFrequenciesCheckbox('icon-show-this-only');
-  initMainWindowFrequenciesCheckbox('icon-merge-subprocesses');
-  initMainWindowFrequenciesCheckbox('icon-unmerge-subprocesses-as-parent');
-  initMainWindowFrequenciesCheckbox('icon-unmerge-subprocesses-as-subprocess');
-  initMainWindowFrequenciesCheckbox('icon-move-to-top');
-  initMainWindowFrequenciesCheckbox('icon-move-to-bottom');
-  initMainWindowFrequenciesCheckbox('icon-hide');
-  initMainWindowFrequenciesCheckbox('icon-hide-siblings-below');
-  initMainWindowFrequenciesCheckbox('icon-unhide-hidden-children');
+  let orderOfFrequenciesIconsInMainWindow = config.frequencies['main-window-icons'];
+
+  mainWindowFrequenciesIconNames.forEach(obj => {
+    let idx;
+    if (orderOfFrequenciesIconsInMainWindow === undefined) {
+      idx = -1;
+    } else {
+      idx = orderOfFrequenciesIconsInMainWindow.indexOf(obj.iconName);
+    }
+    obj.indexInOrder = idx;
+    obj.checked = idx !== -1;
+  });
+
+  my.frequenciesIconsOfMainWindowListView = new IconsListView('frequencies-icons-list-in-main-window', mainWindowFrequenciesIconNames);
+  my.frequenciesIconsOfMainWindowListView.initHtml();
+  my.frequenciesIconsOfMainWindowListView.setChangeListener((iconView) => {
+    my.frequenciesIconsOfMainWindowListView.refreshOrderInConfig(config.frequencies, 'main-window-icons');
+    let sameAsOldValue = iconView.checked === iconView.originalChecked;
+    let label = document.getElementById('tab4-label');
+    if (!sameAsOldValue) {
+      if (!my.showingFrequenciesHeaderWithStar) {
+        label.innerHTML = 'Frequencies*';
+        my.showingFrequenciesHeaderWithStar = true;
+      }
+      return;
+    }
+    if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
+      label.innerHTML = 'Frequencies';
+      my.showingFrequenciesHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Frequencies*';
+      my.showingFrequenciesHeaderWithStar = true;
+    }
+  });
+  my.frequenciesIconsOfMainWindowListView.setOrderChangeListener(() => {
+    my.frequenciesIconsOfMainWindowListView.refreshOrderInConfig(config.frequencies, 'main-window-icons');
+    my.frequenciesIconsOfMainWindowListView.refreshOrderOnScreen();
+    let label = document.getElementById('tab4-label');
+    if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
+      label.innerHTML = 'Frequencies';
+      my.showingFrequenciesHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Frequencies*';
+      my.showingFrequenciesHeaderWithStar = true;
+    }
+  });
 
 
   function initPostTimingDialogCheckbox(configName, htmlElemId) {
@@ -1704,26 +1855,36 @@ function notebookConfigIsSameAsOriginal(notebookConfig, originalNotebookConfig) 
 }
 
 function frequenciesConfigIsSameAsOriginal(frequenciesConfig, originalFrequenciesConfig) {
-  let iconPropNames = [
-    'icon-show-this-only',
-    'icon-merge-subprocesses',
-    'icon-unmerge-subprocesses-as-parent',
-    'icon-unmerge-subprocesses-as-subprocess',
-    'icon-move-to-top',
-    'icon-move-to-bottom',
-    'icon-hide',
-    'icon-hide-siblings-below',
-    'icon-unhide-hidden-children',
+  // let iconPropNames = [
+  //   'icon-show-this-only',
+  //   'icon-merge-subprocesses',
+  //   'icon-unmerge-subprocesses-as-parent',
+  //   'icon-unmerge-subprocesses-as-subprocess',
+  //   'icon-move-to-top',
+  //   'icon-move-to-bottom',
+  //   'icon-hide',
+  //   'icon-hide-siblings-below',
+  //   'icon-unhide-hidden-children',
+  // ];
+  // for (let iconPropName of iconPropNames) {
+  //   if (frequenciesConfig[iconPropName] !== originalFrequenciesConfig[iconPropName]) {
+  //     return false;
+  //   }
+  // }
+  // for (let iconPropName of iconPropNames) {
+  //   if (frequenciesConfig['main-window-' + iconPropName] !== originalFrequenciesConfig['main-window-' + iconPropName]) {
+  //     return false;
+  //   }
+  // }
+  // return true;
+  let orderPropNames = [
+    'icons',
+    'main-window-icons',
   ];
-  for (let iconPropName of iconPropNames) {
-    if (frequenciesConfig[iconPropName] !== originalFrequenciesConfig[iconPropName]) {
-      return false;
-    }
+  for (let orderPropName of orderPropNames) {
+  if (!listEqOrBothUndefined(frequenciesConfig[orderPropName], originalFrequenciesConfig[orderPropName])) {
+    return false;
   }
-  for (let iconPropName of iconPropNames) {
-    if (frequenciesConfig['main-window-' + iconPropName] !== originalFrequenciesConfig['main-window-' + iconPropName]) {
-      return false;
-    }
   }
   return true;
 }
