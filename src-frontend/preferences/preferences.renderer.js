@@ -87,14 +87,37 @@ function handleServerMessage(msg) {
     my.wallpapersListView.initHtml();
     return;
   }
+
   let originalConfig = msg.config;
   let config = createCopyOfConfig(originalConfig);
   my.originalConfig = originalConfig;
   my.config = config;
 
-  let timingsToShow = createCopyOfTimings(msg.config);
-  my.timingsFileInfosListView = new TimingsFileInfosListView(timingsToShow);
+  initMainButtons();
 
+  initTimingsUIs();
+
+  initWallpapersUIs();
+
+  initTimingsConfigsUIs();
+
+  initNotebookUIs();
+
+  initFrequenciesUIs();
+
+  initPostTimingDialogUIs();
+
+}
+
+
+
+
+
+
+
+
+
+function initMainButtons() {
   let btnSave = document.getElementById('btn-save');
   btnSave.addEventListener('click', (eve) => {
     let hasUnsavedChanges = 
@@ -161,7 +184,7 @@ function handleServerMessage(msg) {
       }
     };
     window.webkit.messageHandlers.preferences_msg__save.postMessage({
-      configWithNoTimings: Object.assign({}, config, {timings: []}),
+      configWithNoTimings: Object.assign({}, my.config, {timings: []}),
       timings: convertToBackendFormat(my.timingsFileInfosListView.timingsToShow),
       timingsToAdd: convertToBackendFormat(Object.values(my.timingsToAddByName)),
       namesOfTimingsToDelete: Object.keys(my.timingsToDeleteByName),
@@ -177,39 +200,71 @@ function handleServerMessage(msg) {
 
   let btnReset = document.getElementById('btn-reset');
   btnReset.addEventListener('click', (eve) => {
-    config = createCopyOfConfig(originalConfig);
-    my.config = config;
-    timingsInputTextualDisplayFormat.value = config['timings-config']['display-format'];
-    timingsRadioBtnUnderlineCanvas.checked = !!config['timings-config']['underline-canvas'];
-    timingsRadioBtnFlexibleWidth.checked = !!config['timings-config']['canvas-with-flexible-width'];
-    timingsInputCanvasWidth.disabled = !!config['timings-config']['canvas-with-flexible-width'];
-    timingsInputCanvasWidth.value = config['timings-config']['canvas-width-in-px'];
-    timingsSelectDefaultSummary.value = config['timings-config']['default-summary'];
-    notebookInputFilepath.value = config.notebook.filepath;
-    notebookInputBackgroundColor.value = config.notebook['background-color'];
-    notebookRadioBtnStartWithBottomPanelOfNotesMaximized.checked = !!config.notebook['start-with-bottom-panel-of-notes-maximized'];
+    my.config = createCopyOfConfig(my.originalConfig);
+    my.config = my.config;
+    let timingsInputTextualDisplayFormat = document.getElementById('timings-textual-display-format');
+    let timingsRadioBtnUnderlineCanvas = document.getElementById('underline-canvas');
+    let timingsRadioBtnFlexibleWidth = document.getElementById('canvas-with-flexible-width');
+    let timingsInputCanvasWidth = document.getElementById('canvas-width-in-px');
+    let timingsSelectDefaultSummary = document.getElementById('timings-default-summary');
+    timingsInputTextualDisplayFormat.value = my.config['timings-config']['display-format'];
+    timingsRadioBtnUnderlineCanvas.checked = !!my.config['timings-config']['underline-canvas'];
+    timingsRadioBtnFlexibleWidth.checked = !!my.config['timings-config']['canvas-with-flexible-width'];
+    timingsInputCanvasWidth.disabled = !!my.config['timings-config']['canvas-with-flexible-width'];
+    timingsInputCanvasWidth.value = my.config['timings-config']['canvas-width-in-px'];
+    timingsSelectDefaultSummary.value = my.config['timings-config']['default-summary'];
+
+    let notebookInputFilepath = document.getElementById('notebook-filepath');
+    let notebookInputBackgroundColor = document.getElementById('notebook-background-color');
+    let notebookRadioBtnStartWithBottomPanelOfNotesMaximized =
+      document.getElementById('start-notebook-with-bottom-panel-of-notes-maximized');
+    notebookInputFilepath.value = my.config.notebook.filepath;
+    notebookInputBackgroundColor.value = my.config.notebook['background-color'];
+    notebookRadioBtnStartWithBottomPanelOfNotesMaximized.checked = !!my.config.notebook['start-with-bottom-panel-of-notes-maximized'];
+
+    let notebookInputFontSizeOfTopPanelOfTags = 
+      document.getElementById('font-size-in-px-of-top-panel-of-tags');
+    let notebookInputFontSizeOfBottomPanelOfTags = 
+      document.getElementById('font-size-in-px-of-bottom-panel-of-tags');
+    let notebookInputFontSizeOfTopPanelOfNotes = 
+      document.getElementById('font-size-in-px-of-top-panel-of-notes');
+    let notebookInputFontSizeOfBottomPanelOfNotes = 
+      document.getElementById('font-size-in-px-of-bottom-panel-of-notes');
+    let notebookInputFontSizeOfTooltips = 
+      document.getElementById('font-size-in-px-of-tooltips');
+
+    let notebookInputFontSizeOfTopPanelOfTagsOnMainWindow = 
+      document.getElementById('font-size-in-px-of-top-panel-of-tags-on-main-window');
+    let notebookInputFontSizeOfBottomPanelOfTagsOnMainWindow = 
+      document.getElementById('font-size-in-px-of-bottom-panel-of-tags-on-main-window');
+    let notebookInputFontSizeOfTopPanelOfNotesOnMainWindow = 
+      document.getElementById('font-size-in-px-of-top-panel-of-notes-on-main-window');
+    let notebookInputFontSizeOfBottomPanelOfNotesOnMainWindow = 
+      document.getElementById('font-size-in-px-of-bottom-panel-of-notes-on-main-window');
+    let notebookInputFontSizeOfTooltipsOnMainWindow = 
+      document.getElementById('font-size-in-px-of-tooltips-on-main-window');
 
     notebookInputFontSizeOfTopPanelOfTags.value =
-      config.notebook['font-size-in-px-of-top-panel-of-tags'];
+      my.config.notebook['font-size-in-px-of-top-panel-of-tags'];
     notebookInputFontSizeOfBottomPanelOfTags.value =
-      config.notebook['font-size-in-px-of-bottom-panel-of-tags'];
+      my.config.notebook['font-size-in-px-of-bottom-panel-of-tags'];
     notebookInputFontSizeOfTopPanelOfNotes.value =
-      config.notebook['font-size-in-px-of-top-panel-of-notes'];
+      my.config.notebook['font-size-in-px-of-top-panel-of-notes'];
     notebookInputFontSizeOfBottomPanelOfNotes.value =
-      config.notebook['font-size-in-px-of-bottom-panel-of-notes'];
+      my.config.notebook['font-size-in-px-of-bottom-panel-of-notes'];
     notebookInputFontSizeOfTooltips.value =
-      config.notebook['font-size-in-px-of-tooltips'];
+      my.config.notebook['font-size-in-px-of-tooltips'];
 
     notebookInputFontSizeOfTopPanelOfTagsOnMainWindow.value =
-      config.notebook['font-size-in-px-of-top-panel-of-tags-on-main-window'];
+      my.config.notebook['font-size-in-px-of-top-panel-of-tags-on-main-window'];
     notebookInputFontSizeOfBottomPanelOfTagsOnMainWindow.value =
-      config.notebook['font-size-in-px-of-bottom-panel-of-tags-on-main-window'];
+      my.config.notebook['font-size-in-px-of-bottom-panel-of-tags-on-main-window'];
     notebookInputFontSizeOfTopPanelOfNotesOnMainWindow.value =
-      config.notebook['font-size-in-px-of-top-panel-of-notes-on-main-window'];
+      my.config.notebook['font-size-in-px-of-top-panel-of-notes-on-main-window'];
     notebookInputFontSizeOfBottomPanelOfNotesOnMainWindow.value =
-      config.notebook['font-size-in-px-of-bottom-panel-of-notes-on-main-window'];
+      my.config.notebook['font-size-in-px-of-bottom-panel-of-notes-on-main-window'];
     notebookInputFontSizeOfTooltipsOnMainWindow.value =
-      config.notebook['font-size-in-px-of-tooltips-on-main-window'];
+      my.config.notebook['font-size-in-px-of-tooltips-on-main-window'];
 
     // let notebookIconPropNames = [
     //   'tag-icon-open-in-tree-above',
@@ -319,7 +374,7 @@ function handleServerMessage(msg) {
 
     let hadChangesInTimings = my.showingTimingsHeaderWithStar;
     if (hadChangesInTimings) {
-      my.timingsFileInfosListView.reset(createCopyOfTimings(config));
+      my.timingsFileInfosListView.reset(createCopyOfTimings(my.config));
     }
 
     // wallpapers:
@@ -328,6 +383,8 @@ function handleServerMessage(msg) {
     if (hadChangesInWallpapers) {
       my.wallpapersListView.reset(createListOfWallpapersToShow(my.originalWallpapersWrapper));
     }
+
+    // headers of tabs:
 
     let label = document.getElementById('tab1-label');
     label.innerHTML = 'Timings';
@@ -372,6 +429,18 @@ function handleServerMessage(msg) {
       window.webkit.messageHandlers.preferences_msg__cancel.postMessage();
     }
   });
+}
+
+
+
+
+
+
+
+function initTimingsUIs() {
+
+  let timingsToShow = createCopyOfTimings(my.originalConfig);
+  my.timingsFileInfosListView = new TimingsFileInfosListView(timingsToShow);
 
   // showTimings(my.timingsToShow);
   my.timingsFileInfosListView.initHtml();
@@ -390,7 +459,7 @@ function handleServerMessage(msg) {
     panelOfListOfTimingsFiles.classList.remove('active');
     panelOfListOfTimingsFiles.classList.add('inactive');
 
-    let newTimingsFileForm = document.getElementById('form-to-edit-timings-file-info');
+    let newTimingsFileForm = document.getElementById('form-to-create-timings-file-info');
     newTimingsFileForm.classList.remove('inactive');
     newTimingsFileForm.classList.add('active');
 
@@ -398,22 +467,19 @@ function handleServerMessage(msg) {
     bottomRowOfButtons.classList.add('hidden-behind-dialog');
   });
 
-  let inputName = document.getElementById('new-timing-name');
-  let inputFilepath = document.getElementById('new-timing-filepath');
-  let textareaCategoryPath = document.getElementById('new-timing-category-path');
-  let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
+  disableShortcutsOnFocus(document.getElementById('new-timing-name'));
+  disableShortcutsOnFocus(document.getElementById('new-timing-filepath'));
+  disableShortcutsOnFocus(document.getElementById('new-timing-category-path'));
+  disableShortcutsOnFocus(document.getElementById('new-timing-competitiveness-level'));
 
-  disableShortcutsOnFocus(inputName);
-  disableShortcutsOnFocus(inputFilepath);
-  disableShortcutsOnFocus(textareaCategoryPath);
-  disableShortcutsOnFocus(inputCompetitivenessLevel);
+  // creating time info:
 
-  let btnTimingsFileInfoSave = document.getElementById('btn-timings-file-info-save');
-  btnTimingsFileInfoSave.addEventListener('click', (eve) => {
+  let btnNewTimingsFileInfoSave = document.getElementById('btn-new-timings-file-info-save');
+  btnNewTimingsFileInfoSave.addEventListener('click', (eve) => {
     let inputName = document.getElementById('new-timing-name');
     let inputFilepath = document.getElementById('new-timing-filepath');
     let selectorOfFormat = document.getElementById('new-timing-format');
-    let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
+    let checkboxCategoryPathIsSameAsName = document.getElementById('new-timing-category-path-is-same-as-name');
     let textareaCategoryPath = document.getElementById('new-timing-category-path');
     let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
 
@@ -433,15 +499,165 @@ function handleServerMessage(msg) {
       competitivenessLevel,
     }
 
-    let isConflictingName;
-    if (my.currentTimingsFileInfoBeingEdited === undefined) {
-      isConflictingName = my.timingsFileInfosListView.hasInfoWithName(name);
+    let isConflictingName = my.timingsFileInfosListView.hasInfoWithName(name);
+
+    if (isConflictingName) {
+      alert(`name '${name}' is already taken.\ntry different name`);
+      return;
+    }
+
+    let isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined;
+
+    if (isConflictingFilepath) {
+      alert('filepath is already in use.');
+      return;
+    }
+
+    let categoryPathIsSameAsName = checkboxCategoryPathIsSameAsName.checked;
+    if (!categoryPathIsSameAsName) {
+      let categoryPath = parseCategoryPath(textareaCategoryPath.value);
+      timingsFileInfo.categoryPath = categoryPath;
+    }
+
+    let newTimingsFileInfo = timingsFileInfo;
+
+    // config.timings.push(newTimingsFileInfo);
+    // my.timingsToShow.push(newTimingsFileInfo);
+    my.timingsFileInfosListView.addNewInfo(newTimingsFileInfo);
+
+    my.timingsToAddByName[name] = newTimingsFileInfo;
+
+    inputName.value = '';
+    inputFilepath.value = '';
+    selectorOfFormat.value = 'yaml';
+    checkboxCategoryPathIsSameAsName.checked = true;
+    textareaCategoryPath.value = '';
+    textareaCategoryPath.disabled = true;
+    inputCompetitivenessLevel.value = '0';
+
+    // showTimings(my.timingsToShow);
+
+    let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
+    panelOfListOfTimingsFiles.classList.add('active');
+    panelOfListOfTimingsFiles.classList.remove('inactive');
+
+    if (my.scrollTopOfListOfTimingsFiles !== undefined) {
+      document.getElementById('tab-contents-of-timings').scrollTop = my.scrollTopOfListOfTimingsFiles;
+    }
+
+    let newTimingsFileForm = document.getElementById('form-to-create-timings-file-info');
+    newTimingsFileForm.classList.add('inactive');
+    newTimingsFileForm.classList.remove('active');
+
+    let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
+    bottomRowOfButtons.classList.remove('hidden-behind-dialog');
+
+    showOrHideStarInTimingsHeader();
+  });
+  let btnNewTimingsFileInfoEditCancel = document.getElementById('btn-new-timings-file-info-cancel');
+  btnNewTimingsFileInfoEditCancel.addEventListener('click', (eve) => {
+
+    let inputName = document.getElementById('new-timing-name');
+    let inputFilepath = document.getElementById('new-timing-filepath');
+    let selectorOfFormat = document.getElementById('new-timing-format');
+    let checkboxCategoryPathIsSameAsName = document.getElementById('new-timing-category-path-is-same-as-name');
+    let textareaCategoryPath = document.getElementById('new-timing-category-path');
+    let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
+
+    inputName.value = '';
+    inputFilepath.value = '';
+    selectorOfFormat.value = 'yaml';
+    checkboxCategoryPathIsSameAsName.checked = true;
+    textareaCategoryPath.value = '';
+    textareaCategoryPath.disabled = true;
+    inputCompetitivenessLevel.value = '0';
+
+    let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
+    panelOfListOfTimingsFiles.classList.add('active');
+    panelOfListOfTimingsFiles.classList.remove('inactive');
+
+    if (my.scrollTopOfListOfTimingsFiles !== undefined) {
+      document.getElementById('tab-contents-of-timings').scrollTop = my.scrollTopOfListOfTimingsFiles;
+    }
+
+    let newTimingsFileForm = document.getElementById('form-to-create-timings-file-info');
+    newTimingsFileForm.classList.add('inactive');
+    newTimingsFileForm.classList.remove('active');
+
+    let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
+    bottomRowOfButtons.classList.remove('hidden-behind-dialog');
+  });
+
+  let checkboxNewTimingCategoryPathIsSameAsName = document.getElementById('new-timing-category-path-is-same-as-name');
+  checkboxNewTimingCategoryPathIsSameAsName.addEventListener('change', (eve) => {
+    let checked = checkboxCategoryPathIsSameAsName.checked;
+    let textareaCategoryPath = document.getElementById('new-timing-category-path');
+    textareaCategoryPath.value = '';
+    if (checked) {
+      textareaCategoryPath.disabled = true;
     } else {
-      if (name === my.currentTimingsFileInfoBeingEdited.name) {
-        isConflictingName = false;
-      } else {
-        isConflictingName = my.timingsFileInfosListView.hasInfoWithName(name);
-      }
+      textareaCategoryPath.disabled = false;
+    }
+  });
+
+  let btnNewTimingsFilepath = document.getElementById('new-timing-filepath-btn');
+  btnNewTimingsFilepath.addEventListener('click', async (eve) => {
+    let result = await pickFile();
+    if (result.canceled) {
+      return;
+    }
+    if (result.filePaths === undefined || result.filePaths.length === 0) {
+      return;
+    }
+    let filepath = result.filePaths[0];
+    let inputFilepath = document.getElementById('new-timing-filepath');
+    inputFilepath.value = filepath;
+
+    let event = new Event('change');
+    inputFilepath.dispatchEvent(event);
+  });
+
+  // editing timing file info:
+
+  disableShortcutsOnFocus(document.getElementById('timing-info-name'));
+  disableShortcutsOnFocus(document.getElementById('timing-info-filepath'));
+  disableShortcutsOnFocus(document.getElementById('timing-info-category-path'));
+  disableShortcutsOnFocus(document.getElementById('timing-info-competitiveness-level'));
+
+  let btnTimingsFileInfoSave = document.getElementById('btn-timings-file-info-save');
+  btnTimingsFileInfoSave.addEventListener('click', (eve) => {
+    if (my.currentTimingsFileInfoBeingEdited === undefined) {
+      alert('error: no timings-file-info to save');
+      return;
+    }
+    let inputName = document.getElementById('timing-info-name');
+    let inputFilepath = document.getElementById('timing-info-filepath');
+    let selectorOfFormat = document.getElementById('timing-info-format');
+    let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
+    let textareaCategoryPath = document.getElementById('timing-info-category-path');
+    let inputCompetitivenessLevel = document.getElementById('timing-info-competitiveness-level');
+
+    let name = inputName.value;
+    let format = selectorOfFormat.value;
+    let filepath = inputFilepath.value;
+    let competitivenessLevel = parseInt(inputCompetitivenessLevel.value);
+    if (isNaN(competitivenessLevel)) {
+      alert('competitivenessLevel must be int');
+      return;
+    }
+
+    let timingsFileInfo = {
+      name,
+      format,
+      filepath,
+      competitivenessLevel,
+    }
+
+    let isConflictingName;
+    if (name === my.currentTimingsFileInfoBeingEdited.name) {
+      isConflictingName = false;
+    } else {
+      isConflictingName = my.timingsFileInfosListView.hasInfoWithName(name);
     }
 
     if (isConflictingName) {
@@ -450,14 +666,10 @@ function handleServerMessage(msg) {
     }
 
     let isConflictingFilepath;
-    if (my.currentTimingsFileInfoBeingEdited === undefined) {
-      isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined;
+    if (filepath === my.currentTimingsFileInfoBeingEdited.filepath) {
+      isConflictingFilepath = false;
     } else {
-      if (filepath === my.currentTimingsFileInfoBeingEdited.filepath) {
-        isConflictingFilepath = false;
-      } else {
-        isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined;
-      }
+      isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined;
     }
 
     if (isConflictingFilepath) {
@@ -471,19 +683,9 @@ function handleServerMessage(msg) {
       timingsFileInfo.categoryPath = categoryPath;
     }
 
-    if (my.currentTimingsFileInfoBeingEdited) {
-      Object.assign(my.currentTimingsFileInfoBeingEdited, timingsFileInfo, {categoryPath: timingsFileInfo.categoryPath});
-      my.currentTimingsFileInfoBeingEdited.view.refresh();
-      delete my.currentTimingsFileInfoBeingEdited;
-    } else {
-      let newTimingsFileInfo = timingsFileInfo;
-
-      // config.timings.push(newTimingsFileInfo);
-      // my.timingsToShow.push(newTimingsFileInfo);
-      my.timingsFileInfosListView.addNewInfo(newTimingsFileInfo);
-
-      my.timingsToAddByName[name] = newTimingsFileInfo;
-    }
+    Object.assign(my.currentTimingsFileInfoBeingEdited, timingsFileInfo, {categoryPath: timingsFileInfo.categoryPath});
+    my.currentTimingsFileInfoBeingEdited.view.refresh();
+    delete my.currentTimingsFileInfoBeingEdited;
 
     inputName.value = '';
     inputFilepath.value = '';
@@ -517,12 +719,12 @@ function handleServerMessage(msg) {
 
     delete my.currentTimingsFileInfoBeingEdited;
 
-    let inputName = document.getElementById('new-timing-name');
-    let inputFilepath = document.getElementById('new-timing-filepath');
-    let selectorOfFormat = document.getElementById('new-timing-format');
+    let inputName = document.getElementById('timing-info-name');
+    let inputFilepath = document.getElementById('timing-info-filepath');
+    let selectorOfFormat = document.getElementById('timing-info-format');
     let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
-    let textareaCategoryPath = document.getElementById('new-timing-category-path');
-    let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
+    let textareaCategoryPath = document.getElementById('timing-info-category-path');
+    let inputCompetitivenessLevel = document.getElementById('timing-info-competitiveness-level');
 
     inputName.value = '';
     inputFilepath.value = '';
@@ -551,7 +753,7 @@ function handleServerMessage(msg) {
   let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
   checkboxCategoryPathIsSameAsName.addEventListener('change', (eve) => {
     let checked = checkboxCategoryPathIsSameAsName.checked;
-    let textareaCategoryPath = document.getElementById('new-timing-category-path');
+    let textareaCategoryPath = document.getElementById('timing-info-category-path');
     textareaCategoryPath.value = '';
     if (checked) {
       textareaCategoryPath.disabled = true;
@@ -560,7 +762,7 @@ function handleServerMessage(msg) {
     }
   });
 
-  let timingsBtnFilepath = document.getElementById('new-timing-filepath-btn');
+  let timingsBtnFilepath = document.getElementById('timing-info-filepath-btn');
   timingsBtnFilepath.addEventListener('click', async (eve) => {
     let result = await pickFile();
     if (result.canceled) {
@@ -570,14 +772,19 @@ function handleServerMessage(msg) {
       return;
     }
     let filepath = result.filePaths[0];
-    let inputFilepath = document.getElementById('new-timing-filepath');
+    let inputFilepath = document.getElementById('timing-info-filepath');
     inputFilepath.value = filepath;
 
     let event = new Event('change');
     inputFilepath.dispatchEvent(event);
   });
+}
 
 
+
+
+
+function initWallpapersUIs() {
 
   let btnNewWallpaper = document.getElementById('btn-new-wallpaper');
   btnNewWallpaper.addEventListener('click', (eve) => {
@@ -813,14 +1020,20 @@ function handleServerMessage(msg) {
     let event = new Event('change');
     inputFilepath.dispatchEvent(event);
   });
+}
 
 
+
+
+
+
+function initTimingsConfigsUIs() {
   let timingsInputTextualDisplayFormat = document.getElementById('timings-textual-display-format');
-  timingsInputTextualDisplayFormat.value = config['timings-config']['display-format'];
+  timingsInputTextualDisplayFormat.value = my.config['timings-config']['display-format'];
   timingsInputTextualDisplayFormat.addEventListener('change', (eve) => {
     let currentValue = timingsInputTextualDisplayFormat.value;
-    config['timings-config']['display-format'] = currentValue;
-    let sameAsOldValue = currentValue === originalConfig['timings-config']['display-format'];
+    my.config['timings-config']['display-format'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['timings-config']['display-format'];
     let label = document.getElementById('tab2-label');
     if (!sameAsOldValue) {
       if (!my.showingTimingsConfigHeaderWithStar) {
@@ -829,7 +1042,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (timingsConfigIsSameAsOriginal(config['timings-config'], originalConfig['timings-config'])) {
+    if (timingsConfigIsSameAsOriginal(my.config['timings-config'], my.originalConfig['timings-config'])) {
       label.innerHTML = 'Timings Config';
       my.showingTimingsConfigHeaderWithStar = false;
     } else {
@@ -839,11 +1052,11 @@ function handleServerMessage(msg) {
   });
 
   let timingsRadioBtnUnderlineCanvas = document.getElementById('underline-canvas');
-  timingsRadioBtnUnderlineCanvas.checked = !!config['timings-config']['underline-canvas'];
+  timingsRadioBtnUnderlineCanvas.checked = !!my.config['timings-config']['underline-canvas'];
   timingsRadioBtnUnderlineCanvas.addEventListener('change', (eve) => {
     let currentValue = timingsRadioBtnUnderlineCanvas.checked;
-    config['timings-config']['underline-canvas'] = currentValue;
-    let sameAsOldValue = currentValue === !!originalConfig['timings-config']['underline-canvas'];
+    my.config['timings-config']['underline-canvas'] = currentValue;
+    let sameAsOldValue = currentValue === !!my.originalConfig['timings-config']['underline-canvas'];
     let label = document.getElementById('tab2-label');
     if (!sameAsOldValue) {
       if (!my.showingTimingsConfigHeaderWithStar) {
@@ -852,7 +1065,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (timingsConfigIsSameAsOriginal(config['timings-config'], originalConfig['timings-config'])) {
+    if (timingsConfigIsSameAsOriginal(my.config['timings-config'], my.originalConfig['timings-config'])) {
       label.innerHTML = 'Timings Config';
       my.showingTimingsConfigHeaderWithStar = false;
     } else {
@@ -862,12 +1075,13 @@ function handleServerMessage(msg) {
   });
 
   let timingsRadioBtnFlexibleWidth = document.getElementById('canvas-with-flexible-width');
-  timingsRadioBtnFlexibleWidth.checked = !!config['timings-config']['canvas-with-flexible-width'];
+  timingsRadioBtnFlexibleWidth.checked = !!my.config['timings-config']['canvas-with-flexible-width'];
   timingsRadioBtnFlexibleWidth.addEventListener('change', (eve) => {
     let currentValue = timingsRadioBtnFlexibleWidth.checked;
-    config['timings-config']['canvas-with-flexible-width'] = currentValue;
+    my.config['timings-config']['canvas-with-flexible-width'] = currentValue;
+    let timingsInputCanvasWidth = document.getElementById('canvas-width-in-px');
     timingsInputCanvasWidth.disabled = currentValue;
-    let sameAsOldValue = currentValue === !!originalConfig['timings-config']['canvas-with-flexible-width'];
+    let sameAsOldValue = currentValue === !!my.originalConfig['timings-config']['canvas-with-flexible-width'];
     let label = document.getElementById('tab2-label');
     if (!sameAsOldValue) {
       if (!my.showingTimingsConfigHeaderWithStar) {
@@ -876,7 +1090,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (timingsConfigIsSameAsOriginal(config['timings-config'], originalConfig['timings-config'])) {
+    if (timingsConfigIsSameAsOriginal(my.config['timings-config'], my.originalConfig['timings-config'])) {
       label.innerHTML = 'Timings Config';
       my.showingTimingsConfigHeaderWithStar = false;
     } else {
@@ -886,8 +1100,8 @@ function handleServerMessage(msg) {
   });
 
   let timingsInputCanvasWidth = document.getElementById('canvas-width-in-px');
-  timingsInputCanvasWidth.disabled = !!config['timings-config']['canvas-with-flexible-width'];
-  timingsInputCanvasWidth.value = config['timings-config']['canvas-width-in-px'];
+  timingsInputCanvasWidth.disabled = !!my.config['timings-config']['canvas-with-flexible-width'];
+  timingsInputCanvasWidth.value = my.config['timings-config']['canvas-width-in-px'];
   timingsInputCanvasWidth.addEventListener('change', (eve) => {
     let currentValue = parseInt(timingsInputCanvasWidth.value);
     if (isNaN(currentValue)) {
@@ -895,8 +1109,8 @@ function handleServerMessage(msg) {
       return;
     }
     timingsInputCanvasWidth.value = currentValue.toString();
-    config['timings-config']['canvas-width-in-px'] = currentValue;
-    let sameAsOldValue = currentValue === originalConfig['timings-config']['canvas-width-in-px'];
+    my.config['timings-config']['canvas-width-in-px'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['timings-config']['canvas-width-in-px'];
     let label = document.getElementById('tab2-label');
     if (!sameAsOldValue) {
       if (!my.showingTimingsConfigHeaderWithStar) {
@@ -905,7 +1119,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (timingsConfigIsSameAsOriginal(config['timings-config'], originalConfig['timings-config'])) {
+    if (timingsConfigIsSameAsOriginal(my.config['timings-config'], my.originalConfig['timings-config'])) {
       label.innerHTML = 'Timings Config';
       my.showingTimingsConfigHeaderWithStar = false;
     } else {
@@ -915,11 +1129,11 @@ function handleServerMessage(msg) {
   });
 
   let timingsSelectDefaultSummary = document.getElementById('timings-default-summary');
-  timingsSelectDefaultSummary.value = config['timings-config']['default-summary'];
+  timingsSelectDefaultSummary.value = my.config['timings-config']['default-summary'];
   timingsSelectDefaultSummary.addEventListener('change', (eve) => {
     let currentValue = timingsSelectDefaultSummary.value;
-    config['timings-config']['default-summary'] = currentValue;
-    let sameAsOldValue = currentValue === originalConfig['timings-config']['default-summary'];
+    my.config['timings-config']['default-summary'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['timings-config']['default-summary'];
     let label = document.getElementById('tab2-label');
     if (!sameAsOldValue) {
       if (!my.showingTimingsConfigHeaderWithStar) {
@@ -928,7 +1142,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (timingsConfigIsSameAsOriginal(config['timings-config'], originalConfig['timings-config'])) {
+    if (timingsConfigIsSameAsOriginal(my.config['timings-config'], my.originalConfig['timings-config'])) {
       label.innerHTML = 'Timings Config';
       my.showingTimingsConfigHeaderWithStar = false;
     } else {
@@ -936,13 +1150,19 @@ function handleServerMessage(msg) {
       my.showingTimingsConfigHeaderWithStar = true;
     }
   });
+}
 
+
+
+
+
+function initNotebookUIs() {
   let notebookInputFilepath = document.getElementById('notebook-filepath');
-  notebookInputFilepath.value = config.notebook.filepath;
+  notebookInputFilepath.value = my.config.notebook.filepath;
   notebookInputFilepath.addEventListener('change', (eve) => {
     let currentValue = notebookInputFilepath.value;
-    config['notebook'].filepath = currentValue;
-    let sameAsOldValue = currentValue === originalConfig.notebook.filepath;
+    my.config['notebook'].filepath = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig.notebook.filepath;
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
       if (!my.showingNotebookHeaderWithStar) {
@@ -951,7 +1171,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
     } else {
@@ -978,11 +1198,11 @@ function handleServerMessage(msg) {
   });
 
   let notebookInputBackgroundColor = document.getElementById('notebook-background-color');
-  notebookInputBackgroundColor.value = config.notebook['background-color'];
+  notebookInputBackgroundColor.value = my.config.notebook['background-color'];
   notebookInputBackgroundColor.addEventListener('change', (eve) => {
     let currentValue = notebookInputBackgroundColor.value;
-    config['notebook']['background-color'] = currentValue;
-    let sameAsOldValue = currentValue === originalConfig.notebook['background-color'];
+    my.config['notebook']['background-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig.notebook['background-color'];
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
       if (!my.showingNotebookHeaderWithStar) {
@@ -991,7 +1211,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
     } else {
@@ -1003,11 +1223,11 @@ function handleServerMessage(msg) {
 
   let notebookRadioBtnStartWithBottomPanelOfNotesMaximized =
     document.getElementById('start-notebook-with-bottom-panel-of-notes-maximized');
-  notebookRadioBtnStartWithBottomPanelOfNotesMaximized.checked = !!config.notebook['start-with-bottom-panel-of-notes-maximized'];
+  notebookRadioBtnStartWithBottomPanelOfNotesMaximized.checked = !!my.config.notebook['start-with-bottom-panel-of-notes-maximized'];
   notebookRadioBtnStartWithBottomPanelOfNotesMaximized.addEventListener('change', (eve) => {
     let currentValue = notebookRadioBtnStartWithBottomPanelOfNotesMaximized.checked;
-    config['notebook']['start-with-bottom-panel-of-notes-maximized'] = currentValue;
-    let sameAsOldValue = currentValue === originalConfig.notebook['start-with-bottom-panel-of-notes-maximized'];
+    my.config['notebook']['start-with-bottom-panel-of-notes-maximized'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig.notebook['start-with-bottom-panel-of-notes-maximized'];
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
       if (!my.showingNotebookHeaderWithStar) {
@@ -1016,7 +1236,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
     } else {
@@ -1028,7 +1248,7 @@ function handleServerMessage(msg) {
   function initNotebookInput(name) {
     let inputElem = document.getElementById(name);
     inputElem.value =
-      config.notebook[name];
+      my.config.notebook[name];
     inputElem.addEventListener('change', (eve) => {
       let currentValue = parseInt(inputElem.value);
       if (isNaN(currentValue)) {
@@ -1036,8 +1256,8 @@ function handleServerMessage(msg) {
         return;
       }
       inputElem.value = currentValue.toString();
-      config.notebook[name] = currentValue;
-      let sameAsOldValue = currentValue === originalConfig.notebook[name];
+      my.config.notebook[name] = currentValue;
+      let sameAsOldValue = currentValue === my.originalConfig.notebook[name];
       let label = document.getElementById('tab3-label');
       if (!sameAsOldValue) {
         if (!my.showingNotebookHeaderWithStar) {
@@ -1046,7 +1266,7 @@ function handleServerMessage(msg) {
         }
         return;
       }
-      if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+      if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
         label.innerHTML = 'Notebook';
         my.showingNotebookHeaderWithStar = false;
       } else {
@@ -1147,7 +1367,7 @@ function handleServerMessage(msg) {
     },
   ];
 
-  let orderOfTagsIcons = config['notebook']['tags-icons'];
+  let orderOfTagsIcons = my.config['notebook']['tags-icons'];
 
   notebookIconNamesOfTags.forEach(obj => {
     let idx;
@@ -1163,7 +1383,7 @@ function handleServerMessage(msg) {
   my.notebookTagsIconsListView = new IconsListView('notebook-node-icons-list-of-tags-tree', notebookIconNamesOfTags);
   my.notebookTagsIconsListView.initHtml();
   my.notebookTagsIconsListView.setChangeListener((iconView) => {
-    my.notebookTagsIconsListView.refreshOrderInConfig(config.notebook, 'tags-icons');
+    my.notebookTagsIconsListView.refreshOrderInConfig(my.config.notebook, 'tags-icons');
     // let currentValue = iconView.checked;
     // config['notebook'][iconView.iconName] = currentValue;
     // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
@@ -1176,7 +1396,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
     } else {
@@ -1185,10 +1405,10 @@ function handleServerMessage(msg) {
     }
   });
   my.notebookTagsIconsListView.setOrderChangeListener(() => {
-    my.notebookTagsIconsListView.refreshOrderInConfig(config.notebook, 'tags-icons');
+    my.notebookTagsIconsListView.refreshOrderInConfig(my.config.notebook, 'tags-icons');
     my.notebookTagsIconsListView.refreshOrderOnScreen();
     let label = document.getElementById('tab3-label');
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
     } else {
@@ -1266,7 +1486,7 @@ function handleServerMessage(msg) {
     },
   ];
 
-  let orderOfNotesIcons = config['notebook']['notes-icons'];
+  let orderOfNotesIcons = my.config['notebook']['notes-icons'];
 
   notebookIconNamesOfNotes.forEach(obj => {
     let idx;
@@ -1282,7 +1502,7 @@ function handleServerMessage(msg) {
   my.notebookNotesIconsListView = new IconsListView('notebook-node-icons-list-of-notes-tree', notebookIconNamesOfNotes);
   my.notebookNotesIconsListView.initHtml();
   my.notebookNotesIconsListView.setChangeListener((iconView) => {
-    my.notebookNotesIconsListView.refreshOrderInConfig(config.notebook, 'notes-icons');
+    my.notebookNotesIconsListView.refreshOrderInConfig(my.config.notebook, 'notes-icons');
     // let currentValue = iconView.checked;
     // config['notebook'][iconView.iconName] = currentValue;
     // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
@@ -1295,7 +1515,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
     } else {
@@ -1304,10 +1524,10 @@ function handleServerMessage(msg) {
     }
   });
   my.notebookNotesIconsListView.setOrderChangeListener(() => {
-    my.notebookNotesIconsListView.refreshOrderInConfig(config.notebook, 'notes-icons');
+    my.notebookNotesIconsListView.refreshOrderInConfig(my.config.notebook, 'notes-icons');
     my.notebookNotesIconsListView.refreshOrderOnScreen();
     let label = document.getElementById('tab3-label');
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
     } else {
@@ -1355,7 +1575,7 @@ function handleServerMessage(msg) {
     },
   ];
 
-  let orderOfTagsIconsInMainWindow = config['notebook']['main-window-tags-icons'];
+  let orderOfTagsIconsInMainWindow = my.config['notebook']['main-window-tags-icons'];
 
   notebookIconNamesOfTagsInMainWindow.forEach(obj => {
     let idx;
@@ -1371,7 +1591,7 @@ function handleServerMessage(msg) {
   my.notebookTagsIconsOfMainWindowListView = new IconsListView('notebook-node-icons-list-of-tags-tree-in-main-window', notebookIconNamesOfTagsInMainWindow);
   my.notebookTagsIconsOfMainWindowListView.initHtml();
   my.notebookTagsIconsOfMainWindowListView.setChangeListener((iconView) => {
-    my.notebookTagsIconsOfMainWindowListView.refreshOrderInConfig(config.notebook, 'main-window-tags-icons');
+    my.notebookTagsIconsOfMainWindowListView.refreshOrderInConfig(my.config.notebook, 'main-window-tags-icons');
     // let currentValue = iconView.checked;
     // config['notebook'][iconView.iconName] = currentValue;
     // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
@@ -1384,7 +1604,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
     } else {
@@ -1393,10 +1613,10 @@ function handleServerMessage(msg) {
     }
   });
   my.notebookTagsIconsOfMainWindowListView.setOrderChangeListener(() => {
-    my.notebookTagsIconsOfMainWindowListView.refreshOrderInConfig(config.notebook, 'main-window-tags-icons');
+    my.notebookTagsIconsOfMainWindowListView.refreshOrderInConfig(my.config.notebook, 'main-window-tags-icons');
     my.notebookTagsIconsOfMainWindowListView.refreshOrderOnScreen();
     let label = document.getElementById('tab3-label');
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
     } else {
@@ -1474,7 +1694,7 @@ function handleServerMessage(msg) {
     },
   ];
 
-  let orderOfNotesIconsInMainWindow = config['notebook']['main-window-notes-icons'];
+  let orderOfNotesIconsInMainWindow = my.config['notebook']['main-window-notes-icons'];
 
   notebookIconNamesOfNotesInMainWindow.forEach(obj => {
     let idx;
@@ -1490,7 +1710,7 @@ function handleServerMessage(msg) {
   my.notebookNotesIconsOfMainWindowListView = new IconsListView('notebook-node-icons-list-of-notes-tree-in-main-window', notebookIconNamesOfNotesInMainWindow);
   my.notebookNotesIconsOfMainWindowListView.initHtml();
   my.notebookNotesIconsOfMainWindowListView.setChangeListener((iconView) => {
-    my.notebookNotesIconsOfMainWindowListView.refreshOrderInConfig(config.notebook, 'main-window-notes-icons');
+    my.notebookNotesIconsOfMainWindowListView.refreshOrderInConfig(my.config.notebook, 'main-window-notes-icons');
     // let currentValue = iconView.checked;
     // config['notebook'][iconView.iconName] = currentValue;
     // let sameAsOldValue = currentValue === !!originalConfig['notebook'][iconView.iconName];
@@ -1503,7 +1723,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
     } else {
@@ -1512,10 +1732,10 @@ function handleServerMessage(msg) {
     }
   });
   my.notebookNotesIconsOfMainWindowListView.setOrderChangeListener(() => {
-    my.notebookNotesIconsOfMainWindowListView.refreshOrderInConfig(config.notebook, 'main-window-notes-icons');
+    my.notebookNotesIconsOfMainWindowListView.refreshOrderInConfig(my.config.notebook, 'main-window-notes-icons');
     my.notebookNotesIconsOfMainWindowListView.refreshOrderOnScreen();
     let label = document.getElementById('tab3-label');
-    if (notebookConfigIsSameAsOriginal(config['notebook'], originalConfig['notebook'])) {
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
       label.innerHTML = 'Notebook';
       my.showingNotebookHeaderWithStar = false;
     } else {
@@ -1523,8 +1743,13 @@ function handleServerMessage(msg) {
       my.showingNotebookHeaderWithStar = true;
     }
   });
+}
 
 
+
+
+
+function initFrequenciesUIs() {
   // function initFrequenciesCheckbox(configName, htmlElemId) {
   //   if (htmlElemId === undefined) {
   //     htmlElemId = 'frequencies-' + configName;
@@ -1605,7 +1830,7 @@ function handleServerMessage(msg) {
 
   let mainWindowFrequenciesIconNames = frequenciesIconNames.map(obj => Object.assign({}, obj));
 
-  let orderOfFrequenciesIcons = config.frequencies.icons;
+  let orderOfFrequenciesIcons = my.config.frequencies.icons;
 
   frequenciesIconNames.forEach(obj => {
     let idx;
@@ -1621,7 +1846,7 @@ function handleServerMessage(msg) {
   my.frequenciesIconsListView = new IconsListView('frequencies-icons-list', frequenciesIconNames);
   my.frequenciesIconsListView.initHtml();
   my.frequenciesIconsListView.setChangeListener((iconView) => {
-    my.frequenciesIconsListView.refreshOrderInConfig(config.frequencies, 'icons');
+    my.frequenciesIconsListView.refreshOrderInConfig(my.config.frequencies, 'icons');
     let sameAsOldValue = iconView.checked === iconView.originalChecked;
     let label = document.getElementById('tab4-label');
     if (!sameAsOldValue) {
@@ -1631,7 +1856,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
+    if (frequenciesConfigIsSameAsOriginal(my.config['frequencies'], my.originalConfig['frequencies'])) {
       label.innerHTML = 'Frequencies';
       my.showingFrequenciesHeaderWithStar = false;
     } else {
@@ -1640,10 +1865,10 @@ function handleServerMessage(msg) {
     }
   });
   my.frequenciesIconsListView.setOrderChangeListener(() => {
-    my.frequenciesIconsListView.refreshOrderInConfig(config.frequencies, 'icons');
+    my.frequenciesIconsListView.refreshOrderInConfig(my.config.frequencies, 'icons');
     my.frequenciesIconsListView.refreshOrderOnScreen();
     let label = document.getElementById('tab4-label');
-    if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
+    if (frequenciesConfigIsSameAsOriginal(my.config['frequencies'], my.originalConfig['frequencies'])) {
       label.innerHTML = 'Frequencies';
       my.showingFrequenciesHeaderWithStar = false;
     } else {
@@ -1666,7 +1891,7 @@ function handleServerMessage(msg) {
   // initMainWindowFrequenciesCheckbox('icon-hide-siblings-below');
   // initMainWindowFrequenciesCheckbox('icon-unhide-hidden-children');
 
-  let orderOfFrequenciesIconsInMainWindow = config.frequencies['main-window-icons'];
+  let orderOfFrequenciesIconsInMainWindow = my.config.frequencies['main-window-icons'];
 
   mainWindowFrequenciesIconNames.forEach(obj => {
     let idx;
@@ -1682,7 +1907,7 @@ function handleServerMessage(msg) {
   my.frequenciesIconsOfMainWindowListView = new IconsListView('frequencies-icons-list-in-main-window', mainWindowFrequenciesIconNames);
   my.frequenciesIconsOfMainWindowListView.initHtml();
   my.frequenciesIconsOfMainWindowListView.setChangeListener((iconView) => {
-    my.frequenciesIconsOfMainWindowListView.refreshOrderInConfig(config.frequencies, 'main-window-icons');
+    my.frequenciesIconsOfMainWindowListView.refreshOrderInConfig(my.config.frequencies, 'main-window-icons');
     let sameAsOldValue = iconView.checked === iconView.originalChecked;
     let label = document.getElementById('tab4-label');
     if (!sameAsOldValue) {
@@ -1692,7 +1917,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
+    if (frequenciesConfigIsSameAsOriginal(my.config['frequencies'], my.originalConfig['frequencies'])) {
       label.innerHTML = 'Frequencies';
       my.showingFrequenciesHeaderWithStar = false;
     } else {
@@ -1701,10 +1926,10 @@ function handleServerMessage(msg) {
     }
   });
   my.frequenciesIconsOfMainWindowListView.setOrderChangeListener(() => {
-    my.frequenciesIconsOfMainWindowListView.refreshOrderInConfig(config.frequencies, 'main-window-icons');
+    my.frequenciesIconsOfMainWindowListView.refreshOrderInConfig(my.config.frequencies, 'main-window-icons');
     my.frequenciesIconsOfMainWindowListView.refreshOrderOnScreen();
     let label = document.getElementById('tab4-label');
-    if (frequenciesConfigIsSameAsOriginal(config['frequencies'], originalConfig['frequencies'])) {
+    if (frequenciesConfigIsSameAsOriginal(my.config['frequencies'], my.originalConfig['frequencies'])) {
       label.innerHTML = 'Frequencies';
       my.showingFrequenciesHeaderWithStar = false;
     } else {
@@ -1712,8 +1937,12 @@ function handleServerMessage(msg) {
       my.showingFrequenciesHeaderWithStar = true;
     }
   });
+}
 
 
+
+
+function initPostTimingDialogUIs() {
   // function initPostTimingDialogCheckbox(configName, htmlElemId) {
   //   if (htmlElemId === undefined) {
   //     htmlElemId = configName;
@@ -1789,7 +2018,7 @@ function handleServerMessage(msg) {
     },
   ];
 
-  let orderOfPostTimingDialogLeftSideIcons = config.post_timing_dialog['left-side-icons'];
+  let orderOfPostTimingDialogLeftSideIcons = my.config.post_timing_dialog['left-side-icons'];
 
   postTimingDialogLeftSideIconNames.forEach(obj => {
     let idx;
@@ -1805,7 +2034,7 @@ function handleServerMessage(msg) {
   my.postTimingDialogLeftSideIconsListView = new IconsListView('post-timing-dialog-left-side-icons-list', postTimingDialogLeftSideIconNames);
   my.postTimingDialogLeftSideIconsListView.initHtml();
   my.postTimingDialogLeftSideIconsListView.setChangeListener((iconView) => {
-    my.postTimingDialogLeftSideIconsListView.refreshOrderInConfig(config.post_timing_dialog, 'left-side-icons');
+    my.postTimingDialogLeftSideIconsListView.refreshOrderInConfig(my.config.post_timing_dialog, 'left-side-icons');
     let sameAsOldValue = iconView.checked === iconView.originalChecked;
     let label = document.getElementById('tab5-label');
     if (!sameAsOldValue) {
@@ -1815,7 +2044,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (postTimingDialogConfigIsSameAsOriginal(config.post_timing_dialog, originalConfig.post_timing_dialog)) {
+    if (postTimingDialogConfigIsSameAsOriginal(my.config.post_timing_dialog, my.originalConfig.post_timing_dialog)) {
       label.innerHTML = 'Post-timing dialog';
       my.showingPostTimingDialogHeaderWithStar = false;
     } else {
@@ -1824,10 +2053,10 @@ function handleServerMessage(msg) {
     }
   });
   my.postTimingDialogLeftSideIconsListView.setOrderChangeListener(() => {
-    my.postTimingDialogLeftSideIconsListView.refreshOrderInConfig(config.post_timing_dialog, 'left-side-icons');
+    my.postTimingDialogLeftSideIconsListView.refreshOrderInConfig(my.config.post_timing_dialog, 'left-side-icons');
     my.postTimingDialogLeftSideIconsListView.refreshOrderOnScreen();
     let label = document.getElementById('tab5-label');
-    if (postTimingDialogConfigIsSameAsOriginal(config.post_timing_dialog, originalConfig.post_timing_dialog)) {
+    if (postTimingDialogConfigIsSameAsOriginal(my.config.post_timing_dialog, my.originalConfig.post_timing_dialog)) {
       label.innerHTML = 'Post-timing dialog';
       my.showingPostTimingDialogHeaderWithStar = false;
     } else {
@@ -1865,7 +2094,7 @@ function handleServerMessage(msg) {
     },
   ];
 
-  let orderOfPostTimingDialogRightSideIcons = config.post_timing_dialog['right-side-icons'];
+  let orderOfPostTimingDialogRightSideIcons = my.config.post_timing_dialog['right-side-icons'];
 
   postTimingDialogRightSideIconNames.forEach(obj => {
     let idx;
@@ -1881,7 +2110,7 @@ function handleServerMessage(msg) {
   my.postTimingDialogRightSideIconsListView = new IconsListView('post-timing-dialog-right-side-icons-list', postTimingDialogRightSideIconNames);
   my.postTimingDialogRightSideIconsListView.initHtml();
   my.postTimingDialogRightSideIconsListView.setChangeListener((iconView) => {
-    my.postTimingDialogRightSideIconsListView.refreshOrderInConfig(config.post_timing_dialog, 'right-side-icons');
+    my.postTimingDialogRightSideIconsListView.refreshOrderInConfig(my.config.post_timing_dialog, 'right-side-icons');
     let sameAsOldValue = iconView.checked === iconView.originalChecked;
     let label = document.getElementById('tab5-label');
     if (!sameAsOldValue) {
@@ -1891,7 +2120,7 @@ function handleServerMessage(msg) {
       }
       return;
     }
-    if (postTimingDialogConfigIsSameAsOriginal(config.post_timing_dialog, originalConfig.post_timing_dialog)) {
+    if (postTimingDialogConfigIsSameAsOriginal(my.config.post_timing_dialog, my.originalConfig.post_timing_dialog)) {
       label.innerHTML = 'Post-timing dialog';
       my.showingPostTimingDialogHeaderWithStar = false;
     } else {
@@ -1900,10 +2129,10 @@ function handleServerMessage(msg) {
     }
   });
   my.postTimingDialogRightSideIconsListView.setOrderChangeListener(() => {
-    my.postTimingDialogRightSideIconsListView.refreshOrderInConfig(config.post_timing_dialog, 'right-side-icons');
+    my.postTimingDialogRightSideIconsListView.refreshOrderInConfig(my.config.post_timing_dialog, 'right-side-icons');
     my.postTimingDialogRightSideIconsListView.refreshOrderOnScreen();
     let label = document.getElementById('tab5-label');
-    if (postTimingDialogConfigIsSameAsOriginal(config.post_timing_dialog, originalConfig.post_timing_dialog)) {
+    if (postTimingDialogConfigIsSameAsOriginal(my.config.post_timing_dialog, my.originalConfig.post_timing_dialog)) {
       label.innerHTML = 'Post-timing dialog';
       my.showingPostTimingDialogHeaderWithStar = false;
     } else {
@@ -1912,14 +2141,6 @@ function handleServerMessage(msg) {
     }
   });
 }
-
-
-
-
-
-
-
-
 
 
 

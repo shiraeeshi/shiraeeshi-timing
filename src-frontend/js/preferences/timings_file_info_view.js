@@ -114,12 +114,12 @@ TimingsFileInfoView.prototype.btnHandlerEditTimingsFileInfo = function() {
 
   window.my.currentTimingsFileInfoBeingEdited = timingsFileInfo;
 
-  let inputName = document.getElementById('new-timing-name');
-  let inputFilepath = document.getElementById('new-timing-filepath');
-  let selectorOfFormat = document.getElementById('new-timing-format');
+  let inputName = document.getElementById('timing-info-name');
+  let inputFilepath = document.getElementById('timing-info-filepath');
+  let selectorOfFormat = document.getElementById('timing-info-format');
   let checkboxCategoryPathIsSameAsName = document.getElementById('category-path-is-same-as-name');
-  let textareaCategoryPath = document.getElementById('new-timing-category-path');
-  let inputCompetitivenessLevel = document.getElementById('new-timing-competitiveness-level');
+  let textareaCategoryPath = document.getElementById('timing-info-category-path');
+  let inputCompetitivenessLevel = document.getElementById('timing-info-competitiveness-level');
 
   inputName.value = timingsFileInfo.name;
   inputFilepath.value = timingsFileInfo.filepath;

@@ -49,16 +49,16 @@
                 <div id="list-of-timings-files">
                 </div>
               </div>
-              <div id="form-to-edit-timings-file-info" class="inactive">
-                <div id="btns-in-form-to-edit-timings-file-info">
-                  <button id="btn-timings-file-info-cancel">
+              <div id="form-to-create-timings-file-info" class="inactive">
+                <div id="btns-in-form-to-create-timings-file-info">
+                  <button id="btn-new-timings-file-info-cancel">
                     Cancel
                   </button>
-                  <button id="btn-timings-file-info-save">
+                  <button id="btn-new-timings-file-info-save">
                     OK
                   </button>
                 </div>
-                <div id="fields-of-timings-file-info-form">
+                <div id="fields-of-form-to-create-timings-file-info">
                   <div>
                     <label for="new-timing-name">Name:</label>
                     <input id="new-timing-name" size="50">
@@ -82,8 +82,8 @@
                     </select>
                   </div>
                   <div>
-                    <input type="checkbox" id="category-path-is-same-as-name" name="category-path-is-same-as-name" value="true" checked="true">
-                    <label for="category-path-is-same-as-name">Category path is same as name</label>
+                    <input type="checkbox" id="new-timing-category-path-is-same-as-name" value="true" checked="true">
+                    <label for="new-timing-category-path-is-same-as-name">Category path is same as name</label>
                   </div>
                   <div>
                     <label for="new-timing-category-path">Category path:</label>
@@ -93,6 +93,53 @@
                   <div>
                     <label for="new-timing-competitiveness-level">Competitiveness level:</label>
                     <input id="new-timing-competitiveness-level" size="6">
+                  </div>
+                </div>
+              </div>
+              <div id="form-to-edit-timings-file-info" class="inactive">
+                <div id="btns-in-form-to-edit-timings-file-info">
+                  <button id="btn-timings-file-info-cancel">
+                    Cancel
+                  </button>
+                  <button id="btn-timings-file-info-save">
+                    OK
+                  </button>
+                </div>
+                <div id="fields-of-timings-file-info-form">
+                  <div>
+                    <label for="timing-info-name">Name:</label>
+                    <input id="timing-info-name" size="50">
+                  </div>
+                  <div id="timing-info-filepath-field-container">
+                    <label for="timing-info-filepath">Filepath:</label>
+                    <input id="timing-info-filepath">
+                    <button id="timing-info-filepath-btn">
+                      filepicker
+                    </button>
+                  </div>
+                  <div>
+                    <label for="timing-info-format">Format:</label>
+                    <select name="timing-info-format" id="timing-info-format">
+                      <option value="yaml">
+                        YAML
+                      </option>
+                      <option value="some format">
+                        Some format
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <input type="checkbox" id="category-path-is-same-as-name" name="category-path-is-same-as-name" value="true" checked="true">
+                    <label for="category-path-is-same-as-name">Category path is same as name</label>
+                  </div>
+                  <div>
+                    <label for="timing-info-category-path">Category path:</label>
+                    <textarea id="timing-info-category-path" rows="5" cols="20" disabled>
+                    </textarea>
+                  </div>
+                  <div>
+                    <label for="timing-info-competitiveness-level">Competitiveness level:</label>
+                    <input id="timing-info-competitiveness-level" size="6">
                   </div>
                 </div>
               </div>
