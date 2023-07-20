@@ -459,12 +459,26 @@ function initTimingsUIs() {
     panelOfListOfTimingsFiles.classList.remove('active');
     panelOfListOfTimingsFiles.classList.add('inactive');
 
-    let newTimingsFileForm = document.getElementById('form-to-create-timings-file-info');
+    let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
+    bottomRowOfButtons.classList.add('hidden-behind-dialog');
+
+    let newTimingsFileForm = document.getElementById('wizard-to-create-timings-file-info');
     newTimingsFileForm.classList.remove('inactive');
     newTimingsFileForm.classList.add('active');
 
-    let bottomRowOfButtons = document.getElementById('bottom-buttons-row');
-    bottomRowOfButtons.classList.add('hidden-behind-dialog');
+    my.timingCreationCurrentStep = 'name';
+    document.querySelectorAll('.current-step').forEach(el => el.classList.remove('current-step'));
+    let timingCreationStepName = document.getElementById('timing-creation-dialog-step-name');
+    timingCreationStepName.classList.add('current-step');
+
+    let btnNewTimingsFileInfoPrevStep = document.getElementById('btn-new-timings-file-info-prev-step');
+    btnNewTimingsFileInfoPrevStep.classList.add('hidden-btn');
+
+    let btnNewTimingsFileInfoNextStep = document.getElementById('btn-new-timings-file-info-next-step');
+    btnNewTimingsFileInfoNextStep.classList.remove('hidden-btn');
+
+    let btnNewTimingsFileInfoSave = document.getElementById('btn-new-timings-file-info-save');
+    btnNewTimingsFileInfoSave.classList.add('hidden-btn');
   });
 
   disableShortcutsOnFocus(document.getElementById('new-timing-name'));
@@ -473,6 +487,122 @@ function initTimingsUIs() {
   disableShortcutsOnFocus(document.getElementById('new-timing-competitiveness-level'));
 
   // creating time info:
+  
+  let btnNewTimingsFileInfoPrevStep = document.getElementById('btn-new-timings-file-info-prev-step');
+  btnNewTimingsFileInfoPrevStep.addEventListener('click', (eve) => {
+    if (my.timingCreationCurrentStep === 'filepath') {
+      my.timingCreationCurrentStep = 'name';
+
+      let timingCreationStepFilepath = document.getElementById('timing-creation-dialog-step-filepath');
+      timingCreationStepFilepath.classList.remove('current-step');
+
+      let timingCreationStepName = document.getElementById('timing-creation-dialog-step-name');
+      timingCreationStepName.classList.add('current-step');
+
+      btnNewTimingsFileInfoPrevStep.classList.add('hidden-btn');
+    } else if (my.timingCreationCurrentStep === 'format') {
+      my.timingCreationCurrentStep = 'filepath';
+
+      let timingCreationStepFormat = document.getElementById('timing-creation-dialog-step-format');
+      timingCreationStepFormat.classList.remove('current-step');
+
+      let timingCreationStepFilepath = document.getElementById('timing-creation-dialog-step-filepath');
+      timingCreationStepFilepath.classList.add('current-step');
+
+    } else if (my.timingCreationCurrentStep === 'categoryPathRelated') {
+      my.timingCreationCurrentStep = 'format';
+
+      let timingCreationStepCategoryPathRelated = document.getElementById('timing-creation-dialog-step-category-path-related');
+      timingCreationStepCategoryPathRelated.classList.remove('current-step');
+
+      let timingCreationStepFormat = document.getElementById('timing-creation-dialog-step-format');
+      timingCreationStepFormat.classList.add('current-step');
+
+      btnNewTimingsFileInfoNextStep.classList.remove('hidden-btn');
+
+      let btnNewTimingsFileInfoSave = document.getElementById('btn-new-timings-file-info-save');
+      btnNewTimingsFileInfoSave.classList.add('hidden-btn');
+    } else {
+      console.log('unexpected step in timing-creation-dialog: ' + my.timingCreationCurrentStep);
+    }
+  });
+  
+  let btnNewTimingsFileInfoNextStep = document.getElementById('btn-new-timings-file-info-next-step');
+  btnNewTimingsFileInfoNextStep.addEventListener('click', (eve) => {
+    if (my.timingCreationCurrentStep === 'name') {
+      let inputName = document.getElementById('new-timing-name');
+      let name = inputName.value;
+
+      if (name === '') {
+        alert('cannot progress to the next step. reason: empty name');
+        return;
+      }
+
+      let isConflictingName = my.timingsFileInfosListView.hasInfoWithName(name);
+
+      if (isConflictingName) {
+        alert(`name '${name}' is already taken.\ntry different name`);
+        return;
+      }
+
+      my.timingCreationCurrentStep = 'filepath';
+
+      let timingCreationStepName = document.getElementById('timing-creation-dialog-step-name');
+      timingCreationStepName.classList.remove('current-step');
+
+      let timingCreationStepFilepath = document.getElementById('timing-creation-dialog-step-filepath');
+      timingCreationStepFilepath.classList.add('current-step');
+
+      let btnNewTimingsFileInfoPrevStep = document.getElementById('btn-new-timings-file-info-prev-step');
+      btnNewTimingsFileInfoPrevStep.classList.remove('hidden-btn');
+    } else if (my.timingCreationCurrentStep === 'filepath') {
+      let inputFilepath = document.getElementById('new-timing-filepath');
+      let filepath = inputFilepath.value;
+
+      if (filepath === '') {
+        alert('cannot progress to the next step. reason: empty filepath');
+        return;
+      }
+
+      let isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined;
+
+      if (isConflictingFilepath) {
+        alert('filepath is already in use.');
+        return;
+      }
+
+      my.timingCreationCurrentStep = 'format';
+
+      let timingCreationStepFilepath = document.getElementById('timing-creation-dialog-step-filepath');
+      timingCreationStepFilepath.classList.remove('current-step');
+
+      let timingCreationStepFormat = document.getElementById('timing-creation-dialog-step-format');
+      timingCreationStepFormat.classList.add('current-step');
+    } else if (my.timingCreationCurrentStep === 'format') {
+      let selectorOfFormat = document.getElementById('new-timing-format');
+      let format = selectorOfFormat.value;
+
+      if (format === undefined) {
+        alert('cannot progress to the next step. reason: undefined format');
+        return;
+      }
+
+      my.timingCreationCurrentStep = 'categoryPathRelated';
+
+      let timingCreationStepFormat = document.getElementById('timing-creation-dialog-step-format');
+      timingCreationStepFormat.classList.remove('current-step');
+
+      let timingCreationStepCategoryPathRelated = document.getElementById('timing-creation-dialog-step-category-path-related');
+      timingCreationStepCategoryPathRelated.classList.add('current-step');
+
+      btnNewTimingsFileInfoNextStep.classList.add('hidden-btn');
+
+      let btnNewTimingsFileInfoSave = document.getElementById('btn-new-timings-file-info-save');
+      btnNewTimingsFileInfoSave.classList.remove('hidden-btn');
+    } else {
+      console.log('unexpected step in timing-creation-dialog: ' + my.timingCreationCurrentStep);
+    }
+  });
 
   let btnNewTimingsFileInfoSave = document.getElementById('btn-new-timings-file-info-save');
   btnNewTimingsFileInfoSave.addEventListener('click', (eve) => {
@@ -545,7 +675,7 @@ function initTimingsUIs() {
       document.getElementById('tab-contents-of-timings').scrollTop = my.scrollTopOfListOfTimingsFiles;
     }
 
-    let newTimingsFileForm = document.getElementById('form-to-create-timings-file-info');
+    let newTimingsFileForm = document.getElementById('wizard-to-create-timings-file-info');
     newTimingsFileForm.classList.add('inactive');
     newTimingsFileForm.classList.remove('active');
 
@@ -580,7 +710,7 @@ function initTimingsUIs() {
       document.getElementById('tab-contents-of-timings').scrollTop = my.scrollTopOfListOfTimingsFiles;
     }
 
-    let newTimingsFileForm = document.getElementById('form-to-create-timings-file-info');
+    let newTimingsFileForm = document.getElementById('wizard-to-create-timings-file-info');
     newTimingsFileForm.classList.add('inactive');
     newTimingsFileForm.classList.remove('active');
 

@@ -280,10 +280,10 @@ div.icons-list-item > div.right-side-buttons-of-icons-list-item {
 }
 
 
-#form-to-create-timings-file-info.active {
+#wizard-to-create-timings-file-info.active {
   display: block;
 }
-#form-to-create-timings-file-info.inactive {
+#wizard-to-create-timings-file-info.inactive {
   display: none;
 }
 
@@ -299,45 +299,62 @@ div.icons-list-item > div.right-side-buttons-of-icons-list-item {
 
 
 
-#form-to-create-timings-file-info {
+#wizard-to-create-timings-file-info {
   padding: 0;
   border: none;
 }
 
-#form-to-create-timings-file-info > #fields-of-form-to-create-timings-file-info {
-  padding: 0;
+#wizard-to-create-timings-file-info > .timing-creation-dialog-step {
+  display: none;
 }
 
-#form-to-create-timings-file-info > #fields-of-form-to-create-timings-file-info > div {
-  border: none;
+#wizard-to-create-timings-file-info > .timing-creation-dialog-step.current-step {
+  display: block;
 }
 
-#form-to-create-timings-file-info > #fields-of-form-to-create-timings-file-info > div:not(:first-child) {
-  border-top: 1px solid #ddd;
-}
-
-#form-to-create-timings-file-info > #fields-of-form-to-create-timings-file-info > #new-timing-filepath-field-container {
+#wizard-to-create-timings-file-info > div > #new-timing-filepath-field-container {
   display: flex;
 }
 
-#form-to-create-timings-file-info > #fields-of-form-to-create-timings-file-info > #new-timing-filepath-field-container > label {
+#wizard-to-create-timings-file-info > div > #new-timing-filepath-field-container > label {
   flex: none;
   margin-right: 4px;
 }
 
-#form-to-create-timings-file-info > #fields-of-form-to-create-timings-file-info > #new-timing-filepath-field-container > input {
+#wizard-to-create-timings-file-info > div > #new-timing-filepath-field-container > input {
   flex: 1;
   margin-right: 4px;
 }
 
-#form-to-create-timings-file-info > #fields-of-form-to-create-timings-file-info > #new-timing-filepath-field-container > button {
+#wizard-to-create-timings-file-info > div > #new-timing-filepath-field-container > button {
   flex: none;
 }
 
-#btns-in-form-to-create-timings-file-info {
+#btns-in-wizard-to-create-timings-file-info {
   display: flex;
   justify-content: flex-end;
   border: none;
+}
+
+#btns-in-wizard-to-create-timings-file-info > div.left-side-btns {
+  flex: 1;
+  border: none;
+  padding: 0;
+}
+
+#btns-in-wizard-to-create-timings-file-info > div.right-side-btns {
+  border: none;
+  padding: 0;
+  margin-left: 10px;
+  width: unset;
+}
+
+#btns-in-wizard-to-create-timings-file-info button.hidden-btn {
+  display: none;
+}
+
+#btn-new-timings-file-info-next-step {
+  margin-left: 4px;
 }
 
 #btn-new-timings-file-info-save {
