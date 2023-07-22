@@ -677,6 +677,42 @@ h2 {
   margin-left: 4px;
 }
 
+#wallpaper-foreground-colors-wrapper {
+  display: flex;
+  border: none;
+  padding: 0;
+  padding-left: 10%;
+}
+
+#wallpaper-foreground-colors-wrapper > #wallpaper-foreground-colors-left-panel {
+  width: 50%;
+  border: none;
+  padding: 0;
+}
+
+#wallpaper-foreground-colors-wrapper > #wallpaper-foreground-colors-left-panel > div {
+  border: none;
+}
+
+#wallpaper-foreground-colors-wrapper > #wallpaper-foreground-colors-left-panel > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+#wallpaper-foreground-colors-wrapper > #wallpaper-foreground-colors-right-panel {
+  width: 50%;
+  border: none;
+  border-left: 1px solid #ddd;
+  padding: 0;
+}
+
+#wallpaper-foreground-colors-wrapper > #wallpaper-foreground-colors-right-panel > div {
+  border: none;
+}
+
+#wallpaper-foreground-colors-wrapper > #wallpaper-foreground-colors-right-panel > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
 #list-of-wallpapers {
   padding: 0;
   border: none;
