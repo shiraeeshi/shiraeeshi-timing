@@ -411,6 +411,12 @@ h2 {
   width: 50%;
 }
 
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-pre-filepath >
+#timing-filepath-dir-or-file-choice-container a {
+  cursor: pointer;
+}
+
 
 
 
