@@ -38,6 +38,14 @@ ipcMain.on('preferences_msg_choose_file', async (event, extractBasename, withRel
   });
 });
 
+ipcMain.on('preferences_msg__choose_directory', async (event) => {
+  let result = await dialog.showOpenDialog({properties: ['openDirectory', 'promptToCreate']});
+  event.sender.send('message-from-backend', {
+    type: 'directory_picker_result',
+    result: result
+  });
+});
+
 ipcMain.on('preferences_msg_filename_exists_in_wallpapers_dir', async (event, filename) => {
   let win = BrowserWindow.fromWebContents(event.sender);
   let appEnv = win.appEnv;
@@ -61,6 +69,16 @@ ipcMain.on('preferences_msg_filename_exists_in_wallpapers_dir', async (event, fi
     type: 'result_filename_exists_in_wallpapers_dir',
     filename,
     exists,
+  });
+});
+
+ipcMain.on('preferences_msg__join_dirname_filename', async (event, dirName, filename) => {
+
+  let result = path.join(dirName, filename);
+
+  event.sender.send('message-from-backend', {
+    type: 'result_join_dirname_filename',
+    result
   });
 });
 

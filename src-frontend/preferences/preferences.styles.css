@@ -15,6 +15,14 @@ body {
   font-family: "Raleway";
 }
 
+.no-border {
+  border: none !important;
+}
+
+.no-padding {
+  padding: 0 !important;
+}
+
 #preferences-main-container {
   height: 100%;
   overflow: hidden;
@@ -107,6 +115,7 @@ h1 {
 .pc-tab section {
   font-family: "Droid Serif";
   clear: both;
+  border-top: 1px solid #ddd;
 }
 .pc-tab section div {
   padding: 10px;
@@ -163,7 +172,8 @@ footer a {
 
 .pc-tab > #bottom-buttons-row {
   flex: none;
-  margin: 4px;
+  padding: 4px;
+  border-top: 1px solid #ddd;
 }
 
 .pc-tab > #bottom-buttons-row.hidden-behind-dialog {
@@ -180,6 +190,10 @@ footer a {
   overflow-y: auto;
   padding: 0;
   border: none;
+}
+
+.tab-contents > div {
+  border: none !important;
 }
 
 #tab-contents-of-timings-config > div > div {
@@ -312,24 +326,6 @@ div.icons-list-item > div.right-side-buttons-of-icons-list-item {
   display: block;
 }
 
-#wizard-to-create-timings-file-info > div > #new-timing-filepath-field-container {
-  display: flex;
-}
-
-#wizard-to-create-timings-file-info > div > #new-timing-filepath-field-container > label {
-  flex: none;
-  margin-right: 4px;
-}
-
-#wizard-to-create-timings-file-info > div > #new-timing-filepath-field-container > input {
-  flex: 1;
-  margin-right: 4px;
-}
-
-#wizard-to-create-timings-file-info > div > #new-timing-filepath-field-container > button {
-  flex: none;
-}
-
 #btns-in-wizard-to-create-timings-file-info {
   display: flex;
   justify-content: flex-end;
@@ -364,6 +360,110 @@ div.icons-list-item > div.right-side-buttons-of-icons-list-item {
 #new-timing-category-path {
   vertical-align: top;
 }
+
+
+
+
+
+
+
+
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-pre-filepath {
+  border: none;
+}
+
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-pre-filepath >
+h2 {
+  margin-bottom: 10px;
+}
+
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-pre-filepath >
+#timing-filepath-dir-or-file-choice-container {
+  display: flex;
+  border: none;
+  padding: 0;
+}
+
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-pre-filepath >
+#timing-filepath-dir-or-file-choice-container.invisible-screen {
+  display: none;
+}
+
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-pre-filepath >
+#timing-filepath-dir-or-file-choice-container >
+#timing-filepath-dir-choice-btn-container {
+/*  flex: auto;  */
+  width: 50%;
+  border-right: none;
+}
+
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-pre-filepath >
+#timing-filepath-dir-or-file-choice-container >
+#timing-filepath-file-choice-btn-container {
+  display: block;
+  border-left: 1px solid #ddd;
+  width: 50%;
+}
+
+
+
+
+
+
+
+
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-filepath >
+#timing-filepath-dir-selector-container > div {
+  border: none;
+}
+
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-filepath >
+#timing-filepath-dir-selector-container > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+
+
+
+
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-filepath >
+#new-timing-filepath-field-container {
+  display: none;
+}
+
+
+
+
+
+
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-category-path-related > div {
+  border: none
+}
+
+#wizard-to-create-timings-file-info >
+#timing-creation-dialog-step-category-path-related > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+
+
+
+.invisible-screen {
+  display: none;
+}
+
+
+
 
 
 

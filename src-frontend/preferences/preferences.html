@@ -72,13 +72,46 @@
                   <label for="new-timing-name">Name:</label>
                   <input id="new-timing-name" size="50">
                 </div>
-                <div id="timing-creation-dialog-step-filepath" class="timing-creation-dialog-step">
-                  <div id="new-timing-filepath-field-container">
-                    <label for="new-timing-filepath">Filepath:</label>
-                    <input id="new-timing-filepath">
-                    <button id="new-timing-filepath-btn">
+                <div id="timing-creation-dialog-step-pre-filepath" class="timing-creation-dialog-step no-border">
+                  <h2>
+                    Filepath
+                  </h2>
+                  <div id="timing-filepath-dir-or-file-choice-container" class="no-border no-padding">
+                    <div id="timing-filepath-dir-choice-btn-container">
+                      <a id="timing-filepath-dir-choice-btn">
+                        select a directory to create a file in
+                      </a>
+                    </div>
+                    <div id="timing-filepath-file-choice-btn-container">
+                      <a id="timing-filepath-goto-existing-file-choice-btn">
+                        pick an existing file
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div id="timing-creation-dialog-step-filepath" class="timing-creation-dialog-step no-border no-padding">
+                  <div id="timing-filepath-dir-selector-container" class="invisible-screen no-border no-padding">
+                    <div>
+                      <label for="new-timing-parent-dir-filepath">Directory to create a file in:</label>
+                      <input id="new-timing-parent-dir-filepath">
+                      <button id="new-timing-parent-dir-filepath-btn">
+                        filepicker
+                      </button>
+                    </div>
+                    <div>
+                      <label for="new-timing-filepath-to-create">Name of the file to create:</label>
+                      <input id="new-timing-filepath-to-create">
+                    </div>
+                  </div>
+                  <div id="timing-filepath-existing-file-selector-container" class="invisible-screen">
+                    <label for="new-timing-existing-filepath">Filepath:</label>
+                    <input id="new-timing-existing-filepath">
+                    <button id="new-timing-existing-filepath-btn">
                       filepicker
                     </button>
+                  </div>
+                  <div id="new-timing-filepath-field-container">
+                    <input id="new-timing-filepath">
                   </div>
                 </div>
                 <div id="timing-creation-dialog-step-format" class="timing-creation-dialog-step">
@@ -92,7 +125,7 @@
                     </option>
                   </select>
                 </div>
-                <div id="timing-creation-dialog-step-category-path-related" class="timing-creation-dialog-step">
+                <div id="timing-creation-dialog-step-category-path-related" class="timing-creation-dialog-step no-padding">
                   <div>
                     <input type="checkbox" id="new-timing-category-path-is-same-as-name" value="true" checked="true">
                     <label for="new-timing-category-path-is-same-as-name">Category path is same as name</label>

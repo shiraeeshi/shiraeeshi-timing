@@ -37,10 +37,23 @@ function handleServerMessage(msg) {
     }
     return;
   }
+  if (msg.type === 'directory_picker_result') {
+    if (my.directory_picker_result_handler) {
+      my.directory_picker_result_handler(msg.result);
+      delete my.directory_picker_result_handler;
+    }
+    return;
+  }
   if (msg.type === 'result_filename_exists_in_wallpapers_dir') {
     if (my.result_handler_filename_exists_in_wallpapers_dir) {
       my.result_handler_filename_exists_in_wallpapers_dir(msg.filename, msg.exists);
       delete my.result_handler_filename_exists_in_wallpapers_dir;
+    }
+    return;
+  }
+  if (msg.type === 'result_join_dirname_filename') {
+    if (my.result_handler_join_dirname_filename) {
+      my.result_handler_join_dirname_filename(msg.result);
     }
     return;
   }
@@ -485,21 +498,41 @@ function initTimingsUIs() {
   disableShortcutsOnFocus(document.getElementById('new-timing-filepath'));
   disableShortcutsOnFocus(document.getElementById('new-timing-category-path'));
   disableShortcutsOnFocus(document.getElementById('new-timing-competitiveness-level'));
+  
+  disableShortcutsOnFocus(document.getElementById('new-timing-parent-dir-filepath'));
+  disableShortcutsOnFocus(document.getElementById('new-timing-filepath-to-create'));
+  disableShortcutsOnFocus(document.getElementById('new-timing-existing-filepath'));
 
   // creating time info:
   
   let btnNewTimingsFileInfoPrevStep = document.getElementById('btn-new-timings-file-info-prev-step');
   btnNewTimingsFileInfoPrevStep.addEventListener('click', (eve) => {
-    if (my.timingCreationCurrentStep === 'filepath') {
+    if (my.timingCreationCurrentStep === 'pre-filepath') {
       my.timingCreationCurrentStep = 'name';
 
-      let timingCreationStepFilepath = document.getElementById('timing-creation-dialog-step-filepath');
-      timingCreationStepFilepath.classList.remove('current-step');
+      let timingCreationStepPreFilepath = document.getElementById('timing-creation-dialog-step-pre-filepath');
+      timingCreationStepPreFilepath.classList.remove('current-step');
 
       let timingCreationStepName = document.getElementById('timing-creation-dialog-step-name');
       timingCreationStepName.classList.add('current-step');
 
       btnNewTimingsFileInfoPrevStep.classList.add('hidden-btn');
+
+      let btnNewTimingsFileInfoNextStep = document.getElementById('btn-new-timings-file-info-next-step');
+      btnNewTimingsFileInfoNextStep.classList.remove('hidden-btn');
+    } else if (my.timingCreationCurrentStep === 'filepath') {
+      my.timingCreationCurrentStep = 'pre-filepath';
+
+      let timingCreationStepFilepath = document.getElementById('timing-creation-dialog-step-filepath');
+      timingCreationStepFilepath.classList.remove('current-step');
+
+      let timingCreationStepPreFilepath = document.getElementById('timing-creation-dialog-step-pre-filepath');
+      timingCreationStepPreFilepath.classList.add('current-step');
+
+      if (my.timingCreationFilepathChoice === undefined) {
+        let btnNewTimingsFileInfoNextStep = document.getElementById('btn-new-timings-file-info-next-step');
+        btnNewTimingsFileInfoNextStep.classList.add('hidden-btn');
+      }
     } else if (my.timingCreationCurrentStep === 'format') {
       my.timingCreationCurrentStep = 'filepath';
 
@@ -528,7 +561,7 @@ function initTimingsUIs() {
   });
   
   let btnNewTimingsFileInfoNextStep = document.getElementById('btn-new-timings-file-info-next-step');
-  btnNewTimingsFileInfoNextStep.addEventListener('click', (eve) => {
+  btnNewTimingsFileInfoNextStep.addEventListener('click', async (eve) => {
     if (my.timingCreationCurrentStep === 'name') {
       let inputName = document.getElementById('new-timing-name');
       let name = inputName.value;
@@ -545,18 +578,61 @@ function initTimingsUIs() {
         return;
       }
 
-      my.timingCreationCurrentStep = 'filepath';
+      my.timingCreationCurrentStep = 'pre-filepath';
 
       let timingCreationStepName = document.getElementById('timing-creation-dialog-step-name');
       timingCreationStepName.classList.remove('current-step');
 
-      let timingCreationStepFilepath = document.getElementById('timing-creation-dialog-step-filepath');
-      timingCreationStepFilepath.classList.add('current-step');
+      let timingCreationStepPreFilepath = document.getElementById('timing-creation-dialog-step-pre-filepath');
+      timingCreationStepPreFilepath.classList.add('current-step');
 
       let btnNewTimingsFileInfoPrevStep = document.getElementById('btn-new-timings-file-info-prev-step');
       btnNewTimingsFileInfoPrevStep.classList.remove('hidden-btn');
+
+      if (my.timingCreationFilepathChoice === undefined) {
+
+        let btnNewTimingsFileInfoNextStep = document.getElementById('btn-new-timings-file-info-next-step');
+        btnNewTimingsFileInfoNextStep.classList.add('hidden-btn');
+      }
+    } else if (my.timingCreationCurrentStep === 'pre-filepath') {
+      let inputFilepath = document.getElementById('new-timing-filepath');
+      if (inputFilepath.value === undefined) {
+        alert('cannot progress to the next step: undefined filepath');
+        return;
+      }
+
+      my.timingCreationCurrentStep = 'filepath';
+
+      let timingCreationStepPreFilepath = document.getElementById('timing-creation-dialog-step-pre-filepath');
+      timingCreationStepPreFilepath.classList.remove('current-step');
+
+      let timingCreationStepFilepath = document.getElementById('timing-creation-dialog-step-filepath');
+      timingCreationStepFilepath.classList.add('current-step');
     } else if (my.timingCreationCurrentStep === 'filepath') {
       let inputFilepath = document.getElementById('new-timing-filepath');
+
+      if (my.timingCreationFilepathChoice === 'parent-dir') {
+        let dirInput = document.getElementById('new-timing-parent-dir-filepath');
+        let filenameInput = document.getElementById('new-timing-filepath-to-create');
+        if (dirInput.value === undefined ||
+            dirInput.value === '') {
+          alert('cannot progress to the next step: empty directory path');
+          return;
+        }
+        if (filenameInput.value === undefined ||
+            filenameInput.value === '') {
+          alert('cannot progress to the next step: empty filename');
+          return;
+        }
+        inputFilepath.value = await joinDirNameAndFilename(dirInput.value, filenameInput.value);
+      } else if (my.timingCreationFilepathChoice === 'existing-file') {
+        let existingFileInput = document.getElementById('new-timing-existing-filepath');
+        inputFilepath.value = existingFileInput.value;
+      } else {
+        console.log(`error. timingCreationFilepathChoice: '${my.timingCreationFilepathChoice}' (expected 'parent-dir' or 'existing-file')`);
+        return;
+      } 
+
       let filepath = inputFilepath.value;
 
       if (filepath === '') {
@@ -602,6 +678,63 @@ function initTimingsUIs() {
     } else {
       console.log('unexpected step in timing-creation-dialog: ' + my.timingCreationCurrentStep);
     }
+  });
+
+  let btnTimingCreationChooseDirToCreateFileIn = document.getElementById('timing-filepath-dir-choice-btn');
+  btnTimingCreationChooseDirToCreateFileIn.addEventListener('click', (eve) => {
+    my.timingCreationFilepathChoice = 'parent-dir';
+
+    let elem;
+
+    elem = document.getElementById('timing-filepath-dir-selector-container');
+    elem.classList.remove('invisible-screen');
+
+    elem = document.getElementById('timing-filepath-existing-file-selector-container');
+    elem.classList.add('invisible-screen');
+
+    my.timingCreationCurrentStep = 'filepath';
+
+    elem = document.getElementById('new-timing-parent-dir-filepath');
+    elem.value = '';
+
+    elem = document.getElementById('new-timing-filepath-to-create');
+    elem.value = '';
+
+    let timingCreationStepPreFilepath = document.getElementById('timing-creation-dialog-step-pre-filepath');
+    timingCreationStepPreFilepath.classList.remove('current-step');
+
+    let timingCreationStepFilepath = document.getElementById('timing-creation-dialog-step-filepath');
+    timingCreationStepFilepath.classList.add('current-step');
+
+    let btnNewTimingsFileInfoNextStep = document.getElementById('btn-new-timings-file-info-next-step');
+    btnNewTimingsFileInfoNextStep.classList.remove('hidden-btn');
+  });
+
+  let btnTimingCreationChooseExistingFile = document.getElementById('timing-filepath-goto-existing-file-choice-btn');
+  btnTimingCreationChooseExistingFile.addEventListener('click', (eve) => {
+    my.timingCreationFilepathChoice = 'existing-file';
+
+    let elem;
+
+    elem = document.getElementById('timing-filepath-dir-selector-container');
+    elem.classList.add('invisible-screen');
+
+    elem = document.getElementById('timing-filepath-existing-file-selector-container');
+    elem.classList.remove('invisible-screen');
+
+    my.timingCreationCurrentStep = 'filepath';
+
+    elem = document.getElementById('new-timing-existing-filepath');
+    elem.value = '';
+
+    let timingCreationStepPreFilepath = document.getElementById('timing-creation-dialog-step-pre-filepath');
+    timingCreationStepPreFilepath.classList.remove('current-step');
+
+    let timingCreationStepFilepath = document.getElementById('timing-creation-dialog-step-filepath');
+    timingCreationStepFilepath.classList.add('current-step');
+
+    let btnNewTimingsFileInfoNextStep = document.getElementById('btn-new-timings-file-info-next-step');
+    btnNewTimingsFileInfoNextStep.classList.remove('hidden-btn');
   });
 
   let btnNewTimingsFileInfoSave = document.getElementById('btn-new-timings-file-info-save');
@@ -664,6 +797,7 @@ function initTimingsUIs() {
     textareaCategoryPath.value = '';
     textareaCategoryPath.disabled = true;
     inputCompetitivenessLevel.value = '0';
+    delete my.timingCreationFilepathChoice;
 
     // showTimings(my.timingsToShow);
 
@@ -701,6 +835,7 @@ function initTimingsUIs() {
     textareaCategoryPath.value = '';
     textareaCategoryPath.disabled = true;
     inputCompetitivenessLevel.value = '0';
+    delete my.timingCreationFilepathChoice;
 
     let panelOfListOfTimingsFiles = document.getElementById('list-of-timings-files-panel');
     panelOfListOfTimingsFiles.classList.add('active');
@@ -730,8 +865,25 @@ function initTimingsUIs() {
     }
   });
 
-  let btnNewTimingsFilepath = document.getElementById('new-timing-filepath-btn');
-  btnNewTimingsFilepath.addEventListener('click', async (eve) => {
+  let btnNewTimingsParentDirFilepath = document.getElementById('new-timing-parent-dir-filepath-btn');
+  btnNewTimingsParentDirFilepath.addEventListener('click', async (eve) => {
+    let result = await pickDir();
+    if (result.canceled) {
+      return;
+    }
+    if (result.filePaths === undefined || result.filePaths.length === 0) {
+      return;
+    }
+    let filepath = result.filePaths[0];
+    let inputParentDirFilepath = document.getElementById('new-timing-parent-dir-filepath');
+    inputParentDirFilepath.value = filepath;
+
+    let event = new Event('change');
+    inputParentDirFilepath.dispatchEvent(event);
+  });
+
+  let btnNewTimingsExistingFilepath = document.getElementById('new-timing-existing-filepath-btn');
+  btnNewTimingsExistingFilepath.addEventListener('click', async (eve) => {
     let result = await pickFile();
     if (result.canceled) {
       return;
@@ -740,7 +892,7 @@ function initTimingsUIs() {
       return;
     }
     let filepath = result.filePaths[0];
-    let inputFilepath = document.getElementById('new-timing-filepath');
+    let inputFilepath = document.getElementById('new-timing-existing-filepath');
     inputFilepath.value = filepath;
 
     let event = new Event('change');
@@ -2458,10 +2610,40 @@ function pickFile(extractBasename, withRelativePath) {
   });
 }
 
+function pickDir() {
+  return new Promise((resolve, reject) => {
+    window.webkit.messageHandlers.preferences_msg__choose_directory.postMessage();
+    my.directory_picker_result_handler = (result) => {
+      resolve(result);
+    }
+  });
+}
+
 function filenameExistsInWallpapersDir(filename) {
   return new Promise((resolve, reject) => {
     window.webkit.messageHandlers.preferences_msg__filename_exists_in_wallpapers_dir.postMessage(filename);
     my.result_handler_filename_exists_in_wallpapers_dir = (filename, result) => {
+      resolve(result);
+    }
+  });
+}
+
+function joinDirNameAndFilename(dirName, filename) {
+  return new Promise((resolve, reject) => {
+    if (dirName === undefined) {
+      reject('undefined dirname');
+    }
+    if (dirName === '') {
+      reject('empty dirname');
+    }
+    if (filename === undefined) {
+      reject('undefined filename');
+    }
+    if (filename === '') {
+      reject('empty filename');
+    }
+    window.webkit.messageHandlers.preferences_msg__join_dirname_filename.postMessage(dirName, filename);
+    my.result_handler_join_dirname_filename = (result) => {
       resolve(result);
     }
   });

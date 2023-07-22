@@ -20,9 +20,19 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('preferences_msg_choose_file', extractBasename, withRelativePath);
       },
     },
+    preferences_msg__choose_directory: {
+      postMessage: () => {
+        ipcRenderer.send('preferences_msg__choose_directory');
+      },
+    },
     preferences_msg__filename_exists_in_wallpapers_dir: {
       postMessage: (filename) => {
         ipcRenderer.send('preferences_msg_filename_exists_in_wallpapers_dir', filename);
+      }
+    },
+    preferences_msg__join_dirname_filename: {
+      postMessage: (dirName, filename) => {
+        ipcRenderer.send('preferences_msg__join_dirname_filename', dirName, filename);
       }
     },
     preferences_msg__enable_shortcuts: {
