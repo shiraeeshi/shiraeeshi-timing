@@ -231,6 +231,7 @@ function showLinksOfTag(tagNode) {
 
   window.my.lastOpenedNodesOfNotes = resultForest;
 
+  my.isCursorOnRightSide = true;
   my.isCursorOnTopRightPanel = false;
   my.isCursorOnBottomRightPanel = true;
 

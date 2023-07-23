@@ -1885,11 +1885,11 @@ function initNotebookUIs() {
   });
 
   let notebookInputBackgroundColor = document.getElementById('notebook-background-color');
-  notebookInputBackgroundColor.value = my.config.notebook['background-color'];
+  notebookInputBackgroundColor.value = my.config.notebook['notebook-window-background-color'];
   notebookInputBackgroundColor.addEventListener('change', (eve) => {
     let currentValue = notebookInputBackgroundColor.value;
-    my.config['notebook']['background-color'] = currentValue;
-    let sameAsOldValue = currentValue === my.originalConfig.notebook['background-color'];
+    my.config['notebook']['notebook-window-background-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig.notebook['notebook-window-background-color'];
     let label = document.getElementById('tab3-label');
     if (!sameAsOldValue) {
       if (!my.showingNotebookHeaderWithStar) {
@@ -1907,6 +1907,52 @@ function initNotebookUIs() {
     }
   });
   disableShortcutsOnFocus(notebookInputBackgroundColor);
+
+  let notebookSelectNotebookWindowTextColor = document.getElementById('notebook-window-text-color');
+  notebookSelectNotebookWindowTextColor.value = my.config['notebook']['notebook-window-text-color'];
+  notebookSelectNotebookWindowTextColor.addEventListener('change', (eve) => {
+    let currentValue = notebookSelectNotebookWindowTextColor.value;
+    my.config['notebook']['notebook-window-text-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['notebook']['notebook-window-text-color'];
+    let label = document.getElementById('tab3-label');
+    if (!sameAsOldValue) {
+      if (!my.showingNotebookHeaderWithStar) {
+        label.innerHTML = 'Notebook*';
+        my.showingNotebookHeaderWithStar = true;
+      }
+      return;
+    }
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
+      label.innerHTML = 'Notebook';
+      my.showingNotebookHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Notebook*';
+      my.showingNotebookHeaderWithStar = true;
+    }
+  });
+
+  let notebookSelectNotebookWindowIconsColor = document.getElementById('notebook-window-icons-color');
+  notebookSelectNotebookWindowIconsColor.value = my.config['notebook']['notebook-window-icons-color'];
+  notebookSelectNotebookWindowIconsColor.addEventListener('change', (eve) => {
+    let currentValue = notebookSelectNotebookWindowIconsColor.value;
+    my.config['notebook']['notebook-window-icons-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['notebook']['notebook-window-icons-color'];
+    let label = document.getElementById('tab3-label');
+    if (!sameAsOldValue) {
+      if (!my.showingNotebookHeaderWithStar) {
+        label.innerHTML = 'Notebook*';
+        my.showingNotebookHeaderWithStar = true;
+      }
+      return;
+    }
+    if (notebookConfigIsSameAsOriginal(my.config['notebook'], my.originalConfig['notebook'])) {
+      label.innerHTML = 'Notebook';
+      my.showingNotebookHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Notebook*';
+      my.showingNotebookHeaderWithStar = true;
+    }
+  });
 
   let notebookRadioBtnStartWithBottomPanelOfNotesMaximized =
     document.getElementById('start-notebook-with-bottom-panel-of-notes-maximized');

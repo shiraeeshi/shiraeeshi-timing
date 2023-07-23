@@ -987,6 +987,44 @@ h2 {
 
 
 
+
+
+
+
+#notebook-window-settings-fields-container {
+  border: none;
+  padding: 0;
+  padding-left: 5%;
+}
+
+#notebook-window-settings-fields-container > div {
+  border: none;
+}
+
+#notebook-window-settings-fields-container > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+#notebook-in-main-window-settings-fields-container {
+  border: none;
+  padding: 0;
+  padding-left: 5%;
+}
+
+#notebook-in-main-window-settings-fields-container > div {
+  border: none;
+}
+
+#notebook-in-main-window-settings-fields-container > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+
+
+
+
+
+
 #notebook-font-sizes-wrapper {
   display: flex;
   padding: 0;

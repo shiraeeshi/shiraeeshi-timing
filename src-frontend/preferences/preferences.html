@@ -365,105 +365,133 @@
                 </div>
               </div>
               <div>
-                <label for="notebook-background-color">Background color:</label>
-                <input id="notebook-background-color">
-              </div>
-              <div>
-                <input type="checkbox" id="start-notebook-with-bottom-panel-of-notes-maximized" name="start-notebook-with-bottom-panel-of-notes-maximized" value="true">
-                <label for="start-notebook-with-bottom-panel-of-notes-maximized">Start with bottom panel of notes maximized</label>
-              </div>
-              <div>
-                Font sizes:
-                <div id="notebook-font-sizes-wrapper">
-                  <div id="notebook-font-sizes-left-panel">
-                    <div>
-                      <label for="font-size-in-px-of-top-panel-of-tags">Top panel of tags:</label>
-                      <input id="font-size-in-px-of-top-panel-of-tags" size="6">
-                    </div>
-                    <div>
-                      <label for="font-size-in-px-of-bottom-panel-of-tags">Bottom panel of tags:</label>
-                      <input id="font-size-in-px-of-bottom-panel-of-tags" size="6">
-                    </div>
-                    <div id="notebook-tooltips-font-size-wrapper">
-                      <label for="font-size-in-px-of-tooltips">(Tooltips:)</label>
-                      <input id="font-size-in-px-of-tooltips" size="6">
+                Notebook window:
+                <div id="notebook-window-settings-fields-container">
+                  <div>
+                    <input type="checkbox" id="start-notebook-with-bottom-panel-of-notes-maximized" name="start-notebook-with-bottom-panel-of-notes-maximized" value="true">
+                    <label for="start-notebook-with-bottom-panel-of-notes-maximized">Start with bottom panel of notes maximized</label>
+                  </div>
+                  <div>
+                    <label for="notebook-background-color">Background color:</label>
+                    <input id="notebook-background-color">
+                  </div>
+                  <div>
+                    <label for="notebook-window-text-color">Text color:</label>
+                    <select id="notebook-window-text-color">
+                      <option value="black">black</option>
+                      <option value="dark-grey">dark-grey</option>
+                      <option value="light-grey">light-grey</option>
+                      <option value="white">white</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="notebook-window-icons-color">Icons color:</label>
+                    <select id="notebook-window-icons-color">
+                      <option value="black">black</option>
+                      <option value="dark-grey">dark-grey</option>
+                      <option value="light-grey">light-grey</option>
+                      <option value="white">white</option>
+                    </select>
+                  </div>
+                  <div>
+                    Font sizes:
+                    <div id="notebook-font-sizes-wrapper">
+                      <div id="notebook-font-sizes-left-panel">
+                        <div>
+                          <label for="font-size-in-px-of-top-panel-of-tags">Top panel of tags:</label>
+                          <input id="font-size-in-px-of-top-panel-of-tags" size="6">
+                        </div>
+                        <div>
+                          <label for="font-size-in-px-of-bottom-panel-of-tags">Bottom panel of tags:</label>
+                          <input id="font-size-in-px-of-bottom-panel-of-tags" size="6">
+                        </div>
+                        <div id="notebook-tooltips-font-size-wrapper">
+                          <label for="font-size-in-px-of-tooltips">(Tooltips:)</label>
+                          <input id="font-size-in-px-of-tooltips" size="6">
+                        </div>
+                      </div>
+                      <div id="notebook-font-sizes-right-panel">
+                        <div>
+                          <label for="font-size-in-px-of-top-panel-of-notes">Top panel of notes:</label>
+                          <input id="font-size-in-px-of-top-panel-of-notes" size="6">
+                        </div>
+                        <div>
+                          <label for="font-size-in-px-of-bottom-panel-of-notes">Bottom panel of notes:</label>
+                          <input id="font-size-in-px-of-bottom-panel-of-notes" size="6">
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div id="notebook-font-sizes-right-panel">
-                    <div>
-                      <label for="font-size-in-px-of-top-panel-of-notes">Top panel of notes:</label>
-                      <input id="font-size-in-px-of-top-panel-of-notes" size="6">
-                    </div>
-                    <div>
-                      <label for="font-size-in-px-of-bottom-panel-of-notes">Bottom panel of notes:</label>
-                      <input id="font-size-in-px-of-bottom-panel-of-notes" size="6">
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div>
-                Font sizes in composite main window:
-                <div id="notebook-font-sizes-on-main-window-wrapper">
-                  <div id="notebook-font-sizes-on-main-window-left-panel">
-                    <div>
-                      <label for="font-size-in-px-of-top-panel-of-tags-on-main-window">Top panel of tags:</label>
-                      <input id="font-size-in-px-of-top-panel-of-tags-on-main-window" size="6">
-                    </div>
-                    <div>
-                      <label for="font-size-in-px-of-bottom-panel-of-tags-on-main-window">Bottom panel of tags:</label>
-                      <input id="font-size-in-px-of-bottom-panel-of-tags-on-main-window" size="6">
-                    </div>
-                    <div id="notebook-tooltips-font-size-on-main-window-wrapper">
-                      <label for="font-size-in-px-of-tooltips-on-main-window">(Tooltips:)</label>
-                      <input id="font-size-in-px-of-tooltips-on-main-window" size="6">
-                    </div>
-                  </div>
-                  <div id="notebook-font-sizes-on-main-window-right-panel">
-                    <div>
-                      <label for="font-size-in-px-of-top-panel-of-notes-on-main-window">Top panel of notes:</label>
-                      <input id="font-size-in-px-of-top-panel-of-notes-on-main-window" size="6">
-                    </div>
-                    <div>
-                      <label for="font-size-in-px-of-bottom-panel-of-notes-on-main-window">Bottom panel of notes:</label>
-                      <input id="font-size-in-px-of-bottom-panel-of-notes-on-main-window" size="6">
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div>
-                Node icons:
-                <div id="notebook-node-icons-wrapper">
-                  <div id="notebook-node-icons-left-panel">
-                    <div>
-                      In tags tree:
-                    </div>
-                    <div id="notebook-node-icons-list-of-tags-tree" class="icons-list-container">
-                    </div>
-                  </div>
-                  <div id="notebook-node-icons-right-panel">
-                    <div>
-                      In notes tree:
-                    </div>
-                    <div id="notebook-node-icons-list-of-notes-tree" class="icons-list-container">
+                  <div>
+                    Node icons:
+                    <div id="notebook-node-icons-wrapper">
+                      <div id="notebook-node-icons-left-panel">
+                        <div>
+                          In tags tree:
+                        </div>
+                        <div id="notebook-node-icons-list-of-tags-tree" class="icons-list-container">
+                        </div>
+                      </div>
+                      <div id="notebook-node-icons-right-panel">
+                        <div>
+                          In notes tree:
+                        </div>
+                        <div id="notebook-node-icons-list-of-notes-tree" class="icons-list-container">
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               <div>
-                Node icons in composite main window:
-                <div id="notebook-node-icons-in-main-window-wrapper">
-                  <div id="notebook-node-icons-in-main-window-left-panel">
-                    <div>
-                      In tags tree:
-                    </div>
-                    <div id="notebook-node-icons-list-of-tags-tree-in-main-window" class="icons-list-container">
+                Notebook in composite main window:
+                <div id="notebook-in-main-window-settings-fields-container">
+                  <div>
+                    Font sizes in composite main window:
+                    <div id="notebook-font-sizes-on-main-window-wrapper">
+                      <div id="notebook-font-sizes-on-main-window-left-panel">
+                        <div>
+                          <label for="font-size-in-px-of-top-panel-of-tags-on-main-window">Top panel of tags:</label>
+                          <input id="font-size-in-px-of-top-panel-of-tags-on-main-window" size="6">
+                        </div>
+                        <div>
+                          <label for="font-size-in-px-of-bottom-panel-of-tags-on-main-window">Bottom panel of tags:</label>
+                          <input id="font-size-in-px-of-bottom-panel-of-tags-on-main-window" size="6">
+                        </div>
+                        <div id="notebook-tooltips-font-size-on-main-window-wrapper">
+                          <label for="font-size-in-px-of-tooltips-on-main-window">(Tooltips:)</label>
+                          <input id="font-size-in-px-of-tooltips-on-main-window" size="6">
+                        </div>
+                      </div>
+                      <div id="notebook-font-sizes-on-main-window-right-panel">
+                        <div>
+                          <label for="font-size-in-px-of-top-panel-of-notes-on-main-window">Top panel of notes:</label>
+                          <input id="font-size-in-px-of-top-panel-of-notes-on-main-window" size="6">
+                        </div>
+                        <div>
+                          <label for="font-size-in-px-of-bottom-panel-of-notes-on-main-window">Bottom panel of notes:</label>
+                          <input id="font-size-in-px-of-bottom-panel-of-notes-on-main-window" size="6">
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div id="notebook-node-icons-in-main-window-right-panel">
-                    <div>
-                      In notes tree:
-                    </div>
-                    <div id="notebook-node-icons-list-of-notes-tree-in-main-window" class="icons-list-container">
+                  <div>
+                    Node icons in composite main window:
+                    <div id="notebook-node-icons-in-main-window-wrapper">
+                      <div id="notebook-node-icons-in-main-window-left-panel">
+                        <div>
+                          In tags tree:
+                        </div>
+                        <div id="notebook-node-icons-list-of-tags-tree-in-main-window" class="icons-list-container">
+                        </div>
+                      </div>
+                      <div id="notebook-node-icons-in-main-window-right-panel">
+                        <div>
+                          In notes tree:
+                        </div>
+                        <div id="notebook-node-icons-list-of-notes-tree-in-main-window" class="icons-list-container">
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

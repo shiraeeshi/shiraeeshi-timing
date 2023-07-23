@@ -186,10 +186,48 @@ function handleConfig(config) {
   if (config.notebook === undefined) {
     config.notebook = {};
   }
-  let backgroundColor = config.notebook['background-color'];
-  if (backgroundColor !== undefined) {
-    document.body.style.backgroundColor = backgroundColor;
+
+  let notebookMainContainer = document.getElementById('notebook-main-container');
+
+  let backgroundColor = config.notebook['notebook-window-background-color'];
+  if (backgroundColor === undefined) {
+    backgroundColor = 'white';
   }
+  document.body.style.backgroundColor = backgroundColor;
+
+  let textColor = config.notebook['notebook-window-text-color'];
+  let textColorToSet = 'black';
+  if (textColor === undefined) {
+    textColorToSet = 'black';
+  } else if (textColor === 'black') {
+    textColorToSet = 'black';
+  } else if (textColor === 'dark-grey') {
+    textColorToSet = '#32323a';
+  } else if (textColor === 'light-grey') {
+    textColorToSet = '#707070';
+  } else if (textColor === 'white') {
+    textColorToSet = 'white';
+  }
+  notebookMainContainer.style.color = textColorToSet;
+
+  let iconsColor = config.notebook['notebook-window-icons-color'];
+  if (iconsColor === undefined) {
+    iconsColor = 'black';
+  }
+  let iconsCssClass;
+  if (iconsColor === 'black') {
+    iconsCssClass = 'black-icons';
+  } else if (iconsColor === 'dark-grey') {
+    iconsCssClass = 'dark-grey-icons';
+  } else if (iconsColor === 'light-grey') {
+    iconsCssClass = 'light-grey-icons';
+  } else if (iconsColor === 'white') {
+    iconsCssClass = 'white-icons';
+  } else {
+    iconsCssClass = 'black-icons';
+  }
+  notebookMainContainer.classList.add(iconsCssClass);
+
   let fontSizeOfTopPanelOfNotes = config.notebook['font-size-in-px-of-top-panel-of-notes'];
   if (fontSizeOfTopPanelOfNotes === undefined) {
     fontSizeOfTopPanelOfNotes = 16;

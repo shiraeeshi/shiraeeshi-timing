@@ -186,6 +186,10 @@ NotebookTagsTreeNodeView.prototype.name2html = function() {
   return withChildren(a, document.createTextNode(that.name))
 };
 
+NotebookTagsTreeNodeView.prototype._addMouseClickListener = function(htmlElem) {
+  return;
+};
+
 NotebookTagsTreeNodeView.prototype._createIconsList = function() {
   let that = this;
   let iconMoveToTop =
