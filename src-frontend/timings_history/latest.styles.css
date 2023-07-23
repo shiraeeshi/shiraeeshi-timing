@@ -7,12 +7,11 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  background-color: darkslategrey;
+/*  background-color: darkslategrey;  */
   background-repeat: no-repeat;
   background-size: cover;
   background-position: right bottom;
   background-attachment: fixed;
-  color: white;
 }
 
 #history-main-container {
@@ -77,16 +76,13 @@ body {
   flex: 1 1 25%;
   min-height: 25%;
   overflow-y: auto;
-  color: white;
 }
 
 li.timing-row-parent-li {
-  color: white;
   opacity: 1;
 }
 
 li.timing-row-parent-li.greyed-out {
-  color: white;
   opacity: .3;
 }
 
@@ -100,9 +96,9 @@ li.timing-row-parent-li.highlighted-from-canvas,
   color: red !important;
 }
 
-ul.timings-categories-tree {
-  color: white;
-}
+/* ul.timings-categories-tree { */
+/*   color: white;              */
+/* }                            */
 
 .proc-node > a, .proc-leaf > a {
   cursor: pointer;
@@ -130,11 +126,61 @@ li.proc-leaf {
 }
 
 .proc-node-open .proc-node-icon {
-  background: url('../img/proc-node-minus.png') no-repeat top left;
+  background: url('../img/black-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.black-icons
+.proc-node-open .proc-node-icon {
+  background: url('../img/black-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.dark-grey-icons
+.proc-node-open .proc-node-icon {
+  background: url('../img/dark-grey-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.light-grey-icons
+.proc-node-open .proc-node-icon {
+  background: url('../img/light-grey-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.white-icons
+.proc-node-open .proc-node-icon {
+  background: url('../img/white-proc-node-minus.png') no-repeat top left;
+  background-size: contain;
 }
 
 .proc-node-closed .proc-node-icon {
-  background: url('../img/proc-node-plus.png') no-repeat top left;
+  background: url('../img/black-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.black-icons
+.proc-node-closed .proc-node-icon {
+  background: url('../img/black-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.dark-grey-icons
+.proc-node-closed .proc-node-icon {
+  background: url('../img/dark-grey-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.light-grey-icons
+.proc-node-closed .proc-node-icon {
+  background: url('../img/light-grey-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
+}
+
+.white-icons
+.proc-node-closed .proc-node-icon {
+  background: url('../img/white-proc-node-plus.png') no-repeat top left;
+  background-size: contain;
 }
 
 .proc-node-open .proc-node-icon, .proc-node-closed .proc-node-icon {
