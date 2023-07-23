@@ -6,6 +6,8 @@ const YAML = require('yaml');
 
 const { forgetLastModifiedTimeOfTimings } = require('../../logic/timing_index_manager.js');
 
+const { expanduser } = require('../../logic/file_utils.js');
+
 ipcMain.on('msg', (_event, msg) => {
   console.log(`[preferences.js] message from preferences: ${msg}`);
 });
@@ -78,6 +80,17 @@ ipcMain.on('preferences_msg__join_dirname_filename', async (event, dirName, file
 
   event.sender.send('message-from-backend', {
     type: 'result_join_dirname_filename',
+    result
+  });
+});
+
+ipcMain.on('preferences_msg__mk_filepath_with_expanded_user', async (event, filepath) => {
+
+  let result = expanduser(filepath);
+
+  event.sender.send('message-from-backend', {
+    type: 'result_mk_filepath_with_expanded_user',
+    filepath,
     result
   });
 });
@@ -442,6 +455,9 @@ async function init(appEnv, win) {
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
 
   const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
+  config.timings.forEach(t => {
+    t.filepathWithExpandedUser = expanduser(t.filepath);
+  });
 
   await func({
     config: config,

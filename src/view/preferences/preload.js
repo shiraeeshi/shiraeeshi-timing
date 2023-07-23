@@ -35,6 +35,11 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('preferences_msg__join_dirname_filename', dirName, filename);
       }
     },
+    preferences_msg__mk_filepath_with_expanded_user: {
+      postMessage: (filepath) => {
+        ipcRenderer.send('preferences_msg__mk_filepath_with_expanded_user', filepath);
+      }
+    },
     preferences_msg__enable_shortcuts: {
       postMessage: () => {
         console.log('[preload.js] webkit.messageHandlers.preferences_msg__enable_shortcuts.postMessage');

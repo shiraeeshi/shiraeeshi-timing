@@ -45,9 +45,23 @@ TimingsFileInfosListView.prototype.hasInfoWithName = function(name) {
   return that.timingsToShow.find(timingsFileInfo => timingsFileInfo.name === name) !== undefined;
 };
 
-TimingsFileInfosListView.prototype.findInfoWithFilepath = function(filepath) {
+TimingsFileInfosListView.prototype.findInfoWithFilepath = function(filepath, filepathWithExpandedUser) {
   let that = this;
-  return that.timingsToShow.find(timingsFileInfo => timingsFileInfo.filepath === filepath);
+  return that.timingsToShow.find(timingsFileInfo => {
+    if (timingsFileInfo.filepath === filepath) {
+      return true;
+    }
+    if (timingsFileInfo.filepathWithExpandedUser === undefined) {
+      return false;
+    }
+    if (timingsFileInfo.filepathWithExpandedUser === filepath) {
+      return true;
+    }
+    if (filepathWithExpandedUser === undefined) {
+      return false;
+    }
+    return timingsFileInfo.filepathWithExpandedUser === filepathWithExpandedUser;
+  });
 };
 
 TimingsFileInfosListView.prototype.dataIsSameAsOriginal = function() {

@@ -57,6 +57,12 @@ function handleServerMessage(msg) {
     }
     return;
   }
+  if (msg.type === 'result_mk_filepath_with_expanded_user') {
+    if (my.result_handler_mk_filepath_with_expanded_user) {
+      my.result_handler_mk_filepath_with_expanded_user(msg.filepath, msg.result);
+    }
+    return;
+  }
   if (msg.type === 'save_result') {
     if (my.save_result_handler) {
       my.save_result_handler(msg.result, msg);
@@ -652,7 +658,9 @@ function initTimingsUIs() {
         return;
       }
 
-      let isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined;
+      let filepathWithExpandedUser = await mkFilepathWithExpandedUser(filepath);
+
+      let isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath, filepathWithExpandedUser) !== undefined;
 
       if (isConflictingFilepath) {
         alert('filepath is already in use.');
@@ -750,7 +758,7 @@ function initTimingsUIs() {
   });
 
   let btnNewTimingsFileInfoSave = document.getElementById('btn-new-timings-file-info-save');
-  btnNewTimingsFileInfoSave.addEventListener('click', (eve) => {
+  btnNewTimingsFileInfoSave.addEventListener('click', async (eve) => {
     let inputName = document.getElementById('new-timing-name');
     let inputFilepath = document.getElementById('new-timing-filepath');
     let selectorOfFormat = document.getElementById('new-timing-format');
@@ -781,7 +789,9 @@ function initTimingsUIs() {
       return;
     }
 
-    let isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined;
+    let filepathWithExpandedUser = await mkFilepathWithExpandedUser(filepath);
+
+    let isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath, filepathWithExpandedUser) !== undefined;
 
     if (isConflictingFilepath) {
       alert('filepath is already in use.');
@@ -919,7 +929,7 @@ function initTimingsUIs() {
   disableShortcutsOnFocus(document.getElementById('timing-info-competitiveness-level'));
 
   let btnTimingsFileInfoSave = document.getElementById('btn-timings-file-info-save');
-  btnTimingsFileInfoSave.addEventListener('click', (eve) => {
+  btnTimingsFileInfoSave.addEventListener('click', async (eve) => {
     if (my.currentTimingsFileInfoBeingEdited === undefined) {
       alert('error: no timings-file-info to save');
       return;
@@ -963,7 +973,8 @@ function initTimingsUIs() {
     if (filepath === my.currentTimingsFileInfoBeingEdited.filepath) {
       isConflictingFilepath = false;
     } else {
-      isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath) !== undefined;
+      let filepathWithExpandedUser = await mkFilepathWithExpandedUser(filepath);
+      isConflictingFilepath = my.timingsFileInfosListView.findInfoWithFilepath(filepath, filepathWithExpandedUser) !== undefined;
     }
 
     if (isConflictingFilepath) {
@@ -2873,6 +2884,15 @@ function filenameExistsInWallpapersDir(filename) {
   return new Promise((resolve, reject) => {
     window.webkit.messageHandlers.preferences_msg__filename_exists_in_wallpapers_dir.postMessage(filename);
     my.result_handler_filename_exists_in_wallpapers_dir = (filename, result) => {
+      resolve(result);
+    }
+  });
+}
+
+function mkFilepathWithExpandedUser(filepath) {
+  return new Promise((resolve, reject) => {
+    window.webkit.messageHandlers.preferences_msg__mk_filepath_with_expanded_user.postMessage(filepath);
+    my.result_handler_mk_filepath_with_expanded_user = (filepath, result) => {
       resolve(result);
     }
   });
