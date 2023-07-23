@@ -28,10 +28,6 @@ let my = {
   //   minutesRange: 0,
   //   minutesMaxDiff: 0
   // },
-  wallpapers: {
-    lst: null,
-    idx: 0
-  },
   timingsFormatErrorHandler: (err) => {
     showTimingsFormatError("inner-content-wrapper", err)
   }
@@ -43,23 +39,8 @@ window.webkit.messageHandlers.timings_summary_msgs.onMessage(handleServerMessage
 
 function handleServerMessage(msg) {
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage start ");
-  if (msg.type == "wallpapers") {
-    my.wallpapers.lst = msg.wallpapers;
-    let randomIndex = getRandomInt(my.wallpapers.lst.length);
-    document.body.style.backgroundImage = "url(" + my.wallpapers.lst[randomIndex] + ")";
-    return;
-  }
   if (msg.type == "key_pressed") {
-    if (msg.keyval == "w") {
-      my.wallpapers.idx++;
-      if (my.wallpapers.idx >= my.wallpapers.lst.length) {
-        my.wallpapers.idx = 0;
-      }
-      window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage current wallpaper: " +
-        my.wallpapers.lst[my.wallpapers.idx]);
-      // document.body.style.backgroundImage = "url(wallpapers/" + my.wallpapers.lst[my.wallpapers.idx] + ")";
-      document.body.style.backgroundImage = "url(" + my.wallpapers.lst[my.wallpapers.idx] + ")";
-    } else if (msg.keyval == "m") {
+    if (msg.keyval == "m") {
       my.minimalTextForTimings = !my.minimalTextForTimings;
       if (my.minimalTextForTimings) {
         clearTimingsTextWrapper();
@@ -108,6 +89,48 @@ function handleServerMessage(msg) {
 
 function handleConfig() {
   let config = my.config;
+
+  let timingsMainContainer = document.getElementById('timings-main-container');
+
+  let bgColor = config['timings-config']['summary-window-background-color'];
+  if (bgColor === undefined) {
+    bgColor = 'white';
+  }
+  document.body.style.backgroundColor = bgColor;
+
+  let textColor = config['timings-config']['summary-window-text-color'];
+  let textColorToSet = 'black';
+  if (textColor === undefined) {
+    textColorToSet = 'black';
+  } else if (textColor === 'black') {
+    textColorToSet = 'black';
+  } else if (textColor === 'dark-grey') {
+    textColorToSet = '#32323a';
+  } else if (textColor === 'light-grey') {
+    textColorToSet = '#707070';
+  } else if (textColor === 'white') {
+    textColorToSet = 'white';
+  }
+  timingsMainContainer.style.color = textColorToSet;
+
+  let iconsColor = config['timings-config']['summary-window-icons-color'];
+  if (iconsColor === undefined) {
+    iconsColor = 'black';
+  }
+  let iconsCssClass;
+  if (iconsColor === 'black') {
+    iconsCssClass = 'black-icons';
+  } else if (iconsColor === 'dark-grey') {
+    iconsCssClass = 'dark-grey-icons';
+  } else if (iconsColor === 'light-grey') {
+    iconsCssClass = 'light-grey-icons';
+  } else if (iconsColor === 'white') {
+    iconsCssClass = 'white-icons';
+  } else {
+    iconsCssClass = 'black-icons';
+  }
+  timingsMainContainer.classList.add(iconsCssClass);
+
   let canvasWrapper = document.getElementById("canvas-wrapper");
 
   my.isToUnderlineCanvas = !!config['timings-config']['underline-canvas'];

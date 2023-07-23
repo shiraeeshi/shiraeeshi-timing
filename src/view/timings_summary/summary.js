@@ -85,17 +85,6 @@ function setMenuAndKeyboardShortcuts(win) {
         }
       },
       {
-        label: 'change wallpaper',
-        accelerator: 'w',
-        click: () => {
-          const msg = {
-            "type": "key_pressed",
-            "keyval": "w"
-          };
-          win.webContents.send('message-from-backend', msg);
-        }
-      },
-      {
         label: 'open devtools',
         accelerator: 'Ctrl+Shift+J',
         click: () => {
@@ -165,31 +154,28 @@ async function init(appEnv, win) {
   console.log(`[summary.js] configFilepath: ${configFilepath}`);
   console.log(`[summary.js] indexDirFilepath: ${indexDirFilepath}`);
   const timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
-  console.log('[init] 1');
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
-  console.log('[init] 2');
   const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
   const today = new Date();
-  const fiveDaysAgo = new Date();
+  const threeDaysAgo = new Date();
 
-  fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
   // today.setTime(Date.parse(dateAsYearMonthDayWithHyphens(today) + "T00:00:00")); // format: "YYYY-mm-ddT00:00:00"
   today.setHours(0);
   today.setMinutes(0);
   today.setSeconds(0);
-  // fiveDaysAgo.setTime(Date.parse(dateAsYearMonthDayWithHyphens(fiveDaysAgo) + "T00:00:00")); // format: "YYYY-mm-ddT00:00:00"
-  fiveDaysAgo.setHours(0);
-  fiveDaysAgo.setMinutes(0);
-  fiveDaysAgo.setSeconds(0);
+  // threeDaysAgo.setTime(Date.parse(dateAsYearMonthDayWithHyphens(threeDaysAgo) + "T00:00:00")); // format: "YYYY-mm-ddT00:00:00"
+  threeDaysAgo.setHours(0);
+  threeDaysAgo.setMinutes(0);
+  threeDaysAgo.setSeconds(0);
 
-  // console.log(`[main.js] fiveDaysAgo: ${fiveDaysAgo}, today: ${today}`);
-  // console.log(`[main.js] fiveDaysAgo: ${dateAsDayMonthYearWithDots(fiveDaysAgo)}, today: ${dateAsDayMonthYearWithDots(today)}`);
+  // console.log(`[main.js] threeDaysAgo: ${threeDaysAgo}, today: ${today}`);
+  // console.log(`[main.js] threeDaysAgo: ${dateAsDayMonthYearWithDots(threeDaysAgo)}, today: ${dateAsDayMonthYearWithDots(today)}`);
 
-  console.log('[init] 3');
-  let timingsOfFiveLastDays;
+  let timingsOfThreeLastDays;
   try {
-    timingsOfFiveLastDays = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, fiveDaysAgo, today);
+    timingsOfThreeLastDays = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, threeDaysAgo, today);
   } catch (err) {
     func({
       "type": "error_message",
@@ -199,34 +185,14 @@ async function init(appEnv, win) {
       "message": err.message
     });
   }
-  console.log('[init] 4');
 
-  console.log(`[main.js] timingsOfFiveLastDays: ${JSON.stringify(timingsOfFiveLastDays)}`);
-  console.log('[init] 5');
+  console.log(`[main.js] timingsOfThreeLastDays: ${JSON.stringify(timingsOfThreeLastDays)}`);
 
   await func({
     config: config,
-    timings: timingsOfFiveLastDays
+    timings: timingsOfThreeLastDays
   });
-  console.log('[init] 6');
 
-  let wallpapersDirPath;
-  if (appEnv.stage === 'production') {
-    wallpapersDirPath = path.join(homeDirPath, 'pm_app', 'wallpapers');
-  } else {
-    wallpapersDirPath = path.join(homeDirPath, 'test_pm_app2', 'wallpapers');
-  }
-  const wallpapersFilenames = await fs.promises.readdir(wallpapersDirPath, { encoding: 'utf8' });
-  console.log('[init] 7');
-  console.log(`wallpapersFilenames: ${wallpapersFilenames}`);
-  const relativePathToWallpapersDir = path.relative('dist-frontend', wallpapersDirPath);
-  console.log(`relativePathToWallpapersDir: ${relativePathToWallpapersDir}`);
-
-
-  await func({
-    "type": "wallpapers",
-    "wallpapers": wallpapersFilenames.map(n => path.join(relativePathToWallpapersDir, n))
-  });
 }
 
 function convertConfigFromYamlFormat(config) {
