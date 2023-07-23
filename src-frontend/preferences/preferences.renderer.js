@@ -2746,6 +2746,76 @@ function initFrequenciesUIs() {
 
 
 function initPostTimingDialogUIs() {
+
+  let inputFrequenciesWindowBgColor = document.getElementById('post-timing-dialog-background-color');
+  inputFrequenciesWindowBgColor.value = my.config.post_timing_dialog['post-timing-dialog-background-color'];
+  inputFrequenciesWindowBgColor.addEventListener('change', (eve) => {
+    let currentValue = inputFrequenciesWindowBgColor.value;
+    my.config['post_timing_dialog']['post-timing-dialog-background-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig.post_timing_dialog['post-timing-dialog-background-color'];
+    let label = document.getElementById('tab5-label');
+    if (!sameAsOldValue) {
+      if (!my.showingPostTimingDialogHeaderWithStar) {
+        label.innerHTML = 'Post-timing dialog*';
+        my.showingPostTimingDialogHeaderWithStar = true;
+      }
+      return;
+    }
+    if (postTimingDialogConfigIsSameAsOriginal(my.config.post_timing_dialog, my.originalConfig.post_timing_dialog)) {
+      label.innerHTML = 'Post-timing dialog';
+      my.showingPostTimingDialogHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Post-timing dialog*';
+      my.showingPostTimingDialogHeaderWithStar = true;
+    }
+  });
+  disableShortcutsOnFocus(inputFrequenciesWindowBgColor);
+
+  let htmlSelectFrequenciesWindowTextColor = document.getElementById('post-timing-dialog-text-color');
+  htmlSelectFrequenciesWindowTextColor.value = my.config['post_timing_dialog']['post-timing-dialog-text-color'];
+  htmlSelectFrequenciesWindowTextColor.addEventListener('change', (eve) => {
+    let currentValue = htmlSelectFrequenciesWindowTextColor.value;
+    my.config['post_timing_dialog']['post-timing-dialog-text-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['post_timing_dialog']['post-timing-dialog-text-color'];
+    let label = document.getElementById('tab5-label');
+    if (!sameAsOldValue) {
+      if (!my.showingPostTimingDialogHeaderWithStar) {
+        label.innerHTML = 'Post-timing dialog*';
+        my.showingPostTimingDialogHeaderWithStar = true;
+      }
+      return;
+    }
+    if (postTimingDialogConfigIsSameAsOriginal(my.config.post_timing_dialog, my.originalConfig.post_timing_dialog)) {
+      label.innerHTML = 'Post-timing dialog';
+      my.showingPostTimingDialogHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Post-timing dialog*';
+      my.showingPostTimingDialogHeaderWithStar = true;
+    }
+  });
+
+  let htmlSelectFrequenciesWindowIconsColor = document.getElementById('post-timing-dialog-icons-color');
+  htmlSelectFrequenciesWindowIconsColor.value = my.config['post_timing_dialog']['post-timing-dialog-icons-color'];
+  htmlSelectFrequenciesWindowIconsColor.addEventListener('change', (eve) => {
+    let currentValue = htmlSelectFrequenciesWindowIconsColor.value;
+    my.config['post_timing_dialog']['post-timing-dialog-icons-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['post_timing_dialog']['post-timing-dialog-icons-color'];
+    let label = document.getElementById('tab5-label');
+    if (!sameAsOldValue) {
+      if (!my.showingPostTimingDialogHeaderWithStar) {
+        label.innerHTML = 'Post-timing dialog*';
+        my.showingPostTimingDialogHeaderWithStar = true;
+      }
+      return;
+    }
+    if (postTimingDialogConfigIsSameAsOriginal(my.config.post_timing_dialog, my.originalConfig.post_timing_dialog)) {
+      label.innerHTML = 'Post-timing dialog';
+      my.showingPostTimingDialogHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Post-timing dialog*';
+      my.showingPostTimingDialogHeaderWithStar = true;
+    }
+  });
   // function initPostTimingDialogCheckbox(configName, htmlElemId) {
   //   if (htmlElemId === undefined) {
   //     htmlElemId = configName;

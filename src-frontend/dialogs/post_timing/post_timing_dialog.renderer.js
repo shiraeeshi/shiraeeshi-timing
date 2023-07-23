@@ -86,6 +86,8 @@ function handleServerMessage(msg) {
 
     my.config = msg.config;
 
+    handleWindowConfig();
+
     my.datetimeKey = msg.datetimeKey;
 
     my.categoryPath2File = buildTreeFromCategoryPathToFile(config);
@@ -131,6 +133,55 @@ function handleServerMessage(msg) {
     window.webkit.messageHandlers.post_timing_dialog_msgs.postMessage("handleServerMessage. error: " + err.message);
     throw err;
   }
+}
+
+function handleWindowConfig() {
+  let config = my.config;
+
+  if (config.post_timing_dialog === undefined) {
+    config.post_timing_dialog = {};
+  }
+
+  let postTimingDialogMainContainer = document.getElementById('post-timing-dialog-main-container');
+
+  let backgroundColor = config.post_timing_dialog['post-timing-dialog-background-color'];
+  if (backgroundColor === undefined) {
+    backgroundColor = 'white';
+  }
+  document.body.style.backgroundColor = backgroundColor;
+
+  let textColor = config.post_timing_dialog['post-timing-dialog-text-color'];
+  let textColorToSet = 'black';
+  if (textColor === undefined) {
+    textColorToSet = 'black';
+  } else if (textColor === 'black') {
+    textColorToSet = 'black';
+  } else if (textColor === 'dark-grey') {
+    textColorToSet = '#32323a';
+  } else if (textColor === 'light-grey') {
+    textColorToSet = '#707070';
+  } else if (textColor === 'white') {
+    textColorToSet = 'white';
+  }
+  postTimingDialogMainContainer.style.color = textColorToSet;
+
+  let iconsColor = config.post_timing_dialog['post-timing-dialog-icons-color'];
+  if (iconsColor === undefined) {
+    iconsColor = 'black';
+  }
+  let iconsCssClass;
+  if (iconsColor === 'black') {
+    iconsCssClass = 'black-icons';
+  } else if (iconsColor === 'dark-grey') {
+    iconsCssClass = 'dark-grey-icons';
+  } else if (iconsColor === 'light-grey') {
+    iconsCssClass = 'light-grey-icons';
+  } else if (iconsColor === 'white') {
+    iconsCssClass = 'white-icons';
+  } else {
+    iconsCssClass = 'black-icons';
+  }
+  postTimingDialogMainContainer.classList.add(iconsCssClass);
 }
 
 function showDatetimeOfTiming() {
