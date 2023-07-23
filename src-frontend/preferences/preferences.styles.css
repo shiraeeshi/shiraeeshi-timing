@@ -204,11 +204,11 @@ footer a {
   border-top: 1px solid #ddd;
 }
 
-#tab-contents-of-notebook > div > div {
+#tab-contents-of-notebook > div#notebook-settings-fields-container > div {
   border: none;
 }
 
-#tab-contents-of-notebook > div > div:not(:first-child) {
+#tab-contents-of-notebook > div#notebook-settings-fields-container > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
@@ -777,8 +777,156 @@ h2 {
 
 
 
+
+#notebook-filepath-wizard {
+  padding: 0;
+  border: none;
+}
+
+#notebook-filepath-wizard > .notebook-filepath-wizard-step {
+  display: none;
+}
+
+#notebook-filepath-wizard > .notebook-filepath-wizard-step.current-step {
+  display: block;
+}
+
+#btns-in-notebook-filepath-wizard {
+  display: flex;
+  justify-content: flex-end;
+  border: none;
+}
+
+#btns-in-notebook-filepath-wizard > div.left-side-btns {
+  flex: 1;
+  border: none;
+  padding: 0;
+}
+
+#btns-in-notebook-filepath-wizard > div.right-side-btns {
+  border: none;
+  padding: 0;
+  margin-left: 10px;
+  width: unset;
+}
+
+#btns-in-notebook-filepath-wizard button.hidden-btn {
+  display: none;
+}
+
+#btn-notebook-filepath-wizard-next-step {
+  margin-left: 4px;
+}
+
+#btn-notebook-filepath-wizard-save {
+  margin-left: 4px;
+}
+
+
+
+
+
+
+
+
+#notebook-filepath-wizard >
+#notebook-filepath-wizard-step-pre-filepath {
+  border: none;
+}
+
+#notebook-filepath-wizard >
+#notebook-filepath-wizard-step-pre-filepath >
+h2 {
+  margin-bottom: 10px;
+}
+
+#notebook-filepath-wizard >
+#notebook-filepath-wizard-step-pre-filepath >
+#notebook-filepath-dir-or-file-choice-container {
+  display: flex;
+  border: none;
+  padding: 0;
+}
+
+#notebook-filepath-wizard >
+#notebook-filepath-wizard-step-pre-filepath >
+#notebook-filepath-dir-or-file-choice-container.invisible-screen {
+  display: none;
+}
+
+#notebook-filepath-wizard >
+#notebook-filepath-wizard-step-pre-filepath >
+#notebook-filepath-dir-or-file-choice-container >
+#notebook-filepath-dir-choice-btn-container {
+/*  flex: auto;  */
+  width: 50%;
+  border-right: none;
+}
+
+#notebook-filepath-wizard >
+#notebook-filepath-wizard-step-pre-filepath >
+#notebook-filepath-dir-or-file-choice-container >
+#notebook-filepath-file-choice-btn-container {
+  display: block;
+  border-left: 1px solid #ddd;
+  width: 50%;
+}
+
+#notebook-filepath-wizard >
+#notebook-filepath-wizard-step-pre-filepath >
+#notebook-filepath-dir-or-file-choice-container a {
+  cursor: pointer;
+}
+
+
+
+
+
+
+
+
+#notebook-filepath-wizard >
+#notebook-filepath-wizard-step-filepath {
+  border: none;
+}
+
+#notebook-filepath-wizard >
+#notebook-filepath-wizard-step-filepath >
+#notebook-filepath-dir-selector-container > div {
+  border: none;
+}
+
+#notebook-filepath-wizard >
+#notebook-filepath-wizard-step-filepath >
+#notebook-filepath-dir-selector-container > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+
+
+
+
+
+#notebook-filepath-undefined-container.hidden-field {
+  display: none;
+}
+
+#notebook-filepath-undefined-container {
+  border: none;
+  padding: 0;
+}
+
+
+
+
+#notebook-filepath-field-container.hidden-field {
+  display: none;
+}
+
 #notebook-filepath-field-container {
   display: flex;
+  border: none;
+  padding: 0;
 }
 
 #notebook-filepath-field-container > label {

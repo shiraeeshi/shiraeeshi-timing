@@ -147,6 +147,21 @@ ipcMain.on('msg_save', async (event, msg) => {
     // forgetLastModifiedTimesIfNeeded(timings, timingsToAdd, namesOfTimingsToDelete);
     forgetLastModifiedTimesIfNeeded(timings, indexDirFilepath);
 
+    if (configWithNoTimings.notebook !== undefined) {
+      if (configWithNoTimings.notebook.filepath !== undefined) {
+        let parentDir = path.dirname(configWithNoTimings.notebook.filepath);
+        let parentDirExists = await fs.promises.access(parentDir, fs.constants.F_OK).then(() => true).catch(() => false);
+        if (!parentDirExists) {
+          await fs.promises.mkdir(parentDir, { recursive: true });
+        }
+        let exists = await fs.promises.access(configWithNoTimings.notebook.filepath, fs.constants.F_OK).then(() => true).catch(() => false);
+        if (!exists) {
+          let filehandle = await fs.promises.open(configWithNoTimings.notebook.filepath, 'w');
+          await filehandle.close();
+        }
+      }
+    }
+
     for (let timingToAdd of timingsToAdd) {
       let parentDir = path.dirname(timingToAdd.filepath);
       let parentDirExists = await fs.promises.access(parentDir, fs.constants.F_OK).then(() => true).catch(() => false);

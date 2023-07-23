@@ -235,13 +235,80 @@
             </div>
           </div>
           <div id="tab-contents-of-notebook" class="tab-contents tab3">
-            <div>
-              <div id="notebook-filepath-field-container">
-                <label for="notebook-filepath">Notebook filepath:</label>
-                <input id="notebook-filepath">
-                <button id="notebook-filepath-btn">
-                  filepicker
-                </button>
+            <div id="notebook-filepath-wizard" class="invisible-screen">
+              <div id="btns-in-notebook-filepath-wizard">
+                <div class="left-side-btns">
+                  <button id="btn-notebook-filepath-wizard-cancel">
+                    Cancel
+                  </button>
+                </div>
+                <div class="right-side-btns">
+                  <button id="btn-notebook-filepath-wizard-prev-step">
+                    Back
+                  </button>
+                  <button id="btn-notebook-filepath-wizard-next-step">
+                    Next
+                  </button>
+                  <button id="btn-notebook-filepath-wizard-save">
+                    OK
+                  </button>
+                </div>
+              </div>
+              <div id="notebook-filepath-wizard-step-pre-filepath" class="notebook-filepath-wizard-step">
+                <h2>
+                  Notebook filepath
+                </h2>
+                <div id="notebook-filepath-dir-or-file-choice-container" class="no-border no-padding">
+                  <div id="notebook-filepath-dir-choice-btn-container">
+                    <a id="notebook-filepath-dir-choice-btn">
+                      select a directory to create a file in
+                    </a>
+                  </div>
+                  <div id="notebook-filepath-file-choice-btn-container">
+                    <a id="notebook-filepath-goto-existing-file-choice-btn">
+                      pick an existing file
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div id="notebook-filepath-wizard-step-filepath" class="notebook-filepath-wizard-step">
+                <div id="notebook-filepath-dir-selector-container" class="invisible-screen no-border no-padding">
+                  <div>
+                    <label for="notebook-parent-dir-filepath">Directory to create a file in:</label>
+                    <input id="notebook-parent-dir-filepath">
+                    <button id="notebook-parent-dir-filepath-btn">
+                      filepicker
+                    </button>
+                  </div>
+                  <div>
+                    <label for="notebook-filepath-to-create">Name of the file to create:</label>
+                    <input id="notebook-filepath-to-create">
+                  </div>
+                </div>
+                <div id="notebook-filepath-existing-file-selector-container" class="invisible-screen">
+                  <label for="notebook-existing-filepath">Filepath:</label>
+                  <input id="notebook-existing-filepath">
+                  <button id="notebook-existing-filepath-btn">
+                    filepicker
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div id="notebook-settings-fields-container">
+              <div>
+                <div id="notebook-filepath-field-container">
+                  <label for="notebook-filepath">Notebook filepath:</label>
+                  <input id="notebook-filepath">
+                  <button id="notebook-filepath-btn">
+                    filepicker
+                  </button>
+                </div>
+                <div id="notebook-filepath-undefined-container">
+                  Notebook filepath is undefined.
+                  <button id="notebook-filepath-define-btn">
+                    define filepath...
+                  </button>
+                </div>
               </div>
               <div>
                 <label for="notebook-background-color">Background color:</label>

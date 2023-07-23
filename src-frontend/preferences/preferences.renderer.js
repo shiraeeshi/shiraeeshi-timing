@@ -228,10 +228,22 @@ function initMainButtons() {
     timingsSelectDefaultSummary.value = my.config['timings-config']['default-summary'];
 
     let notebookInputFilepath = document.getElementById('notebook-filepath');
+
+    let notebookFilepathFieldContainer = document.getElementById('notebook-filepath-field-container');
+    let notebookFilepathUndefinedDiv = document.getElementById('notebook-filepath-undefined-container');
+
+    if (my.config.notebook.filepath === undefined) {
+      notebookFilepathFieldContainer.classList.add('hidden-field');
+      notebookFilepathUndefinedDiv.classList.remove('hidden-field');
+    } else {
+      notebookFilepathFieldContainer.classList.remove('hidden-field');
+      notebookFilepathUndefinedDiv.classList.add('hidden-field');
+      notebookInputFilepath.value = my.config.notebook.filepath;
+    }
+
     let notebookInputBackgroundColor = document.getElementById('notebook-background-color');
     let notebookRadioBtnStartWithBottomPanelOfNotesMaximized =
       document.getElementById('start-notebook-with-bottom-panel-of-notes-maximized');
-    notebookInputFilepath.value = my.config.notebook.filepath;
     notebookInputBackgroundColor.value = my.config.notebook['background-color'];
     notebookRadioBtnStartWithBottomPanelOfNotesMaximized.checked = !!my.config.notebook['start-with-bottom-panel-of-notes-maximized'];
 
@@ -1439,8 +1451,22 @@ function initTimingsConfigsUIs() {
 
 
 function initNotebookUIs() {
+  
+  disableShortcutsOnFocus(document.getElementById('notebook-parent-dir-filepath'));
+  disableShortcutsOnFocus(document.getElementById('notebook-filepath-to-create'));
+  disableShortcutsOnFocus(document.getElementById('notebook-existing-filepath'));
+
+  let notebookFilepathUndefinedDiv = document.getElementById('notebook-filepath-undefined-container');
+  let notebookFilepathFieldContainer = document.getElementById('notebook-filepath-field-container');
   let notebookInputFilepath = document.getElementById('notebook-filepath');
-  notebookInputFilepath.value = my.config.notebook.filepath;
+
+  if (my.config.notebook.filepath === undefined) {
+    notebookFilepathFieldContainer.classList.add('hidden-field');
+  } else {
+    notebookFilepathUndefinedDiv.classList.add('hidden-field');
+    notebookInputFilepath.value = my.config.notebook.filepath;
+  }
+
   notebookInputFilepath.addEventListener('change', (eve) => {
     let currentValue = notebookInputFilepath.value;
     my.config['notebook'].filepath = currentValue;
@@ -1477,6 +1503,230 @@ function initNotebookUIs() {
 
     let event = new Event('change');
     notebookInputFilepath.dispatchEvent(event);
+  });
+
+  let notebookFilepathDefineBtn = document.getElementById('notebook-filepath-define-btn');
+  notebookFilepathDefineBtn.addEventListener('click', (eve) => {
+    let notebookSettingsFieldsContainer = document.getElementById('notebook-settings-fields-container');
+    notebookSettingsFieldsContainer.classList.add('invisible-screen');
+
+    let notebookFilepathWizard = document.getElementById('notebook-filepath-wizard');
+    notebookFilepathWizard.classList.remove('invisible-screen');
+
+    let notebookFilepathWizardStepPreFilepath = document.getElementById('notebook-filepath-wizard-step-pre-filepath');
+    notebookFilepathWizardStepPreFilepath.classList.add('current-step');
+
+    let btnPrevStep = document.getElementById('btn-notebook-filepath-wizard-prev-step');
+    btnPrevStep.classList.add('hidden-btn');
+
+    let btnNextStep = document.getElementById('btn-notebook-filepath-wizard-next-step');
+    btnNextStep.classList.add('hidden-btn');
+
+    let btnWizardDone = document.getElementById('btn-notebook-filepath-wizard-save');
+    btnWizardDone.classList.add('hidden-btn');
+
+    let elem;
+
+    elem = document.getElementById('notebook-filepath-dir-selector-container');
+    elem.classList.add('invisible-screen');
+
+    elem = document.getElementById('notebook-filepath-existing-file-selector-container');
+    elem.classList.add('invisible-screen');
+  });
+
+  let btnNotebookFilepathWizardPrevStep = document.getElementById('btn-notebook-filepath-wizard-prev-step');
+  btnNotebookFilepathWizardPrevStep.addEventListener('click', (eve) => {
+    my.notebookFilepathWizardCurrentStep = 'pre-filepath';
+
+    let notebookFilepathWizardStepFilepath = document.getElementById('notebook-filepath-wizard-step-filepath');
+    notebookFilepathWizardStepFilepath.classList.remove('current-step');
+
+    let notebookFilepathWizardStepPreFilepath = document.getElementById('notebook-filepath-wizard-step-pre-filepath');
+    notebookFilepathWizardStepPreFilepath.classList.add('current-step');
+
+    let btnPrevStep = document.getElementById('btn-notebook-filepath-wizard-prev-step');
+    btnPrevStep.classList.add('hidden-btn');
+
+    let btnNextStep = document.getElementById('btn-notebook-filepath-wizard-next-step');
+    btnNextStep.classList.remove('hidden-btn');
+  });
+  
+  let btnNotebookFilepathWizardNextStep = document.getElementById('btn-notebook-filepath-wizard-next-step');
+  btnNotebookFilepathWizardNextStep.addEventListener('click', (eve) => {
+    my.notebookFilepathWizardCurrentStep = 'filepath';
+
+    let notebookFilepathWizardStepPreFilepath = document.getElementById('notebook-filepath-wizard-step-pre-filepath');
+    notebookFilepathWizardStepPreFilepath.classList.remove('current-step');
+
+    let notebookFilepathWizardStepFilepath = document.getElementById('notebook-filepath-wizard-step-filepath');
+    notebookFilepathWizardStepFilepath.classList.add('current-step');
+
+    let btnPrevStep = document.getElementById('btn-notebook-filepath-wizard-prev-step');
+    btnPrevStep.classList.remove('hidden-btn');
+
+    let btnNextStep = document.getElementById('btn-notebook-filepath-wizard-next-step');
+    btnNextStep.classList.add('hidden-btn');
+  });
+
+  let btnNotebookFilepathWizardChooseDirToCreateFileIn = document.getElementById('notebook-filepath-dir-choice-btn');
+  btnNotebookFilepathWizardChooseDirToCreateFileIn.addEventListener('click', (eve) => {
+    my.notebookFilepathWizardChoice = 'parent-dir';
+
+    let elem;
+
+    elem = document.getElementById('notebook-filepath-dir-selector-container');
+    elem.classList.remove('invisible-screen');
+
+    elem = document.getElementById('notebook-filepath-existing-file-selector-container');
+    elem.classList.add('invisible-screen');
+
+    my.notebookFilepathWizardCurrentStep = 'filepath';
+
+    elem = document.getElementById('notebook-parent-dir-filepath');
+    elem.value = '';
+
+    elem = document.getElementById('notebook-filepath-to-create');
+    elem.value = '';
+
+    let notebookFilepathWizardStepPreFilepath = document.getElementById('notebook-filepath-wizard-step-pre-filepath');
+    notebookFilepathWizardStepPreFilepath.classList.remove('current-step');
+
+    let notebookFilepathWizardStepFilepath = document.getElementById('notebook-filepath-wizard-step-filepath');
+    notebookFilepathWizardStepFilepath.classList.add('current-step');
+
+    let btnNotebookFilepathWizardPrevStep = document.getElementById('btn-notebook-filepath-wizard-prev-step');
+    btnNotebookFilepathWizardPrevStep.classList.remove('hidden-btn');
+
+    let btnNotebookFilepathWizardNextStep = document.getElementById('btn-notebook-filepath-wizard-next-step');
+    btnNotebookFilepathWizardNextStep.classList.add('hidden-btn');
+
+    let btnWizardDone = document.getElementById('btn-notebook-filepath-wizard-save');
+    btnWizardDone.classList.remove('hidden-btn');
+  });
+
+  let btnNotebookFilepathWizardChooseExistingFile = document.getElementById('notebook-filepath-goto-existing-file-choice-btn');
+  btnNotebookFilepathWizardChooseExistingFile.addEventListener('click', (eve) => {
+    my.notebookFilepathWizardChoice = 'existing-file';
+
+    let elem;
+
+    elem = document.getElementById('notebook-filepath-dir-selector-container');
+    elem.classList.add('invisible-screen');
+
+    elem = document.getElementById('notebook-filepath-existing-file-selector-container');
+    elem.classList.remove('invisible-screen');
+
+    my.notebookFilepathWizardCurrentStep = 'filepath';
+
+    elem = document.getElementById('notebook-existing-filepath');
+    elem.value = '';
+
+    let notebookFilepathWizardStepPreFilepath = document.getElementById('notebook-filepath-wizard-step-pre-filepath');
+    notebookFilepathWizardStepPreFilepath.classList.remove('current-step');
+
+    let notebookFilepathWizardStepFilepath = document.getElementById('notebook-filepath-wizard-step-filepath');
+    notebookFilepathWizardStepFilepath.classList.add('current-step');
+
+    let btnNotebookFilepathWizardPrevStep = document.getElementById('btn-notebook-filepath-wizard-prev-step');
+    btnNotebookFilepathWizardPrevStep.classList.remove('hidden-btn');
+
+    let btnNotebookFilepathWizardNextStep = document.getElementById('btn-notebook-filepath-wizard-next-step');
+    btnNotebookFilepathWizardNextStep.classList.add('hidden-btn');
+
+    let btnWizardDone = document.getElementById('btn-notebook-filepath-wizard-save');
+    btnWizardDone.classList.remove('hidden-btn');
+  });
+
+  let btnNotebookFilepathWizardParentDirFilepath = document.getElementById('notebook-parent-dir-filepath-btn');
+  btnNotebookFilepathWizardParentDirFilepath.addEventListener('click', async (eve) => {
+    let result = await pickDir();
+    if (result.canceled) {
+      return;
+    }
+    if (result.filePaths === undefined || result.filePaths.length === 0) {
+      return;
+    }
+    let filepath = result.filePaths[0];
+    let inputParentDirFilepath = document.getElementById('notebook-parent-dir-filepath');
+    inputParentDirFilepath.value = filepath;
+
+    let event = new Event('change');
+    inputParentDirFilepath.dispatchEvent(event);
+  });
+
+  let btnNotebookFilepathWizardExistingFilepath = document.getElementById('notebook-existing-filepath-btn');
+  btnNotebookFilepathWizardExistingFilepath.addEventListener('click', async (eve) => {
+    let result = await pickFile();
+    if (result.canceled) {
+      return;
+    }
+    if (result.filePaths === undefined || result.filePaths.length === 0) {
+      return;
+    }
+    let filepath = result.filePaths[0];
+    let inputFilepath = document.getElementById('notebook-existing-filepath');
+    inputFilepath.value = filepath;
+
+    let event = new Event('change');
+    inputFilepath.dispatchEvent(event);
+  });
+
+  let btnNotebookFilepathWizardDone = document.getElementById('btn-notebook-filepath-wizard-save');
+  btnNotebookFilepathWizardDone.addEventListener('click', async (eve) => {
+    let notebookInputFilepath = document.getElementById('notebook-filepath');
+
+    if (my.notebookFilepathWizardChoice === 'parent-dir') {
+      let dirInput = document.getElementById('notebook-parent-dir-filepath');
+      let filenameInput = document.getElementById('notebook-filepath-to-create');
+      if (dirInput.value === undefined ||
+          dirInput.value === '') {
+        alert('cannot define filepath: empty directory path');
+        return;
+      }
+      if (filenameInput.value === undefined ||
+          filenameInput.value === '') {
+        alert('cannot define filepath: empty filename');
+        return;
+      }
+      notebookInputFilepath.value = await joinDirNameAndFilename(dirInput.value, filenameInput.value);
+
+      let event = new Event('change');
+      notebookInputFilepath.dispatchEvent(event);
+    } else if (my.notebookFilepathWizardChoice === 'existing-file') {
+      let existingFileInput = document.getElementById('notebook-existing-filepath');
+      if (existingFileInput.value === undefined ||
+          existingFileInput.value === '') {
+        alert('cannot define filepath: empty filepath');
+        return;
+      }
+      notebookInputFilepath.value = existingFileInput.value;
+
+      let event = new Event('change');
+      notebookInputFilepath.dispatchEvent(event);
+    } else {
+      console.log(`error. notebookFilepathWizardChoice: '${my.notebookFilepathWizardChoice}' (expected 'parent-dir' or 'existing-file')`);
+      return;
+    }
+
+    notebookFilepathFieldContainer.classList.remove('hidden-field');
+    notebookFilepathUndefinedDiv.classList.add('hidden-field');
+
+    let notebookSettingsFieldsContainer = document.getElementById('notebook-settings-fields-container');
+    notebookSettingsFieldsContainer.classList.remove('invisible-screen');
+
+    let notebookFilepathWizard = document.getElementById('notebook-filepath-wizard');
+    notebookFilepathWizard.classList.add('invisible-screen');
+  });
+
+  let btnNotebookFilepathWizardCancel = document.getElementById('btn-notebook-filepath-wizard-cancel');
+  btnNotebookFilepathWizardCancel.addEventListener('click', (eve) => {
+    delete my.notebookFilepathWizardChoice;
+
+    let notebookSettingsFieldsContainer = document.getElementById('notebook-settings-fields-container');
+    notebookSettingsFieldsContainer.classList.remove('invisible-screen');
+
+    let notebookFilepathWizard = document.getElementById('notebook-filepath-wizard');
+    notebookFilepathWizard.classList.add('invisible-screen');
   });
 
   let notebookInputBackgroundColor = document.getElementById('notebook-background-color');
