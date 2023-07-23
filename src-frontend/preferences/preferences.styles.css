@@ -220,17 +220,17 @@ footer a {
   border-top: 1px solid #ddd;
 }
 
-#tab-contents-of-frequencies > div > #div-field-node-icons > div {
+#tab-contents-of-frequencies #div-field-node-icons > div {
   border: none;
   padding: 0;
   padding-left: 10%;
 }
 
-#tab-contents-of-frequencies > div > #div-field-node-icons > div > div {
+#tab-contents-of-frequencies #div-field-node-icons > div > div {
   border: none;
 }
 
-#tab-contents-of-frequencies > div > #div-field-node-icons > div > div:not(:first-child) {
+#tab-contents-of-frequencies #div-field-node-icons > div > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
@@ -251,19 +251,55 @@ div.icons-list-item > div.right-side-buttons-of-icons-list-item {
   width: unset;
 }
 
-#tab-contents-of-frequencies > div > #div-field-node-icons-in-main-window > div {
+#tab-contents-of-frequencies #div-field-node-icons-in-main-window > div {
   border: none;
   padding: 0;
   padding-left: 10%;
 }
 
-#tab-contents-of-frequencies > div > #div-field-node-icons-in-main-window > div > div {
+#tab-contents-of-frequencies #div-field-node-icons-in-main-window > div > div {
   border: none;
 }
 
-#tab-contents-of-frequencies > div > #div-field-node-icons-in-main-window > div > div:not(:first-child) {
+#tab-contents-of-frequencies #div-field-node-icons-in-main-window > div > div:not(:first-child) {
   border-top: 1px solid #ddd;
 }
+
+
+
+#frequencies-window-settings-fields-container {
+  border: none;
+  padding: 0;
+  padding-left: 5%;
+}
+
+#frequencies-window-settings-fields-container > div {
+  border: none;
+}
+
+#frequencies-window-settings-fields-container > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+
+
+#frequencies-in-main-window-settings-fields-container {
+  border: none;
+  padding: 0;
+  padding-left: 5%;
+}
+
+#frequencies-in-main-window-settings-fields-container > div {
+  border: none;
+}
+
+#frequencies-in-main-window-settings-fields-container > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+
+
+
 
 #tab-contents-of-post-timing-dialog > div > div {
   border: none;

@@ -62,6 +62,8 @@ function handleServerMessage(msg) {
     if (msg.msg_type === "initial_message") {
       my.config = msg.config;
 
+      handleWindowConfig();
+
       my.now = new Date();
       my.viewBuilder = new FrequenciesViewBuilder();
 
@@ -91,6 +93,55 @@ function handleServerMessage(msg) {
     window.webkit.messageHandlers.timings_frequencies_msgs.postMessage("handleServerMessage. error: " + err.message);
     throw err;
   }
+}
+
+function handleWindowConfig() {
+  let config = my.config;
+
+  if (config.frequencies === undefined) {
+    config.frequencies = {};
+  }
+
+  let frequenciesMainContainer = document.getElementById('frequencies-main-content-wrapper');
+
+  let backgroundColor = config.frequencies['frequencies-window-background-color'];
+  if (backgroundColor === undefined) {
+    backgroundColor = 'white';
+  }
+  document.body.style.backgroundColor = backgroundColor;
+
+  let textColor = config.frequencies['frequencies-window-text-color'];
+  let textColorToSet = 'black';
+  if (textColor === undefined) {
+    textColorToSet = 'black';
+  } else if (textColor === 'black') {
+    textColorToSet = 'black';
+  } else if (textColor === 'dark-grey') {
+    textColorToSet = '#32323a';
+  } else if (textColor === 'light-grey') {
+    textColorToSet = '#707070';
+  } else if (textColor === 'white') {
+    textColorToSet = 'white';
+  }
+  frequenciesMainContainer.style.color = textColorToSet;
+
+  let iconsColor = config.frequencies['frequencies-window-icons-color'];
+  if (iconsColor === undefined) {
+    iconsColor = 'black';
+  }
+  let iconsCssClass;
+  if (iconsColor === 'black') {
+    iconsCssClass = 'black-icons';
+  } else if (iconsColor === 'dark-grey') {
+    iconsCssClass = 'dark-grey-icons';
+  } else if (iconsColor === 'light-grey') {
+    iconsCssClass = 'light-grey-icons';
+  } else if (iconsColor === 'white') {
+    iconsCssClass = 'white-icons';
+  } else {
+    iconsCssClass = 'black-icons';
+  }
+  frequenciesMainContainer.classList.add(iconsCssClass);
 }
 
 function showTimingsBySubcategoriesAndLastModified(timingsBySubcategoriesTree) {

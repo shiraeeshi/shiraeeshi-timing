@@ -2483,6 +2483,76 @@ function initNotebookUIs() {
 
 
 function initFrequenciesUIs() {
+
+  let inputFrequenciesWindowBgColor = document.getElementById('frequencies-window-background-color');
+  inputFrequenciesWindowBgColor.value = my.config.frequencies['frequencies-window-background-color'];
+  inputFrequenciesWindowBgColor.addEventListener('change', (eve) => {
+    let currentValue = inputFrequenciesWindowBgColor.value;
+    my.config['frequencies']['frequencies-window-background-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig.frequencies['frequencies-window-background-color'];
+    let label = document.getElementById('tab4-label');
+    if (!sameAsOldValue) {
+      if (!my.showingFrequenciesHeaderWithStar) {
+        label.innerHTML = 'Frequencies*';
+        my.showingFrequenciesHeaderWithStar = true;
+      }
+      return;
+    }
+    if (frequenciesConfigIsSameAsOriginal(my.config['frequencies'], my.originalConfig['frequencies'])) {
+      label.innerHTML = 'Frequencies';
+      my.showingFrequenciesHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Frequencies*';
+      my.showingFrequenciesHeaderWithStar = true;
+    }
+  });
+  disableShortcutsOnFocus(inputFrequenciesWindowBgColor);
+
+  let htmlSelectFrequenciesWindowTextColor = document.getElementById('frequencies-window-text-color');
+  htmlSelectFrequenciesWindowTextColor.value = my.config['frequencies']['frequencies-window-text-color'];
+  htmlSelectFrequenciesWindowTextColor.addEventListener('change', (eve) => {
+    let currentValue = htmlSelectFrequenciesWindowTextColor.value;
+    my.config['frequencies']['frequencies-window-text-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['frequencies']['frequencies-window-text-color'];
+    let label = document.getElementById('tab4-label');
+    if (!sameAsOldValue) {
+      if (!my.showingFrequenciesHeaderWithStar) {
+        label.innerHTML = 'Frequencies*';
+        my.showingFrequenciesHeaderWithStar = true;
+      }
+      return;
+    }
+    if (frequenciesConfigIsSameAsOriginal(my.config['frequencies'], my.originalConfig['frequencies'])) {
+      label.innerHTML = 'Frequencies';
+      my.showingFrequenciesHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Frequencies*';
+      my.showingFrequenciesHeaderWithStar = true;
+    }
+  });
+
+  let htmlSelectFrequenciesWindowIconsColor = document.getElementById('frequencies-window-icons-color');
+  htmlSelectFrequenciesWindowIconsColor.value = my.config['frequencies']['frequencies-window-icons-color'];
+  htmlSelectFrequenciesWindowIconsColor.addEventListener('change', (eve) => {
+    let currentValue = htmlSelectFrequenciesWindowIconsColor.value;
+    my.config['frequencies']['frequencies-window-icons-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['frequencies']['frequencies-window-icons-color'];
+    let label = document.getElementById('tab4-label');
+    if (!sameAsOldValue) {
+      if (!my.showingFrequenciesHeaderWithStar) {
+        label.innerHTML = 'Frequencies*';
+        my.showingFrequenciesHeaderWithStar = true;
+      }
+      return;
+    }
+    if (frequenciesConfigIsSameAsOriginal(my.config['frequencies'], my.originalConfig['frequencies'])) {
+      label.innerHTML = 'Frequencies';
+      my.showingFrequenciesHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Frequencies*';
+      my.showingFrequenciesHeaderWithStar = true;
+    }
+  });
   // function initFrequenciesCheckbox(configName, htmlElemId) {
   //   if (htmlElemId === undefined) {
   //     htmlElemId = 'frequencies-' + configName;
