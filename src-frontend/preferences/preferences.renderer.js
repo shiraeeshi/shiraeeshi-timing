@@ -174,6 +174,9 @@ function initMainButtons() {
         return;
       }
       if (result === 'success') {
+        my.originalConfig = my.config;
+        my.config = createCopyOfConfig(my.originalConfig);
+
         my.timingsFileInfosListView.handleSaveSuccess();
         my.wallpapersListView.handleSaveSuccess();
 
@@ -1333,6 +1336,7 @@ function initWallpapersUIs() {
 
 
 function initTimingsConfigsUIs() {
+
   let timingsInputTextualDisplayFormat = document.getElementById('timings-textual-display-format');
   timingsInputTextualDisplayFormat.value = my.config['timings-config']['display-format'];
   timingsInputTextualDisplayFormat.addEventListener('change', (eve) => {
@@ -1439,6 +1443,146 @@ function initTimingsConfigsUIs() {
     let currentValue = timingsSelectDefaultSummary.value;
     my.config['timings-config']['default-summary'] = currentValue;
     let sameAsOldValue = currentValue === my.originalConfig['timings-config']['default-summary'];
+    let label = document.getElementById('tab2-label');
+    if (!sameAsOldValue) {
+      if (!my.showingTimingsConfigHeaderWithStar) {
+        label.innerHTML = 'Timings Config*';
+        my.showingTimingsConfigHeaderWithStar = true;
+      }
+      return;
+    }
+    if (timingsConfigIsSameAsOriginal(my.config['timings-config'], my.originalConfig['timings-config'])) {
+      label.innerHTML = 'Timings Config';
+      my.showingTimingsConfigHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Timings Config*';
+      my.showingTimingsConfigHeaderWithStar = true;
+    }
+  });
+
+  let timingsInputSummaryWindowBackgroundColor = document.getElementById('timings-summary-window-background-color')
+  timingsInputSummaryWindowBackgroundColor.value = my.config['timings-config']['summary-window-background-color'];
+  timingsInputSummaryWindowBackgroundColor.addEventListener('change', (eve) => {
+    let currentValue = timingsInputSummaryWindowBackgroundColor.value;
+    my.config['timings-config']['summary-window-background-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['timings-config']['summary-window-background-color'];
+    let label = document.getElementById('tab2-label');
+    if (!sameAsOldValue) {
+      if (!my.showingTimingsConfigHeaderWithStar) {
+        label.innerHTML = 'Timings Config*';
+        my.showingTimingsConfigHeaderWithStar = true;
+      }
+      return;
+    }
+    if (timingsConfigIsSameAsOriginal(my.config['timings-config'], my.originalConfig['timings-config'])) {
+      label.innerHTML = 'Timings Config';
+      my.showingTimingsConfigHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Timings Config*';
+      my.showingTimingsConfigHeaderWithStar = true;
+    }
+  });
+  disableShortcutsOnFocus(timingsInputSummaryWindowBackgroundColor);
+
+  let timingsSelectSummaryWindowTextColor = document.getElementById('timings-summary-window-text-color');
+  timingsSelectSummaryWindowTextColor.value = my.config['timings-config']['summary-window-text-color'];
+  timingsSelectSummaryWindowTextColor.addEventListener('change', (eve) => {
+    let currentValue = timingsSelectSummaryWindowTextColor.value;
+    my.config['timings-config']['summary-window-text-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['timings-config']['summary-window-text-color'];
+    let label = document.getElementById('tab2-label');
+    if (!sameAsOldValue) {
+      if (!my.showingTimingsConfigHeaderWithStar) {
+        label.innerHTML = 'Timings Config*';
+        my.showingTimingsConfigHeaderWithStar = true;
+      }
+      return;
+    }
+    if (timingsConfigIsSameAsOriginal(my.config['timings-config'], my.originalConfig['timings-config'])) {
+      label.innerHTML = 'Timings Config';
+      my.showingTimingsConfigHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Timings Config*';
+      my.showingTimingsConfigHeaderWithStar = true;
+    }
+  });
+
+  let timingsSelectSummaryWindowIconsColor = document.getElementById('timings-summary-window-icons-color');
+  timingsSelectSummaryWindowIconsColor.value = my.config['timings-config']['summary-window-icons-color'];
+  timingsSelectSummaryWindowIconsColor.addEventListener('change', (eve) => {
+    let currentValue = timingsSelectSummaryWindowIconsColor.value;
+    my.config['timings-config']['summary-window-icons-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['timings-config']['summary-window-icons-color'];
+    let label = document.getElementById('tab2-label');
+    if (!sameAsOldValue) {
+      if (!my.showingTimingsConfigHeaderWithStar) {
+        label.innerHTML = 'Timings Config*';
+        my.showingTimingsConfigHeaderWithStar = true;
+      }
+      return;
+    }
+    if (timingsConfigIsSameAsOriginal(my.config['timings-config'], my.originalConfig['timings-config'])) {
+      label.innerHTML = 'Timings Config';
+      my.showingTimingsConfigHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Timings Config*';
+      my.showingTimingsConfigHeaderWithStar = true;
+    }
+  });
+
+  let timingsInputHistoryWindowBackgroundColor = document.getElementById('timings-history-window-background-color')
+  timingsInputHistoryWindowBackgroundColor.value = my.config['timings-config']['history-window-background-color'];
+  timingsInputHistoryWindowBackgroundColor.addEventListener('change', (eve) => {
+    let currentValue = timingsInputHistoryWindowBackgroundColor.value;
+    my.config['timings-config']['history-window-background-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['timings-config']['history-window-background-color'];
+    let label = document.getElementById('tab2-label');
+    if (!sameAsOldValue) {
+      if (!my.showingTimingsConfigHeaderWithStar) {
+        label.innerHTML = 'Timings Config*';
+        my.showingTimingsConfigHeaderWithStar = true;
+      }
+      return;
+    }
+    if (timingsConfigIsSameAsOriginal(my.config['timings-config'], my.originalConfig['timings-config'])) {
+      label.innerHTML = 'Timings Config';
+      my.showingTimingsConfigHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Timings Config*';
+      my.showingTimingsConfigHeaderWithStar = true;
+    }
+  });
+  disableShortcutsOnFocus(timingsInputHistoryWindowBackgroundColor);
+
+  let timingsSelectHistoryWindowTextColor = document.getElementById('timings-history-window-text-color');
+  timingsSelectHistoryWindowTextColor.value = my.config['timings-config']['history-window-text-color'];
+  timingsSelectHistoryWindowTextColor.addEventListener('change', (eve) => {
+    let currentValue = timingsSelectHistoryWindowTextColor.value;
+    my.config['timings-config']['history-window-text-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['timings-config']['history-window-text-color'];
+    let label = document.getElementById('tab2-label');
+    if (!sameAsOldValue) {
+      if (!my.showingTimingsConfigHeaderWithStar) {
+        label.innerHTML = 'Timings Config*';
+        my.showingTimingsConfigHeaderWithStar = true;
+      }
+      return;
+    }
+    if (timingsConfigIsSameAsOriginal(my.config['timings-config'], my.originalConfig['timings-config'])) {
+      label.innerHTML = 'Timings Config';
+      my.showingTimingsConfigHeaderWithStar = false;
+    } else {
+      label.innerHTML = 'Timings Config*';
+      my.showingTimingsConfigHeaderWithStar = true;
+    }
+  });
+
+  let timingsSelectHistoryWindowIconsColor = document.getElementById('timings-history-window-icons-color');
+  timingsSelectHistoryWindowIconsColor.value = my.config['timings-config']['history-window-icons-color'];
+  timingsSelectHistoryWindowIconsColor.addEventListener('change', (eve) => {
+    let currentValue = timingsSelectHistoryWindowIconsColor.value;
+    my.config['timings-config']['history-window-icons-color'] = currentValue;
+    let sameAsOldValue = currentValue === my.originalConfig['timings-config']['history-window-icons-color'];
     let label = document.getElementById('tab2-label');
     if (!sameAsOldValue) {
       if (!my.showingTimingsConfigHeaderWithStar) {

@@ -599,6 +599,48 @@ h2 {
 
 
 
+#tab-contents-of-timings-config 
+#timings-summary-window-settings-fields-container {
+  border: none;
+  padding: 0;
+  padding-left: 10%;
+}
+
+#tab-contents-of-timings-config 
+#timings-summary-window-settings-fields-container > div {
+  border: none;
+}
+#tab-contents-of-timings-config 
+#timings-summary-window-settings-fields-container > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+
+
+
+
+
+#tab-contents-of-timings-config 
+#timings-history-window-settings-fields-container {
+  border: none;
+  padding: 0;
+  padding-left: 10%;
+}
+
+#tab-contents-of-timings-config 
+#timings-history-window-settings-fields-container > div {
+  border: none;
+}
+#tab-contents-of-timings-config 
+#timings-history-window-settings-fields-container > div:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+
+
+
+
+
 
 
 #list-of-wallpapers-panel {
