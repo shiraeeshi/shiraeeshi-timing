@@ -107,6 +107,14 @@ function handleServerMessage(msg) {
     return;
   }
 
+  if (!my.addedKeyupListener) {
+    document.body.addEventListener('keyup', (eve) => {
+      runActionFromKeyEvent(eve);
+    });
+
+    my.addedKeyupListener = true;
+  }
+
   let originalConfig = msg.config;
   let config = createCopyOfConfig(originalConfig);
   my.originalConfig = originalConfig;
@@ -3032,6 +3040,7 @@ function createCopyOfConfig(config) {
   result.notebook = Object.assign({}, config.notebook);
   result.frequencies = Object.assign({}, config.frequencies);
   result.post_timing_dialog = Object.assign({}, config.post_timing_dialog);
+  result.hotkeys = Object.assign({}, config.hotkeys);
   return result;
 }
 
@@ -3256,4 +3265,47 @@ function disableShortcutsOnFocus(inputElem) {
   inputElem.addEventListener('blur', (eve) => {
     window.webkit.messageHandlers.preferences_msg__enable_shortcuts.postMessage();
   });
+}
+
+function runActionFromKeyEvent(eve) {
+
+  let key = eve.key;
+
+  let prefix = '';
+
+  if (eve.shiftKey) {
+    prefix = 'Shift+' + prefix;
+  }
+
+  if (eve.altKey) {
+    prefix = 'Alt+' + prefix;
+  }
+
+  if (eve.ctrlKey) {
+    prefix = 'Ctrl+' + prefix;
+  }
+
+  key = prefix + key;
+
+  let action;
+
+  if (my.config.hotkeys === undefined || my.config.hotkeys.preferences_window === undefined) {
+    return;
+  }
+
+  action = my.config.hotkeys.preferences_window[key];
+  
+  if (action === undefined) {
+    return;
+  }
+
+  runAction(action);
+}
+
+function runAction(action) {
+  if (action === 'toggle-fullscreen') {
+    window.webkit.messageHandlers.preferences_msg__toggle_fullscreen.postMessage();
+  } else if (action === 'open-devtools') {
+    window.webkit.messageHandlers.preferences_msg__open_devtools.postMessage();
+  }
 }

@@ -408,7 +408,77 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
 
   let key = eve.key;
 
-  if (key === 'ArrowLeft') {
+  let prefix = '';
+
+  if (eve.shiftKey) {
+    prefix = 'Shift+' + prefix;
+  }
+
+  if (eve.altKey) {
+    prefix = 'Alt+' + prefix;
+  }
+
+  if (eve.ctrlKey) {
+    prefix = 'Ctrl+' + prefix;
+  }
+
+  key = prefix + key;
+
+  let action;
+
+  // if (key === 'ArrowLeft') {
+  //   action = 'go-to-parent-node';
+  // } else if (key === 'ArrowRight') {
+  //   action = 'go-to-child-node';
+  // } else if (key === 'ArrowUp') {
+  //   action = 'go-to-previous-sibling';
+  // } else if (key === 'ArrowDown') {
+  //   action = 'go-to-next-sibling';
+  // } else if (key === ' ') {
+  //   action = 'toggle-collapse-node';
+  // } else if (key === 'l') {
+  //   action = 'go-to-the-very-last-node';
+  // } else if (key === '1') {
+  //   action = 'switch-to-left-side';
+  // } else if (key === '2') {
+  //   action = 'switch-to-right-side';
+  // } else if (key === 'Enter') {
+  //   action = 'copy-node-to-the-right-side';
+  // } else if (key === 'o') {
+  //   action = 'add-sibling-to-node';
+  // } else if (key === 'a') {
+  //   action = 'append-child-to-node';
+  // } else if (eve.ctrlKey && key === 'x') {
+  //   action = 'cut-node';
+  // } else if (eve.ctrlKey && key === 'c') {
+  //   action = 'copy-node';
+  // } else if (eve.ctrlKey && key === 'v') {
+  //   action = 'paste-into-node';
+  // } else if (key === 'c') {
+  //   action = 'copy-node-text-into-clipboard';
+  // } else if (key === 'F2') {
+  //   action = 'edit-node-text';
+  // } else if (key === 'Delete') {
+  //   action = 'delete-node-from-the-right-side';
+  // } else if (eve.ctrlKey && key === 's') {
+  //   action = 'save-result';
+  // }
+
+  if (key === 'ArrowUp' || key === 'ArrowDown' || key === ' ') {
+    eve.preventDefault();
+  }
+
+  if (my.config.hotkeys === undefined || my.config.hotkeys.post_timing_dialog === undefined) {
+    return;
+  }
+
+  action = my.config.hotkeys.post_timing_dialog[key];
+  
+  if (action === undefined) {
+    return;
+  }
+
+  if (action === 'go-to-parent-node') {
     if (that.isCursorOnRightSide) {
       if (that.rightSideNodeInRectangle.parentNodeView !== undefined) {
         that.rightSideNodeInRectangle.removeRectangleWrapper();
@@ -429,7 +499,8 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
         that.nodeInRectangle = newNodeInRectangle;
       }
     }
-  } else if (key === 'ArrowRight') {
+    return true;
+  } else if (action === 'go-to-child-node') {
     if (that.isCursorOnRightSide) {
       if (that.rightSideNodeInRectangle.children.length > 0) {
         that.rightSideNodeInRectangle.removeRectangleWrapper();
@@ -458,7 +529,8 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
         that.nodeInRectangle = newNodeInRectangle;
       }
     }
-  } else if (key === 'ArrowUp') {
+    return true;
+  } else if (action === 'go-to-previous-sibling') {
     if (that.isCursorOnRightSide) {
       if (that.rightSideNodeInRectangle.parentNodeView !== undefined) {
 
@@ -485,7 +557,8 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
         that.nodeInRectangle = newNodeInRectangle;
       }
     }
-  } else if (key === 'ArrowDown') {
+    return true;
+  } else if (action === 'go-to-next-sibling') {
     if (that.isCursorOnRightSide) {
       if (that.rightSideNodeInRectangle.parentNodeView !== undefined) {
 
@@ -512,13 +585,15 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
         that.nodeInRectangle = newNodeInRectangle;
       }
     }
-  } else if (key === ' ') {
+    return true;
+  } else if (action === 'toggle-collapse-node') {
     if (that.isCursorOnRightSide) {
       that.rightSideNodeInRectangle.toggleCollapse();
     } else {
       that.nodeInRectangle.toggleCollapse();
     }
-  } else if (key === 'l') {
+    return true;
+  } else if (action === 'go-to-the-very-last-node') {
     if (that.isCursorOnRightSide) {
       let nodeInRectangle = that.rightSideNodeInRectangle;
       nodeInRectangle.removeRectangleWrapper();
@@ -542,15 +617,18 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
       nodeInRectangle.wrapInRectangle();
       that.nodeInRectangle = nodeInRectangle;
     }
-  } else if (key === '1') {
+    return true;
+  } else if (action === 'switch-to-left-side') {
     that.isCursorOnRightSide = false;
     that.rightSideNodeInRectangle.removeRectangleWrapper();
     that.nodeInRectangle.wrapInRectangle();
-  } else if (key === '2') {
+    return true;
+  } else if (action === 'switch-to-right-side') {
     that.isCursorOnRightSide = true;
     that.nodeInRectangle.removeRectangleWrapper();
     that.rightSideNodeInRectangle.wrapInRectangle();
-  } else if (key === 'Enter') {
+    return true;
+  } else if (action === 'copy-node-to-the-right-side') {
     if (that.isCursorOnRightSide) {
     } else {
       let branchUntilNode = that.copyNodeToTheRightSide(that.nodeInRectangle);
@@ -574,42 +652,52 @@ PostTimingView.prototype.handleKeyUp = function(eve) {
       node.nodeView.wrapInRectangle();
       that.rightSideNodeInRectangle = node.nodeView;
     }
-  } else if (key === 'o') {
+    return true;
+  } else if (action === 'add-sibling-to-node') {
     if (!that.isCursorOnRightSide) {
-      return;
+      return true;
     }
     that.addSiblingWithInputToTheRightSideNode(that.rightSideNodeInRectangle);
-  } else if (key === 'a') {
+    return true;
+  } else if (action === 'append-child-to-node') {
     if (!that.isCursorOnRightSide) {
-      return;
+      return true;
     }
     that.appendChildWithInputToTheRightSideNode(that.rightSideNodeInRectangle);
-  } else if (eve.ctrlKey && key === 'x') {
+    return true;
+  } else if (action === 'cut-node') {
     delete my.rightSideNodeToCopy;
     my.rightSideNodeToCut = that.rightSideNodeInRectangle.processNode;
-  } else if (eve.ctrlKey && key === 'c') {
+    return true;
+  } else if (action === 'copy-node') {
     delete my.rightSideNodeToCut;
     my.rightSideNodeToCopy = that.rightSideNodeInRectangle.processNode;
-  } else if (eve.ctrlKey && key === 'v') {
+    return true;
+  } else if (action === 'paste-into-node') {
     that.pasteRightSideNode();
-  } else if (key === 'c') {
+    return true;
+  } else if (action === 'copy-node-text-into-clipboard') {
     if (!that.isCursorOnRightSide) {
-      return;
+      return true;
     }
     that.rightSideNodeInRectangle.copyValueToClipboard();
-  } else if (key === 'F2') {
+    return true;
+  } else if (action === 'edit-node-text') {
     if (!that.isCursorOnRightSide) {
-      return;
+      return true;
     }
     that.editRightSideNode(that.rightSideNodeInRectangle);
-  } else if (key === 'Delete') {
+    return true;
+  } else if (action === 'delete-node-from-the-right-side') {
     if (that.isCursorOnRightSide) {
       that.deleteNodeFromTheRightSide(that.rightSideNodeInRectangle);
     } else {
       that.deleteCorrespondingNodeFromTheRightSide(that.nodeInRectangle)
     }
-  } else if (eve.ctrlKey && key === 's') {
+    return true;
+  } else if (action === 'save-result') {
     save();
+    return true;
   }
 };
 

@@ -50,6 +50,28 @@ ipcMain.on('notebook_msgs__copy_full_path_of_tag', async (event, fullPathStr) =>
 
 
 
+ipcMain.on('notebook_msgs__toggle_fullscreen', (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  if (win.isDisabledShortcuts) {
+    return;
+  }
+  let nextFullScreen = !win.isFullScreen();
+  win.setFullScreen(nextFullScreen);
+});
+
+ipcMain.on('notebook_msgs__open_devtools', (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  if (win.isDisabledShortcuts) {
+    return;
+  }
+  win.openDevTools();
+});
+
+
+
+
+
+
 ipcMain.on('notebook_msgs__disable_shortcuts', async (event) => {
   let win = BrowserWindow.fromWebContents(event.sender);
   win.isDisabledShortcuts = true;
@@ -102,22 +124,37 @@ const createWindow = async (appEnv) => {
     }
   });
 
-  setMenuAndKeyboardShortcuts(win);
-
   await init(appEnv, win);
 }
 
-function setMenuAndKeyboardShortcuts(win) {
+function setMenuAndKeyboardShortcuts(win, config) {
 
-  let isFullScreen = false;
-  
+  let shortcutsCfg;
+
+  if (config.hotkeys === undefined) {
+    config.hotkeys = {
+      notebook_window: {
+        shortcuts_of_main_menu: {}
+      }
+    };
+  } else if (config.hotkeys.notebook_window === undefined) {
+    config.hotkeys.notebook_window = {
+      shortcuts_of_main_menu: {}
+    };
+  } else if (config.hotkeys.notebook_window.shortcuts_of_main_menu === undefined) {
+    config.hotkeys.notebook_window.shortcuts_of_main_menu = {};
+  }
+
+  shortcutsCfg = config.hotkeys.notebook_window.shortcuts_of_main_menu;
+
   const menu = new Menu();
   menu.append(new MenuItem({
     label: 'Shiraeeshi',
     submenu: [
       {
-        label: 'save',
-        click: () => {
+        label: 'save notebook',
+        accelerator: shortcutsCfg['save-notebook'],
+        click: (menuItem, win, event) => {
           // let window = electron.remote.getCurrentWindow();
           win.webContents.send('message-from-backend', {
             type: 'save-command'
@@ -126,25 +163,26 @@ function setMenuAndKeyboardShortcuts(win) {
       },
       {
         label: 'toggle fullscreen',
-        accelerator: process.platform === 'darwin' ? 'f' : 'f',
-        click: () => {
+        // accelerator: process.platform === 'darwin' ? 'f' : 'f',
+        accelerator: shortcutsCfg['toggle-fullscreen'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
-          isFullScreen = !isFullScreen;
+          let nextFullScreen = !win.isFullScreen();
           // let window = electron.remote.getCurrentWindow();
-          win.setFullScreen(isFullScreen);
+          win.setFullScreen(nextFullScreen);
         }
       },
       {
         label: 'Escape',
-        accelerator: 'Escape',
-        click: () => {
+        // accelerator: 'Escape',
+        accelerator: shortcutsCfg['escape'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
-          if (isFullScreen) {
-            isFullScreen = false;
+          if (win.isFullScreen()) {
             win.setFullScreen(false);
           } else {
             win.close();
@@ -153,22 +191,24 @@ function setMenuAndKeyboardShortcuts(win) {
       },
       {
         label: 'open devtools',
-        accelerator: 'Ctrl+Shift+J',
-        click: () => {
+        // accelerator: 'Ctrl+Shift+J',
+        accelerator: shortcutsCfg['open-devtools'],
+        click: (menuItem, win, event) => {
           win.openDevTools();
         }
       },
       {
         role: 'help',
         accelerator: process.platform === 'darwin' ? 'h' : 'h',
-        click: () => {
+        click: (menuItem, win, event) => {
           console.log('---===[ menu item clicked ]===---')
         }
       }
     ]
   }));
   
-  Menu.setApplicationMenu(menu);
+  // Menu.setApplicationMenu(null);
+  win.setMenu(menu);
 }
 
 function MessageSender(win) {
@@ -221,7 +261,9 @@ async function init(appEnv, win) {
   }
   console.log(`configFilepath: ${configFilepath}`);
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
-  const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
+  const config = handleHotkeys(convertConfigFromYamlFormat(YAML.parse(configFileContents)));
+
+  setMenuAndKeyboardShortcuts(win, config);
 
   if (config.notebook === undefined) {
     func({
@@ -507,6 +549,64 @@ function showContextMenuOfNotebookNotesTopPanel(event, options) {
   menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
 }
 
+
+function handleHotkeys(config) {
+  inheritDefaultMainMenuShortcuts(config, 'notebook_window');
+  removeDuplicateShortcutsThatConflictWithMainMenu(config, 'notebook_window');
+  return config;
+}
+
+function inheritDefaultMainMenuShortcuts(config, window_prop_name) {
+  if (config.hotkeys === undefined) {
+    config.hotkeys = {};
+    config.hotkeys.all_windows = {
+      shortcuts_of_main_menu: {}
+    };
+    config.hotkeys[window_prop_name] = {
+      shortcuts_of_main_menu: {}
+    };
+  } else {
+    if (config.hotkeys.all_windows === undefined) {
+      config.hotkeys.all_windows = {
+        shortcuts_of_main_menu: {}
+      };
+    } else if (config.hotkeys.all_windows.shortcuts_of_main_menu === undefined) {
+      config.hotkeys.all_windows.shortcuts_of_main_menu = {};
+    }
+
+    if (config.hotkeys[window_prop_name] === undefined) {
+      config.hotkeys[window_prop_name] = {
+        shortcuts_of_main_menu: {}
+      };
+    } else if (config.hotkeys[window_prop_name].shortcuts_of_main_menu === undefined) {
+      config.hotkeys[window_prop_name].shortcuts_of_main_menu = {};
+    }
+  }
+
+  for (let [action, shortcut] of Object.entries(config.hotkeys.all_windows.shortcuts_of_main_menu)) {
+    if (config.hotkeys[window_prop_name].shortcuts_of_main_menu[action] === undefined) {
+      config.hotkeys[window_prop_name].shortcuts_of_main_menu[action] = shortcut;
+    }
+  }
+}
+
+function removeDuplicateShortcutsThatConflictWithMainMenu(config, window_prop_name) {
+  if (config.hotkeys === undefined) {
+    return config;
+  }
+  if (config.hotkeys[window_prop_name] === undefined) {
+    return config;
+  }
+  if (config.hotkeys[window_prop_name].shortcuts_of_main_menu === undefined) {
+    return config;
+  }
+  for (let hotkey of Object.values(config.hotkeys[window_prop_name].shortcuts_of_main_menu)) {
+    delete config.hotkeys[window_prop_name][hotkey];
+    delete config.hotkeys[window_prop_name][hotkey.toUpperCase()];
+    delete config.hotkeys[window_prop_name][hotkey.toLowerCase()];
+  }
+  return config;
+}
 
 function convertConfigFromYamlFormat(config) {
   config.timings.forEach(timingsFileInfo => {

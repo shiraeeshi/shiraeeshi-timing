@@ -24,6 +24,16 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('notebook_msgs__enable_shortcuts');
       }
     },
+    notebook_msgs__toggle_fullscreen: {
+      postMessage: () => {
+        ipcRenderer.send('notebook_msgs__toggle_fullscreen');
+      }
+    },
+    notebook_msgs__open_devtools: {
+      postMessage: () => {
+        ipcRenderer.send('notebook_msgs__open_devtools');
+      }
+    },
     show_notebook_context_menu: {
       postMessage: (sourceType, options) => {
         ipcRenderer.send('notebook_msgs__show_context_menu', sourceType, options);

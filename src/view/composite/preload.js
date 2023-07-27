@@ -59,6 +59,16 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('msg', msg);
       },
     },
+    composite_main_window_msgs__toggle_fullscreen: {
+      postMessage: () => {
+        ipcRenderer.send('composite_main_window_msgs__toggle_fullscreen');
+      }
+    },
+    composite_main_window_msgs__open_devtools: {
+      postMessage: () => {
+        ipcRenderer.send('composite_main_window_msgs__open_devtools');
+      }
+    },
     disable_shortcuts: {
       postMessage: () => {
         ipcRenderer.send('composite_main_window_msgs__disable_shortcuts');

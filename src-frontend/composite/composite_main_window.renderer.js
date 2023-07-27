@@ -173,9 +173,6 @@ function handleServerMessage(msg) {
 
 
     if (msg.msg_type == "timings_query_response") {
-      if (my.currentView === 'timings-summary') {
-        return;
-      }
       if (my.timingsQueryResponseCallback !== undefined) {
         my.timingsQueryResponseCallback(msg.timings);
       }
@@ -200,21 +197,7 @@ function handleServerMessage(msg) {
     }
 
     if (msg.msg_type === 'command-save-notebook') {
-
-      let preYamlJson = convertNotebookTreeToPreYamlJson(my.notebookTree);
-
-      my.save_result_handler = (result, msg) => {
-        if (result === 'error') {
-          alert(`There was an error while saving a file. Error message: "${msg.error_message}"`);
-          return;
-        }
-        if (result === 'success') {
-          my.hasChangesInNotebook = false;
-          alert('Saved the notebook successfully');
-          return;
-        }
-      };
-      window.webkit.messageHandlers.composite_main_window_msgs__save_notebook.postMessage(preYamlJson, my.config.notebook.filepath);
+      saveNotebook();
       return;
     }
 
@@ -273,248 +256,28 @@ function handleServerMessage(msg) {
       let options = false;
       // document.body.addEventListener('keyup', (eve) => {
       window.addEventListener('keydown', (eve) => {
-        handleKeyDown(eve);
+        let handled = handleKeyDown(eve);
+        if (handled) {
+          return;
+        }
+        // runActionFromKeyEvent(eve);
       }, options);
 
       window.addEventListener('keyup', (eve) => {
-        handleKeyUp(eve);
+        let handled = handleKeyUp(eve);
+        if (handled) {
+          return;
+        }
+        runActionFromKeyEvent(eve);
       }, options);
 
       my.addedKeyListeners = true;
     }
 
-    if (msg.type == "key_pressed") {
-      if (msg.keyval == "w") {
-        my.wallpapers.idx++;
-        if (my.wallpapers.idx >= my.wallpapers.lst.length) {
-          my.wallpapers.idx = 0;
-        }
-        // window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage current wallpaper: " +
-        //   my.wallpapers.lst[my.wallpapers.idx]);
-        document.body.style.backgroundImage = `url("${my.wallpapers.lst[my.wallpapers.idx].relativePath}")`;
-        let currentWallpaperName = my.wallpapers.lst[my.wallpapers.idx].name;
-        let currentWallpaperConfig = my.wallpapers.config[currentWallpaperName];
-        if (currentWallpaperConfig !== undefined) {
-          actualizeWallpaperConfig(currentWallpaperConfig);
-        } else {
-          my.colors.text.idx = 0;
-          delete my.colors.text.idx_left;
-          delete my.colors.text.idx_right;
-          let colorObj = my.colors.text.lst[my.colors.text.idx];
-          let leftPanel = document.getElementById('left-panel');
-          leftPanel.style.color = colorObj.textColor;
-          for (let className of leftPanel.classList) {
-            if (className.endsWith('-icons')) {
-              leftPanel.classList.remove(className);
-              break;
-            }
-          }
-          leftPanel.classList.add(colorObj.iconsColor + '-icons');
+    if (msg.type == "run_action") {
 
-          let notebookContentWrapper = document.getElementById('notebook-main-container');
-          notebookContentWrapper.style.color = colorObj.textColor;
-          for (let className of notebookContentWrapper.classList) {
-            if (className.endsWith('-icons')) {
-              notebookContentWrapper.classList.remove(className);
-              break;
-            }
-          }
-          notebookContentWrapper.classList.add(colorObj.iconsColor + '-icons');
-        }
-      } else if (msg.keyval == "m") {
-        my.minimalTextForTimings = !my.minimalTextForTimings;
-        if (my.minimalTextForTimings) {
-          clearTimingsTextWrapper();
-        } else {
-          makeTimingsTextElementsUnminimized();
-        }
-      } else if (msg.keyval == "Ctrl+Left") {
-        my.dayOffset++;
+      runAction(msg.action);
 
-        delete my.highlightedCategory;
-        my.isHighlightingTimingRowInText = false;
-        my.isHighlightingTimingItemInImage = false;
-
-        let btnNextDay = document.getElementById("next-day");
-        btnNextDay.disabled = false;
-        let radioBtn24Hours = document.getElementById("day-of-24-hours");
-        function showTimings() {
-          if (radioBtn24Hours.checked) {
-            showTimingsOf24HourDay();
-          } else {
-            showTimingsOf60HourDay();
-          }
-        }
-        showTimings();
-      } else if (msg.keyval == "Ctrl+Right") {
-        if (my.dayOffset > 0) {
-          my.dayOffset--;
-        }
-
-        delete my.highlightedCategory;
-        my.isHighlightingTimingRowInText = false;
-        my.isHighlightingTimingItemInImage = false;
-
-        if (my.dayOffset <= 0) {
-          let btnNextDay = document.getElementById("next-day");
-          btnNextDay.disabled = true;
-        }
-        let radioBtn24Hours = document.getElementById("day-of-24-hours");
-        function showTimings() {
-          if (radioBtn24Hours.checked) {
-            showTimingsOf24HourDay();
-          } else {
-            showTimingsOf60HourDay();
-          }
-        }
-        showTimings();
-      } else if (msg.keyval == "Ctrl+L") {
-        my.isToUnderlineCanvas = !my.isToUnderlineCanvas;
-        let canvasWrapper = document.getElementById("canvas-wrapper");
-        if (canvasWrapper === undefined) {
-          return;
-        }
-        if (my.isToUnderlineCanvas) {
-          canvasWrapper.classList.add('underlined');
-        } else {
-          canvasWrapper.classList.remove('underlined');
-        }
-      } else if (msg.keyval == "Ctrl+S") {
-        showOnlyTimingsSummaryInLeftPanel();
-        initPeriodButtonsRow();
-        initResizerInTimingsSummary();
-        my.imageInfo = new ImageInfo();
-        my.timings = msg.timings;
-
-        if (msg.config !== undefined) {
-          my.config = msg.config;
-        }
-        if (my.config !== undefined) {
-          handleTimingConfig(my.config);
-
-          // if (my.notesForest !== undefined) {
-          //   handleNotebookConfig(my.config);
-          // }
-        }
-      } else if (msg.keyval == "Ctrl+H") {
-        showOnlyHistoryInLeftPanel();
-        my.config = msg.config;
-        window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage start ");
-        addListenersToButtons();
-        initResizerInHistory();
-        my.imageInfo = new HistoryImageInfo();
-        // my.timings = msg;
-        showTimingsOf60HourDay();
-        handleHistoryConfig();
-        window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage end ");
-      } else if (msg.keyval == "Ctrl+F") {
-        showOnlyFrequenciesInLeftPanel();
-        my.now = new Date();
-        my.viewBuilder = new FrequenciesViewBuilder();
-
-        let millisInWeek = 7*24*60*60*1000;
-
-        let initialPeriodTo = new Date();
-        let initialPeriodFrom = new Date();
-        initialPeriodFrom.setTime(initialPeriodFrom.getTime() - millisInWeek)
-        requestTimingsForPeriod(initialPeriodFrom, initialPeriodTo).then(timings => {
-          console.log('initial handleServerMessage. timings keys:');
-          console.dir(Object.keys(timings));
-          my.timings = initProcessesTree(timings, undefined);
-          // console.log(`initial handleServerMessage. initProcessesTree result: ${JSON.stringify(my.timings)}`);
-          my.viewBuilder.buildViews(my.timings);
-          my.viewBuilder.showView();
-        }).catch(err => {
-          showTimingsFormatError("frequencies-main-content-wrapper", err);
-          console.log(`initial handleServerMessage. err: ${err}`);
-          window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
-            "initial handleServerMessage. err: " + err);
-          throw err;
-        });
-      } else if (msg.keyval == "t") {
-        let newIdx = (my.colors.text.idx + 1) % (my.colors.text.lst.length + 1);
-        my.colors.text.idx = newIdx;
-        delete my.colors.text.idx_left;
-        delete my.colors.text.idx_right;
-        if (newIdx === my.colors.text.lst.length) {
-          let currentWallpaperName = my.wallpapers.lst[my.wallpapers.idx].name;
-          let currentWallpaperConfig = my.wallpapers.config[currentWallpaperName];
-          if (currentWallpaperConfig !== undefined) {
-            actualizeWallpaperConfig(currentWallpaperConfig);
-          }
-          return;
-        }
-        let colorObj = my.colors.text.lst[my.colors.text.idx];
-        let leftPanel = document.getElementById('left-panel');
-        leftPanel.style.color = colorObj.textColor;
-        for (let className of leftPanel.classList) {
-          if (className.endsWith('-icons')) {
-            leftPanel.classList.remove(className);
-            break;
-          }
-        }
-        leftPanel.classList.add(colorObj.iconsColor + '-icons');
-
-        let notebookContentWrapper = document.getElementById('notebook-main-container');
-        notebookContentWrapper.style.color = colorObj.textColor;
-        for (let className of notebookContentWrapper.classList) {
-          if (className.endsWith('-icons')) {
-            notebookContentWrapper.classList.remove(className);
-            break;
-          }
-        }
-        notebookContentWrapper.classList.add(colorObj.iconsColor + '-icons');
-      } else if (msg.keyval == "l") {
-        if (my.colors.text.idx_left === undefined) {
-          my.colors.text.idx_left = my.colors.text.idx;
-        }
-        my.colors.text.idx_left = (my.colors.text.idx_left + 1) % my.colors.text.lst.length;
-        let colorObj = my.colors.text.lst[my.colors.text.idx_left];
-
-        let leftPanel = document.getElementById('left-panel');
-        leftPanel.style.color = colorObj.textColor;
-        for (let className of leftPanel.classList) {
-          if (className.endsWith('-icons')) {
-            leftPanel.classList.remove(className);
-            break;
-          }
-        }
-        leftPanel.classList.add(colorObj.iconsColor + '-icons');
-      } else if (msg.keyval == "r") {
-        if (my.colors.text.idx_right === undefined) {
-          my.colors.text.idx_right = my.colors.text.idx;
-        }
-        my.colors.text.idx_right = (my.colors.text.idx_right + 1) % my.colors.text.lst.length;
-        let colorObj = my.colors.text.lst[my.colors.text.idx_right];
-
-        let notebookContentWrapper = document.getElementById('notebook-main-container');
-        notebookContentWrapper.style.color = colorObj.textColor;
-        for (let className of notebookContentWrapper.classList) {
-          if (className.endsWith('-icons')) {
-            notebookContentWrapper.classList.remove(className);
-            break;
-          }
-        }
-        notebookContentWrapper.classList.add(colorObj.iconsColor + '-icons');
-      } else if (msg.keyval == "g") {
-        if (my.currentView === 'timings-summary' || my.currentView === 'history') {
-          my.colors.canvas.timings.idx++;
-          if (my.colors.canvas.timings.idx >= my.colors.canvas.timings.lst.length) {
-            my.colors.canvas.timings.idx = 0; 
-          }
-          let obj = my.colors.canvas.timings.lst[my.colors.canvas.timings.idx];
-          my.currentFillStylesOfTimings = obj;
-          displayTimingsAsImage(my.currentFilteredProcess, my.highlightedCategory);
-        } else {
-          my.colors.canvas.frequencies.idx++;
-          if (my.colors.canvas.frequencies.idx >= my.colors.canvas.frequencies.lst.length) {
-            my.colors.canvas.frequencies.idx = 0; 
-          }
-          let obj = my.colors.canvas.frequencies.lst[my.colors.canvas.frequencies.idx];
-          my.currentFillStylesOfFrequencies = obj;
-          my.viewBuilder.viewsByName["all"].hGraphic.redraw();
-        }
-      }
       return;
     }
     if (msg.type == "error_message") {
@@ -975,6 +738,314 @@ function actualizeWallpaperConfig(wallpaperConfig) {
     }
     notebookContentWrapper.classList.add(wallpaperConfig.rightSideIconsColor + '-icons');
   }
+}
+
+function runActionFromKeyEvent(eve) {
+
+  let key = eve.key;
+
+  let prefix = '';
+
+  if (eve.shiftKey) {
+    prefix = 'Shift+' + prefix;
+  }
+
+  if (eve.altKey) {
+    prefix = 'Alt+' + prefix;
+  }
+
+  if (eve.ctrlKey) {
+    prefix = 'Ctrl+' + prefix;
+  }
+
+  key = prefix + key;
+
+  let action;
+
+  if (my.config.hotkeys === undefined || my.config.hotkeys.main_window === undefined) {
+    return;
+  }
+
+  action = my.config.hotkeys.main_window[key];
+  
+  if (action === undefined) {
+    return;
+  }
+
+  runAction(action);
+}
+
+function runAction(action) {
+  if (action === 'toggle-fullscreen') {
+    window.webkit.messageHandlers.composite_main_window_msgs__toggle_fullscreen.postMessage();
+  } else if (action === 'open-devtools') {
+    window.webkit.messageHandlers.composite_main_window_msgs__open_devtools.postMessage();
+  } else if (action === 'save-notebook') {
+    saveNotebook();
+  } else if (action === 'show-next-wallpaper') {
+    my.wallpapers.idx++;
+    if (my.wallpapers.idx >= my.wallpapers.lst.length) {
+      my.wallpapers.idx = 0;
+    }
+    // window.webkit.messageHandlers.composite_main_window.postMessage("handleServerMessage current wallpaper: " +
+    //   my.wallpapers.lst[my.wallpapers.idx]);
+    document.body.style.backgroundImage = `url("${my.wallpapers.lst[my.wallpapers.idx].relativePath}")`;
+    let currentWallpaperName = my.wallpapers.lst[my.wallpapers.idx].name;
+    let currentWallpaperConfig = my.wallpapers.config[currentWallpaperName];
+    if (currentWallpaperConfig !== undefined) {
+      actualizeWallpaperConfig(currentWallpaperConfig);
+    } else {
+      my.colors.text.idx = 0;
+      delete my.colors.text.idx_left;
+      delete my.colors.text.idx_right;
+      let colorObj = my.colors.text.lst[my.colors.text.idx];
+      let leftPanel = document.getElementById('left-panel');
+      leftPanel.style.color = colorObj.textColor;
+      for (let className of leftPanel.classList) {
+        if (className.endsWith('-icons')) {
+          leftPanel.classList.remove(className);
+          break;
+        }
+      }
+      leftPanel.classList.add(colorObj.iconsColor + '-icons');
+
+      let notebookContentWrapper = document.getElementById('notebook-main-container');
+      notebookContentWrapper.style.color = colorObj.textColor;
+      for (let className of notebookContentWrapper.classList) {
+        if (className.endsWith('-icons')) {
+          notebookContentWrapper.classList.remove(className);
+          break;
+        }
+      }
+      notebookContentWrapper.classList.add(colorObj.iconsColor + '-icons');
+    }
+  } else if (action === 'toggle-minimal-text-for-timings') {
+    my.minimalTextForTimings = !my.minimalTextForTimings;
+    if (my.minimalTextForTimings) {
+      clearTimingsTextWrapper();
+    } else {
+      makeTimingsTextElementsUnminimized();
+    }
+  } else if (action === 'go-to-previous-day') {
+    my.dayOffset++;
+
+    delete my.highlightedCategory;
+    my.isHighlightingTimingRowInText = false;
+    my.isHighlightingTimingItemInImage = false;
+
+    let btnNextDay = document.getElementById("next-day");
+    btnNextDay.disabled = false;
+    let radioBtn24Hours = document.getElementById("day-of-24-hours");
+    function showTimings() {
+      if (radioBtn24Hours.checked) {
+        showTimingsOf24HourDay();
+      } else {
+        showTimingsOf60HourDay();
+      }
+    }
+    showTimings();
+  } else if (action === 'go-to-next-day') {
+    if (my.dayOffset > 0) {
+      my.dayOffset--;
+    }
+
+    delete my.highlightedCategory;
+    my.isHighlightingTimingRowInText = false;
+    my.isHighlightingTimingItemInImage = false;
+
+    if (my.dayOffset <= 0) {
+      let btnNextDay = document.getElementById("next-day");
+      btnNextDay.disabled = true;
+    }
+    let radioBtn24Hours = document.getElementById("day-of-24-hours");
+    function showTimings() {
+      if (radioBtn24Hours.checked) {
+        showTimingsOf24HourDay();
+      } else {
+        showTimingsOf60HourDay();
+      }
+    }
+    showTimings();
+  } else if (action === 'toggle-underline-canvas') {
+    my.isToUnderlineCanvas = !my.isToUnderlineCanvas;
+    let canvasWrapper = document.getElementById("canvas-wrapper");
+    if (canvasWrapper === undefined) {
+      return;
+    }
+    if (my.isToUnderlineCanvas) {
+      canvasWrapper.classList.add('underlined');
+    } else {
+      canvasWrapper.classList.remove('underlined');
+    }
+  } else if (action === 'switch-to-view-timings-summary') {
+    showOnlyTimingsSummaryInLeftPanel();
+    initPeriodButtonsRow();
+    initResizerInTimingsSummary();
+    my.imageInfo = new ImageInfo();
+    // my.timings = msg.timings;
+
+    // if (msg.config !== undefined) {
+    //   my.config = msg.config;
+    // }
+    // if (my.config !== undefined) {
+    //   handleTimingConfig(my.config);
+
+    //   // if (my.notesForest !== undefined) {
+    //   //   handleNotebookConfig(my.config);
+    //   // }
+    // }
+
+    let millisInThreeDays = 3*24*60*60*1000;
+
+    let initialPeriodTo = new Date();
+    let initialPeriodFrom = new Date();
+    initialPeriodFrom.setTime(initialPeriodFrom.getTime() - millisInThreeDays)
+    requestTimingsForPeriod(initialPeriodFrom, initialPeriodTo).then(timings => {
+      my.timings = timings;
+      handleTimingConfig(my.config);
+    }).catch(err => {
+      showTimingsFormatError("timings-main-container", err);
+      console.log(`runAction switch-to-view-timings-summary. err: ${err}`);
+      window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
+        "runAction switch-to-view-timings-summary. err: " + err);
+      throw err;
+    });
+  } else if (action === 'switch-to-view-timings-history') {
+    showOnlyHistoryInLeftPanel();
+    // my.config = msg.config;
+    window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage start ");
+    addListenersToButtons();
+    initResizerInHistory();
+    my.imageInfo = new HistoryImageInfo();
+    // my.timings = msg;
+    showTimingsOf60HourDay();
+    handleHistoryConfig();
+    window.webkit.messageHandlers.timings_history_latest_msgs.postMessage("handleServerMessage end ");
+  } else if (action === 'switch-to-view-timings-frequencies') {
+    showOnlyFrequenciesInLeftPanel();
+    my.now = new Date();
+    my.viewBuilder = new FrequenciesViewBuilder();
+
+    let millisInWeek = 7*24*60*60*1000;
+
+    let initialPeriodTo = new Date();
+    let initialPeriodFrom = new Date();
+    initialPeriodFrom.setTime(initialPeriodFrom.getTime() - millisInWeek)
+    requestTimingsForPeriod(initialPeriodFrom, initialPeriodTo).then(timings => {
+      console.log('runAction switch-to-view-timings-frequencies. timings keys:');
+      console.dir(Object.keys(timings));
+      my.timings = initProcessesTree(timings, undefined);
+      // console.log(`initial handleServerMessage. initProcessesTree result: ${JSON.stringify(my.timings)}`);
+      my.viewBuilder.buildViews(my.timings);
+      my.viewBuilder.showView();
+    }).catch(err => {
+      showTimingsFormatError("frequencies-main-content-wrapper", err);
+      console.log(`runAction switch-to-view-timings-frequencies. err: ${err}`);
+      window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(
+        "runAction switch-to-view-timings-frequencies. err: " + err);
+      throw err;
+    });
+  } else if (action === 'change-foreground-color') {
+    let newIdx = (my.colors.text.idx + 1) % (my.colors.text.lst.length + 1);
+    my.colors.text.idx = newIdx;
+    delete my.colors.text.idx_left;
+    delete my.colors.text.idx_right;
+    if (newIdx === my.colors.text.lst.length) {
+      let currentWallpaperName = my.wallpapers.lst[my.wallpapers.idx].name;
+      let currentWallpaperConfig = my.wallpapers.config[currentWallpaperName];
+      if (currentWallpaperConfig !== undefined) {
+        actualizeWallpaperConfig(currentWallpaperConfig);
+      }
+      return;
+    }
+    let colorObj = my.colors.text.lst[my.colors.text.idx];
+    let leftPanel = document.getElementById('left-panel');
+    leftPanel.style.color = colorObj.textColor;
+    for (let className of leftPanel.classList) {
+      if (className.endsWith('-icons')) {
+        leftPanel.classList.remove(className);
+        break;
+      }
+    }
+    leftPanel.classList.add(colorObj.iconsColor + '-icons');
+
+    let notebookContentWrapper = document.getElementById('notebook-main-container');
+    notebookContentWrapper.style.color = colorObj.textColor;
+    for (let className of notebookContentWrapper.classList) {
+      if (className.endsWith('-icons')) {
+        notebookContentWrapper.classList.remove(className);
+        break;
+      }
+    }
+    notebookContentWrapper.classList.add(colorObj.iconsColor + '-icons');
+  } else if (action === 'change-foreground-color-of-left-side-panel') {
+    if (my.colors.text.idx_left === undefined) {
+      my.colors.text.idx_left = my.colors.text.idx;
+    }
+    my.colors.text.idx_left = (my.colors.text.idx_left + 1) % my.colors.text.lst.length;
+    let colorObj = my.colors.text.lst[my.colors.text.idx_left];
+
+    let leftPanel = document.getElementById('left-panel');
+    leftPanel.style.color = colorObj.textColor;
+    for (let className of leftPanel.classList) {
+      if (className.endsWith('-icons')) {
+        leftPanel.classList.remove(className);
+        break;
+      }
+    }
+    leftPanel.classList.add(colorObj.iconsColor + '-icons');
+  } else if (action === 'change-foreground-color-of-right-side-panel') {
+    if (my.colors.text.idx_right === undefined) {
+      my.colors.text.idx_right = my.colors.text.idx;
+    }
+    my.colors.text.idx_right = (my.colors.text.idx_right + 1) % my.colors.text.lst.length;
+    let colorObj = my.colors.text.lst[my.colors.text.idx_right];
+
+    let notebookContentWrapper = document.getElementById('notebook-main-container');
+    notebookContentWrapper.style.color = colorObj.textColor;
+    for (let className of notebookContentWrapper.classList) {
+      if (className.endsWith('-icons')) {
+        notebookContentWrapper.classList.remove(className);
+        break;
+      }
+    }
+    notebookContentWrapper.classList.add(colorObj.iconsColor + '-icons');
+  } else if (action === 'change-colors-of-graphic-on-canvas') {
+    if (my.currentView === 'timings-summary' || my.currentView === 'history') {
+      my.colors.canvas.timings.idx++;
+      if (my.colors.canvas.timings.idx >= my.colors.canvas.timings.lst.length) {
+        my.colors.canvas.timings.idx = 0; 
+      }
+      let obj = my.colors.canvas.timings.lst[my.colors.canvas.timings.idx];
+      my.currentFillStylesOfTimings = obj;
+      displayTimingsAsImage(my.currentFilteredProcess, my.highlightedCategory);
+    } else {
+      my.colors.canvas.frequencies.idx++;
+      if (my.colors.canvas.frequencies.idx >= my.colors.canvas.frequencies.lst.length) {
+        my.colors.canvas.frequencies.idx = 0; 
+      }
+      let obj = my.colors.canvas.frequencies.lst[my.colors.canvas.frequencies.idx];
+      my.currentFillStylesOfFrequencies = obj;
+      my.viewBuilder.viewsByName["all"].hGraphic.redraw();
+    }
+  }
+}
+
+function saveNotebook() {
+  let preYamlJson = convertNotebookTreeToPreYamlJson(my.notebookTree);
+
+  my.save_result_handler = (result, msg) => {
+    if (result === 'error') {
+      alert(`There was an error while saving a file. Error message: "${msg.error_message}"`);
+      return;
+    }
+    if (result === 'success') {
+      my.hasChangesInNotebook = false;
+      alert('Saved the notebook successfully');
+      return;
+    }
+  };
+  window.webkit.messageHandlers.composite_main_window_msgs__save_notebook.postMessage(preYamlJson, my.config.notebook.filepath);
 }
 
 function convertToNotebookNodes(jsonForest) {

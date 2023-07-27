@@ -40,6 +40,16 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('preferences_msg__mk_filepath_with_expanded_user', filepath);
       }
     },
+    preferences_msg__toggle_fullscreen: {
+      postMessage: () => {
+        ipcRenderer.send('preferences_msg__toggle_fullscreen');
+      }
+    },
+    preferences_msg__open_devtools: {
+      postMessage: () => {
+        ipcRenderer.send('preferences_msg__open_devtools');
+      }
+    },
     preferences_msg__enable_shortcuts: {
       postMessage: () => {
         console.log('[preload.js] webkit.messageHandlers.preferences_msg__enable_shortcuts.postMessage');

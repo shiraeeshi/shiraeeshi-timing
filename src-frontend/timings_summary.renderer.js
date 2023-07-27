@@ -39,28 +39,20 @@ window.webkit.messageHandlers.timings_summary_msgs.onMessage(handleServerMessage
 
 function handleServerMessage(msg) {
   window.webkit.messageHandlers.timings_summary_msgs.postMessage("handleServerMessage start ");
-  if (msg.type == "key_pressed") {
-    if (msg.keyval == "m") {
-      my.minimalTextForTimings = !my.minimalTextForTimings;
-      if (my.minimalTextForTimings) {
-        clearTimingsTextWrapper();
-      } else {
-        makeTimingsTextElementsUnminimized();
-      }
-    } else if (msg.keyval == "Ctrl+L") {
-      my.isToUnderlineCanvas = !my.isToUnderlineCanvas;
-      let canvasWrapper = document.getElementById("canvas-wrapper");
-      if (canvasWrapper === undefined) {
-        return;
-      }
-      if (my.isToUnderlineCanvas) {
-        canvasWrapper.classList.add('underlined');
-      } else {
-        canvasWrapper.classList.remove('underlined');
-      }
-    }
+
+  if (!my.addedKeyupListener) {
+    document.body.addEventListener('keyup', (eve) => {
+      runActionFromKeyEvent(eve);
+    });
+
+    my.addedKeyupListener = true;
+  }
+
+  if (msg.type == "run_action") {
+    runAction(msg.action);
     return;
   }
+
   if (msg.type == "error_message") {
     let innerContentWrapper = document.getElementById("inner-content-wrapper");
     let errorMessage = msg.message;
@@ -78,6 +70,7 @@ function handleServerMessage(msg) {
     innerContentWrapper.appendChild(errorMessageHtml);
     return;
   }
+
   initPeriodButtonsRow();
   initResizerInTimingsSummary();
   my.imageInfo = new ImageInfo();
@@ -227,5 +220,66 @@ function initResizerInTimingsSummary() {
 
     document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
     document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
+  }
+}
+
+function runActionFromKeyEvent(eve) {
+
+  let key = eve.key;
+
+  let prefix = '';
+
+  if (eve.shiftKey) {
+    prefix = 'Shift+' + prefix;
+  }
+
+  if (eve.altKey) {
+    prefix = 'Alt+' + prefix;
+  }
+
+  if (eve.ctrlKey) {
+    prefix = 'Ctrl+' + prefix;
+  }
+
+  key = prefix + key;
+
+  let action;
+
+  if (my.config.hotkeys === undefined || my.config.hotkeys.timings_summary_window === undefined) {
+    return;
+  }
+
+  action = my.config.hotkeys.timings_summary_window[key];
+  
+  if (action === undefined) {
+    return;
+  }
+
+  runAction(action);
+}
+
+function runAction(action) {
+  if (action === 'toggle-fullscreen') {
+    window.webkit.messageHandlers.timings_summary_msgs__toggle_fullscreen.postMessage();
+  } else if (action === 'open-devtools') {
+    window.webkit.messageHandlers.timings_summary_msgs__open_devtools.postMessage();
+  } else if (action == "toggle-minimal-text-for-timings") {
+    my.minimalTextForTimings = !my.minimalTextForTimings;
+    if (my.minimalTextForTimings) {
+      clearTimingsTextWrapper();
+    } else {
+      makeTimingsTextElementsUnminimized();
+    }
+  } else if (action == "toggle-underline-canvas") {
+    my.isToUnderlineCanvas = !my.isToUnderlineCanvas;
+    let canvasWrapper = document.getElementById("canvas-wrapper");
+    if (canvasWrapper === undefined) {
+      return;
+    }
+    if (my.isToUnderlineCanvas) {
+      canvasWrapper.classList.add('underlined');
+    } else {
+      canvasWrapper.classList.remove('underlined');
+    }
   }
 }

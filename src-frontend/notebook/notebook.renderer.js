@@ -61,21 +61,7 @@ function handleServerMessage(msg) {
     }
 
     if (msg.type === 'save-command') {
-
-      let preYamlJson = convertNotebookTreeToPreYamlJson(my.notebookTree);
-
-      my.save_result_handler = (result, msg) => {
-        if (result === 'error') {
-          alert(`There was an error while saving a file. Error message: "${msg.error_message}"`);
-          return;
-        }
-        if (result === 'success') {
-          my.hasChangesInNotebook = false;
-          alert('Saved the notebook successfully');
-          return;
-        }
-      };
-      window.webkit.messageHandlers.notebook_msgs__save_notebook.postMessage(preYamlJson, my.config.notebook.filepath);
+      saveNotebook();
       return;
     }
 
@@ -108,7 +94,10 @@ function handleServerMessage(msg) {
       }, options);
 
       window.addEventListener('keyup', (eve) => {
-        handleKeyUp(eve);
+        let handled = handleKeyUp(eve);
+        if (!handled) {
+          runActionFromKeyEvent(eve);
+        }
       }, options);
 
       my.addedKeyListeners = true;
@@ -257,6 +246,68 @@ function handleConfig(config) {
     fontSizeOfTooltips = 16;
   }
   my.notebookTooltipFontSize = fontSizeOfTooltips;
+}
+
+function runActionFromKeyEvent(eve) {
+
+  let key = eve.key;
+
+  let prefix = '';
+
+  if (eve.shiftKey) {
+    prefix = 'Shift+' + prefix;
+  }
+
+  if (eve.altKey) {
+    prefix = 'Alt+' + prefix;
+  }
+
+  if (eve.ctrlKey) {
+    prefix = 'Ctrl+' + prefix;
+  }
+
+  key = prefix + key;
+
+  let action;
+
+  if (my.config.hotkeys === undefined || my.config.hotkeys.notebook_window === undefined) {
+    return;
+  }
+
+  action = my.config.hotkeys.notebook_window[key];
+  
+  if (action === undefined) {
+    return;
+  }
+
+  runAction(action);
+}
+
+function runAction(action) {
+  if (action === 'toggle-fullscreen') {
+    window.webkit.messageHandlers.notebook_msgs__toggle_fullscreen.postMessage();
+  } else if (action === 'open-devtools') {
+    window.webkit.messageHandlers.notebook_msgs__open_devtools.postMessage();
+  } else if (action === 'save-notebook') {
+    saveNotebook();
+  }
+}
+
+function saveNotebook() {
+  let preYamlJson = convertNotebookTreeToPreYamlJson(my.notebookTree);
+
+  my.save_result_handler = (result, msg) => {
+    if (result === 'error') {
+      alert(`There was an error while saving a file. Error message: "${msg.error_message}"`);
+      return;
+    }
+    if (result === 'success') {
+      my.hasChangesInNotebook = false;
+      alert('Saved the notebook successfully');
+      return;
+    }
+  };
+  window.webkit.messageHandlers.notebook_msgs__save_notebook.postMessage(preYamlJson, my.config.notebook.filepath);
 }
 
 function convertToNotebookNodes(jsonForest) {

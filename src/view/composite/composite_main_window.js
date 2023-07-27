@@ -26,6 +26,23 @@ ipcMain.on('msg', (_event, msg) => {
   console.log(`[main.js] message from composite_main_window: ${msg}`);
 });
 
+ipcMain.on('composite_main_window_msgs__toggle_fullscreen', (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  if (win.isDisabledShortcuts) {
+    return;
+  }
+  let nextFullScreen = !win.isFullScreen();
+  win.setFullScreen(nextFullScreen);
+});
+
+ipcMain.on('composite_main_window_msgs__open_devtools', (event) => {
+  let win = BrowserWindow.fromWebContents(event.sender);
+  if (win.isDisabledShortcuts) {
+    return;
+  }
+  win.openDevTools();
+});
+
 ipcMain.on('composite_main_window_msgs__disable_shortcuts', async (event) => {
   let win = BrowserWindow.fromWebContents(event.sender);
   win.isDisabledShortcuts = true;
@@ -95,7 +112,10 @@ ipcMain.on('composite_main_window_handle_request_for_timings', async (event, com
       indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
     }
     const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
-    const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
+    const config =
+      handleHotkeys(
+        convertConfigFromYamlFormat(
+          YAML.parse(configFileContents)));
 
     let timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
     timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
@@ -150,7 +170,10 @@ ipcMain.on('composite_main_window_msgs__timings_for_period', async (event, perio
       indexDirFilepath = path.join(homeDirPath, 'test_pm_app2', 'files_to_parse', 'indexes');
     }
     const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
-    const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
+    const config =
+      handleHotkeys(
+        convertConfigFromYamlFormat(
+          YAML.parse(configFileContents)));
 
     let timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
     timings = await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, dateFrom, dateTo);
@@ -222,9 +245,25 @@ const createWindow = async (appEnv) => {
   await init(appEnv, win);
 }
 
-function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexDirFilepath, messageSender) {
+function setMenuAndKeyboardShortcuts(win, appEnv, config) {
 
-  let isFullScreen = false;
+  let shortcutsCfg;
+
+  if (config.hotkeys === undefined) {
+    config.hotkeys = {
+      main_window: {
+        shortcuts_of_main_menu: {}
+      }
+    };
+  } else if (config.hotkeys.main_window === undefined) {
+    config.hotkeys.main_window = {
+      shortcuts_of_main_menu: {}
+    };
+  } else if (config.hotkeys.main_window.shortcuts_of_main_menu === undefined) {
+    config.hotkeys.main_window.shortcuts_of_main_menu = {};
+  }
+
+  shortcutsCfg = config.hotkeys.main_window.shortcuts_of_main_menu;
   
   const menu = new Menu();
   menu.append(new MenuItem({
@@ -232,7 +271,8 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
     submenu: [
       {
         label: 'save notebook',
-        click: () => {
+        accelerator: shortcutsCfg['save-notebook'],
+        click: (menuItem, win, event) => {
           // let window = electron.remote.getCurrentWindow();
           win.webContents.send('message-from-backend', {
             msg_type: 'command-save-notebook'
@@ -241,78 +281,83 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
       },
       {
         label: 'toggle fullscreen',
-        accelerator: process.platform === 'darwin' ? 'f' : 'f',
-        click: () => {
+        // accelerator: process.platform === 'darwin' ? 'f' : 'f',
+        accelerator: shortcutsCfg['toggle-fullscreen'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
-          isFullScreen = !isFullScreen;
+          let nextFullScreen = !win.isFullScreen();
           // let window = electron.remote.getCurrentWindow();
-          win.setFullScreen(isFullScreen);
+          win.setFullScreen(nextFullScreen);
         }
       },
       {
         label: 'toggle minimal text mode',
-        accelerator: 'm',
-        click: () => {
+        // accelerator: 'm',
+        accelerator: shortcutsCfg['toggle-minimal-text-for-timings'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
           const msg = {
-            "type": "key_pressed",
-            "keyval": "m"
+            "type": "run_action",
+            "action": "toggle-minimal-text-for-timings"
           };
           win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'toggle underlining the canvas',
-        accelerator: 'Ctrl+L',
-        click: () => {
+        // accelerator: 'Ctrl+L',
+        accelerator: shortcutsCfg['toggle-underline-canvas'],
+        click: (menuItem, win, event) => {
           const msg = {
-            "type": "key_pressed",
-            "keyval": "Ctrl+L"
+            "type": "run_action",
+            "action": "toggle-underline-canvas"
           };
           win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'previous day (in history)',
-        accelerator: 'Ctrl+Left',
-        click: () => {
+        // accelerator: 'Ctrl+Left',
+        accelerator: shortcutsCfg['go-to-previous-day'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
           const msg = {
-            "type": "key_pressed",
-            "keyval": "Ctrl+Left"
+            "type": "run_action",
+            "action": "go-to-previous-day"
           };
           win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'next day (in history)',
-        accelerator: 'Ctrl+Right',
-        click: () => {
+        // accelerator: 'Ctrl+Right',
+        accelerator: shortcutsCfg['go-to-next-day'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
           const msg = {
-            "type": "key_pressed",
-            "keyval": "Ctrl+Right"
+            "type": "run_action",
+            "action": "go-to-next-day"
           };
           win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'Escape',
-        accelerator: 'Escape',
-        click: () => {
+        // accelerator: 'Escape',
+        accelerator: shortcutsCfg['escape'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
-          if (isFullScreen) {
-            isFullScreen = false;
+          if (win.isFullScreen()) {
             win.setFullScreen(false);
           } else {
             win.close();
@@ -321,85 +366,91 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
       },
       {
         label: 'change wallpaper',
-        accelerator: 'w',
-        click: () => {
+        // accelerator: 'w',
+        accelerator: shortcutsCfg['show-next-wallpaper'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
           const msg = {
-            "type": "key_pressed",
-            "keyval": "w"
+            "type": "run_action",
+            "action": "show-next-wallpaper"
           };
           win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'change colors on graph',
-        accelerator: 'g',
-        click: () => {
+        // accelerator: 'g',
+        accelerator: shortcutsCfg['change-colors-of-graphic-on-canvas'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
           const msg = {
-            "type": "key_pressed",
-            "keyval": "g"
+            "type": "run_action",
+            "action": "change-colors-of-graphic-on-canvas"
           };
           win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'change text color',
-        accelerator: 't',
-        click: () => {
+        // accelerator: 't',
+        accelerator: shortcutsCfg['change-foreground-color'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
           const msg = {
-            "type": "key_pressed",
-            "keyval": "t"
+            "type": "run_action",
+            "action": "change-foreground-color"
           };
           win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'change text color of left-side panel',
-        accelerator: 'l',
-        click: () => {
+        // accelerator: 'l',
+        accelerator: shortcutsCfg['change-foreground-color-of-left-side-panel'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
           const msg = {
-            "type": "key_pressed",
-            "keyval": "l"
+            "type": "run_action",
+            "action": "change-foreground-color-of-left-side-panel"
           };
           win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'change text color of right-side panel',
-        accelerator: 'r',
-        click: () => {
+        // accelerator: 'r',
+        accelerator: shortcutsCfg['change-foreground-color-of-right-side-panel'],
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
           const msg = {
-            "type": "key_pressed",
-            "keyval": "r"
+            "type": "run_action",
+            "action": "change-foreground-color-of-right-side-panel"
           };
           win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'open devtools',
-        accelerator: 'Ctrl+Shift+J',
-        click: () => {
+        // accelerator: 'Ctrl+Shift+J',
+        accelerator: shortcutsCfg['open-devtools'],
+        click: (menuItem, win, event) => {
           win.openDevTools();
         }
       },
       {
         role: 'help',
         accelerator: process.platform === 'darwin' ? 'h' : 'h',
-        click: () => {
+        click: (menuItem, win, event) => {
           if (win.isDisabledShortcuts) {
             return;
           }
@@ -409,7 +460,7 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
       {
         role: 'preferences',
         label: 'preferences',
-        click: async () => {
+        click: async (menuItem, win, event) => {
           await showPreferences(appEnv)
         }
       },
@@ -421,65 +472,36 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
     submenu: [
       {
         label: 'timings summary',
-        accelerator: 'Ctrl+S',
-        click: async () => {
-
-          const today = new Date();
-          const threeDaysAgo = new Date();
-
-          threeDaysAgo.setDate(threeDaysAgo.getDate() - 5);
-
-          today.setHours(0);
-          today.setMinutes(0);
-          today.setSeconds(0);
-          threeDaysAgo.setHours(0);
-          threeDaysAgo.setMinutes(0);
-          threeDaysAgo.setSeconds(0);
-
-          const timing2indexFilename = await createOrRefreshIndex(configFilepath, indexDirFilepath);
-
-          await readTimingsForRangeOfDates(config, timing2indexFilename, indexDirFilepath, threeDaysAgo, today)
-            .then(timingsOfThreeLastDays => {
-              console.log(`[main.js] timingsOfThreeLastDays: ${JSON.stringify(timingsOfThreeLastDays)}`);
-              let msg = {
-                "type": "key_pressed",
-                "keyval": "Ctrl+S",
-                "timings": timingsOfThreeLastDays,
-                "config": config,
-              };
-              messageSender.send(msg);
-            })
-            .catch(err => {
-              messageSender.send({
-                "type": "error_message",
-                "error_source": "timings",
-                "source_timing": err.source_timing,
-                "source_timing_location": err.source_timing_location,
-                "lineNumOffset": err.lineNumOffset,
-                "message": err.message
-              });
-            });
+        // accelerator: 'Ctrl+S',
+        accelerator: shortcutsCfg['switch-to-view-timings-summary'],
+        click: async (menuItem, win, event) => {
+          let msg = {
+            "type": "run_action",
+            "action": "switch-to-view-timings-summary",
+          };
+          win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'timings history',
-        accelerator: 'Ctrl+H',
-        click: () => {
+        // accelerator: 'Ctrl+H',
+        accelerator: shortcutsCfg['switch-to-view-timings-history'],
+        click: (menuItem, win, event) => {
           const msg = {
-            "type": "key_pressed",
-            "keyval": "Ctrl+H",
-            "config": config,
+            "type": "run_action",
+            "action": "switch-to-view-timings-history",
           };
-          messageSender.send(msg);
+          win.webContents.send('message-from-backend', msg);
         }
       },
       {
         label: 'timings frequencies',
-        accelerator: 'Ctrl+F',
-        click: () => {
+        // accelerator: 'Ctrl+F',
+        accelerator: shortcutsCfg['switch-to-view-timings-frequencies'],
+        click: (menuItem, win, event) => {
           const msg = {
-            "type": "key_pressed",
-            "keyval": "Ctrl+F"
+            "type": "run_action",
+            "action": "switch-to-view-timings-frequencies"
           };
           win.webContents.send('message-from-backend', msg);
         }
@@ -487,7 +509,8 @@ function setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexD
     ]
   }));
   
-  Menu.setApplicationMenu(menu);
+  // Menu.setApplicationMenu(null);
+  win.setMenu(menu);
 }
 
 function MessageSender(win) {
@@ -545,9 +568,12 @@ async function init(appEnv, win) {
   console.log('[init] 1');
   const configFileContents = await fs.promises.readFile(configFilepath, { encoding: 'utf8' });
   console.log('[init] 2');
-  const config = convertConfigFromYamlFormat(YAML.parse(configFileContents));
+  const config =
+    handleHotkeys(
+      convertConfigFromYamlFormat(
+        YAML.parse(configFileContents)));
 
-  setMenuAndKeyboardShortcuts(appEnv, win, config, configFilepath, indexDirFilepath, messageSender);
+  setMenuAndKeyboardShortcuts(win, appEnv, config);
 
   const today = new Date();
   const threeDaysAgo = new Date();
@@ -1042,6 +1068,64 @@ function showContextMenuOfNotebookNotesTopPanel(event, options) {
   ];
   const menu = Menu.buildFromTemplate(listOfMenuItems);
   menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
+}
+
+function handleHotkeys(config) {
+  inheritDefaultMainMenuShortcuts(config, 'main_window');
+  removeDuplicateShortcutsThatConflictWithMainMenu(config, 'main_window');
+  return config;
+}
+
+function inheritDefaultMainMenuShortcuts(config, window_prop_name) {
+  if (config.hotkeys === undefined) {
+    config.hotkeys = {};
+    config.hotkeys.all_windows = {
+      shortcuts_of_main_menu: {}
+    };
+    config.hotkeys[window_prop_name] = {
+      shortcuts_of_main_menu: {}
+    };
+  } else {
+    if (config.hotkeys.all_windows === undefined) {
+      config.hotkeys.all_windows = {
+        shortcuts_of_main_menu: {}
+      };
+    } else if (config.hotkeys.all_windows.shortcuts_of_main_menu === undefined) {
+      config.hotkeys.all_windows.shortcuts_of_main_menu = {};
+    }
+
+    if (config.hotkeys[window_prop_name] === undefined) {
+      config.hotkeys[window_prop_name] = {
+        shortcuts_of_main_menu: {}
+      };
+    } else if (config.hotkeys[window_prop_name].shortcuts_of_main_menu === undefined) {
+      config.hotkeys[window_prop_name].shortcuts_of_main_menu = {};
+    }
+  }
+
+  for (let [action, shortcut] of Object.entries(config.hotkeys.all_windows.shortcuts_of_main_menu)) {
+    if (config.hotkeys[window_prop_name].shortcuts_of_main_menu[action] === undefined) {
+      config.hotkeys[window_prop_name].shortcuts_of_main_menu[action] = shortcut;
+    }
+  }
+}
+
+function removeDuplicateShortcutsThatConflictWithMainMenu(config, window_prop_name) {
+  if (config.hotkeys === undefined) {
+    return config;
+  }
+  if (config.hotkeys[window_prop_name] === undefined) {
+    return config;
+  }
+  if (config.hotkeys[window_prop_name].shortcuts_of_main_menu === undefined) {
+    return config;
+  }
+  for (let hotkey of Object.values(config.hotkeys[window_prop_name].shortcuts_of_main_menu)) {
+    delete config.hotkeys[window_prop_name][hotkey];
+    delete config.hotkeys[window_prop_name][hotkey.toUpperCase()];
+    delete config.hotkeys[window_prop_name][hotkey.toLowerCase()];
+  }
+  return config;
 }
 
 function convertConfigFromYamlFormat(config) {

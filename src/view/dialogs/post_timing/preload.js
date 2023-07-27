@@ -26,6 +26,16 @@ contextBridge.exposeInMainWorld('webkit', {
         ipcRenderer.send('post_timing_dialog_msgs__timings_for_period', msg);
       },
     },
+    post_timing_dialog_msgs__toggle_fullscreen: {
+      postMessage: () => {
+        ipcRenderer.send('post_timing_dialog_msgs__toggle_fullscreen');
+      }
+    },
+    post_timing_dialog_msgs__open_devtools: {
+      postMessage: () => {
+        ipcRenderer.send('post_timing_dialog_msgs__open_devtools');
+      }
+    },
     post_timing_dialog_msgs__disable_shortcuts: {
       postMessage: () => {
         ipcRenderer.send('post_timing_dialog_msgs__disable_shortcuts');

@@ -14,6 +14,16 @@ contextBridge.exposeInMainWorld('webkit', {
         });
       },
     },
+    timings_frequencies_msgs__toggle_fullscreen: {
+      postMessage: () => {
+        ipcRenderer.send('timings_frequencies_msgs__toggle_fullscreen');
+      }
+    },
+    timings_frequencies_msgs__open_devtools: {
+      postMessage: () => {
+        ipcRenderer.send('timings_frequencies_msgs__open_devtools');
+      }
+    },
     request_timings_for_period: {
       postMessage: (msg) => {
         console.log('[preload.js] webkit.messageHandlers.timings_frequencies_msgs.postMessage');

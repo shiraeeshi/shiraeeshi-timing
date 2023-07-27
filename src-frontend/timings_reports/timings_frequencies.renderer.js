@@ -22,9 +22,15 @@ window.webkit.messageHandlers.timings_frequencies_msgs.onMessage(handleServerMes
 function handleServerMessage(msg) {
   try {
     window.webkit.messageHandlers.timings_frequencies_msgs.postMessage(`handleServerMessage start msg.msg_type: ${msg.msg_type}`);
-    if (msg.msg_type == 'keypress_event') {
-      return;
+
+    if (!my.addedKeyupListener) {
+      document.body.addEventListener('keyup', (eve) => {
+        runActionFromKeyEvent(eve);
+      });
+
+      my.addedKeyupListener = true;
     }
+
     if (msg.msg_type == "timings_query_response") {
       if (my.timingsQueryResponseCallback !== undefined) {
         my.timingsQueryResponseCallback(msg.timings);
@@ -197,6 +203,45 @@ function showTimingsByPrefixesAndLastModified(timingsByCategoriesByPrefixes) {
 }
 
 
-function mergeTimings(timingsA, timingsB) {
-  return timingsB;
+function runActionFromKeyEvent(eve) {
+
+  let key = eve.key;
+
+  let prefix = '';
+
+  if (eve.shiftKey) {
+    prefix = 'Shift+' + prefix;
+  }
+
+  if (eve.altKey) {
+    prefix = 'Alt+' + prefix;
+  }
+
+  if (eve.ctrlKey) {
+    prefix = 'Ctrl+' + prefix;
+  }
+
+  key = prefix + key;
+
+  let action;
+
+  if (my.config.hotkeys === undefined || my.config.hotkeys.timings_frequencies_window === undefined) {
+    return;
+  }
+
+  action = my.config.hotkeys.timings_frequencies_window[key];
+  
+  if (action === undefined) {
+    return;
+  }
+
+  runAction(action);
+}
+
+function runAction(action) {
+  if (action === 'toggle-fullscreen') {
+    window.webkit.messageHandlers.timings_frequencies_msgs__toggle_fullscreen.postMessage();
+  } else if (action === 'open-devtools') {
+    window.webkit.messageHandlers.timings_frequencies_msgs__open_devtools.postMessage();
+  }
 }

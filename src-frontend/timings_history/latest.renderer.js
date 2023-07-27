@@ -36,57 +36,17 @@ window.my = my;
 window.webkit.messageHandlers.timings_history_latest_msgs.onMessage(handleServerMessage);
 
 function handleServerMessage(msg) {
-  if (msg.msg_type == "key_pressed") {
-    let radioBtn24Hours = document.getElementById("day-of-24-hours");
-    function showTimings() {
-      if (radioBtn24Hours.checked) {
-        showTimingsOf24HourDay();
-      } else {
-        showTimingsOf60HourDay();
-      }
-    }
-    let btnNextDay = document.getElementById("next-day");
-    if (msg.keyval == "Left") {
-      my.dayOffset++;
 
-      delete my.highlightedCategory;
-      my.isHighlightingTimingRowInText = false;
-      my.isHighlightingTimingItemInImage = false;
+  if (!my.addedKeyupListener) {
+    document.body.addEventListener('keyup', (eve) => {
+      runActionFromKeyEvent(eve);
+    });
 
-      btnNextDay.disabled = false;
-      showTimings();
-    } else if (msg.keyval == "Right") {
-      if (my.dayOffset > 0) {
-        my.dayOffset--;
-      }
+    my.addedKeyupListener = true;
+  }
 
-      delete my.highlightedCategory;
-      my.isHighlightingTimingRowInText = false;
-      my.isHighlightingTimingItemInImage = false;
-
-      if (my.dayOffset <= 0) {
-        btnNextDay.disabled = true;
-      }
-      showTimings();
-    } else if (msg.keyval == "m") {
-      my.minimalTextForTimings = !my.minimalTextForTimings;
-      if (my.minimalTextForTimings) {
-        clearTimingsTextWrapper();
-      } else {
-        makeTimingsTextElementsUnminimized();
-      }
-    } else if (msg.keyval == "Ctrl+L") {
-      my.isToUnderlineCanvas = !my.isToUnderlineCanvas;
-      let canvasWrapper = document.getElementById("canvas-wrapper-in-history");
-      if (canvasWrapper === undefined) {
-        return;
-      }
-      if (my.isToUnderlineCanvas) {
-        canvasWrapper.classList.add('underlined');
-      } else {
-        canvasWrapper.classList.remove('underlined');
-      }
-    }
+  if (msg.msg_type == "run_action") {
+    runAction(msg.action);
     return;
   }
   if (msg.msg_type == "timings_query_response") {
@@ -252,5 +212,97 @@ function initResizerInHistory() {
 
     document.documentElement.removeEventListener('mousemove', resizerMouseMoveListener);
     document.documentElement.removeEventListener('mouseup', resizerMouseUpListener);
+  }
+}
+
+function runActionFromKeyEvent(eve) {
+
+  let key = eve.key;
+
+  let prefix = '';
+
+  if (eve.shiftKey) {
+    prefix = 'Shift+' + prefix;
+  }
+
+  if (eve.altKey) {
+    prefix = 'Alt+' + prefix;
+  }
+
+  if (eve.ctrlKey) {
+    prefix = 'Ctrl+' + prefix;
+  }
+
+  key = prefix + key;
+
+  let action;
+
+  if (my.config.hotkeys === undefined || my.config.hotkeys.timings_history_window === undefined) {
+    return;
+  }
+
+  action = my.config.hotkeys.timings_history_window[key];
+  
+  if (action === undefined) {
+    return;
+  }
+
+  runAction(action);
+}
+
+function runAction(action) {
+  let radioBtn24Hours = document.getElementById("day-of-24-hours");
+  function showTimings() {
+    if (radioBtn24Hours.checked) {
+      showTimingsOf24HourDay();
+    } else {
+      showTimingsOf60HourDay();
+    }
+  }
+  let btnNextDay = document.getElementById("next-day");
+  if (action === 'toggle-fullscreen') {
+    window.webkit.messageHandlers.history_msg__toggle_fullscreen.postMessage();
+  } else if (action === 'open-devtools') {
+    window.webkit.messageHandlers.history_msg__open_devtools.postMessage();
+  } else if (action == "go-to-previous-day") {
+    my.dayOffset++;
+
+    delete my.highlightedCategory;
+    my.isHighlightingTimingRowInText = false;
+    my.isHighlightingTimingItemInImage = false;
+
+    btnNextDay.disabled = false;
+    showTimings();
+  } else if (action == "go-to-next-day") {
+    if (my.dayOffset > 0) {
+      my.dayOffset--;
+    }
+
+    delete my.highlightedCategory;
+    my.isHighlightingTimingRowInText = false;
+    my.isHighlightingTimingItemInImage = false;
+
+    if (my.dayOffset <= 0) {
+      btnNextDay.disabled = true;
+    }
+    showTimings();
+  } else if (action == "toggle-minimal-text-for-timings") {
+    my.minimalTextForTimings = !my.minimalTextForTimings;
+    if (my.minimalTextForTimings) {
+      clearTimingsTextWrapper();
+    } else {
+      makeTimingsTextElementsUnminimized();
+    }
+  } else if (action == "toggle-underline-canvas") {
+    my.isToUnderlineCanvas = !my.isToUnderlineCanvas;
+    let canvasWrapper = document.getElementById("canvas-wrapper-in-history");
+    if (canvasWrapper === undefined) {
+      return;
+    }
+    if (my.isToUnderlineCanvas) {
+      canvasWrapper.classList.add('underlined');
+    } else {
+      canvasWrapper.classList.remove('underlined');
+    }
   }
 }

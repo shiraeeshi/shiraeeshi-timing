@@ -76,7 +76,10 @@ function handleServerMessage(msg) {
 
     if (!my.addedKeyupListener) {
       document.body.addEventListener('keyup', (eve) => {
-        my.viewBuilder.treeView.handleKeyUp(eve);
+        let handled = my.viewBuilder.treeView.handleKeyUp(eve);
+        if (!handled) {
+          runActionFromKeyEvent(eve);
+        }
       });
 
       my.addedKeyupListener = true;
@@ -256,4 +259,47 @@ function buildInitialProcessesTree() {
   let rootProcessNode = new ProcessNode("all");
   func(my.categoryPath2File, rootProcessNode)
   return rootProcessNode;
+}
+
+function runActionFromKeyEvent(eve) {
+
+  let key = eve.key;
+
+  let prefix = '';
+
+  if (eve.shiftKey) {
+    prefix = 'Shift+' + prefix;
+  }
+
+  if (eve.altKey) {
+    prefix = 'Alt+' + prefix;
+  }
+
+  if (eve.ctrlKey) {
+    prefix = 'Ctrl+' + prefix;
+  }
+
+  key = prefix + key;
+
+  let action;
+
+  if (my.config.hotkeys === undefined || my.config.hotkeys.post_timing_dialog_window === undefined) {
+    return;
+  }
+
+  action = my.config.hotkeys.post_timing_dialog_window[key];
+  
+  if (action === undefined) {
+    return;
+  }
+
+  runAction(action);
+}
+
+function runAction(action) {
+  if (action === 'toggle-fullscreen') {
+    window.webkit.messageHandlers.post_timing_dialog_msgs__toggle_fullscreen.postMessage();
+  } else if (action === 'open-devtools') {
+    window.webkit.messageHandlers.post_timing_dialog_msgs__open_devtools.postMessage();
+  }
 }

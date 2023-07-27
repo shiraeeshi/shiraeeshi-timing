@@ -26,6 +26,16 @@ contextBridge.exposeInMainWorld('webkit', {
       //   return ipcRenderer.invoke('request_for_timings', dateFrom, dateTo);
       // },
     },
+    history_msg__toggle_fullscreen: {
+      postMessage: () => {
+        ipcRenderer.send('history_msg__toggle_fullscreen');
+      }
+    },
+    history_msg__open_devtools: {
+      postMessage: () => {
+        ipcRenderer.send('history_msg__open_devtools');
+      }
+    },
     timings_history_latest__get_timings: {
       postMessage: (msg) => {
         console.log('[preload.js] webkit.messageHandlers.timings_history_latest__get_timings.postMessage');

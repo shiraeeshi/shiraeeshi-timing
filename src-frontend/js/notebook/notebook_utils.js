@@ -534,13 +534,70 @@ function initVerticalResizer() {
 
 export function handleKeyDown(eve) {
 
+
+// hotkeys:
+//   ArrowLeft: go-to-parent-node
+//   ArrowRight: go-to-child-node
+//   Ctrl+ArrowUp: switch-to-top-panel-of-notes
+//   ArrowUp: go-to-previous-sibling-node
+//   Ctrl+ArrowDown: switch-to-bottom-panel-of-notes
+//   ArrowDown: go-to-next-sibling-node
+//   ' ': toggle-collapse-node
+//   Ctrl+x: cut-node-under-cursor
+//   Ctrl+c: copy-node-under-cursor
+//   Delete: delete-node
+//   o: add-sibling-node
+//   a: append-child-node
+//   F2: edit-node-text
+//   Ctrl+v: paste-into-node-under-cursor
+
   if (my.isKeyboardListenerDisabled) {
+    return;
+  }
+
+  if (my.config.hotkeys === undefined || my.config.hotkeys.notebook === undefined) {
     return;
   }
 
   let key = eve.key;
 
-  if (key === 'ArrowLeft') {
+  if (eve.ctrlKey) {
+    key = 'Ctrl+' + key;
+  }
+
+  let action;
+
+  // if (key === 'ArrowLeft') {
+  //   action = 'go-to-parent-node';
+  // } else if (key === 'ArrowRight') {
+  //   action = 'go-to-child-node';
+  // } else if (eve.ctrlKey && key === 'ArrowUp') {
+  //   action = 'switch-to-top-panel-of-notes';
+  // } else if (key === 'ArrowUp') {
+  //   action = 'go-to-previous-sibling-node';
+  // } else if (eve.ctrlKey && key === 'ArrowDown') {
+  //   action = 'switch-to-bottom-panel-of-notes';
+  // } else if (key === 'ArrowDown') {
+  //   action = 'go-to-next-sibling-node';
+  // } else if (key === ' ') {
+  //   action = 'toggle-collapse-node';
+  // } else if (eve.ctrlKey && key === 'x') {
+  //   action = 'cut-node-under-cursor';
+  // } else if (eve.ctrlKey && key === 'c') {
+  //   action = 'copy-node-under-cursor';
+  // }
+
+  if (key === 'ArrowUp' || key === 'ArrowDown' || key === ' ') {
+    eve.preventDefault();
+  }
+
+  action = my.config.hotkeys.notebook[key];
+  
+  if (action === undefined) {
+    return;
+  }
+
+  if (action === 'go-to-parent-node') {
     if (my.isCursorOnRightSide) {
       if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
         my.rightSideNodeInRectangle.removeRectangleWrapper();
@@ -560,6 +617,7 @@ export function handleKeyDown(eve) {
           my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
         }
       }
+      return true;
     } else {
       let nodeInRectangle = that.nodeInRectangle;
       if (nodeInRectangle.parentNodeView !== undefined) {
@@ -570,8 +628,9 @@ export function handleKeyDown(eve) {
 
         that.nodeInRectangle = newNodeInRectangle;
       }
+      return true;
     }
-  } else if (key === 'ArrowRight') {
+  } else if (action === 'go-to-child-node') {
     if (my.isCursorOnRightSide) {
       if (my.rightSideNodeInRectangle.children.length > 0) {
 
@@ -608,6 +667,7 @@ export function handleKeyDown(eve) {
           my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
         }
       }
+      return true;
     } else {
       let nodeInRectangle = that.nodeInRectangle;
       if (nodeInRectangle.children.length > 0) {
@@ -635,16 +695,17 @@ export function handleKeyDown(eve) {
 
         that.nodeInRectangle = newNodeInRectangle;
       }
+      return true;
     }
-  } else if (eve.ctrlKey && key === 'ArrowUp') {
+  } else if (action === 'switch-to-top-panel-of-notes') {
     if (my.isCursorOnRightSide) {
       my.isCursorOnTopRightPanel = true;
       my.isCursorOnBottomRightPanel = false;
       my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
       my.rightSideNodeInRectangle = my.rightTopNodeInRectangle;
     }
-  } else if (key === 'ArrowUp') {
-    eve.preventDefault();
+    return true;
+  } else if (action === 'go-to-previous-sibling-node') {
     if (my.isCursorOnRightSide) {
       if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
 
@@ -667,6 +728,7 @@ export function handleKeyDown(eve) {
           my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
         }
       }
+      return true;
     } else {
       let nodeInRectangle = that.nodeInRectangle;
       if (nodeInRectangle.parentNodeView !== undefined) {
@@ -680,16 +742,17 @@ export function handleKeyDown(eve) {
 
         that.nodeInRectangle = newNodeInRectangle;
       }
+      return true;
     }
-  } else if (eve.ctrlKey && key === 'ArrowDown') {
+  } else if (action === 'switch-to-bottom-panel-of-notes') {
     if (my.isCursorOnRightSide) {
       my.isCursorOnTopRightPanel = false;
       my.isCursorOnBottomRightPanel = true;
       my.rightTopNodeInRectangle = my.rightSideNodeInRectangle;
       my.rightSideNodeInRectangle = my.rightBottomNodeInRectangle;
     }
-  } else if (key === 'ArrowDown') {
-    eve.preventDefault();
+    return true;
+  } else if (action === 'go-to-next-sibling-node') {
     if (my.isCursorOnRightSide) {
       if (my.rightSideNodeInRectangle.parentNodeView !== undefined) {
 
@@ -712,6 +775,7 @@ export function handleKeyDown(eve) {
           my.rightBottomNodeInRectangle = my.rightSideNodeInRectangle;
         }
       }
+      return true;
     } else {
       let nodeInRectangle = that.nodeInRectangle;
       if (nodeInRectangle.parentNodeView !== undefined) {
@@ -725,28 +789,23 @@ export function handleKeyDown(eve) {
 
         that.nodeInRectangle = newNodeInRectangle;
       }
+      return true;
     }
-  } else if (key === ' ') {
-    eve.preventDefault();
+  } else if (action === 'toggle-collapse-node') {
     if (my.isCursorOnRightSide) {
       my.rightSideNodeInRectangle.toggleCollapse();
     } else {
       that.nodeInRectangle.toggleCollapse();
     }
-  } else if (eve.ctrlKey && key === 'x') {
+    return true;
+  } else if (action === 'cut-node-under-cursor') {
     delete my.notebookNodeToCopy;
     my.notebookNodeToCut = my.rightSideNodeInRectangle.notebookNode;
-  } else if (eve.ctrlKey && key === 'c') {
+    return true;
+  } else if (action === 'copy-node-under-cursor') {
     delete my.notebookNodeToCut;
     my.notebookNodeToCopy = my.rightSideNodeInRectangle.notebookNode;
-  } else if (key === 'Delete') {
-    if (my.isCursorOnRightSide) {
-      deleteNodeFromTheRightSide(my.rightSideNodeInRectangle);
-    } else {
-      that.deleteCorrespondingNodeFromTheRightSide(that.nodeInRectangle)
-    }
-  } else if (eve.ctrlKey && key === 's') {
-    save();
+    return true;
   }
 }
 
@@ -756,25 +815,84 @@ export function handleKeyUp(eve) {
     return;
   }
 
+  if (my.config.hotkeys === undefined) {
+    return;
+  }
+
   let key = eve.key;
 
-  if (key === 'o') {
+  let prefix = '';
+
+  if (eve.shiftKey) {
+    prefix = 'Shift+' + prefix;
+  }
+
+  if (eve.altKey) {
+    prefix = 'Alt+' + prefix;
+  }
+
+  if (eve.ctrlKey) {
+    prefix = 'Ctrl+' + prefix;
+  }
+
+  key = prefix + key;
+
+  let action;
+
+  // if (key === 'o') {
+  //   action = 'add-sibling-node';
+  // } else if (key === 'a') {
+  //   action = 'append-child-node';
+  // } else if (key === 'F2') {
+  //   action = 'edit-node-text';
+  // } else if (eve.ctrlKey && key === 'v') {
+  //   action = 'paste-into-node-under-cursor';
+  // } else if (key === 'Delete') {
+  //   action = 'delete-node';
+  // }
+
+  if (key === 'ArrowUp' || key === 'ArrowDown' || key === ' ') {
+    eve.preventDefault();
+  }
+
+  if (my.config.hotkeys === undefined || my.config.hotkeys.notebook === undefined) {
+    return;
+  }
+
+  action = my.config.hotkeys.notebook[key];
+  
+  if (action === undefined) {
+    return;
+  }
+
+  if (action === 'add-sibling-node') {
     if (!my.isCursorOnRightSide) {
-      return;
+      return true;
     }
     addSiblingWithInputToTheRightSideNode(my.rightSideNodeInRectangle);
-  } else if (key === 'a') {
+    return true;
+  } else if (action === 'append-child-node') {
     if (!my.isCursorOnRightSide) {
-      return;
+      return true;
     }
     appendChildWithInputToTheRightSideNode(my.rightSideNodeInRectangle);
-  } else if (key === 'F2') {
+    return true;
+  } else if (action === 'edit-node-text') {
     if (!my.isCursorOnRightSide) {
-      return;
+      return true;
     }
     editRightSideNode(my.rightSideNodeInRectangle);
-  } else if (eve.ctrlKey && key === 'v') {
+    return true;
+  } else if (action === 'paste-into-node-under-cursor') {
     pasteNodeInto(my.rightSideNodeInRectangle.notebookNode);
+    return true;
+  } else if (action === 'delete-node') {
+    if (my.isCursorOnRightSide) {
+      deleteNodeFromTheRightSide(my.rightSideNodeInRectangle);
+    } else {
+      that.deleteCorrespondingNodeFromTheRightSide(that.nodeInRectangle)
+    }
+    return true;
   }
 }
 

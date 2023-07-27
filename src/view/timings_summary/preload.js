@@ -13,6 +13,16 @@ contextBridge.exposeInMainWorld('webkit', {
           callback(msg);
         });
       }
-    }
+    },
+    timings_summary_msgs__toggle_fullscreen: {
+      postMessage: () => {
+        ipcRenderer.send('timings_summary_msgs__toggle_fullscreen');
+      }
+    },
+    timings_summary_msgs__open_devtools: {
+      postMessage: () => {
+        ipcRenderer.send('timings_summary_msgs__open_devtools');
+      }
+    },
   }
 });
